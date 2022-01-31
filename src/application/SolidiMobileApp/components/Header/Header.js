@@ -1,0 +1,110 @@
+// React imports
+import React, { useContext } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
+// Internal imports
+import { AppStateContext } from 'src/application/data';
+import { mainPanelStates } from 'src/constants';
+import { Button } from 'src/components/atomic';
+import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
+
+
+const Header = (props) => {
+
+  let {style: styleArg} = props;
+
+  let appState = useContext(AppStateContext);
+
+  // Add back button if appropriate.
+  let includeBackButton = false;
+  if (appState.stateHistoryList.length > 1) {
+    includeBackButton = true;
+  }
+
+  // Set mainPanelState to the previous state in the history,
+  // and remove the current state from the history.
+  let backButton = (
+    <Button title='<' styles={styleBackButton}
+      onPress={ () => { appState.decrementStateHistory() } }
+    />
+  )
+  let blankBackButton = <></>;
+
+  return (
+    <AppStateContext.Consumer>
+      {(context) =>
+        <View style={[styleArg, styles.header]}>
+          <View style={styles.buttonWrapper}>
+            {includeBackButton ? backButton : blankBackButton}
+          </View>
+          <View style={styles.buttonWrapper}>
+            <Button title='SOLIDI' styles={styleLogoButton}
+              onPress={ () => { context.setMainPanelState({mainPanelState:mainPanelStates.TEST}) } }
+            />
+          </View>
+          <View style={styles.buttonWrapper}>
+            {/*
+            Future: Build notification section.
+            <Button title='Alerts' styles={styleHeaderButton}
+              onPress={ () => { context.setMainPanelState({mainPanelState:mainPanelStates.NOTIFICATIONS}) } }
+            />
+            */}
+          </View>
+          <View style={styles.buttonWrapper}>
+            <Button title='Menu' styles={styleHeaderButton}
+              onPress={ () => { context.setMainPanelState({mainPanelState: mainPanelStates.SETTINGS}) } }
+            />
+          </View>
+        </View>
+      }
+    </AppStateContext.Consumer>
+  );
+};
+
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  buttonWrapper: {
+    width: '25%',
+  },
+})
+
+
+const styleBackButton = StyleSheet.create({
+  text: {
+    fontWeight: 'bold',
+    fontSize: normaliseFont(18),
+  }
+})
+
+
+const styleLogoButton = StyleSheet.create({
+  text: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: normaliseFont(18),
+    fontStyle: 'italic',
+  },
+  view: {
+    backgroundColor: 'black',
+  },
+})
+
+
+const styleHeaderButton = StyleSheet.create({
+  text: {
+    fontSize: normaliseFont(18),
+  }
+})
+
+
+export default Header;
