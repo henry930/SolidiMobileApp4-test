@@ -43,6 +43,12 @@
 		9189E50CBBB9FE42558D694A /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig"; sourceTree = "<group>"; };
 		BCEBE28C507E85AF65ECBA96 /* Pods-SolidiMobileApp4.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4.release.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4.release.xcconfig"; sourceTree = "<group>"; };
 		C6A4509C71B6A81E111CC6B1 /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE03275427A9639F001BDF07 /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialIcons.ttf"; sourceTree = "<group>"; };
+		CE03275827A9639F001BDF07 /* FontAwesome5_Solid.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome5_Solid.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf"; sourceTree = "<group>"; };
+		CE03275E27A965A9001BDF07 /* FontAwesome5_Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome5_Regular.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf"; sourceTree = "<group>"; };
+		CE03275F27A9676B001BDF07 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialCommunityIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"; sourceTree = "<group>"; };
+		CE03276027A96A61001BDF07 /* FontAwesome.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf"; sourceTree = "<group>"; };
+		CE03276127A96A61001BDF07 /* FontAwesome5_Brands.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome5_Brands.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -86,6 +92,7 @@
 		13B07FAE1A68108700A75B9A /* SolidiMobileApp4 */ = {
 			isa = PBXGroup;
 			children = (
+				CE03274D27A96359001BDF07 /* Fonts */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -114,7 +121,6 @@
 				84EE362A5E481F780485C175 /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig */,
 				9189E50CBBB9FE42558D694A /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -147,6 +153,19 @@
 				00E356EE1AD99517003FC87E /* SolidiMobileApp4Tests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CE03274D27A96359001BDF07 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				CE03276027A96A61001BDF07 /* FontAwesome.ttf */,
+				CE03276127A96A61001BDF07 /* FontAwesome5_Brands.ttf */,
+				CE03275827A9639F001BDF07 /* FontAwesome5_Solid.ttf */,
+				CE03275E27A965A9001BDF07 /* FontAwesome5_Regular.ttf */,
+				CE03275F27A9676B001BDF07 /* MaterialCommunityIcons.ttf */,
+				CE03275427A9639F001BDF07 /* MaterialIcons.ttf */,
+			);
+			name = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
