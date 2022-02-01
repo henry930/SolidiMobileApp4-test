@@ -51,6 +51,10 @@ x();
 console.log('foo')
 
 
+import PINCode from '@haskkor/react-native-pincode';
+
+
+
 
 let PIN = () => {
 
@@ -60,6 +64,7 @@ let PIN = () => {
     <View>
     <Text>foo</Text>
     <Icon name="rocket" size={30} color="#900" />
+    <PINCode status={'choose'}/>
     </View>
   )
 
