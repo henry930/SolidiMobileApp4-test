@@ -1,5 +1,5 @@
 // React imports
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -7,64 +7,104 @@ import {
   Text,
   View
 } from 'react-native';
-//import PINCode from '@haskkor/react-native-pincode'
-
+import PINCode, { hasUserSetPinCode } from '@haskkor/react-native-pincode';
+import * as Keychain from 'react-native-keychain';
 
 // Other imports
 import _ from 'lodash';
 
 // Internal imports
 import { screenWidth, screenHeight } from 'src/util/dimensions';
-
-import Icon from 'react-native-vector-icons/FontAwesome';
-
-
-import * as Keychain from 'react-native-keychain';
-
-let x = async () => {
-  const username = 'zuck';
-  const password = 'poniesRgr8';
-
-  console.log('=====')
-
-  // Store the credentials
-  await Keychain.setGenericPassword(username, password);
-
-  try {
-    // Retrieve the credentials
-    const credentials = await Keychain.getGenericPassword();
-    if (credentials) {
-      console.log(
-        'Credentials successfully loaded for user ' + credentials.username
-      );
-    } else {
-      console.log('No credentials stored');
-    }
-  } catch (error) {
-    console.log("Keychain couldn't be accessed!", error);
-  }
-  await Keychain.resetGenericPassword();
-};
-
-x();
-
-console.log('foo')
-
-
-import PINCode from '@haskkor/react-native-pincode';
+import AppStateContext from 'src/application/data';
+import { mainPanelStates } from 'src/constants';
+import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
+import SolidiRestAPIClientLibrary from 'src/api/SolidiRestAPIClientLibrary';
+import misc from 'src/util/misc';
 
 
 
 
 let PIN = () => {
 
-  let [displayPIN, setDisplayPIN] = useState(false);
+  let appState = useContext(AppStateContext);
 
+  /* By default, this will be the "Enter PIN" page.
+  - If we can't find a PIN stored in the keychain, redirect to login page to authenticate the user.
+  - The login page will redirect here, with pageName == 'choose'.
+  */
+
+  let pinStatus = 'enter';
+  if (appState.pageName === 'choose') {
+    pinStatus = 'choose';
+  }
+  log({pinStatus})
+
+  let _finishProcess = async () => {
+    let pinStored = await hasUserSetPinCode(appState.appName);
+    if (! pinStored) {
+      log('pin not stored');
+      // Future: Throw error ? In both "enter" and "choose", it should be stored by now.
+    }
+    // Load PIN from the keychain.
+    let credentials = await Keychain.getInternetCredentials(appState.appName);
+    let pin = credentials.password;
+    // Store PIN in global state.
+    appState.user.pin = pin;
+    // If we have successfully entered the PIN, then look up the user's email and password.
+    if (pinStatus === 'enter') {
+      let loginCredentials = await Keychain.getInternetCredentials(appState.domain);
+      // Example result:
+      // {"password": "mrfishsayshelloN6", "server": "t3.solidi.co", "storage": "keychain", "username": "mr@pig.com"}
+      let {username: email, password} = loginCredentials;
+      let msg = `loginCredentials (email=${email}, password=${password} loaded from keychain under ${appState.domain})`;
+      log(msg);
+      // Use the email and password to load the API Key and Secret from server.
+      let {userAgent, domain} = appState;
+      let apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
+      let apiMethod = 'login_mobile' + `/${email}`;
+      let params = {password};
+      let data = await apiClient.publicMethod({httpMethod: 'POST', apiMethod, params});
+      let keyNames = 'apiKey, apiSecret'.split(', ');
+      misc.confirmExactKeys('data', data, keyNames, 'submitLoginRequest');
+      let {apiKey, apiSecret} = data;
+      // Store these access values in the global state.
+      _.assign(apiClient, {apiKey, apiSecret});
+      appState.apiClient = apiClient;
+      appState.user.isAuthenticated = true;
+      _.assign(appState.user, {email, password});
+    }
+    // Change mainPanel.
+    if (_.isEmpty(appState.stashedState)) {
+      // Change to BUY state by default.
+      appState.setMainPanelState({mainPanelState: mainPanelStates.BUY});
+      return;
+    } else {
+      // Reload stashed state.
+    }
+  }
+  
   return (
     <View>
-    <Text>foo</Text>
-    <Icon name="rocket" size={30} color="#900" />
-    <PINCode status={'choose'}/>
+      <PINCode
+        status = {pinStatus}
+        pinCodeKeychainName = {appState.appName}
+        touchIDDisabled = {true}
+        finishProcess = {() => _finishProcess()}
+        delayBetweenAttempts = '0.3' // 0.4
+        pinCodeVisible = {true}
+        colorPassword = 'black'
+        textPasswordVisibleSize = {normaliseFont(28)}
+        stylePinCodeColorTitle = 'black'
+        stylePinCodeColorSubtitle = 'black'
+        stylePinCodeMainContainer = {styles.container}
+        stylePinCodeTextTitle = {styles.stylePinCodeTextTitle}
+        stylePinCodeCircle = {styles.stylePinCodeCircle}
+        stylePinCodeButtonCircle = {styles.stylePinCodeButtonCircle}
+        stylePinCodeTextButtonCircle = {styles.stylePinCodeTextButtonCircle}
+        stylePinCodeButtonNumber = 'rgb(100, 100, 130)'
+        stylePinCodeDeleteButtonColorHideUnderlay = 'rgb(50, 50, 100)'
+        stylePinCodeDeleteButtonText = {styles.stylePinCodeDeleteButtonText}
+      />
     </View>
   )
 
@@ -73,12 +113,24 @@ let PIN = () => {
 
 let styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF'
+    backgroundColor: 'white'
   },
-});
+  stylePinCodeTextTitle: {
+    fontWeight: '400',
+  },
+  stylePinCodeCircle: {
+    backgroundColor: 'black',
+  },
+  stylePinCodeButtonCircle: {
+    backgroundColor: 'rgb(235, 235, 235)',
+  },
+  stylePinCodeTextButtonCircle: {
+    fontWeight: '700',
+  },
+  stylePinCodeDeleteButtonText: {
+    fontWeight: '500',
+  }
+})
 
 
 export default PIN;

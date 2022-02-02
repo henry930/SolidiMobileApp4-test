@@ -4,6 +4,11 @@
 - The history stack of previous MainPanel states
 */
 
+/* Note:
+- We use the appName as the "username" (i.e. key) for storing the PIN in the keychain.
+- We use the domain (e.g. "solidi.co") for storing the email & password in the keychain.
+*/
+
 // React imports
 import React, { Component, useContext } from 'react';
 import { Dimensions } from 'react-native';
@@ -39,14 +44,17 @@ class AppStateProvider extends Component {
     super(props);
 
     // Can set this initial state for testing.
-    this.initialMainPanelState = mainPanelStates.PIN;
+    this.initialMainPanelState = mainPanelStates.BUY;
     this.initialPageName = 'default';
 
     // Misc
     this.numberOfFooterButtonsToDisplay = 3;
     this.standardPaddingTop = scaledHeight(80);
     this.standardPaddingHorizontal = scaledWidth(15);
+    this.nonHistoryPanels = [mainPanelStates.PIN];
+    this.appName = 'SolidiMobileApp';
 
+    // Function for changing the mainPanelState.
     this.setMainPanelState = (newState) => {
       log(`Set state to: ${JSON.stringify(newState)}`);
       let {mainPanelState, pageName} = newState;
@@ -58,19 +66,22 @@ class AppStateProvider extends Component {
       if (_.isNil(pageName)) pageName = 'default';
       newState = {mainPanelState, pageName};
       /*
-      If this is a new state, add an entry to the state history.
+      If this is a new state, add an entry to the state history,
+      unless it's a state we don't care about: e.g. PIN.
       A state history entry consists of:
       - mainPanelState
       - pageName
       */
       let stateHistoryList = this.state.stateHistoryList;
-      let currentState = stateHistoryList[stateHistoryList.length - 1];
-      if (JSON.stringify(newState) === JSON.stringify(currentState)) {
-        // We don't want to store the same state twice, so do nothing.
-      } else {
-        log("Store new state history entry: " + JSON.stringify(newState));
-        stateHistoryList = stateHistoryList.concat(newState);
-        this.setState({stateHistoryList});
+      if (! this.nonHistoryPanels.includes(mainPanelState)) {
+        let currentState = stateHistoryList[stateHistoryList.length - 1];
+        if (JSON.stringify(newState) === JSON.stringify(currentState)) {
+          // We don't want to store the same state twice, so do nothing.
+        } else {
+          log("Store new state history entry: " + JSON.stringify(newState));
+          stateHistoryList = stateHistoryList.concat(newState);
+          this.setState({stateHistoryList});
+        }
       }
       this.setState({mainPanelState, pageName});
     }
@@ -125,10 +136,7 @@ class AppStateProvider extends Component {
       pageName: this.initialPageName,
       setMainPanelState: this.setMainPanelState,
       stashedState: {},
-      stateHistoryList: [{
-        mainPanelState: this.initialMainPanelState,
-        pageName: this.initialPageName,
-      }],
+      stateHistoryList: [],
       decrementStateHistory: this.decrementStateHistory,
       footerIndex: 0,
       setFooterIndex: this.setFooterIndex,
@@ -145,9 +153,18 @@ class AppStateProvider extends Component {
         email: '',
         password: '',
         userInfo: {},
-        pin: '', // Future: Check in phone's keychain / keystore.
+        pin: '',
       },
       apiClient: null,
+      appName: this.appName,
+    }
+
+    // Save the initial state to the state history.
+    if (! this.nonHistoryPanels.includes(this.initialMainPanelState)) {
+      this.state.stateHistoryList = [{
+        mainPanelState: this.initialMainPanelState,
+        pageName: this.initialPageName,
+      }];
     }
 
     if (tier === 'dev') {

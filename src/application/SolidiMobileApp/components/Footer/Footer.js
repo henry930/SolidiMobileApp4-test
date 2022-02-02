@@ -20,6 +20,8 @@ const Footer = (props) => {
 
   let appState = useContext(AppStateContext);
 
+  let hideFooter = appState.mainPanelState === mainPanelStates.PIN;
+
   let footerIndex = AppStateContext._currentValue.footerIndex;
   let footerEndIndex = footerIndex + appState.numberOfFooterButtonsToDisplay - 1;
   let newFooterIndexLeft = footerIndex - appState.numberOfFooterButtonsToDisplay;
@@ -30,7 +32,7 @@ const Footer = (props) => {
   // Select 4 buttons.
   let selectedButtons = footerButtonList.slice(footerIndex, footerEndIndex + 1);
 
-  // Add left and right buttons if appropriate.
+  // Check whether to add left and right buttons.
   includeLeftButton = (footerIndex > 0) ? true : false;
   includeRightButton = (footerEndIndex < maxID) ? true : false;
 
@@ -73,6 +75,13 @@ const Footer = (props) => {
         </View>
       }
       </AppStateContext.Consumer>
+    );
+  }
+
+  // Check whether to hide the footer completely.
+  if (hideFooter) {
+    return (
+      <View></View>
     );
   }
 

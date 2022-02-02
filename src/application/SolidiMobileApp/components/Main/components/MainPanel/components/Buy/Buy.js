@@ -1,9 +1,11 @@
 // React imports
 import React, { useContext, useState } from 'react';
 import { FlatList, Text, TextInput, StyleSheet, View } from 'react-native';
+import * as Keychain from 'react-native-keychain';
+import { hasUserSetPinCode } from '@haskkor/react-native-pincode';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 // Other imports
-import DropDownPicker from 'react-native-dropdown-picker';
 import _ from 'lodash';
 
 // Internal imports
@@ -18,6 +20,19 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 let Buy = () => {
 
   let appState = useContext(AppStateContext);
+
+  // Treat this as the initial page.
+  // Load the PIN from the keychain if it exists. Note that this is via a promise - it'll race.
+  // Future: Move this to the splash page ?
+  Keychain.getInternetCredentials(appState.appName).then((credentials) => {
+    // Example result:
+    // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
+    if (credentials) {
+      let pin = credentials.password;
+      appState.user.pin = pin;
+      log(`PIN loaded: ${pin}`);
+    }
+  });
 
   // QA = Quote Asset
   let [volumeQA, onChangeVolumeQA] = useState("100");
@@ -41,7 +56,11 @@ let Buy = () => {
 
   let submitBuyRequest = async () => {
     if (! appState.user.isAuthenticated) {
-      appState.setMainPanelState({mainPanelState: mainPanelStates.LOGIN});
+      if (! appState.user.pin) {
+        appState.setMainPanelState({mainPanelState: mainPanelStates.LOGIN});
+      } else {
+        appState.setMainPanelState({mainPanelState: mainPanelStates.PIN});
+      }
       return;
     }
     let fxmarket = symbolBA + '/' + symbolQA;

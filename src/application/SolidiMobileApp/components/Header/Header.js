@@ -19,13 +19,10 @@ const Header = (props) => {
 
   let appState = useContext(AppStateContext);
 
-  // Add back button if appropriate.
-  let includeBackButton = false;
-  if (appState.stateHistoryList.length > 1) {
-    includeBackButton = true;
-  }
+  let showLogoOnly = appState.mainPanelState === mainPanelStates.PIN;
 
-  // Set mainPanelState to the previous state in the history,
+  // Prepare back button.
+  // It will set mainPanelState to the previous state in the history,
   // and remove the current state from the history.
   let backButton = (
     <Button title='<' styles={styleBackButton}
@@ -33,6 +30,19 @@ const Header = (props) => {
     />
   )
   let blankBackButton = <></>;
+
+  // Check whether to include back button.
+  let includeBackButton = false;
+  if (appState.stateHistoryList.length > 1) {
+    if (! showLogoOnly) {
+      includeBackButton = true;
+    }
+  }
+
+  // Check whether to include notification and menu buttons.
+  let includeNotificationButton = ! showLogoOnly;
+  let includeMenuButton = includeNotificationButton;
+
 
   return (
     <AppStateContext.Consumer>
@@ -49,15 +59,15 @@ const Header = (props) => {
           <View style={styles.buttonWrapper}>
             {/*
             Future: Build notification section.
-            <Button title='Alerts' styles={styleHeaderButton}
+            { includeNotificationButton && <Button title='Alerts' styles={styleHeaderButton}
               onPress={ () => { context.setMainPanelState({mainPanelState:mainPanelStates.NOTIFICATIONS}) } }
-            />
+            /> }
             */}
           </View>
           <View style={styles.buttonWrapper}>
-            <Button title='Menu' styles={styleHeaderButton}
+            { includeMenuButton && <Button title='Menu' styles={styleHeaderButton}
               onPress={ () => { context.setMainPanelState({mainPanelState: mainPanelStates.SETTINGS}) } }
-            />
+            /> }
           </View>
         </View>
       }

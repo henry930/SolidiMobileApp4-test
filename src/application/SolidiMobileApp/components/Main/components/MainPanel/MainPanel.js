@@ -38,6 +38,11 @@ const MainPanel = () => {
     } else if (context.mainPanelState === mainPanelStates.LOGIN) {
       return <Login />
     } else if (context.mainPanelState === mainPanelStates.PIN) {
+      if (context.pageName == 'default') {
+        if (! context.user.pin) {
+          return <Login />
+        }
+      }
       return <PIN />
     } else {
       return <Text>Error: Unknown mainPanelState: {context.mainPanelState}</Text>

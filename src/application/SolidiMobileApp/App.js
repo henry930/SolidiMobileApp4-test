@@ -11,6 +11,7 @@ import {
 import { colours } from 'src/constants';
 import { Header, Main, Footer } from './components';
 import { AppStateProvider } from 'src/application/data';
+import { mainPanelStates } from 'src/constants';
 
 // Misc
 log = console.log;
@@ -19,7 +20,7 @@ let lj = (x) => console.log(JSON.stringify(x));
 
 
 
-const App = () => {
+let App = () => {
 
 
   const helloWorld = async () => {

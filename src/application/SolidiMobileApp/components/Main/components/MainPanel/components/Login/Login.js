@@ -1,6 +1,7 @@
 // React imports
 import React, { useContext, useState } from 'react';
 import { Text, TextInput, StyleSheet, View } from 'react-native';
+import * as Keychain from 'react-native-keychain';
 
 // Other imports
 import _ from 'lodash';
@@ -40,6 +41,7 @@ let Login = () => {
         setErrorMessage(msg);
         return;
       }
+      // Load API Key and Secret from server.
       let {userAgent, domain} = appState;
       let apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       let apiMethod = 'login_mobile' + `/${email}`;
@@ -48,11 +50,18 @@ let Login = () => {
       let keyNames = 'apiKey, apiSecret'.split(', ');
       misc.confirmExactKeys('data', data, keyNames, 'submitLoginRequest');
       let {apiKey, apiSecret} = data;
-      // Store the new values & components in the global state.
+      // Store these access values in the global state.
       _.assign(apiClient, {apiKey, apiSecret});
       appState.apiClient = apiClient;
       appState.user.isAuthenticated = true;
       _.assign(appState.user, {email, password});
+      // Store the email and password in the secure keychain storage.
+      let loginCredentialsStored = await Keychain.hasInternetCredentials(appState.domain)
+      if (! loginCredentialsStored) {
+        await Keychain.setInternetCredentials(appState.domain, email, password);
+        let msg = `loginCredentials (email=${email}, password=${password}) stored in keychain under ${appState.domain})`;
+        log(msg);
+      }
       // Load and store user info.
       let data2 = await apiClient.privateMethod({httpMethod: 'POST', apiMethod: 'user'});
       let keyNames2 = `address_1, address_2, address_3, address_4,
@@ -64,13 +73,14 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       appState.user.userInfo = data2;
       // Change mainPanel.
       if (! appState.user.pin) {
-        appState.setMainPanelState({mainPanelState: mainPanelStates.PIN});
+        appState.setMainPanelState({mainPanelState: mainPanelStates.PIN, pageName: 'choose'});
       } else if (_.isEmpty(appState.stashedState)) {
         // Change to BUY state by default.
         appState.setMainPanelState({mainPanelState: mainPanelStates.BUY});
       } else {
         // Reload stashed state.
       }
+      return;
     } catch(err) {
       log(err);
       setErrorMessage(err.message);
