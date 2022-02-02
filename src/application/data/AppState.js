@@ -55,7 +55,7 @@ class AppStateProvider extends Component {
     this.appName = 'SolidiMobileApp';
 
     // Function for changing the mainPanelState.
-    this.setMainPanelState = (newState) => {
+    this.setMainPanelState = (newState, stashed=false) => {
       log(`Set state to: ${JSON.stringify(newState)}`);
       let {mainPanelState, pageName} = newState;
       if (_.isNil(mainPanelState)) {
@@ -73,7 +73,8 @@ class AppStateProvider extends Component {
       - pageName
       */
       let stateHistoryList = this.state.stateHistoryList;
-      if (! this.nonHistoryPanels.includes(mainPanelState)) {
+      let storeHistoryState = (! stashed && ! this.nonHistoryPanels.includes(mainPanelState))
+      if (storeHistoryState) {
         let currentState = stateHistoryList[stateHistoryList.length - 1];
         if (JSON.stringify(newState) === JSON.stringify(currentState)) {
           // We don't want to store the same state twice, so do nothing.
@@ -129,7 +130,7 @@ class AppStateProvider extends Component {
       this.setState({history});
     }
 
-    // This must be declared at the end of the constructor.
+    // This must be declared towards the end of the constructor.
     this.state = {
       numberOfFooterButtonsToDisplay: this.numberOfFooterButtonsToDisplay,
       mainPanelState: this.initialMainPanelState,
@@ -157,6 +158,12 @@ class AppStateProvider extends Component {
       },
       apiClient: null,
       appName: this.appName,
+      buyPanel: {
+        volumeQA: 0,
+        symbolQA: '',
+        volumeBA: 0,
+        symbolBA: '',
+      }
     }
 
     // Save the initial state to the state history.

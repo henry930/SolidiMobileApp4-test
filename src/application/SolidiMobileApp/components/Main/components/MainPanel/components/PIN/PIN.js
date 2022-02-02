@@ -56,7 +56,7 @@ let PIN = () => {
       // Example result:
       // {"password": "mrfishsayshelloN6", "server": "t3.solidi.co", "storage": "keychain", "username": "mr@pig.com"}
       let {username: email, password} = loginCredentials;
-      let msg = `loginCredentials (email=${email}, password=${password} loaded from keychain under ${appState.domain})`;
+      let msg = `loginCredentials (email=${email}, password=${password}) loaded from keychain under ${appState.domain})`;
       log(msg);
       // Use the email and password to load the API Key and Secret from server.
       let {userAgent, domain} = appState;
@@ -80,6 +80,7 @@ let PIN = () => {
       return;
     } else {
       // Reload stashed state.
+      appState.setMainPanelState(appState.stashedState, stashed=true);
     }
   }
   
