@@ -66,9 +66,11 @@ const Header = (props) => {
             */}
           </View>
           <View style={styles.buttonWrapper}>
-            { includeMenuButton && <Button title='Menu' styles={styleHeaderButton}
-              onPress={ () => { context.setMainPanelState({mainPanelState: mainPanelStates.SETTINGS}) } }
-            /> }
+            <ImageButton imageName='bars' imageType='icon'
+              iconColor="#555"
+              styles={styleMenuButton}
+              onPress={ () => { context.setMainPanelState({mainPanelState:mainPanelStates.SETTINGS}) } }
+            />
           </View>
         </View>
       }
@@ -103,6 +105,11 @@ const styleLogoButton = StyleSheet.create({
     width: '60%',
   },
 })
+
+
+styleMenuButton = StyleSheet.create({
+  view: {},
+});
 
 
 const styleHeaderButton = StyleSheet.create({
