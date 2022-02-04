@@ -51,7 +51,7 @@ const Footer = (props) => {
   let rightButton = (
     <View style={styles.rightButtonWrapper}>
       <ImageButton imageName='angle-right' imageType='icon'
-        styles={stylesLeftButton}
+        styles={stylesRightButton}
         onPress={ () => { appState.setFooterIndex(newFooterIndexRight) } }
       />
     </View>
