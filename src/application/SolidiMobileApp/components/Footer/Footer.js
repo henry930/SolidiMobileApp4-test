@@ -146,7 +146,6 @@ const stylesLeftButton = StyleSheet.create({
   },
   view: {
     height: '100%',
-    backgroundColor: colours.footerSideButton,
     borderWidth: 1,
     borderRightWidth: 0,
   }
@@ -159,7 +158,6 @@ const stylesRightButton = StyleSheet.create({
   },
   view: {
     height: '100%',
-    backgroundColor: colours.footerSideButton,
     borderWidth: 1,
   }
 })
