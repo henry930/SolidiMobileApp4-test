@@ -10,7 +10,7 @@ import {
 // Internal imports
 import { AppStateContext } from 'src/application/data';
 import { colours, mainPanelStates, footerButtonList } from 'src/constants';
-import { Button } from 'src/components/atomic';
+import { Button, ImageButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
 
@@ -38,7 +38,8 @@ const Footer = (props) => {
 
   let leftButton = (
     <View style={styles.leftButtonWrapper}>
-      <Button title='<' styles={stylesLeftButton}
+      <ImageButton imageName='angle-left' imageType='icon'
+        styles={stylesLeftButton}
         onPress={ () => { appState.setFooterIndex(newFooterIndexLeft) } }
       />
     </View>
@@ -49,7 +50,8 @@ const Footer = (props) => {
 
   let rightButton = (
     <View style={styles.rightButtonWrapper}>
-      <Button title='>' styles={stylesRightButton}
+      <ImageButton imageName='angle-right' imageType='icon'
+        styles={stylesLeftButton}
         onPress={ () => { appState.setFooterIndex(newFooterIndexRight) } }
       />
     </View>

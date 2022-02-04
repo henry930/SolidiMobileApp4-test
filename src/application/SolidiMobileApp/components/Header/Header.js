@@ -25,7 +25,8 @@ const Header = (props) => {
   // It will set mainPanelState to the previous state in the history,
   // and remove the current state from the history.
   let backButton = (
-    <Button title='<' styles={styleBackButton}
+    <ImageButton imageName='angle-left' imageType='icon'
+      styles={styleBackButton}
       onPress={ () => { appState.decrementStateHistory() } }
     />
   )
