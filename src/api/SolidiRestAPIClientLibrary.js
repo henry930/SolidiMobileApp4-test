@@ -132,6 +132,8 @@ export default class SolidiRestAPIClientLibrary {
         redirect: 'follow',
       }
       if (postData) options.body = postData;
+      let msg = `Calling ${uri}`;
+      log(msg)
       let response = await fetch(uri, options);
       let data = await response.text();
       //log("Response: " + data);
