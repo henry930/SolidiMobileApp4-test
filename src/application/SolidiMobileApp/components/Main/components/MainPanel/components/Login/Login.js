@@ -77,7 +77,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         // Change to BUY state by default.
         appState.setMainPanelState({mainPanelState: mainPanelStates.BUY});
       } else {
-        // Reload stashed state.
+        appState.loadStashedState();
       }
       return;
     } catch(err) {
