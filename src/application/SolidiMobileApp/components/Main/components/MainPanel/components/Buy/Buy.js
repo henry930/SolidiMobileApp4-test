@@ -24,7 +24,7 @@ let Buy = () => {
   // We're using the BUY panel as the initial landing page.
   // -> Load the PIN from the keychain if it exists.
   // Note that this is via a promise - there will be a slight delay while the data is retrieved.
-  // Future: Is it possible to move this to the splash page ?
+  // However: The user would have to be very fast indeed to click Buy before this completes.
   Keychain.getInternetCredentials(appState.appName).then((credentials) => {
     // Example result:
     // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
@@ -41,10 +41,10 @@ let Buy = () => {
 
   let selectedVolumeQA = '100';
   let selectedSymbolQA = 'GBPX';
-  let selectedVolumeBA = '0.05';
+  let selectedVolumeBA = '0.05'; // Future: Set this to "Loading..." on start.
   let selectedSymbolBA = 'BTC';
 
-  // If we're picking up an existing order, load its details from the global state.
+  // If we're reloading an existing order, load its details from the global state.
   if (appState.pageName === 'continue') {
     ({volumeQA: selectedVolumeQA, symbolQA: selectedSymbolQA} = appState.buyPanel);
     ({volumeBA: selectedVolumeBA, symbolBA: selectedSymbolBA} = appState.buyPanel);
@@ -52,7 +52,7 @@ let Buy = () => {
 
   // QA = Quote Asset
   // Future: Load the items from the server.
-  let [volumeQA, onChangeVolumeQA] = useState(selectedVolumeQA);
+  let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
   let [openQA, setOpenQA] = useState(false);
   let [symbolQA, setSymbolQA] = useState(selectedSymbolQA);
   let [itemsQA, setItemsQA] = useState([
@@ -61,7 +61,7 @@ let Buy = () => {
   ]);
 
   // BA = Base Asset
-  let [volumeBA, onChangeVolumeBA] = useState(selectedVolumeBA);
+  let [volumeBA, setVolumeBA] = useState(selectedVolumeBA);
   let [openBA, setOpenBA] = useState(false);
   let [symbolBA, setSymbolBA] = useState(selectedSymbolBA);
   let [itemsBA, setItemsBA] = useState([
@@ -106,6 +106,7 @@ let Buy = () => {
     {"id":11,"datetime":1643047261277,"type":0,"price":"100","amount":"0.05"}
     */
    // Future: If an error occurs, display the error description below the orderSubmitted description.
+   setOrderSubmitted(true);
   }
 
   // Submit the order automatically if we have returned from auth sequence.
@@ -126,7 +127,7 @@ let Buy = () => {
         <View style={styles.quoteAssetWrapper}>
           <TextInput
             style={styles.volumeQA}
-            onChangeText={onChangeVolumeQA}
+            onChangeText={setVolumeQA}
             value={volumeQA}
           />
           <DropDownPicker
@@ -146,7 +147,7 @@ let Buy = () => {
         <View style={styles.baseAssetWrapper}>
           <TextInput
             style={styles.volumeBA}
-            onChangeText={onChangeVolumeBA}
+            onChangeText={setVolumeBA}
             value={volumeBA}
           />
           <DropDownPicker
@@ -161,7 +162,7 @@ let Buy = () => {
           />
         </View>
 
-        <View style={styles.buyButtonWrapper}>
+        <View style={styles.buttonWrapper}>
           <StandardButton title="Buy now" onPress={ submitBuyRequest } />
         </View>
 
@@ -239,8 +240,8 @@ let styles = StyleSheet.create({
     height: 40,
     width: scaledWidth(220),
   },
-  buyButtonWrapper: {
-    marginTop: 10,
+  buttonWrapper: {
+    marginTop: scaledHeight(20),
   },
   orderSubmittedMessage: {
     marginTop: 10,
