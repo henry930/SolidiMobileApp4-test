@@ -26,15 +26,17 @@ let History = () => {
       apiMethod: 'transaction',
       params: {}
     })
+    // Example data:
+    // {"total": 1, "transactions": [{"cur1": "GBP", "cur1amt": "10000.00000000", "cur2": "", "cur2amt": "0.00000000", "fee_cur": "", "fees": "0.00000000", "fxmarket": 1, "ref": "initial deposit", "short_desc": "Transfer In", "status": "A", "txn_code": "PI", "txn_date": "14 Feb 2022", "txn_time": "16:56"}]}
     appState.setHistoryTransactions(data.transactions);
-    /*
     data = await appState.apiClient.privateMethod({
-      httpMethod: 'GET',
+      httpMethod: 'POST',
       apiMethod: 'order',
       params: {}
     })
-    log(data)
-    */
+    // Example data:
+    // {"results": [{"date": "14 Feb 2022", "fxmarket": "BTC/GBPX", "id": 31, "ocount": "1", "order_age": "147", "order_type": "Limit", "price": "100.00000000", "qty": "0.05000000", "s1_id": null, "s1_status": null, "s2_id": null, "s2_status": null, "side": "Buy", "status": "LIVE", "time": "17:34:42", "unixtime": "1644860082"}], "total": "1"}
+    appState.setHistoryOrders(data.results);
     setIsLoading(false);
   }
 
@@ -47,8 +49,19 @@ let History = () => {
     );
   }
 
+  // Check to see if a category has been specified as this panel is loaded.
+  let selectedCategory = 'orders'; // default value.
+  let categories = 'transactions orders'.split(' ');
+  let pageName = appState.pageName;
+  if (pageName !== 'default') {
+    if (! categories.includes(pageName)) {
+      throw Error(`Unrecognised category: ${pageName}`);
+    }
+    selectedCategory = pageName;
+  }
+
   let [open, setOpen] = useState(false);
-  let [category, setCategory] = useState('transactions');
+  let [category, setCategory] = useState(selectedCategory);
   let [categoryItems, setCategoryItems] = useState([
     {label: 'Orders', value: 'orders'},
     {label: 'Transactions', value: 'transactions'},
@@ -56,7 +69,7 @@ let History = () => {
 
   useEffect(() => {
     getData();
-  }, [category, reloadCount]);
+  }, [reloadCount]);
 
   let displayHistoryControls = () => {
 
@@ -96,7 +109,7 @@ let History = () => {
 
   let renderTransactionItem = ({ item }) => {
     return (
-      <View style={styles.transaction}>
+      <View style={styles.flatListItem}>
         <Text>{item.txn_date} {item.txn_time}</Text>
         <Text style={styles.typeField}>{codeToType(item.txn_code)}</Text>
         <Text>Currency: {item.cur1}</Text>
@@ -108,7 +121,7 @@ let History = () => {
 
   let renderTransactions = () => {
     return (
-      <View style={styles.transactionListWrapper}>
+      <View style={styles.flatListWrapper}>
         <FlatList
           style={styles.transactionList}
           data={appState.history.transactions}
@@ -116,15 +129,39 @@ let History = () => {
           keyExtractor={(item, index) => index}
           numColumns={1}
           scrollEnabled='true'
-          contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
+          contentContainerStyle={{justifyContent: 'center'}}
         />
+      </View>
+    );
+  }
+  let renderOrderItem = ({ item }) => {
+    let [baseAsset, quoteAsset] = item['fxmarket'].split('/');
+    if (baseAsset === 'GBPX') baseAsset = 'GBP';
+    if (quoteAsset === 'GBPX') quoteAsset = 'GBP';
+    return (
+      <View style={styles.flatListItem}>
+        <Text>{item.date} {item.time}</Text>
+        <Text>{item.status}</Text>
+        <Text style={styles.typeField}>{item.side}</Text>
+        <Text>{item.qty} {baseAsset} for {item.price} {quoteAsset}</Text>
       </View>
     );
   }
 
   let renderOrders = () => {
-    // placeholder
-    return renderTransactions();
+    return (
+      <View style={styles.flatListWrapper}>
+        <FlatList
+          style={styles.orderList}
+          data={appState.history.orders}
+          renderItem={renderOrderItem}
+          keyExtractor={(item, index) => index}
+          numColumns={1}
+          scrollEnabled='true'
+          contentContainerStyle={{justifyContent: 'center'}}
+        />
+      </View>
+    );
   }
 
   return (
@@ -169,10 +206,10 @@ const styles = StyleSheet.create({
   historyCategoryWrapper: {
     width: '50%',
   },
-  transactionListWrapper: {
+  flatListWrapper: {
     height: '90%',
   },
-  transaction: {
+  flatListItem: {
     marginTop: scaledHeight(10),
     paddingHorizontal: scaledWidth(10),
     paddingVertical: scaledHeight(10),
