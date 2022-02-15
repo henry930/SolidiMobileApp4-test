@@ -11,7 +11,7 @@
 
 // React imports
 import React, { Component, useContext } from 'react';
-import { Dimensions } from 'react-native';
+import * as Keychain from 'react-native-keychain';
 
 // Other imports
 import _ from 'lodash';
@@ -159,6 +159,23 @@ class AppStateProvider extends Component {
       this.setState({history});
     }
 
+    this.loadPIN = () => {
+      /*
+      - We load the PIN from the keychain if it exists.
+      - This uses a promise - there will be a slight delay while the data is retrieved.
+      - However: The user would have to be very fast indeed to click Buy on the initial BUY page before this completes.
+      */
+      Keychain.getInternetCredentials(this.state.appName).then((credentials) => {
+        // Example result:
+        // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
+        if (credentials) {
+          let pin = credentials.password;
+          this.state.user.pin = pin;
+          log(`PIN loaded: ${pin}`);
+        }
+      });
+    }
+
     // This must be declared towards the end of the constructor.
     this.state = {
       numberOfFooterButtonsToDisplay: this.numberOfFooterButtonsToDisplay,
@@ -173,6 +190,7 @@ class AppStateProvider extends Component {
       decrementStateHistory: this.decrementStateHistory,
       footerIndex: 0,
       setFooterIndex: this.setFooterIndex,
+      loadPIN: this.loadPIN,
       history: {
         orders: [],
         transactions: [],

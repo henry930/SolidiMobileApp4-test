@@ -1,8 +1,6 @@
 // React imports
 import React, { useContext, useState } from 'react';
 import { Text, TextInput, StyleSheet, View } from 'react-native';
-import * as Keychain from 'react-native-keychain';
-import { hasUserSetPinCode } from '@haskkor/react-native-pincode';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 // Other imports
@@ -21,20 +19,7 @@ let Buy = () => {
 
   let appState = useContext(AppStateContext);
 
-  // We're using the BUY panel as the initial landing page.
-  // -> Load the PIN from the keychain if it exists.
-  // Note that this is via a promise - there will be a slight delay while the data is retrieved.
-  // However: The user would have to be very fast indeed to click Buy before this completes.
-  Keychain.getInternetCredentials(appState.appName).then((credentials) => {
-    // Example result:
-    // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
-    if (credentials) {
-      let pin = credentials.password;
-      appState.user.pin = pin;
-      //log(`PIN loaded: ${pin}`);
-    }
-  });
-
+  appState.loadPIN();
 
   let selectedOrderSubmitted = (appState.pageName === 'continue') ? true : false;
   let [orderSubmitted, setOrderSubmitted] = useState(selectedOrderSubmitted);
