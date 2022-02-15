@@ -10,7 +10,7 @@ import Big from 'big.js';
 // Internal imports
 import { assets, mainPanelStates } from 'src/constants';
 import AppStateContext from 'src/application/data';
-import { Button } from 'src/components/atomic';
+import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
 
@@ -88,9 +88,7 @@ let History = () => {
             setItems={setCategoryItems}
           />
         </View>
-        <Button title='Reload' styles={stylesReloadButton}
-          onPress={ () => { setReloadCount(reloadCount+1); } }
-        />
+        <StandardButton title='Reload' onPress={ () => { setReloadCount(reloadCount+1); } } />
       </View>
     );
   }
@@ -242,15 +240,6 @@ const styles = StyleSheet.create({
   typeField: {
     fontWeight: 'bold',
   },
-})
-
-
-const stylesReloadButton = StyleSheet.create({
-  text: {
-    paddingRight: 0,
-    marginRight: 0,
-    fontSize: normaliseFont(16),
-  }
 })
 
 
