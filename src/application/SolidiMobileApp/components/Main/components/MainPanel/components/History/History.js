@@ -5,9 +5,10 @@ import { FlatList, Text, StyleSheet, View } from 'react-native';
 // Other imports
 import DropDownPicker from 'react-native-dropdown-picker';
 import _ from 'lodash';
+import Big from 'big.js';
 
 // Internal imports
-import { colours, mainPanelStates } from 'src/constants';
+import { assets, mainPanelStates } from 'src/constants';
 import AppStateContext from 'src/application/data';
 import { Button } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
@@ -136,14 +137,22 @@ let History = () => {
   }
   let renderOrderItem = ({ item }) => {
     let [baseAsset, quoteAsset] = item['fxmarket'].split('/');
-    if (baseAsset === 'GBPX') baseAsset = 'GBP';
-    if (quoteAsset === 'GBPX') quoteAsset = 'GBP';
+    let priceDP = assets[quoteAsset].decimalPlaces;
+    let price = Big(item.price).toFixed(priceDP);
+    let orderStatus = item.status;
     return (
       <View style={styles.flatListItem}>
-        <Text>{item.date} {item.time}</Text>
-        <Text>{item.status}</Text>
-        <Text style={styles.typeField}>{item.side}</Text>
-        <Text>{item.qty} {baseAsset} for {item.price} {quoteAsset}</Text>
+        <View style={styles.orderTopWrapper}>
+          <Text>{item.date} {item.time}</Text>
+          { orderStatus == 'LIVE' &&
+            <Text style={styles.liveOrderStatus}>{orderStatus}</Text>
+          }
+          { orderStatus == 'SETTLED' &&
+            <Text style={styles.settledOrderStatus}>{orderStatus}</Text>
+          }
+        </View>
+        <Text style={styles.typeField}>{item.side} Order</Text>
+        <Text>Spent {price} {assets[quoteAsset].displaySymbol} to get {item.qty} {assets[baseAsset].displaySymbol}.</Text>
       </View>
     );
   }
@@ -216,6 +225,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'black',
     borderRadius: 8,
+  },
+  orderTopWrapper: {
+    flexDirection: 'row',
+    justifyContent: "space-between",
+  },
+  liveOrderStatus: {
+    color: 'green',
+    fontWeight: '500',
+  },
+  settledOrderStatus: {
+    color: 'blue',
+    fontWeight: '500',
   },
   typeField: {
     fontWeight: 'bold',
