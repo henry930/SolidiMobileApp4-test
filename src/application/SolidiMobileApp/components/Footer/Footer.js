@@ -83,7 +83,7 @@ const Footer = (props) => {
   // Check whether to hide the footer completely.
   if (hideFooter) {
     return (
-      <View></View>
+      <View style={[styleArg, styleEmptyFooter]}></View>
     );
   }
 
@@ -138,6 +138,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
 })
+
+let styleEmptyFooter = StyleSheet.create({
+  borderLeftWidth: 1,
+  borderRightWidth: 1,
+});
 
 const stylesLeftButton = StyleSheet.create({
   text: {
