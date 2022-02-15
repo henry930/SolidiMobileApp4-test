@@ -12,6 +12,7 @@
 // React imports
 import React, { Component, useContext } from 'react';
 import * as Keychain from 'react-native-keychain';
+import {deleteUserPinCode} from '@haskkor/react-native-pincode'
 
 // Other imports
 import _ from 'lodash';
@@ -37,7 +38,7 @@ class AppStateProvider extends Component {
     super(props);
 
     // Can set this initial state for testing.
-    this.initialMainPanelState = mainPanelStates.BUY;
+    this.initialMainPanelState = mainPanelStates.TEST;
     this.initialPageName = 'default';
 
     // Misc
@@ -170,7 +171,15 @@ class AppStateProvider extends Component {
     }
 
     this.choosePIN = () => {
-      log(this.state.user)
+      // Delete the PIN in memory.
+      this.state.user.pin = '';
+      /*
+      - Delete the PIN stored in the keychain.
+      - Note: This is done using a promise, so there will be a slight delay.
+      - However, the time taken to go through the choose PIN screens is much greater.
+      */
+      deleteUserPinCode(this.state.appName);
+      log('PIN deleted.')
       // If user hasn't logged in, they need to do so first.
       if (! this.state.user.isAuthenticated) {
         // We send them to the login page, which will ask them to choose a PIN afterwards.

@@ -17,6 +17,7 @@ import _ from 'lodash';
 import { screenWidth, screenHeight } from 'src/util/dimensions';
 import AppStateContext from 'src/application/data';
 import { mainPanelStates } from 'src/constants';
+import { Button } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import SolidiRestAPIClientLibrary from 'src/api/SolidiRestAPIClientLibrary';
 import misc from 'src/util/misc';
@@ -31,6 +32,7 @@ let PIN = () => {
   /* By default, this will be the "Enter PIN" page.
   - If we can't find a PIN stored in the keychain, redirect to login page to authenticate the user.
   - The login page will redirect here, with pageName == 'choose'.
+  - Note that "enter" and "choose" are specific internal strings used by the PINCode component.
   */
 
   let pinStatus = 'enter';
@@ -48,6 +50,9 @@ let PIN = () => {
     // Load PIN from the keychain.
     let credentials = await Keychain.getInternetCredentials(appState.appName);
     let pin = credentials.password;
+    if (pinStatus) {
+      log(`PIN stored: ${pin}`);
+    }
     // Store PIN in global state.
     appState.user.pin = pin;
     // If we have successfully entered the PIN, then look up the user's email and password.
@@ -84,13 +89,15 @@ let PIN = () => {
   }
   
   return (
-    <View>
+    <View style={styles.panelContainer}>
       <PINCode
         status = {pinStatus}
         pinCodeKeychainName = {appState.appName}
         touchIDDisabled = {true}
         finishProcess = {() => _finishProcess()}
-        delayBetweenAttempts = '0.3' // 0.4
+        delayBetweenAttempts = {0.3}
+        maxAttempts = {10}
+        onClickButtonLockedPage = { () => {} }
         pinCodeVisible = {true}
         colorPassword = 'black'
         textPasswordVisibleSize = {normaliseFont(28)}
@@ -105,6 +112,11 @@ let PIN = () => {
         stylePinCodeDeleteButtonColorHideUnderlay = 'rgb(50, 50, 100)'
         stylePinCodeDeleteButtonText = {styles.stylePinCodeDeleteButtonText}
       />
+      <View style={styles.resetButtonWrapper}>
+        { pinStatus == 'enter' &&
+          <Button title="Reset PIN" styles={stylesResetButton} onPress={ () => { appState.choosePIN(); } } />
+        }
+      </View>
     </View>
   )
 
@@ -112,6 +124,14 @@ let PIN = () => {
 
 
 let styles = StyleSheet.create({
+  panelContainer: {
+    paddingTop: scaledHeight(0),
+    paddingHorizontal: scaledWidth(15),
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    width: '100%',
+    height: '100%',
+  },
   container: {
     backgroundColor: 'white'
   },
@@ -129,8 +149,19 @@ let styles = StyleSheet.create({
   },
   stylePinCodeDeleteButtonText: {
     fontWeight: '500',
-  }
+  },
+  resetButtonWrapper: {
+    height: scaledHeight(60),
+  },
 })
+
+
+let stylesResetButton = StyleSheet.create({
+  view: {
+    marginTop: scaledHeight(30),
+    alignSelf: 'flex-start',
+  },
+});
 
 
 export default PIN;
