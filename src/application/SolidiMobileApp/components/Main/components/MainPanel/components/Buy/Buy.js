@@ -8,7 +8,7 @@ import _ from 'lodash';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { assets, mainPanelStates } from 'src/constants';
+import { assetInfo, mainPanelStates } from 'src/constants';
 import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
@@ -41,7 +41,7 @@ let Buy = () => {
   let [symbolQA, setSymbolQA] = useState(selectedSymbolQA);
   let quoteAssets = 'GBPX EUR'.split(' ');
   let quoteAssetItems = quoteAssets.map(x => {
-    let a = assets[x];
+    let a = assetInfo[x];
     return {label: a.displayString, value: a.displaySymbol};
   });
   let [itemsQA, setItemsQA] = useState(quoteAssetItems);
@@ -52,7 +52,7 @@ let Buy = () => {
   let [symbolBA, setSymbolBA] = useState(selectedSymbolBA);
   let baseAssets = 'BTC ETH'.split(' ');
   let baseAssetItems = baseAssets.map(x => {
-    let a = assets[x];
+    let a = assetInfo[x];
     return {label: a.displayString, value: a.displaySymbol};
   });
   let [itemsBA, setItemsBA] = useState(baseAssetItems);
@@ -130,7 +130,7 @@ let Buy = () => {
             value={volumeQA}
           />
           <DropDownPicker
-            placeholder={assets[selectedSymbolQA].displayString}
+            placeholder={assetInfo[selectedSymbolQA].displayString}
             style={styles.quoteAsset}
             containerStyle={styles.quoteAssetContainer}
             open={openQA}
@@ -151,7 +151,7 @@ let Buy = () => {
             value={volumeBA}
           />
           <DropDownPicker
-            placeholder={assets[selectedSymbolBA].displayString}
+            placeholder={assetInfo[selectedSymbolBA].displayString}
             style={styles.baseAsset}
             containerStyle={styles.baseAssetContainer}
             open={openBA}
