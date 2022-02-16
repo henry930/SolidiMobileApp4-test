@@ -38,7 +38,7 @@ class AppStateProvider extends Component {
     super(props);
 
     // Can set this initial state for testing.
-    this.initialMainPanelState = mainPanelStates.ASSETS;
+    this.initialMainPanelState = mainPanelStates.HISTORY;
     this.initialPageName = 'default';
 
     // Misc
@@ -150,18 +150,6 @@ class AppStateProvider extends Component {
       }
     }
 
-    this.setHistoryOrders = (newOrders) => {
-      log(`setHistoryOrders`);
-      let history = {...this.state.history, orders: newOrders};
-      this.setState({history});
-    }
-
-    this.setHistoryTransactions = (newTransactions) => {
-      log(`setHistoryTransactions`);
-      let history = {...this.state.history, transactions: newTransactions};
-      this.setState({history});
-    }
-
     this.setAPIData = ({key, data}) => {
       let msg = `setAPIData: set state.apiData.${key} to hold: ${JSON.stringify(data, null, 2)}`;
       log('setAPIData: ' + key)
@@ -230,12 +218,6 @@ class AppStateProvider extends Component {
       authenticateUser: this.authenticateUser,
       choosePIN: this.choosePIN,
       loadPIN: this.loadPIN,
-      history: {
-        orders: [],
-        transactions: [],
-      },
-      setHistoryOrders: this.setHistoryOrders,
-      setHistoryTransactions: this.setHistoryTransactions,
       setAPIData: this.setAPIData,
       apiData: {},
       domain: 'solidi.co',

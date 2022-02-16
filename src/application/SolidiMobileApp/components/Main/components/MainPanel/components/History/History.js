@@ -29,7 +29,7 @@ let History = () => {
     })
     // Example data:
     // {"total": 1, "transactions": [{"cur1": "GBP", "cur1amt": "10000.00000000", "cur2": "", "cur2amt": "0.00000000", "fee_cur": "", "fees": "0.00000000", "fxmarket": 1, "ref": "initial deposit", "short_desc": "Transfer In", "status": "A", "txn_code": "PI", "txn_date": "14 Feb 2022", "txn_time": "16:56"}]}
-    appState.setHistoryTransactions(data.transactions);
+    appState.setAPIData({key: 'transaction', data});
     let data2 = await appState.apiClient.privateMethod({
       httpMethod: 'POST',
       apiMethod: 'order',
@@ -37,7 +37,7 @@ let History = () => {
     })
     // Example data:
     // {"results": [{"date": "14 Feb 2022", "fxmarket": "BTC/GBPX", "id": 31, "ocount": "1", "order_age": "147", "order_type": "Limit", "price": "100.00000000", "qty": "0.05000000", "s1_id": null, "s1_status": null, "s2_id": null, "s2_status": null, "side": "Buy", "status": "LIVE", "time": "17:34:42", "unixtime": "1644860082"}], "total": "1"}
-    appState.setHistoryOrders(data2.results);
+    appState.setAPIData({key: 'order', data:data2});
     setIsLoading(false);
   }
 
@@ -65,7 +65,7 @@ let History = () => {
   let [category, setCategory] = useState(selectedCategory);
   let [categoryItems, setCategoryItems] = useState([
     {label: 'Orders', value: 'orders'},
-    {label: 'Transactions', value: 'transactions'},
+    {label: 'All Transactions', value: 'transactions'},
   ]);
 
   useEffect(() => {
@@ -121,11 +121,12 @@ let History = () => {
   }
 
   let renderTransactions = () => {
+    let data = appState.apiData.transaction.transactions;
     return (
       <View style={styles.flatListWrapper}>
         <FlatList
           style={styles.transactionList}
-          data={appState.history.transactions}
+          data={data}
           renderItem={renderTransactionItem}
           keyExtractor={(item, index) => index}
           numColumns={1}
@@ -158,11 +159,12 @@ let History = () => {
   }
 
   let renderOrders = () => {
+    let data = appState.apiData.order.results;
     return (
       <View style={styles.flatListWrapper}>
         <FlatList
           style={styles.orderList}
-          data={appState.history.orders}
+          data={data}
           renderItem={renderOrderItem}
           keyExtractor={(item, index) => index}
           numColumns={1}
