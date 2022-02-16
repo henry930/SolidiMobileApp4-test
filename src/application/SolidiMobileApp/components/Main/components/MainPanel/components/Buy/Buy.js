@@ -1,5 +1,5 @@
 // React imports
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Text, TextInput, StyleSheet, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
@@ -71,6 +71,15 @@ let Buy = () => {
   if (appState.pageName === 'default') {
     //loadPriceData(); // API call isn't working atm.
   }
+
+  useEffect(() => {
+    log('Recalculate volume');
+    // Can't tell which volume value the user changed. Can only know that one of them did change.
+    // So: Track previous values of both, compare with new values, find out which changed.
+    // Then, use stored price for this market to recalculate the non-changed value.
+    // Store the new values into the previous value holders.
+    // Update the value that the user didn't manually change. This will trigger a re-render.
+  }, [volumeQA, volumeBA]);
 
   let submitBuyRequest = async () => {
     // If the user isn't authenticated, push them into the auth sequence.
