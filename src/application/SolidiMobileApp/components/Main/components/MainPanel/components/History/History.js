@@ -42,7 +42,7 @@ let History = () => {
   }
 
   let displayLoadingMsg = () => {
-    let loadingMsg = 'Loading... please wait.';
+    let loadingMsg = '';
     return (
       <View style={styles.loadingMsg}>
         <Text>{loadingMsg}</Text>
