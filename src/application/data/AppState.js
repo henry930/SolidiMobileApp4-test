@@ -279,6 +279,18 @@ class AppStateProvider extends Component {
       domain: this.state.domain,
     });
 
+    // Tweak app state for dev work.
+    if (tier === 'dev') {
+      // Use test values for accessing a dev API.
+      let apiKey = 'WmgwEP7RqaF9morLAiDauluX146BdUO9g5GVUNMkXsukQW5qeIBI35F5';
+      let apiSecret = 'aMGnGuxXzdSu0EOY6jiWgonu7Ycb4SgeFWClq9i0nbuoPjnWDFST4gnbfAmjtDx8zau0kN0HYv5OOtKs8DldTJp9';
+      let email = 'mr@pig.com';
+      let password = 'mrfishsayshelloN6';
+      _.assign(this.state.apiClient, {apiKey, apiSecret});
+      this.state.user.isAuthenticated = true;
+      _.assign(this.state.user, {email, password});
+    }
+
   }
 
   render() {
