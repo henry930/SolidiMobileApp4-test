@@ -93,7 +93,7 @@ let Assets = () => {
   }
 }
 */
-    appState.setAPIData({key: 'assets', data});
+    appState.setAPIData({key: 'balance', data});
     setIsLoading(false);
   }
 
@@ -148,7 +148,7 @@ let Assets = () => {
   let renderAssets = () => {
     // FlatList requires a list input.
     // Transform the stored asset data into a list, sorted by asset symbol (e.g. "BTC").
-    let data = appState.apiData.assets;
+    let data = appState.apiData.balance;
     let assets = _.keys(data).sort();
     let data2 = assets.map(asset => {
       let item = data[asset];
