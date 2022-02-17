@@ -137,10 +137,11 @@ let Assets = () => {
     let volume = item.balance;
     let assetDP = assetInfo[asset].decimalPlaces;
     let displayVolume = Big(volume).toFixed(assetDP);
+    let displayString = assetInfo[asset].displayString;
     return (
       <View style={styles.flatListItem}>
         <Text style={[styles.assetText]}>{displayVolume}</Text>
-        <Text style={[styles.boldText, styles.assetText]}>{asset}</Text>
+        <Text style={[styles.boldText, styles.assetText]}>{displayString}</Text>
       </View>
     );
   }
