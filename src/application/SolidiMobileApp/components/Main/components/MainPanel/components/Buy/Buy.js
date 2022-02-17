@@ -87,6 +87,7 @@ let Buy = () => {
     }
     appState.setAPIData({key: 'prices', data: prices});
     // Trigger a recalculation of volumeBA that uses the stored price data.
+    if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
     setPriceLoadCount(priceLoadCount+1);
   }, []); // Pass empty array to only run once on mount.
 
