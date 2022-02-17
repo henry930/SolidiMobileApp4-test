@@ -71,14 +71,9 @@ let Buy = () => {
     // Future: log the data, extract relevant bits, calculate volumeBA that can be bought for default 100 GBP, and use setVolumeBA to change the volumeBA value.
   }
 
-  // By default, load price data.
-  if (appState.pageName === 'default') {
-    //loadPriceData(); // API call isn't working atm.
-  }
-
   useEffect(() => {
     // Tmp: Set market prices here.
-    // Future: Load them from the API.
+    // Future: Load them from the API. Use loadPriceData.
     let prices = {
       'BTC/GBPX': '2000',
       'ETH/GBPX': '100',
