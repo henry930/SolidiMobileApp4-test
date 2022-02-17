@@ -100,13 +100,13 @@ let Buy = () => {
       // - Note: Without this clause, the two recalculation events would trigger each other.
     } else if (appState.apiData.prices) {
       log('Recalculate base asset volume')
-      if (_.isEmpty(volumeBA)) volumeBA = '0';
+      let checkVolumeBA = _.isEmpty(volumeBA) ? '0' : volumeBA;
       let market = assetBA + '/' + assetQA;
       let price = appState.apiData.prices[market];
       let baseDP = assetsInfo[assetBA].decimalPlaces;
       let newVolumeBA = Big(volumeQA).div(Big(price)).toFixed(baseDP);
       // If new value of volumeBA is different, update it.
-      if (Big(newVolumeBA) !== Big(volumeBA)) {
+      if (Big(newVolumeBA) !== Big(checkVolumeBA)) {
         log("New base asset volume: " + newVolumeBA);
         setVolumeBA(newVolumeBA);
       }
@@ -121,12 +121,12 @@ let Buy = () => {
       // - Note: Without this clause, the two recalculation events would trigger each other.
     } else if (appState.apiData.prices) {
       log('Recalculate quote asset volume');
-      if (_.isEmpty(volumeQA)) volumeQA = '0';
+      let checkVolumeQA = _.isEmpty(volumeQA) ? '0' : volumeQA;
       let market = assetBA + '/' + assetQA;
       let price = appState.apiData.prices[market];
       let quoteDP = assetsInfo[assetQA].decimalPlaces;
       let newVolumeQA = Big(volumeBA).mul(Big(price)).toFixed(quoteDP);
-      if (newVolumeQA !== volumeQA) {
+      if (Big(newVolumeQA) !== Big(checkVolumeQA)) {
         log("New quote asset volume: " + newVolumeQA)
         setVolumeQA(newVolumeQA);
       }
