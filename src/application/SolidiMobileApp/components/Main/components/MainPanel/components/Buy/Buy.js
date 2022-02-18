@@ -22,9 +22,6 @@ let Buy = () => {
 
   appState.loadPIN();
 
-  let selectedOrderSubmitted = (appState.pageName === 'continue') ? true : false;
-  let [orderSubmitted, setOrderSubmitted] = useState(selectedOrderSubmitted);
-
   let [priceLoadCount, setPriceLoadCount] = useState(0);
   let [lastUserInput, setLastUserInput] = useState('');
 
@@ -34,7 +31,7 @@ let Buy = () => {
   let selectedAssetBA = 'BTC';
 
   // If we're reloading an existing order, load its details from the global state.
-  if (appState.pageName === 'continue') {
+  if (appState.pageName === 'userHasClickedBuyButton') {
     ({volumeQA: selectedVolumeQA, assetQA: selectedAssetQA} = appState.buyPanel);
     ({volumeBA: selectedVolumeBA, assetBA: selectedAssetBA} = appState.buyPanel);
   }
@@ -170,7 +167,7 @@ let Buy = () => {
     }
   }
 
-  let submitBuyRequest = async () => {
+  let startBuyRequest = async () => {
     // If the user isn't authenticated, push them into the auth sequence.
 
     if (! appState.user.isAuthenticated) {
@@ -178,117 +175,75 @@ let Buy = () => {
       // Save the order details in the global state.
       _.assign(appState.buyPanel, {volumeQA, assetQA, volumeBA, assetBA});
       // Stash the BUY state for later retrieval.
-      appState.stashState({mainPanelState: mainPanelStates.BUY, pageName: 'continue'});
+      appState.stashState({mainPanelState: mainPanelStates.BUY, pageName: 'userHasClickedBuyButton'});
       appState.authenticateUser();
       return;
     }
 
-    // To continue, we are either already authed, or we have returned from the auth sequence.
-    let fxmarket = assetBA + '/' + assetQA;
-    let data = await appState.apiClient.privateMethod({
-      httpMethod: 'POST',
-      apiMethod: 'buy',
-      params: {
-        fxmarket,
-        amount: volumeBA,
-        price: volumeQA,
-      }
-    })
-    log(`submitBuyRequest: BUY ${volumeBA} ${fxmarket} @ MARKET ${volumeQA}`)
-    log(data)
-    /*
-    Example error response:
-    {"error":"Insufficient Funds"}
-    Example data:
-    {"id":11,"datetime":1643047261277,"type":0,"price":"100","amount":"0.05"}
-    */
-   // Future: If an error occurs, display the error description below the orderSubmitted description.
-   setOrderSubmitted(true);
+    // At this point, the user is already authenticated, or has just returned from the auth sequence.
+    // We transfer to the payment sequence.
+    // At the end of the payment sequence, the BUY order will be submitted to the server.
+    appState.changeState('payment', 'how_to_pay');
   }
 
   // Submit the order automatically if we have returned from auth sequence.
-  if (appState.pageName === 'continue') {
-    submitBuyRequest();
+  if (appState.pageName === 'userHasClickedBuyButton') {
+    startBuyRequest();
   }
 
   return (
 
     <View style={styles.panelContainer}>
 
-      { ! orderSubmitted &&
+      <View>
 
-        <View>
+      <Text style={styles.boldText}>I want to spend:</Text>
 
-        <Text style={styles.boldText}>I want to spend:</Text>
+      <View style={styles.quoteAssetWrapper}>
+        <TextInput
+          style={styles.volumeQA}
+          onChangeText={validateAndSetVolumeQA}
+          value={volumeQA}
+        />
+        <DropDownPicker
+          placeholder={assetsInfo[selectedAssetQA].displayString}
+          style={styles.quoteAsset}
+          containerStyle={styles.quoteAssetContainer}
+          open={openQA}
+          value={assetQA}
+          items={itemsQA}
+          setOpen={setOpenQA}
+          setValue={setAssetQA}
+          setItems={setItemsQA}
+        />
+      </View>
 
-        <View style={styles.quoteAssetWrapper}>
-          <TextInput
-            style={styles.volumeQA}
-            onChangeText={validateAndSetVolumeQA}
-            value={volumeQA}
-          />
-          <DropDownPicker
-            placeholder={assetsInfo[selectedAssetQA].displayString}
-            style={styles.quoteAsset}
-            containerStyle={styles.quoteAssetContainer}
-            open={openQA}
-            value={assetQA}
-            items={itemsQA}
-            setOpen={setOpenQA}
-            setValue={setAssetQA}
-            setItems={setItemsQA}
-          />
-        </View>
+      <Text style={styles.boldText}>To get:</Text>
 
-        <Text style={styles.boldText}>To get:</Text>
+      <View style={styles.baseAssetWrapper}>
+        <TextInput
+          style={styles.volumeBA}
+          onChangeText={validateAndSetVolumeBA}
+          value={volumeBA}
+        />
+        <DropDownPicker
+          placeholder={assetsInfo[selectedAssetBA].displayString}
+          style={styles.baseAsset}
+          containerStyle={styles.baseAssetContainer}
+          open={openBA}
+          value={assetBA}
+          items={itemsBA}
+          setOpen={setOpenBA}
+          setValue={setAssetBA}
+          setItems={setItemsBA}
+        />
+      </View>
 
-        <View style={styles.baseAssetWrapper}>
-          <TextInput
-            style={styles.volumeBA}
-            onChangeText={validateAndSetVolumeBA}
-            value={volumeBA}
-          />
-          <DropDownPicker
-            placeholder={assetsInfo[selectedAssetBA].displayString}
-            style={styles.baseAsset}
-            containerStyle={styles.baseAssetContainer}
-            open={openBA}
-            value={assetBA}
-            items={itemsBA}
-            setOpen={setOpenBA}
-            setValue={setAssetBA}
-            setItems={setItemsBA}
-          />
-        </View>
+      <View style={styles.buttonWrapper}>
+        <StandardButton title="Buy now" onPress={ startBuyRequest } />
+      </View>
 
-        <View style={styles.buttonWrapper}>
-          <StandardButton title="Buy now" onPress={ submitBuyRequest } />
-        </View>
-
-        </View>
-      }
-
-      { orderSubmitted &&
-        <View>
-          <View style={styles.orderSubmittedMessage}>
-            <Text style={styles.boldText}>Order submitted.{'\n'}</Text>
-            <Text>Order description: Spend {volumeQA} {assetQA} to buy {volumeBA} {assetBA}.</Text>
-          </View>
-          <View style={styles.buttonWrapper}>
-            <StandardButton title="Buy another asset" onPress={
-              () => {
-                appState.setMainPanelState({mainPanelState: mainPanelStates.BUY, pageName: 'default'});
-                setOrderSubmitted(false);
-              }
-            } />
-          </View>
-          <View style={styles.buttonWrapper}>
-            <StandardButton title="View orders" onPress={
-              () => appState.setMainPanelState({mainPanelState: mainPanelStates.HISTORY, pageName: 'orders'})
-            } />
-          </View>
-        </View>
-      }
+      </View>
 
     </View>
   
