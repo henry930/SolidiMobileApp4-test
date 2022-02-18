@@ -100,7 +100,7 @@ let Payment = () => {
 
       <View style={styles.orderDetailsSection}>
 
-      <View style={styles.orderDetailsLine}>
+        <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>You buy</Text>
           <Text style={styles.bold}>{volumeBA} {assetsInfo[assetBA].displaySymbol}</Text>
         </View>
