@@ -176,8 +176,8 @@ let History = () => {
   }
 
   return (
-    <View style={styles.history}>
-      <View style={styles.historyInternalBox}>
+    <View style={styles.panelContainer}>
+      <View style={styles.historySection}>
         {isLoading && displayLoadingMsg()}
         {! isLoading && displayHistoryControls()}
         {! isLoading && category === 'transactions' &&
@@ -192,15 +192,16 @@ let History = () => {
 
 
 const styles = StyleSheet.create({
-  history: {
+  panelContainer: {
     width: '100%',
+    height: '100%',
+    paddingTop: scaledHeight(15),
+    paddingHorizontal: scaledWidth(15),
     borderLeftWidth: 1,
     borderRightWidth: 1,
   },
-  historyInternalBox: {
+  historySection: {
     height: '100%',
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(15),
   },
   historyControls: {
     width: '100%',
