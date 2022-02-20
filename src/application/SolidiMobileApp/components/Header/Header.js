@@ -45,6 +45,10 @@ const Header = (props) => {
   let includeMenuButton = includeNotificationButton;
 
 
+  let isSettingsButtonSelected = 'Settings' === appState.mainPanelState;
+  let _styleSettingsButton = isSettingsButtonSelected ? styleSettingsButtonSelected : styleSettingsButton;
+
+
   return (
     <AppStateContext.Consumer>
       {(context) =>
@@ -68,7 +72,7 @@ const Header = (props) => {
           </View>
           <View style={styles.buttonWrapper}>
             <ImageButton imageName='bars' imageType='icon'
-              styles={styleMenuButton}
+              styles={_styleSettingsButton}
               onPress={ () => { context.setMainPanelState({mainPanelState:mainPanelStates.SETTINGS}) } }
             />
           </View>
@@ -110,8 +114,17 @@ const styleLogoButton = StyleSheet.create({
 })
 
 
-styleMenuButton = StyleSheet.create({
-  view: {},
+styleSettingsButton = StyleSheet.create({
+  image: {
+    iconColor: colours.greyedOutIcon,
+  },
+});
+
+
+styleSettingsButtonSelected = StyleSheet.create({
+  image: {
+    iconColor: colours.selectedIcon,
+  },
 });
 
 

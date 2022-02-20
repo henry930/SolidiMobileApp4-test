@@ -18,6 +18,7 @@ import _ from 'lodash';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 // Internal imports
+import { colours } from 'src/constants';
 import StyledView from './StyledView';
 import StyledImage from './StyledImage';
 import StyledText from './StyledText';
@@ -40,7 +41,7 @@ const ImageButton = ({
 
   // Defaults:
   let iconSize = 30;
-  let iconColor = '#333';
+  let iconColor = colours.greyedOutIcon;
 
   // Check for arguments:
   if (! _.isUndefined(styles.image) && ! _.isUndefined(styles.image.iconSize))
