@@ -77,12 +77,12 @@ const Footer = (props) => {
       imageName = footerIcons[keyName];
     }
     return (
-        <View style={styles.buttonWrapper}>
-          <ImageButton imageName={imageName} imageType='icon'
-            title={mainPanelState} styles={_style}
-            onPress={ () => { appState.changeState(mainPanelState) } }
-          />
-        </View>
+      <View style={styles.buttonWrapper}>
+        <ImageButton imageName={imageName} imageType='icon'
+          title={mainPanelState} styles={_style}
+          onPress={ () => { appState.changeState(mainPanelState) } }
+        />
+      </View>
     );
   }
 
