@@ -97,20 +97,20 @@ const Footer = (props) => {
   }
 
   return (
-      <View style={[styleArg, styles.footer]}>
-        {includeLeftButton ? leftButton : blankLeftButton}
-        <FlatList
-          style={styles.footerButtonList}
-          data={selectedButtons}
-          renderItem={renderPanelButton}
-          keyExtractor={(item, index) => index}
-          numColumns={4}
-          scrollEnabled='false'
-          contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
-        >
-        </FlatList>
-        {includeRightButton ? rightButton : blankRightButton}
-      </View>
+    <View style={[styleArg, styles.footer]}>
+      {includeLeftButton ? leftButton : blankLeftButton}
+      <FlatList
+        style={styles.footerButtonList}
+        data={selectedButtons}
+        renderItem={renderPanelButton}
+        keyExtractor={(item, index) => index}
+        numColumns={4}
+        scrollEnabled='false'
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
+      >
+      </FlatList>
+      {includeRightButton ? rightButton : blankRightButton}
+    </View>
   );
 
 };
