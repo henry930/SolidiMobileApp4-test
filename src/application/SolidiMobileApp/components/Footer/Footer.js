@@ -68,24 +68,21 @@ const Footer = (props) => {
   //includeRightButton = true;
 
   let renderPanelButton = ({ item }) => {
-    let isSelected = item === appState.mainPanelState;
+    let mainPanelState = item;
+    let isSelected = mainPanelState === appState.mainPanelState;
     let _style = isSelected ? stylePanelButtonSelected : stylePanelButton;
     let imageName = 'question-circle';
-    let keyName = item.toUpperCase();
+    let keyName = mainPanelState.toUpperCase();
     if (_.keys(footerIcons).includes(keyName)) {
       imageName = footerIcons[keyName];
     }
     return (
-      <AppStateContext.Consumer>
-      {(context) =>
         <View style={styles.buttonWrapper}>
           <ImageButton imageName={imageName} imageType='icon'
-            title={item} styles={_style}
-            onPress={ () => { context.setMainPanelState({mainPanelState: item}) } }
+            title={mainPanelState} styles={_style}
+            onPress={ () => { appState.changeState(mainPanelState) } }
           />
         </View>
-      }
-      </AppStateContext.Consumer>
     );
   }
 
