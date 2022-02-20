@@ -1,61 +1,66 @@
 
+// React imports
 import React, {useContext} from 'react';
-import PropTypes from 'prop-types';
-
 import {
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+// Other imports
+import _ from 'lodash';
+
+// Internal imports
 import { mainPanelStates } from 'src/constants';
 import { Test, Buy, Sell, Send, Receive, Assets, History,
   Notifications, Settings, Login, PIN, Payment } from './components';
 import AppStateContext from 'src/application/data';
 
 
+
+
 const MainPanel = () => {
 
-  let selectPanel = (context) => {
-    if (context.mainPanelState === mainPanelStates.TEST) {
+  let appState = useContext(AppStateContext);
+
+  let selectPanel = () => {
+    if (appState.mainPanelState === mainPanelStates.TEST) {
       return <Test />
-    } else if (context.mainPanelState === mainPanelStates.BUY) {
+    } else if (appState.mainPanelState === mainPanelStates.BUY) {
       return <Buy />
-    } else if (context.mainPanelState === mainPanelStates.SELL) {
+    } else if (appState.mainPanelState === mainPanelStates.SELL) {
       return <Sell />
-    } else if (context.mainPanelState === mainPanelStates.SEND) {
+    } else if (appState.mainPanelState === mainPanelStates.SEND) {
       return <Send />
-    } else if (context.mainPanelState === mainPanelStates.RECEIVE) {
+    } else if (appState.mainPanelState === mainPanelStates.RECEIVE) {
       return <Receive />
-    } else if (context.mainPanelState === mainPanelStates.ASSETS) {
+    } else if (appState.mainPanelState === mainPanelStates.ASSETS) {
       return <Assets />
-    } else if (context.mainPanelState === mainPanelStates.HISTORY) {
+    } else if (appState.mainPanelState === mainPanelStates.HISTORY) {
       return <History />
-    } else if (context.mainPanelState === mainPanelStates.NOTIFICATIONS) {
+    } else if (appState.mainPanelState === mainPanelStates.NOTIFICATIONS) {
       return <Notifications />
-    } else if (context.mainPanelState === mainPanelStates.SETTINGS) {
+    } else if (appState.mainPanelState === mainPanelStates.SETTINGS) {
       return <Settings />
-    } else if (context.mainPanelState === mainPanelStates.LOGIN) {
+    } else if (appState.mainPanelState === mainPanelStates.LOGIN) {
       return <Login />
-    } else if (context.mainPanelState === mainPanelStates.PIN) {
-      if (context.pageName == 'default') {
-        if (! context.user.pin) {
+    } else if (appState.mainPanelState === mainPanelStates.PIN) {
+      if (appState.pageName == 'default') {
+        if (! appState.user.pin) {
           return <Login />
         }
       }
       return <PIN />
-    } else if (context.mainPanelState === mainPanelStates.PAYMENT) {
+    } else if (appState.mainPanelState === mainPanelStates.PAYMENT) {
       return <Payment />
     } else {
-      return <Text>Error: Unknown mainPanelState: {context.mainPanelState}</Text>
+      return <Text>Error: Unknown mainPanelState: {appState.mainPanelState}</Text>
     }
   }
 
   return (
-    <AppStateContext.Consumer>
-      {(context) => selectPanel(context) }
-    </AppStateContext.Consumer>
-  );
+      selectPanel()
+    );
 
 };
 
