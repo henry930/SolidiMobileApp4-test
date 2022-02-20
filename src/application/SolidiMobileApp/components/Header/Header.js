@@ -57,21 +57,21 @@ const Header = (props) => {
       <View style={styles.buttonWrapper}>
         <ImageButton imageName='solidi'
           styles={styleLogoButton}
-          onPress={ () => { appState.setMainPanelState({mainPanelState:mainPanelStates.TEST}) } }
+          onPress={ () => { appState.changeState('test') } }
         />
       </View>
       <View style={styles.buttonWrapper}>
         {/*
         Future: Build notification section.
         { includeNotificationButton && <Button title='Alerts' styles={styleHeaderButton}
-          onPress={ () => { appState.setMainPanelState({mainPanelState:mainPanelStates.NOTIFICATIONS}) } }
+          onPress={ () => { appState.changeState('notifications) } }
         /> }
         */}
       </View>
       <View style={styles.buttonWrapper}>
         <ImageButton imageName='bars' imageType='icon'
           styles={_styleSettingsButton}
-          onPress={ () => { appState.setMainPanelState({mainPanelState:mainPanelStates.SETTINGS}) } }
+          onPress={ () => { appState.changeState('settings') } }
         />
       </View>
     </View>
