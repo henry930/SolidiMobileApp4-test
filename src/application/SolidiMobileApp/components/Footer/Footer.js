@@ -12,7 +12,7 @@ import _ from 'lodash';
 
 // Internal imports
 import { AppStateContext } from 'src/application/data';
-import { colours, mainPanelStates, footerButtonList, footerIcons } from 'src/constants';
+import { colors, mainPanelStates, footerButtonList, footerIcons } from 'src/constants';
 import { Button, ImageButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
@@ -127,7 +127,7 @@ let styles = StyleSheet.create({
   },
   unavailableLeftButton: {
     height: '100%',
-    backgroundColor: colours.unavailableButton,
+    backgroundColor: colors.unavailableButton,
   },
   footerButtonList: {
     width: '70%',
@@ -141,7 +141,7 @@ let styles = StyleSheet.create({
   },
   unavailableRightButton: {
     height: '100%',
-    backgroundColor: colours.unavailableButton,
+    backgroundColor: colors.unavailableButton,
   },
 })
 
@@ -152,7 +152,7 @@ let styleEmptyFooter = StyleSheet.create({
 let styleLeftButton = StyleSheet.create({
   image: {
     iconSize: 22,
-    iconColor: colours.greyedOutIcon,
+    iconColor: colors.greyedOutIcon,
   },
   text: {
     fontSize: normaliseFont(22),
@@ -166,7 +166,7 @@ let styleLeftButton = StyleSheet.create({
 let styleRightButton = StyleSheet.create({
   image: {
     iconSize: 22,
-    iconColor: colours.greyedOutIcon,
+    iconColor: colors.greyedOutIcon,
   },
   text: {
     fontSize: normaliseFont(22),
@@ -179,11 +179,11 @@ let styleRightButton = StyleSheet.create({
 
 let stylePanelButton = StyleSheet.create({
   image: {
-    iconColor: colours.greyedOutIcon,
+    iconColor: colors.greyedOutIcon,
   },
   text: {
     fontSize: normaliseFont(16),
-    color: colours.greyedOutIcon,
+    color: colors.greyedOutIcon,
   },
   view: {
     height: '100%',
@@ -192,11 +192,11 @@ let stylePanelButton = StyleSheet.create({
 
 let stylePanelButtonSelected = StyleSheet.create({
   image: {
-    iconColor: colours.selectedIcon,
+    iconColor: colors.selectedIcon,
   },
   text: {
     fontSize: normaliseFont(16),
-    color: colours.selectedIcon,
+    color: colors.selectedIcon,
     fontWeight: 'bold',
   },
   view: {

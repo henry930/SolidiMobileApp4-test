@@ -9,7 +9,7 @@ import {
 import SplashScreen from 'react-native-splash-screen';
 
 // Internal imports
-import { colours } from 'src/constants';
+import { colors } from 'src/constants';
 import { Header, Main, Footer } from './components';
 import { AppStateProvider } from 'src/application/data';
 import { mainPanelStates } from 'src/constants';
@@ -57,7 +57,7 @@ let App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colours.defaultBackground,
+    backgroundColor: colors.defaultBackground,
   },
   header: {
     height: '10%',

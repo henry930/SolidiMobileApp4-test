@@ -7,7 +7,7 @@ import { RadioButton } from 'react-native-paper';
 import _ from 'lodash';
 
 // Internal imports
-import { assetsInfo, mainPanelStates, colours } from 'src/constants';
+import { assetsInfo, mainPanelStates, colors } from 'src/constants';
 import AppStateContext from 'src/application/data';
 import { Button, StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
@@ -66,7 +66,7 @@ let Payment = () => {
         <RadioButton.Group onValueChange={x => setPaymentChoice(x)} value={paymentChoice}>
 
           <RadioButton.Item label="Pay directly to Solidi" value="direct_payment"
-            color={colours.standardButtonText}
+            color={colors.standardButtonText}
             style={styles.button} labelStyle={styles.buttonLabel} />
 
           <View style={styles.buttonDetail}>
@@ -75,7 +75,7 @@ let Payment = () => {
           </View>
 
           <RadioButton.Item label="Pay with balance" value="balance"
-            color={colours.standardButtonText}
+            color={colors.standardButtonText}
             style={styles.button} labelStyle={styles.buttonLabel} />
 
           <View style={styles.buttonDetail}>
@@ -164,11 +164,11 @@ let styles = StyleSheet.create({
   button: {
     borderWidth: 1,
     borderRadius: 18,
-    backgroundColor: colours.standardButton,
+    backgroundColor: colors.standardButton,
   },
   buttonLabel: {
     fontWeight: 'bold',
-    color: colours.standardButtonText,
+    color: colors.standardButtonText,
   },
   buttonDetail: {
     marginVertical: scaledHeight(10),

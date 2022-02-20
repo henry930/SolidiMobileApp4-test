@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 
-import { colours } from 'src/constants';
+import { colors } from 'src/constants';
 
 import { MainPanel } from './components';
 
@@ -25,7 +25,7 @@ const Main = (props) => {
 const styles = StyleSheet.create({
   main: {
     alignItems: 'center',
-    backgroundColor: colours.mainPanelBackground,
+    backgroundColor: colors.mainPanelBackground,
   },
 })
 

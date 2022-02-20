@@ -1,5 +1,5 @@
 
-export const colours = {
+export const colors = {
   defaultBackground: 'white',
   mainPanelBackground: 'white',
   unavailableButton: 'white',
@@ -11,4 +11,4 @@ export const colours = {
   selectedIcon: '#1652f0',
 }
 
-export default colours;
+export default colors;

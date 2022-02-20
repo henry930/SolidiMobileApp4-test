@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Button from './Button/Button';
-import { colours } from 'src/constants';
+import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
 let StandardButton = (props) => {
@@ -19,10 +19,10 @@ let styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: scaledWidth(20),
     borderRadius: scaledWidth(8),
-    backgroundColor: colours.standardButton,
+    backgroundColor: colors.standardButton,
   },
   text: {
-    color: colours.standardButtonText,
+    color: colors.standardButtonText,
     fontWeight: 'bold',
     fontSize: normaliseFont(16),
   },

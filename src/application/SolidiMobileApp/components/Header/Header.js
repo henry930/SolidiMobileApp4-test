@@ -8,7 +8,7 @@ import {
 
 // Internal imports
 import { AppStateContext } from 'src/application/data';
-import { colours, mainPanelStates } from 'src/constants';
+import { colors, mainPanelStates } from 'src/constants';
 import { Button, ImageButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
 const styleBackButton = StyleSheet.create({
   image: {
     iconSize: 22,
-    iconColor: colours.greyedOutIcon,
+    iconColor: colors.greyedOutIcon,
   },
   text: {
     fontWeight: 'bold',
@@ -116,14 +116,14 @@ const styleLogoButton = StyleSheet.create({
 
 styleSettingsButton = StyleSheet.create({
   image: {
-    iconColor: colours.greyedOutIcon,
+    iconColor: colors.greyedOutIcon,
   },
 });
 
 
 styleSettingsButtonSelected = StyleSheet.create({
   image: {
-    iconColor: colours.selectedIcon,
+    iconColor: colors.selectedIcon,
   },
 });
 
