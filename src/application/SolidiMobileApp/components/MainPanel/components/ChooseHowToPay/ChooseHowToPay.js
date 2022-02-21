@@ -39,7 +39,7 @@ let Payment = () => {
 
   }
 
-  let confirmPayment = async () => {
+  let confirmPaymentChoice = async () => {
     if (paymentChoice === 'direct_payment') {
         appState.changeState('MakePayment');
     } else {
@@ -120,7 +120,7 @@ let Payment = () => {
       <View style={styles.horizontalRule}/>
 
       <View style={styles.confirmButtonWrapper}>
-        <StandardButton title="Confirm & Pay" onPress={ confirmPayment } />
+        <StandardButton title="Confirm & Pay" onPress={ confirmPaymentChoice } />
       </View>
 
       </View>
