@@ -1,10 +1,10 @@
 
 import Header from './Header/Header';
-import Main from './Main/Main';
+import MainPanel from './MainPanel/MainPanel';
 import Footer from './Footer/Footer';
 
 export {
   Header,
-  Main,
+  MainPanel,
   Footer,
 };

@@ -19,11 +19,13 @@ import AppStateContext from 'src/application/data';
 
 
 
-const MainPanel = () => {
+const MainPanel = (props) => {
+
+  let {style:styleArg} = props;
 
   let appState = useContext(AppStateContext);
 
-  let selectPanel = () => {
+  let selectPanelComponent = () => {
     if (appState.mainPanelState === mainPanelStates.TEST) {
       return <Test />
     } else if (appState.mainPanelState === mainPanelStates.BUY) {
@@ -59,8 +61,8 @@ const MainPanel = () => {
   }
 
   return (
-      <View style={styles.mainPanel}>
-        {selectPanel()}
+      <View style={[styleArg, styles.mainPanel]}>
+        {selectPanelComponent()}
       </View>
     );
 

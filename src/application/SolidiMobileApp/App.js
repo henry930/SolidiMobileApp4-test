@@ -10,7 +10,7 @@ import SplashScreen from 'react-native-splash-screen';
 
 // Internal imports
 import { colors } from 'src/constants';
-import { Header, Main, Footer } from './components';
+import { Header, MainPanel, Footer } from './components';
 import { AppStateProvider } from 'src/application/data';
 import { mainPanelStates } from 'src/constants';
 
@@ -46,7 +46,7 @@ let App = () => {
     <AppStateProvider>
       <SafeAreaView style={styles.container}>
         <Header style={styles.header} />
-        <Main style={styles.main} />
+        <MainPanel style={styles.mainPanel} />
         <Footer style={styles.footer} />
       </SafeAreaView>
     </AppStateProvider>
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     height: '10%',
     width: '100%',
   },
-  main: {
+  mainPanel: {
     height: '80%',
   },
   footer: {
