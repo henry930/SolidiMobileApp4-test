@@ -140,7 +140,7 @@ let styles = StyleSheet.create({
     height: '100%',
   },
   selectPaymentMethodSection: {
-    paddingTop: scaledWidth(20),
+    paddingTop: scaledHeight(20),
     paddingHorizontal: scaledWidth(30),
   },
   heading: {
