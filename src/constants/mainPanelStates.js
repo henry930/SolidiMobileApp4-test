@@ -12,6 +12,7 @@ export const mainPanelStates = {
   LOGIN: 'Login',
   PIN: 'PIN',
   CHOOSEHOWTOPAY: 'ChooseHowToPay',
+  MAKEPAYMENT: 'MakePayment',
 };
 
 export default mainPanelStates;

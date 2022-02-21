@@ -55,6 +55,8 @@ const MainPanel = (props) => {
       return <PIN />
     } else if (appState.mainPanelState === mainPanelStates.CHOOSEHOWTOPAY) {
       return <ChooseHowToPay />
+    } else if (appState.mainPanelState === mainPanelStates.MAKEPAYMENT) {
+      return <MakePayment />
     } else {
       return <Text>Error: Unknown mainPanelState: {appState.mainPanelState}</Text>
     }

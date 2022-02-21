@@ -10,6 +10,7 @@ import Settings from './Settings/Settings';
 import Login from './Login/Login';
 import PIN from './PIN/PIN';
 import ChooseHowToPay from './ChooseHowToPay/ChooseHowToPay';
+import MakePayment from './MakePayment/MakePayment';
 
 
 export {
@@ -25,4 +26,5 @@ export {
   Login,
   PIN,
   ChooseHowToPay,
+  MakePayment,
 };
