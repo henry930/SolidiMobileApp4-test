@@ -33,18 +33,6 @@ let Payment = () => {
 
   let zeroVolumeQA = '0.' + '0'.repeat(assetsInfo[assetQA].decimalPlaces);
 
-  let horizontalRule = () => {
-    return (
-      <View
-        style={{
-          borderBottomColor: 'black',
-          borderBottomWidth: 1,
-          marginHorizontal: scaledWidth(30),
-        }}
-      />
-    )
-  }
-
   let confirmPayment = async () => {
 
   }
@@ -92,7 +80,7 @@ let Payment = () => {
           styles={styleConditionButton}/>
       </View>
 
-      {horizontalRule()}
+      <View style={styles.horizontalRule}/>
 
       <View style={[styles.heading, styles.heading2]}>
           <Text style={styles.headingText}>Your order</Text>
@@ -122,7 +110,7 @@ let Payment = () => {
 
       </View>
 
-      {horizontalRule()}
+      <View style={styles.horizontalRule}/>
 
       <View style={styles.confirmButtonWrapper}>
         <StandardButton title="Confirm & Pay" onPress={ confirmPayment } />
@@ -173,6 +161,11 @@ let styles = StyleSheet.create({
   buttonDetail: {
     marginVertical: scaledHeight(10),
     marginLeft: scaledWidth(15),
+  },
+  horizontalRule: {
+    borderBottomColor: 'black',
+    borderBottomWidth: 1,
+    marginHorizontal: scaledWidth(30),
   },
   orderDetailsSection: {
     marginVertical: scaledHeight(20),
