@@ -37,10 +37,7 @@ let MakePayment = () => {
   let intervalSeconds = 3;
   function incrementTimeElapsed () {
     timeElapsedSeconds += intervalSeconds;
-    let newMarkerValue = timeElapsedSeconds / parseFloat(maxTimeAllowedSeconds)
-    log('===')
-    log({timeElapsedSeconds})
-    log({newMarkerValue})
+    let newMarkerValue = timeElapsedSeconds / parseFloat(maxTimeAllowedSeconds);
     setTimeElapsedMarker(newMarkerValue);
     if (newMarkerValue > maxTimeAllowedSeconds) {
       // Stop the timer.
