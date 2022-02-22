@@ -65,7 +65,7 @@ let MakePayment = () => {
   }
 
   let confirmPayment = async () => {
-
+    appState.changeState('WaitingForPayment');
   }
 
   return (
