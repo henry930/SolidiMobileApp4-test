@@ -1,19 +1,19 @@
 
-export const mainPanelStates = {
-  BUY: 'Buy',
-  SELL: 'Sell',
-  ASSETS: 'Assets',
-  HISTORY: 'History',
-  SEND: 'Send',
-  RECEIVE: 'Receive',
-  NOTIFICATIONS: 'Notifications',
-  SETTINGS: 'Settings',
-  TEST: 'Test',
-  LOGIN: 'Login',
-  PIN: 'PIN',
-  CHOOSEHOWTOPAY: 'ChooseHowToPay',
-  MAKEPAYMENT: 'MakePayment',
-  WAITINGFORPAYMENT: 'WaitingForPayment',
-};
+export const mainPanelStates = [
+  'Buy',
+  'Sell',
+  'Assets',
+  'History',
+  'Send',
+  'Receive',
+  'Notifications',
+  'Settings',
+  'Test',
+  'Login',
+  'PIN',
+  'ChooseHowToPay',
+  'MakePayment',
+  'WaitingForPayment',
+];
 
 export default mainPanelStates;
