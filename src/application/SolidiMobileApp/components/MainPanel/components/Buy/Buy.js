@@ -119,7 +119,7 @@ let Buy = () => {
       let quoteDP = assetsInfo[assetQA].decimalPlaces;
       let newVolumeQA = Big(volumeBA).mul(Big(price)).toFixed(quoteDP);
       if (Big(newVolumeQA) !== Big(checkVolumeQA)) {
-        log("New quote asset volume: " + newVolumeQA)
+        log("New quote asset volume: " + newVolumeQA);
         setVolumeQA(newVolumeQA);
       }
     }
