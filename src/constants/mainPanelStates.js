@@ -13,6 +13,7 @@ export const mainPanelStates = {
   PIN: 'PIN',
   CHOOSEHOWTOPAY: 'ChooseHowToPay',
   MAKEPAYMENT: 'MakePayment',
+  WAITINGFORPAYMENT: 'WaitingForPayment',
 };
 
 export default mainPanelStates;

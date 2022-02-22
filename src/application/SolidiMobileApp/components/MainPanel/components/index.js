@@ -11,6 +11,7 @@ import Login from './Login/Login';
 import PIN from './PIN/PIN';
 import ChooseHowToPay from './ChooseHowToPay/ChooseHowToPay';
 import MakePayment from './MakePayment/MakePayment';
+import WaitingForPayment from './WaitingForPayment/WaitingForPayment';
 
 
 export {
@@ -27,4 +28,5 @@ export {
   PIN,
   ChooseHowToPay,
   MakePayment,
+  WaitingForPayment,
 };

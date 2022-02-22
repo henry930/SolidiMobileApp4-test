@@ -14,7 +14,7 @@ import _ from 'lodash';
 import { colors, mainPanelStates } from 'src/constants';
 import { Test, Buy, Sell, Send, Receive, Assets, History,
   Notifications, Settings, Login, PIN, ChooseHowToPay,
-  MakePayment } from './components';
+  MakePayment, WaitingForPayment} from './components';
 import AppStateContext from 'src/application/data';
 
 
@@ -58,8 +58,10 @@ const MainPanel = (props) => {
       return <ChooseHowToPay />
     } else if (appState.mainPanelState === mainPanelStates.MAKEPAYMENT) {
       return <MakePayment />
+    } else if (appState.mainPanelState === mainPanelStates.WAITINGFORPAYMENT) {
+      return <WaitingForPayment />
     } else {
-      return <Text>Error: Unknown mainPanelState: {appState.mainPanelState}</Text>
+      return <Text>Error in MainPanel.js: Unknown mainPanelState: {appState.mainPanelState}</Text>
     }
   }
 
