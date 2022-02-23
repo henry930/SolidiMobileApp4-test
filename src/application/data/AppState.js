@@ -299,6 +299,14 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       _.assign(this.state.apiClient, {apiKey, apiSecret});
       this.state.user.isAuthenticated = true;
       _.assign(this.state.user, {email, password});
+
+      // Method for loading data at the start of whatever component we're working on currently.
+      this.state.onStartDevTesting = () => {
+        if (_.isEmpty(this.state.user.userInfo)) {
+          this.loadUserInfo();
+        }
+      }
+
     }
 
   }

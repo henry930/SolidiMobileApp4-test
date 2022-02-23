@@ -19,6 +19,9 @@ let WaitingForPayment = () => {
   let appState = useContext(AppStateContext);
 
   // Testing:
+  appState.onStartDevTesting();
+
+  // Testing:
   _.assign(appState.buyPanel, {volumeQA: '100', assetQA: 'GBPX', volumeBA: '0.05', assetBA: 'BTC'});
 
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.buyPanel);
