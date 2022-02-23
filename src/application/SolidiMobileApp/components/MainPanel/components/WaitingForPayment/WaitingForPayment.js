@@ -18,19 +18,16 @@ let WaitingForPayment = () => {
 
   let appState = useContext(AppStateContext);
 
-  // Testing:
-  appState.onStartDevTesting();
-
-  // Testing:
-  _.assign(appState.buyPanel, {volumeQA: '100', assetQA: 'GBPX', volumeBA: '0.05', assetBA: 'BTC'});
-
+  // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.buyPanel);
 
-  // Testing:
-  let paymentReference = 'SPARKLE';
-  let solidiSortCode = '04-05-11';
-  let solidiAccountNumber = '00012484';
-  let solidiAccountName = 'Solidi';
+  // Set up progress bar.
+  // Load deposit account details.
+  let detailsGBP = appState.user.info.depositDetails.GBP;
+  let reference = detailsGBP.reference;
+  let solidiSortCode = detailsGBP.sortCode;
+  let solidiAccountNumber = detailsGBP.accountNumber;
+  let solidiAccountName = detailsGBP.accountName;
 
   /* Notes:
   - Check for "payment received" status on the server every 2 seconds, 5 times. (10 seconds cumulative total time.)
@@ -140,7 +137,7 @@ let WaitingForPayment = () => {
 
         <View style={styles.paymentDetailsLine}>
           <Text style={styles.paymentDetailText}>Reference</Text>
-          <Text style={styles.paymentDetailText}>{paymentReference}</Text>
+          <Text style={styles.paymentDetailText}>{reference}</Text>
         </View>
 
       </View>
