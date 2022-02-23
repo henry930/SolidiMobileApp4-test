@@ -77,6 +77,8 @@ let PIN = () => {
       appState.apiClient = apiClient;
       appState.user.isAuthenticated = true;
       _.assign(appState.user, {email, password});
+      // Load and store user info.
+      await appState.loadUserInfo();
     }
     // Change mainPanel.
     if (_.isEmpty(appState.stashedState)) {
