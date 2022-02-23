@@ -210,6 +210,11 @@ class AppStateProvider extends Component {
       });
     }
 
+    this.onStart = () => {
+      // Call this function on the landing page (which should be 'Buy').
+      this.loadPIN();
+    }
+
     // This must be declared towards the end of the constructor.
     this.state = {
       numberOfFooterButtonsToDisplay: this.numberOfFooterButtonsToDisplay,
@@ -228,6 +233,7 @@ class AppStateProvider extends Component {
       authenticateUser: this.authenticateUser,
       choosePIN: this.choosePIN,
       loadPIN: this.loadPIN,
+      onStart: this.onStart,
       apiData: {},
       domain: 'solidi.co',
       userAgent: "Solidi Mobile App 3",
