@@ -44,7 +44,7 @@ let PaymentNotMade = () => {
     <View style={styles.panelSubContainer}>
 
       <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Payment not sent</Text>
+        <Text style={styles.headingText}>Payment not made</Text>
       </View>
 
       <View style={styles.infoSection}>
