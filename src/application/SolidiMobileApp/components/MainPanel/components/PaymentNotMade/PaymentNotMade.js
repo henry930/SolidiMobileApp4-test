@@ -74,7 +74,7 @@ let PaymentNotMade = () => {
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Order details: {volumeBA} {assetsInfo[assetBA].displayString} for {volumeQA} {assetsInfo[assetQA].displayString}.</Text>
+          <Text style={styles.bold}>{`\u2022  `} Order details: Buy {volumeBA} {assetsInfo[assetBA].displayString} for {volumeQA} {assetsInfo[assetQA].displayString}.</Text>
         </View>
 
       </View>
