@@ -197,8 +197,6 @@ const styles = StyleSheet.create({
     height: '100%',
     paddingTop: scaledHeight(15),
     paddingHorizontal: scaledWidth(15),
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
   },
   historySection: {
     height: '100%',

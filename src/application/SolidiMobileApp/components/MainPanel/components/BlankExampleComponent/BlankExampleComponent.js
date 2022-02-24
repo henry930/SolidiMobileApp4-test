@@ -40,8 +40,6 @@ let styles = StyleSheet.create({
   panelContainer: {
     paddingHorizontal: scaledWidth(15),
     paddingVertical: scaledHeight(5),
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
     width: '100%',
     height: '100%',
   },
