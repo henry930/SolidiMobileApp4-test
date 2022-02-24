@@ -12,6 +12,7 @@ import PIN from './PIN/PIN';
 import ChooseHowToPay from './ChooseHowToPay/ChooseHowToPay';
 import MakePayment from './MakePayment/MakePayment';
 import WaitingForPayment from './WaitingForPayment/WaitingForPayment';
+import BlankExampleComponent from './BlankExampleComponent/BlankExampleComponent';
 
 
 export {
@@ -29,4 +30,5 @@ export {
   ChooseHowToPay,
   MakePayment,
   WaitingForPayment,
+  BlankExampleComponent,
 };
