@@ -13,6 +13,7 @@ import ChooseHowToPay from './ChooseHowToPay/ChooseHowToPay';
 import MakePayment from './MakePayment/MakePayment';
 import WaitingForPayment from './WaitingForPayment/WaitingForPayment';
 import BlankExampleComponent from './BlankExampleComponent/BlankExampleComponent';
+import PaymentNotMade from './PaymentNotMade/PaymentNotMade';
 
 
 export {
@@ -31,4 +32,5 @@ export {
   MakePayment,
   WaitingForPayment,
   BlankExampleComponent,
+  PaymentNotMade,
 };
