@@ -27,7 +27,7 @@ let BlankExampleComponent = () => {
         <Text style={styles.headingText}>BlankExampleComponent</Text>
       </View>
 
-      <Text style={styles.bold}>{'\n'}[some text]</Text>
+      <Text style={styles.bold}>{'\n'} {`\u2022  `} [some text]</Text>
 
     </View>
     </View>
