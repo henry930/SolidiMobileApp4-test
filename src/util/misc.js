@@ -28,9 +28,26 @@ function confirmExactKeys(objName, obj, keyNames, functionName) {
 }
 
 
+function confirmItemInArray(arrayName, arrayObj, item, functionName) {
+  // Confirm that an array contains a particular item.
+  if (! arrayObj instanceof Array) {
+    let msg = `${functionName}: ${arrayName} is expected to be an array, but isn't.`;
+    throw new Error(msg);
+  }
+  for (let x of arrayObj) {
+    if (_.isEqual(item, x)) {
+      return true;
+    }
+  }
+  let msg = `${functionName}: ${arrayName} does not contain this item: '${item.toString()}'`;
+  throw new Error(msg);
+}
+
+
 let misc = {
   confirmKeys,
   confirmExactKeys,
+  confirmItemInArray,
 }
 
 
