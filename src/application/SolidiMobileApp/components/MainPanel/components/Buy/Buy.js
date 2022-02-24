@@ -199,7 +199,7 @@ let Buy = () => {
     Example data:
     {"id":11,"datetime":1643047261277,"type":0,"price":"100","amount":"0.05"}
     */
-   // Future: If an error occurs, display the error description below the orderSubmitted description.
+   // Todo: If an error occurs, display it.
    // Store the orderID. Later, we'll use this to check whether the payment for it has been received.
    appState.panels.buy.orderID = data.id;
    log(`OrderID: ${appState.panels.buy.orderID}`);
