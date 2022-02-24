@@ -82,10 +82,12 @@ let WaitingForPayment = () => {
       appState.panels.waitingForPayment.timerID = timerID;
     }
     if (timeElapsedSeconds >= maxTimeAllowedSeconds) {
-      // Future: Move to "Payment not received" page.
+      // Change to next state.
+      appState.changeState('PaymentNotReceived');
     }
-    // Future: Call the server to check if the payment has been received.
-
+    // Todo: Call the server to check if the payment has been received.
+    // We need to check if the status of the relevant settlement is "R" (for "Received").
+    // [API call goes here]
     // confirmPaymentReceived();
   }
   // Set the initial timer on startup.
@@ -97,6 +99,7 @@ let WaitingForPayment = () => {
   useEffect(() => {}, [timeElapsedMarker]);
 
   let confirmPaymentReceived = async () => {
+    // Change to next state.
     appState.changeState('PaymentReceived');
   }
 
