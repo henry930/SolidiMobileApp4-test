@@ -43,9 +43,9 @@ let MakePayment = () => {
     setTimeElapsedMarker(newMarkerValue);
     if (newMarkerValue > maxTimeAllowedSeconds) {
       // Stop the timer.
-      // clearInterval(timerID);
-      // Change to "PaymentNotReceived" state.
-      // appState.changeState('PaymentNotReceived');
+      clearInterval(timerID);
+      // Change to next state.
+      appState.changeState('PaymentNotMade');
     }
   }
   if (! intervalTimerCreated) {
@@ -64,8 +64,9 @@ let MakePayment = () => {
   }
 
   let confirmPayment = async () => {
-    // Tell the server that the user has clicked "I have paid".
-
+    // Todo: Tell the server that the user has clicked "I have paid".
+    // The relevant settlement's status needs to be updated to "S" (for "Sent")
+    // [API call goes here]
     // Continue to next stage.
     appState.changeState('WaitingForPayment');
   }
