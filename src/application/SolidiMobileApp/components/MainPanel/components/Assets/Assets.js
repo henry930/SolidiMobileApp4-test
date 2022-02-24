@@ -12,6 +12,9 @@ import { assetsInfo, mainPanelStates } from 'src/constants';
 import AppStateContext from 'src/application/data';
 import { Button } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
+import misc from 'src/util/misc';
+
+
 
 
 let Assets = () => {
@@ -21,7 +24,9 @@ let Assets = () => {
   let [isLoading, setIsLoading] = useState(true);
   let [reloadCount, setReloadCount] = useState(0);
 
-  let selectedCategory = 'crypto';
+  let selectedCategory = appState.pageName;
+  let categories = 'crypto fiat'.split(' ');
+  misc.confirmItemInArray('categories', categories, selectedCategory, 'Assets');
 
   let [open, setOpen] = useState(false);
   let [category, setCategory] = useState(selectedCategory);
