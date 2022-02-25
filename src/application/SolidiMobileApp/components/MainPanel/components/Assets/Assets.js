@@ -25,6 +25,7 @@ let Assets = () => {
   let [reloadCount, setReloadCount] = useState(0);
 
   let selectedCategory = appState.pageName;
+  if (selectedCategory == 'default') selectedCategory = 'crypto';
   let categories = 'crypto fiat'.split(' ');
   misc.confirmItemInArray('categories', categories, selectedCategory, 'Assets');
 
