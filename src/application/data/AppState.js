@@ -240,6 +240,16 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       log("User info loaded from server.");
     }
 
+    this.loadBalances = async () => {
+      let data = await this.state.apiClient.privateMethod({
+        httpMethod: 'POST',
+        apiMethod: 'balance',
+        params: {},
+      });
+      this.state.apiData.balance = data;
+      log("User balances loaded from server.")
+    }
+
     // This must be declared towards the end of the constructor.
     this.state = {
       numberOfFooterButtonsToDisplay: this.numberOfFooterButtonsToDisplay,
@@ -260,6 +270,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       loadPIN: this.loadPIN,
       loadUserInfo: this.loadUserInfo,
       userInfoLoaded: false,
+      loadBalances: this.loadBalances,
       apiData: {},
       domain: 'solidi.co',
       userAgent: "Solidi Mobile App 3",
