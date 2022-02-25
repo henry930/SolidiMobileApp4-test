@@ -15,6 +15,7 @@ import WaitingForPayment from './WaitingForPayment/WaitingForPayment';
 import BlankExampleComponent from './BlankExampleComponent/BlankExampleComponent';
 import PaymentNotMade from './PaymentNotMade/PaymentNotMade';
 import PurchaseSuccessful from './PurchaseSuccessful/PurchaseSuccessful';
+import InsufficientBalance from './InsufficientBalance/InsufficientBalance';
 
 
 export {
@@ -35,4 +36,5 @@ export {
   BlankExampleComponent,
   PaymentNotMade,
   PurchaseSuccessful,
+  InsufficientBalance,
 };

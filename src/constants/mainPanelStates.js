@@ -16,6 +16,7 @@ export const mainPanelStates = [
   'WaitingForPayment',
   'PaymentNotMade',
   'PurchaseSuccessful',
+  'InsufficientBalance',
 ];
 
 export default mainPanelStates;
