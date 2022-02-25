@@ -279,7 +279,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         email: '',
         password: '',
         info: {
-          user: null,
+          user: {},
           depositDetails: {
             GBP: {
               accountName: null,
@@ -358,6 +358,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         sortCode: '040511',
         reference: 'SHMPQKC',
       });
+
+      _.assign(this.state.user.info.user, {"address_1": "foo", "address_2": "foo2", "address_3": null, "address_4": null, "bank_limit": "0.00", "btc_limit": "12.50000000", "country": null, "crypto_limit": "20.00", "email": "mr@pig.com", "firstname": "Mr", "freewithdraw": 0, "landline": null, "lastname": "Pig", "mobile": null, "mon_bank_limit": "0", "mon_btc_limit": "12.5", "mon_crypto_limit": "20", "postcode": "Casdij", "uuid": "ecb7e23a-a4ff-4c18-80d5-924fec8ee7d9", "year_bank_limit": "0", "year_btc_limit": "200", "year_crypto_limit": "200"});
 
     }
 
