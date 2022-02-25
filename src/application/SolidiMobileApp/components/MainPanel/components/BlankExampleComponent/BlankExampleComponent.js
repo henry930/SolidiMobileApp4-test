@@ -4,6 +4,7 @@ import { Text, StyleSheet, View } from 'react-native';
 
 // Other imports
 import _ from 'lodash';
+import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
