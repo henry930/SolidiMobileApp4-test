@@ -30,6 +30,14 @@ let BlankExampleComponent = () => {
 
       <Text style={styles.bold}>{'\n'} {`\u2022  `} [some text]</Text>
 
+      <View style={styles.infoSection}>
+
+        <View style={styles.infoItem}>
+          <Text style={styles.bold}>{`\u2022  `} [some details]</Text>
+        </View>
+
+      </View>
+
     </View>
     </View>
   )
@@ -60,6 +68,13 @@ let styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
+  },
+  infoSection: {
+    paddingTop: scaledHeight(20),
+    alignItems: 'flex-start',
+  },
+  infoItem: {
+    marginBottom: scaledHeight(5),
   },
 });
 
