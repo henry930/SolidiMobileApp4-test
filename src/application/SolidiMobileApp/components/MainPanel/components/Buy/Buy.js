@@ -20,6 +20,10 @@ let Buy = () => {
 
   let appState = useContext(AppStateContext);
 
+  let pageName = appState.pageName;
+  let permittedPageNames = 'default userHasClickedBuyButton'.split(' ');
+  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Buy');
+
   let [priceLoadCount, setPriceLoadCount] = useState(0);
   let [lastUserInput, setLastUserInput] = useState('');
 

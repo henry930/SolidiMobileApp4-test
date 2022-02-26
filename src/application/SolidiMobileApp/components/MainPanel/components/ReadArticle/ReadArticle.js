@@ -20,6 +20,10 @@ let ReadArticle = () => {
 
   let appState = useContext(AppStateContext);
 
+  let pageName = appState.pageName;
+  let permittedPageNames = 'conditions'.split(' ');
+  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ReadArticle');
+
   return (
     <View style={styles.panelContainer}>
     <View style={styles.panelSubContainer}>

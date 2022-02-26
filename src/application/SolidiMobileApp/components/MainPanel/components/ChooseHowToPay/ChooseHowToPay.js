@@ -32,7 +32,7 @@ let ChooseHowToPay = () => {
 
   let pageName = appState.pageName;
   let permittedPageNames = 'direct_payment balance'.split(' ');
-  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'InsufficientBalance');
+  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToPay');
 
   let [paymentChoice, setPaymentChoice] = React.useState(pageName);
 
