@@ -251,7 +251,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     }
 
     this.startLockAppTimer = async () => {
-      let waitTimeMinutes = 30;
+      let waitTimeMinutes = 120; // Future: Set to 30 mins.
       let waitTimeSeconds = waitTimeMinutes * 60;
       let lockApp = () => {
         let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
