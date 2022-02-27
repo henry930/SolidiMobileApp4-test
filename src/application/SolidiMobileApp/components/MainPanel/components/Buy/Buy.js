@@ -12,6 +12,7 @@ import AppStateContext from 'src/application/data';
 import { assetsInfo, mainPanelStates } from 'src/constants';
 import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
+import misc from 'src/util/misc';
 
 
 
@@ -184,6 +185,10 @@ let Buy = () => {
 
     // At this point, the user is already authenticated, or has just returned from the auth sequence.
     // We send the BUY order to the server.
+    // Unprincipled exception: On the app, we think in terms of GBP, but on the server, the fxmarkets are in terms of GBPX (GBP that is off-exchange).
+    // Therefore, here, we add an 'X' to specific quote assets.
+    let offExchangeList = 'GBP EUR'.split(' ');
+    if (offExchangeList.includes(assetQA)) assetQA += 'X';
     let fxmarket = assetBA + '/' + assetQA;
     log(`Send order to server: BUY ${volumeBA} ${fxmarket} @ MARKET ${volumeQA}`);
     let data = await appState.apiClient.privateMethod({
@@ -207,7 +212,7 @@ let Buy = () => {
    log(`OrderID: ${appState.panels.buy.orderID}`);
 
     // We transfer to the payment sequence.
-    appState.changeState('ChooseHowToPay');
+    appState.changeState('ChooseHowToPay', 'direct_payment');
   }
 
   // Submit the order automatically if we have returned from auth sequence.
