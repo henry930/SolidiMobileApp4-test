@@ -45,7 +45,7 @@ let ChooseHowToPay = () => {
   let zeroVolumeQA = '0.' + '0'.repeat(assetsInfo[assetQA].decimalPlaces);
 
   let readPaymentConditions = async () => {
-    appState.changeState('ReadArticle', 'conditions');
+    appState.changeState('ReadArticle', 'payment_conditions');
   }
 
   let confirmPaymentChoice = async () => {
