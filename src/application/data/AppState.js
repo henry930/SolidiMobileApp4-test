@@ -40,7 +40,7 @@ class AppStateProvider extends Component {
 
     // Can set this initial state for testing.
     this.initialMainPanelState = 'ReadArticle';
-    this.initialPageName = 'conditions';
+    this.initialPageName = 'terms_and_conditions';
 
     // Misc
     this.numberOfFooterButtonsToDisplay = 3;
@@ -68,6 +68,7 @@ class AppStateProvider extends Component {
       }
       if (_.isNil(pageName)) pageName = 'default';
       newState = {mainPanelState, pageName};
+      this.cancelTimers();
       /*
       If this is a new state, add an entry to the state history,
       unless it's a state we don't care about: e.g. PIN.
@@ -117,6 +118,11 @@ class AppStateProvider extends Component {
 
     this.decrementStateHistory = () => {
       let stateHistoryList = this.state.stateHistoryList;
+      if (stateHistoryList.length == 1) {
+        // No previous state.
+        return;
+      }
+      this.cancelTimers();
       let prevState = stateHistoryList[stateHistoryList.length - 2];
       let {mainPanelState, pageName} = prevState;
       if (stateHistoryList.length > 1) {
@@ -264,6 +270,20 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       setTimeout(lockApp, waitTimeSeconds * 1000);
     }
 
+    this.cancelTimers = () => {
+      /* Cancel any existing timers. */
+      if (this.state.panels.makePayment.timerID) {
+        clearInterval(this.state.panels.makePayment.timerID);
+        this.state.panels.makePayment.timerID = null;
+        log(`Cleared interval: makePayment`);
+      }
+      if (this.state.panels.waitingForPayment.timerID) {
+        clearInterval(this.state.panels.waitingForPayment.timerID);
+        this.state.panels.waitingForPayment.timerID = null;
+        log(`Cleared interval: waitingForPayment`);
+      }
+    }
+
     // This must be declared towards the end of the constructor.
     this.state = {
       numberOfFooterButtonsToDisplay: this.numberOfFooterButtonsToDisplay,
@@ -286,6 +306,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       userInfoLoaded: false,
       loadBalances: this.loadBalances,
       startLockAppTimer: this.startLockAppTimer,
+      cancelTimers: this.cancelTimers,
       apiData: {},
       domain: 'solidi.co',
       userAgent: "Solidi Mobile App 3",
