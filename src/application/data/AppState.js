@@ -39,8 +39,8 @@ class AppStateProvider extends Component {
     super(props);
 
     // Can set this initial state for testing.
-    this.initialMainPanelState = 'ReadArticle';
-    this.initialPageName = 'terms_and_conditions';
+    this.initialMainPanelState = 'Buy';
+    this.initialPageName = 'default';
 
     // Misc
     this.numberOfFooterButtonsToDisplay = 3;
@@ -393,6 +393,15 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       }
 
       _.assign(this.state.panels.buy, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
+
+      // Sample prices.
+      let prices = {
+        'BTC/GBP': '2000.00',
+        'ETH/GBP': '100.00',
+        'BTC/EUR': '3000.00',
+        'ETH/EUR': '150.00',
+      }
+      _.assign(this.state.apiData, {prices});
 
       _.assign(this.state.user.info.depositDetails.GBP, {
         accountName: 'Solidi',

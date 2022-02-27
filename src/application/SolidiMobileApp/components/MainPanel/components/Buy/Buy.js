@@ -68,24 +68,20 @@ let Buy = () => {
       apiMethod: 'ticker',
       params: {},
     });
-    // Future: log the data, extract relevant bits, calculate volumeBA that can be bought for default 100 GBP, and use setVolumeBA to change the volumeBA value.
+    // Future: Log the data, extract relevant bits, calculate volumeBA that can be bought for the current QA volume, and use setVolumeBA to change the volumeBA value.
+    // The QA volume will stay at its current value.
   }
 
+  // Initial setup.
   useEffect(() => {
-    // Tmp: Set market prices here.
-    // Future: Load them from the API. Use loadPriceData.
-    let prices = {
-      'BTC/GBP': '2000',
-      'ETH/GBP': '100',
-      'BTC/EUR': '3000',
-      'ETH/EUR': '150',
-    }
-    appState.setAPIData({key: 'prices', data: prices});
-    // Trigger a recalculation of volumeBA that uses the stored price data.
     if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
+    // Trigger a recalculation of volumeBA that uses the stored price data.
     setPriceLoadCount(priceLoadCount+1);
   }, []); // Pass empty array to only run once on mount.
 
+  // Handle recalculating volumeBA when:
+  // - the price changes.
+  // - the user changes the volumeQA value.
   useEffect(() => {
     // Use stored price for this market to recalculate the value of volumeBA.
     if (_.isEmpty(volumeQA)) {
@@ -108,6 +104,7 @@ let Buy = () => {
     }
   }, [volumeQA, priceLoadCount]);
 
+  // Handle user changing the volumeBA.
   useEffect(() => {
     if (_.isEmpty(volumeBA)) {
       // pass
@@ -170,6 +167,17 @@ let Buy = () => {
     }
   }
 
+  let generatePriceDescription = () => {
+    let market = selectedAssetBA + '/' + selectedAssetQA;
+    let price = appState.apiData.prices[market];
+    let dp = assetsInfo[selectedAssetQA].decimalPlaces;
+    let priceString = Big(price).toFixed(dp);
+    let displayStringBA = assetsInfo[selectedAssetBA].displaySymbol;
+    let displayStringQA = assetsInfo[selectedAssetQA].displaySymbol;
+    let description = `1 ${displayStringBA} = ${priceString} ${displayStringQA}`;
+    return description;
+  }
+
   let startBuyRequest = async () => {
     // If the user isn't authenticated, push them into the auth sequence.
 
@@ -226,7 +234,7 @@ let Buy = () => {
 
       <View>
 
-      <Text style={styles.boldText}>I want to spend:</Text>
+      <Text style={styles.descriptionText}>I want to spend:</Text>
 
       <View style={styles.quoteAssetWrapper}>
         <TextInput
@@ -247,7 +255,7 @@ let Buy = () => {
         />
       </View>
 
-      <Text style={styles.boldText}>To get:</Text>
+      <Text style={styles.descriptionText}>To get:</Text>
 
       <View style={styles.baseAssetWrapper}>
         <TextInput
@@ -267,6 +275,8 @@ let Buy = () => {
           setItems={setItemsBA}
         />
       </View>
+
+      <Text style={styles.descriptionText}>Current price: {generatePriceDescription()}</Text>
 
       <View style={styles.buttonWrapper}>
         <StandardButton title="Buy now" onPress={ startBuyRequest } />
@@ -289,6 +299,10 @@ let styles = StyleSheet.create({
   },
   boldText: {
     fontWeight: 'bold',
+  },
+  descriptionText: {
+    fontWeight: 'bold',
+    fontSize: normaliseFont(16),
   },
   quoteAssetWrapper: {
     paddingVertical: scaledHeight(20),
@@ -338,13 +352,6 @@ let styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginTop: scaledHeight(20),
-  },
-  orderSubmittedMessage: {
-    marginTop: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderRadius: 8,
-    overflow: 'hidden',
   },
 });
 
