@@ -28,8 +28,11 @@ let Buy = () => {
   let [priceLoadCount, setPriceLoadCount] = useState(0);
   let [lastUserInput, setLastUserInput] = useState('');
 
+  // Note: On the app, we think in terms of GBP, but on the server, the fxmarkets are in terms of GBPX (GBP that is off-exchange).
+  // Therefore, here, we use 'GBPX'.
+
   let selectedVolumeQA = '100';
-  let selectedAssetQA = 'GBP';
+  let selectedAssetQA = 'GBPX';
   let selectedVolumeBA = ''; // Later, we calculate this from the price and the volumeQA.
   let selectedAssetBA = 'BTC';
 
@@ -43,7 +46,7 @@ let Buy = () => {
   let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
   let [openQA, setOpenQA] = useState(false);
   let [assetQA, setAssetQA] = useState(selectedAssetQA);
-  let quoteAssets = 'GBP EUR'.split(' ');
+  let quoteAssets = 'GBPX EUR'.split(' ');
   let quoteAssetItems = quoteAssets.map(x => {
     let a = assetsInfo[x];
     return {label: a.displayString, value: a.displaySymbol};
@@ -193,10 +196,6 @@ let Buy = () => {
 
     // At this point, the user is already authenticated, or has just returned from the auth sequence.
     // We send the BUY order to the server.
-    // Unprincipled exception: On the app, we think in terms of GBP, but on the server, the fxmarkets are in terms of GBPX (GBP that is off-exchange).
-    // Therefore, here, we add an 'X' to specific quote assets.
-    let offExchangeList = 'GBP EUR'.split(' ');
-    if (offExchangeList.includes(assetQA)) assetQA += 'X';
     let fxmarket = assetBA + '/' + assetQA;
     log(`Send order to server: BUY ${volumeBA} ${fxmarket} @ MARKET ${volumeQA}`);
     let data = await appState.apiClient.privateMethod({

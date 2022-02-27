@@ -396,8 +396,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
 
       // Sample prices.
       let prices = {
-        'BTC/GBP': '2000.00',
-        'ETH/GBP': '100.00',
+        'BTC/GBPX': '2000.00',
+        'ETH/GBPX': '100.00',
         'BTC/EUR': '3000.00',
         'ETH/EUR': '150.00',
       }
