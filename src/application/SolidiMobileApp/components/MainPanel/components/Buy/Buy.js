@@ -25,7 +25,6 @@ let Buy = () => {
   let permittedPageNames = 'default userHasClickedBuyButton'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Buy');
 
-  let [priceLoadCount, setPriceLoadCount] = useState(0);
   let [lastUserInput, setLastUserInput] = useState('');
 
   // Note: On the app, we think in terms of GBP, but on the server, the fxmarkets are in terms of GBPX (GBP that is off-exchange).
@@ -66,26 +65,38 @@ let Buy = () => {
 
   let loadPriceData = async () => {
     let fxmarket = assetBA + '/' + assetQA;
+    // Todo: Fix "ticker" call on server.
+    /*
     let data = await appState.apiClient.publicMethod({
       httpMethod: 'GET',
       apiMethod: 'ticker',
       params: {},
     });
-    // Future: Log the data, extract relevant bits, calculate volumeBA that can be bought for the current QA volume, and use setVolumeBA to change the volumeBA value.
+    */
+    // Tmp: To mimic price changes, increment the price slightly.
+    let price = appState.apiData.prices[fxmarket];
+    let dp = assetsInfo[assetQA].decimalPlaces;
+    let price2 = (Big(price).minus(Big('1.01'))).toFixed(dp);
+    appState.apiData.prices[fxmarket] = price2;
+    // End tmp.
+    log(`Price data loaded from server. Focus: ${fxmarket} market. Price: ${price2}`);
+    // Todo: Log the data, store it in the apiData, extract the relevant bits, calculate volumeBA that can be bought for the current QA volume, and use setVolumeBA to change the volumeBA value.
     // The QA volume will stay at its current value.
+    // Need to recalculate volumeBA if the price has changed.
+    calculateVolumeBA();
   }
 
   // Initial setup.
-  useEffect(() => {
+  useEffect( () => {
     if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
-    // Trigger a recalculation of volumeBA that uses the stored price data.
-    setPriceLoadCount(priceLoadCount+1);
+    loadPriceData();
   }, []); // Pass empty array to only run once on mount.
 
   // Handle recalculating volumeBA when:
   // - the price changes.
   // - the user changes the volumeQA value.
-  useEffect(() => {
+  let calculateVolumeBA = () => {
+    log("Check whether volumeBA should be recalculated.")
     // Use stored price for this market to recalculate the value of volumeBA.
     if (_.isEmpty(volumeQA)) {
       // pass
@@ -93,7 +104,7 @@ let Buy = () => {
       // If the last action the user did was to change volumeBA, don't recalculate it. This will just be annoying.
       // - Note: Without this clause, the two recalculation events would trigger each other.
     } else if (appState.apiData.prices) {
-      log('Recalculate base asset volume')
+      log('Recalculate base asset volume');
       let checkVolumeBA = _.isEmpty(volumeBA) ? '0' : volumeBA;
       let market = assetBA + '/' + assetQA;
       let price = appState.apiData.prices[market];
@@ -105,7 +116,10 @@ let Buy = () => {
         setVolumeBA(newVolumeBA);
       }
     }
-  }, [volumeQA, priceLoadCount]);
+  }
+  useEffect(() => {
+    calculateVolumeBA();
+  }, [volumeQA]);
 
   // Handle user changing the volumeBA.
   useEffect(() => {
@@ -179,6 +193,18 @@ let Buy = () => {
     let displayStringQA = assetsInfo[selectedAssetQA].displaySymbol;
     let description = `1 ${displayStringBA} = ${priceString} ${displayStringQA}`;
     return description;
+  }
+
+  // Set an interval timer that periodically reloads the price data from the sever.
+  let checkTimeSeconds = 15;
+  // Time function.
+  let checkPrice = async () => {
+    await loadPriceData();
+  }
+  // Set timer on load.
+  if (_.isNil(appState.panels.buy.timerID)) {
+    let timerID = setInterval(checkPrice, checkTimeSeconds * 1000);
+    appState.panels.buy.timerID = timerID;
   }
 
   let startBuyRequest = async () => {
