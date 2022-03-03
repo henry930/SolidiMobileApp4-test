@@ -65,21 +65,21 @@ let Buy = () => {
 
   let loadPriceData = async () => {
     let fxmarket = assetBA + '/' + assetQA;
-    // Todo: Fix "ticker" call on server.
-    /*
     let data = await appState.apiClient.publicMethod({
       httpMethod: 'GET',
       apiMethod: 'ticker',
       params: {},
     });
-    */
+    log(data)
     // Tmp: To mimic price changes, increment the price slightly.
+    /*
     let price = appState.apiData.prices[fxmarket];
     let dp = assetsInfo[assetQA].decimalPlaces;
     let price2 = (Big(price).minus(Big('1.01'))).toFixed(dp);
     appState.apiData.prices[fxmarket] = price2;
+    */
     // End tmp.
-    log(`Price data loaded from server. Focus: ${fxmarket} market. Price: ${price2}`);
+    //log(`Price data loaded from server. Focus: ${fxmarket} market. Price: ${price2}`);
     // Todo: Log the data, store it in the apiData, extract the relevant bits, calculate volumeBA that can be bought for the current QA volume, and use setVolumeBA to change the volumeBA value.
     // The QA volume will stay at its current value.
     // Need to recalculate volumeBA if the price has changed.
@@ -231,7 +231,7 @@ let Buy = () => {
         fxmarket,
         amount: volumeBA,
         price: volumeQA,
-      }
+      },
     });
     /*
     Example error response:
@@ -240,7 +240,7 @@ let Buy = () => {
     {"id":11,"datetime":1643047261277,"type":0,"price":"100","amount":"0.05"}
     */
    // Todo: If an error occurs, display it.
-   // Store the orderID. Later, we'll use this to check whether the payment for it has been received.
+   // Store the orderID. Later, we'll use it to check the order's status.
    appState.panels.buy.orderID = data.id;
    log(`OrderID: ${appState.panels.buy.orderID}`);
 
