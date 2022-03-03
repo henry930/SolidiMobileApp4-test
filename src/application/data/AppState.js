@@ -289,6 +289,19 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       }
     }
 
+    this.getOrderStatus = async ({orderID}) => {
+      let data = await this.state.apiClient.privateMethod({
+        httpMethod: 'POST',
+        apiMethod: 'order_status/' + orderID,
+        params: {},
+      });
+      // Todo: Look at data, and return 'live' or 'filled'.
+      let orderStatus = 'live'; //tmp
+      let knownStatuses = 'live settled'.split(' ');
+      misc.confirmItemInArray('knownStatuses', knownStatuses, orderStatus, 'getOrderStatus');
+      return orderStatus;
+    }
+
     // This must be declared towards the end of the constructor.
     this.state = {
       numberOfFooterButtonsToDisplay: this.numberOfFooterButtonsToDisplay,
@@ -312,6 +325,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       loadBalances: this.loadBalances,
       startLockAppTimer: this.startLockAppTimer,
       cancelTimers: this.cancelTimers,
+      getOrderStatus: this.getOrderStatus,
       apiData: {},
       domain: 'solidi.co',
       userAgent: "Solidi Mobile App 3",

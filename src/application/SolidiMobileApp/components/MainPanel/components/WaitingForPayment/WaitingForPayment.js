@@ -85,10 +85,11 @@ let WaitingForPayment = () => {
       clearInterval(appState.panels.waitingForPayment.timerID);
       appState.changeState('PaymentNotReceived');
     }
-    // Todo: Call the server to check if the payment has been received.
-    // We need to check if the status of the relevant settlement is "R" (for "Received").
-    // [API call goes here]
-    // confirmPaymentReceived();
+    // Call the server to check if the payment has been received (if yes, the order will have been filled).
+    let orderStatus = appState.getOrderStatus();
+    if (orderStatus == 'filled') {
+      appState.changeState('PurchaseSuccessful');
+    }
   }
   // Set the initial timer on load.
   if (_.isNil(appState.panels.waitingForPayment.timerID)) {

@@ -43,10 +43,14 @@ let MakePayment = () => {
     if (newMarkerValue > maxTimeAllowedSeconds) {
       // Stop the timer.
       clearInterval(appState.panels.makePayment.timerID);
-      // Todo: Call the server to find out if the user made the payment but did not click "I have paid" button. Do this by checking the related settlement's status.
-      // If yes, then change to state "PaymentReceived".
-      // If not, then change to state "PaymentNotMade".
-      appState.changeState('PaymentNotMade');
+      // Call the server to find out if the user made the payment but did not click "I have paid" button.
+      // If the payment has arrived, the order will have been filled.
+      let orderStatus = appState.getOrderStatus({orderID: appState.panels.buy.orderID});
+      if (orderStatus == 'filled') {
+        appState.changeState('PurchaseSuccessful');
+      } else {
+        appState.changeState('PaymentNotMade');
+      }
     }
   }
   // Set the timer on load.
