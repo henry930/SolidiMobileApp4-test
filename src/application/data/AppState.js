@@ -277,6 +277,11 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         this.state.panels.buy.timerID = null;
         log(`Cleared interval: buy`);
       }
+      if (this.state.panels.sell.timerID) {
+        clearInterval(this.state.panels.buy.timerID);
+        this.state.panels.sell.timerID = null;
+        log(`Cleared interval: sell`);
+      }
       if (this.state.panels.makePayment.timerID) {
         clearInterval(this.state.panels.makePayment.timerID);
         this.state.panels.makePayment.timerID = null;
@@ -353,6 +358,14 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       appName: this.appName,
       panels: {
         buy: {
+          timerID: null,
+          orderID: null,
+          volumeQA: 0,
+          symbolQA: '',
+          volumeBA: 0,
+          symbolBA: '',
+        },
+        sell: {
           timerID: null,
           orderID: null,
           volumeQA: 0,
