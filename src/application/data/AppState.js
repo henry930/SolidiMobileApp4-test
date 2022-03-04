@@ -418,8 +418,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       let prices = {
         'BTC/GBPX': '2000.00',
         'ETH/GBPX': '100.00',
-        'BTC/EUR': '3000.00',
-        'ETH/EUR': '150.00',
+        'BTC/EURX': '3000.00',
+        'ETH/EURX': '150.00',
       }
       _.assign(this.state.apiData, {prices});
 
