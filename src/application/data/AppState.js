@@ -217,6 +217,7 @@ class AppStateProvider extends Component {
       });
     }
 
+    // This is called immediately after a successful Login or PIN entry.
     this.loadUserInfo = async () => {
       // User info
       let data = await this.state.apiClient.privateMethod({httpMethod: 'POST', apiMethod: 'user'});
@@ -243,6 +244,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         reference: data2.reference,
       }
       this.state.userInfoLoaded = true;
+      this.loadBalances();
       log("User info loaded from server.");
     }
 
@@ -307,6 +309,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       return orderStatus;
     }
 
+    // The actual state object of the app.
     // This must be declared towards the end of the constructor.
     this.state = {
       numberOfFooterButtonsToDisplay: this.numberOfFooterButtonsToDisplay,
@@ -390,6 +393,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       }];
     }
 
+    // === Call initial setup functions.
+
     // Load the PIN.
     this.loadPIN();
 
@@ -406,6 +411,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       userAgent: this.state.userAgent, apiKey:'', apiSecret:'',
       domain: this.state.domain,
     });
+
+    // === End setup
 
     // Tweak app state for dev work.
     if (tier === 'dev') {
