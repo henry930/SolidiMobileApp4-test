@@ -16,7 +16,7 @@ import { Test, Buy, Sell, Send, Receive, Assets, History,
   Notifications, Settings, Login, PIN, ChooseHowToPay,
   MakePayment, WaitingForPayment, BlankExampleComponent,
   PaymentNotMade, PurchaseSuccessful, InsufficientBalance,
-  ReadArticle } from './components';
+  ReadArticle, ChooseHowToReceivePayment } from './components';
 import AppStateContext from 'src/application/data';
 
 
@@ -72,6 +72,8 @@ const MainPanel = (props) => {
       return <InsufficientBalance />
     } else if (appState.mainPanelState === 'ReadArticle') {
       return <ReadArticle />
+    } else if (appState.mainPanelState === 'ChooseHowToReceivePayment') {
+      return <ChooseHowToReceivePayment />
     } else {
       return <Text>Error in MainPanel.js: Unknown mainPanelState: {appState.mainPanelState}</Text>
     }

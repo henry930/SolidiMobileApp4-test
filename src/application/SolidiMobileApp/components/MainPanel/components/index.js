@@ -17,6 +17,7 @@ import PaymentNotMade from './PaymentNotMade/PaymentNotMade';
 import PurchaseSuccessful from './PurchaseSuccessful/PurchaseSuccessful';
 import InsufficientBalance from './InsufficientBalance/InsufficientBalance';
 import ReadArticle from './ReadArticle/ReadArticle';
+import ChooseHowToReceivePayment from './ChooseHowToReceivePayment/ChooseHowToReceivePayment';
 
 
 export {
@@ -39,4 +40,5 @@ export {
   PurchaseSuccessful,
   InsufficientBalance,
   ReadArticle,
+  ChooseHowToReceivePayment,
 };
