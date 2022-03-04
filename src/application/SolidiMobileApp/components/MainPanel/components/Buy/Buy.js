@@ -125,7 +125,8 @@ let Buy = () => {
 
   // Handle user recalculating volumeQA when:
   // - the user changes the volumeBA value.
-  useEffect(() => {
+  let calculateVolumeQA = () => {
+    log("Check whether volumeQA should be recalculated.")
     if (_.isEmpty(volumeBA)) {
       // pass
     } else if (lastUserInput == 'volumeQA') {
@@ -143,6 +144,9 @@ let Buy = () => {
         setVolumeQA(newVolumeQA);
       }
     }
+  }
+  useEffect(() => {
+    calculateVolumeQA();
   }, [volumeBA]);
 
   let validateAndSetVolumeBA = (newVolumeBA) => {
