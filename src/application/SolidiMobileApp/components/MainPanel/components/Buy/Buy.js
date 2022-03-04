@@ -123,7 +123,8 @@ let Buy = () => {
     calculateVolumeBA();
   }, [volumeQA]);
 
-  // Handle user changing the volumeBA.
+  // Handle user recalculating volumeQA when:
+  // - the user changes the volumeBA value.
   useEffect(() => {
     if (_.isEmpty(volumeBA)) {
       // pass
