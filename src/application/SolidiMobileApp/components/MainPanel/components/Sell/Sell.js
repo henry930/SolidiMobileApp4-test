@@ -51,6 +51,8 @@ let Sell = () => {
   });
   let [itemsBA, setItemsBA] = useState(baseAssetItems);
 
+  let [balanceBA, setBalanceBA] = useState('');
+
   let loadPriceData = async () => {
     let fxmarket = assetBA + '/' + assetQA;
     let data = await appState.apiClient.publicMethod({
@@ -72,10 +74,29 @@ let Sell = () => {
     calculateVolumeBA();
   }
 
+  let loadBalanceData = async () => {
+    // If we have a balance stored, display that first.
+    if (! _.isUndefined(appState.apiData.balance)) {
+      if (! _.isUndefined(appState.apiData.balance[assetBA])) {
+        let balanceValue = appState.apiData.balance[assetBA].balance;
+        setBalanceBA(balanceValue);
+      }
+    }
+    // Load the balance from the server.
+    await appState.loadBalances();
+    let balanceValue = appState.apiData.balance[assetBA].balance;
+    setBalanceBA(balanceValue);
+  }
+  // When the user changes the assetBA, reload the balance data.
+  useEffect(() => {
+    loadBalanceData();
+  }, [assetBA]);
+
   // Initial setup.
   useEffect( () => {
     if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
     loadPriceData();
+    loadBalanceData();
   }, []); // Pass empty array to only run once on mount.
 
   // Handle recalculating volumeBA when:
@@ -272,7 +293,13 @@ let Sell = () => {
         />
       </View>
 
-      <Text style={styles.descriptionText}>Current price: {generatePriceDescription()}</Text>
+      <View style={styles.balanceWrapper}>
+        <Text style={styles.descriptionText}>Your balance: {balanceBA} {assetBA}</Text>
+      </View>
+
+      <View style={styles.descriptionWrapper}>
+        <Text style={styles.descriptionText}>Current price: {generatePriceDescription()}</Text>
+      </View>
 
       <View style={styles.buttonWrapper}>
         <StandardButton title="Sell now" onPress={ startSellRequest } />
@@ -348,6 +375,9 @@ let styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginTop: scaledHeight(20),
+  },
+  balanceWrapper: {
+    marginBottom: scaledHeight(15),
   },
 });
 
