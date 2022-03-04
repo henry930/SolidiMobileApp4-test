@@ -45,7 +45,8 @@ let Buy = () => {
   let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
   let [openQA, setOpenQA] = useState(false);
   let [assetQA, setAssetQA] = useState(selectedAssetQA);
-  let quoteAssets = 'GBPX EUR'.split(' ');
+  // Future: Load quoteAssets from "list of enabled markets" ?
+  let quoteAssets = 'GBPX EURX'.split(' ');
   let quoteAssetItems = quoteAssets.map(x => {
     let a = assetsInfo[x];
     return {label: a.displayString, value: a.displaySymbol};
@@ -56,6 +57,7 @@ let Buy = () => {
   let [volumeBA, setVolumeBA] = useState(selectedVolumeBA);
   let [openBA, setOpenBA] = useState(false);
   let [assetBA, setAssetBA] = useState(selectedAssetBA);
+  // Future: Load baseAssets from "list of enabled markets" ?
   let baseAssets = 'BTC ETH'.split(' ');
   let baseAssetItems = baseAssets.map(x => {
     let a = assetsInfo[x];
