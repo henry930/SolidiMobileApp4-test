@@ -241,10 +241,10 @@ let Buy = () => {
     Example data:
     {"id":11,"datetime":1643047261277,"type":0,"price":"100","amount":"0.05"}
     */
-   // Todo: If an error occurs, display it.
-   // Store the orderID. Later, we'll use it to check the order's status.
-   appState.panels.buy.orderID = data.id;
-   log(`OrderID: ${appState.panels.buy.orderID}`);
+    // Todo: If an error occurs, display it.
+    // Store the orderID. Later, we'll use it to check the order's status.
+    appState.panels.buy.orderID = data.id;
+    log(`OrderID: ${appState.panels.buy.orderID}`);
 
     // We transfer to the payment sequence.
     appState.changeState('ChooseHowToPay', 'direct_payment');
