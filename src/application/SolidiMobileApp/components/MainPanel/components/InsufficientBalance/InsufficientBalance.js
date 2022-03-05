@@ -30,7 +30,8 @@ let InsufficientBalance = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'InsufficientBalance');
 
   // Testing:
-  _.assign(appState.panels.buy, {volumeQA: '10000', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
+  _.assign(appState.panels.buy, {volumeQA: '100', assetQA: 'GBPX', volumeBA: '0.05', assetBA: 'BTC'});
+  _.assign(appState.panels.sell, {volumeQA: '100', assetQA: 'GBPX', volumeBA: '0.05', assetBA: 'BTC'});
   _.assign(appState.apiData, {
     balance: {
       BTC: {"balance": "0.00000000"},
@@ -39,23 +40,59 @@ let InsufficientBalance = () => {
   });
 
   // Load order details.
-  ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
+  let volumeQA, volumeBA, assetQA, assetBA;
+  if (pageName == 'buy') {
+    ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
+  } else if (pageName == 'sell') {
+    ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.sell);
+  }
 
   // We assume that prior to loading this component, we have retrieved the balances from the API. So, here we can just load them directly.
-  let balanceQA = appState.apiData.balance[assetQA].balance;
-  let dp = assetsInfo[assetQA].decimalPlaces;
-  let diffString = Big(volumeQA).minus(Big(balanceQA)).toFixed(dp);
-  let balanceString = Big(balanceQA).toFixed(dp);
-  let volumeString = Big(volumeQA).toFixed(dp);
-  let orderDetails = `Buy ${volumeBA} ${assetsInfo[assetBA].displayString} for ${volumeQA} ${assetsInfo[assetQA].displayString}.`;
+  let balanceBA = appState.getBalance(assetBA);
+  let balanceQA = appState.getBalance(assetQA);
+  let dpBA = assetsInfo[assetBA].decimalPlaces;
+  let dpQA = assetsInfo[assetQA].decimalPlaces;
+  let balanceString, volumeString, diffString;
+  if (pageName == 'buy') {
+    balanceString = Big(balanceQA).toFixed(dpQA);
+    volumeString = Big(volumeQA).toFixed(dpQA);
+    diffString = Big(volumeQA).minus(Big(balanceQA)).toFixed(dpQA);
+  } else if (pageName == 'sell') {
+    balanceString = Big(balanceBA).toFixed(dpBA);
+    volumeString = Big(volumeBA).toFixed(dpBA);
+    diffString = Big(volumeBA).minus(Big(balanceBA)).toFixed(dpBA);
+  }
 
   let payDirectly = () => {
     appState.changeState('ChooseHowToPay', 'direct_payment');
   }
 
   let makeDeposit = () => {
-    // Todo: Not implemented yet.
-    appState.changeState('Receive', assetQA);
+    let asset;
+    if (pageName == 'buy') asset = assetsInfo[assetQA].displaySymbol;
+    if (pageName == 'sell') asset = assetsInfo[assetBA].displaySymbol;
+    appState.changeState('Receive', asset);
+  }
+
+  let getOrderDetails = () => {
+    let details = '';
+    let displayStringBA = assetsInfo[assetBA].displayString;
+    let displayStringQA = assetsInfo[assetQA].displayString;
+    if (pageName == 'buy') {
+      details += `Buy ${volumeBA} ${displayStringBA} for ${volumeQA} ${displayStringQA}.`;
+    } else if (pageName == 'sell') {
+      details += `Sell ${volumeBA} ${displayStringBA} to get ${volumeQA} ${displayStringQA}.`;
+    }
+    return details;
+  }
+
+  let sellBalanceBA = () => {
+    // Change the order volume to equal the balanceBA.
+    appState.panels.sell.volumeBA = balanceBA;
+    // Todo:
+    //appState.panels.sell.volumeQA = appState.calculateVolumeQAFromVolumeBA(volumeBA);
+    // Go back to the sell page.
+    appState.changeState('Sell', 'loadExistingOrder');
   }
 
   return (
@@ -66,7 +103,7 @@ let InsufficientBalance = () => {
         <Text style={styles.headingText}>Insufficient balance</Text>
       </View>
 
-      <Text>Order details: {orderDetails}</Text>
+      <Text>Order details: {getOrderDetails()}</Text>
 
       <View style={styles.infoSection}>
 
@@ -79,7 +116,7 @@ let InsufficientBalance = () => {
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} The difference: {diffString} {assetQA}</Text>
+          <Text style={styles.bold}>{`\u2022  `} The missing amount: {diffString} {assetQA}</Text>
         </View>
 
       </View>
@@ -90,32 +127,73 @@ let InsufficientBalance = () => {
         </View>
       </View>
 
-      <View style={styles.infoSection}>
+      {(pageName == 'buy') &&
 
-        <View style={styles.infoItem}>
-          <Text style={styles.bold}>Option 1:</Text>
-          <Text>{'\n'}Go back and pay for the order using your online banking.</Text>
+        <View style={styles.optionList}>
+
+          <View style={styles.infoSection}>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.bold}>Option 1:</Text>
+              <Text>{'\n'}Go back and pay for the order using your online banking.</Text>
+            </View>
+
+            <View style={styles.button}>
+              <StandardButton title="Go back" onPress={ payDirectly } />
+            </View>
+
+          </View>
+
+          <View style={styles.infoSection}>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.bold}>Option 2:</Text>
+              <Text>{'\n'}Increase your {assetsInfo[assetQA].displaySymbol} balance by making a deposit.</Text>
+            </View>
+
+            <View style={styles.button}>
+              <StandardButton title="Make a deposit" onPress={ makeDeposit } />
+            </View>
+
+          </View>
+
         </View>
 
-        <View style={styles.button}>
-          <StandardButton title="Go back" onPress={ payDirectly } />
+      }
+
+      {pageName == 'sell' &&
+
+        <View style={styles.optionList}>
+
+          <View style={styles.infoSection}>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.bold}>Option 1:</Text>
+              <Text>{'\n'}Go back and change the amount you wish to sell.</Text>
+            </View>
+
+            <View style={styles.button}>
+              <StandardButton title="Go back" onPress={ sellBalanceBA } />
+            </View>
+
+          </View>
+
+          <View style={styles.infoSection}>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.bold}>Option 2:</Text>
+              <Text>{'\n'}Increase your {assetBA} balance by making a deposit.</Text>
+            </View>
+
+            <View style={styles.button}>
+              <StandardButton title="Make a deposit" onPress={ makeDeposit } />
+            </View>
+
+          </View>
+
         </View>
 
-      </View>
-
-      <View style={styles.infoSection}>
-
-        <View style={styles.infoItem}>
-          <Text style={styles.bold}>Option 2:</Text>
-          <Text>{'\n'}Increase your {assetQA} balance by making a deposit.</Text>
-        </View>
-
-        <View style={styles.button}>
-          <StandardButton title="Make a deposit" onPress={ makeDeposit } />
-        </View>
-
-      </View>
-
+      }
 
 
     </View>

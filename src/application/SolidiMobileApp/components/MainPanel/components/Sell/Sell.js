@@ -21,12 +21,22 @@ let Sell = () => {
 
   let appState = useContext(AppStateContext);
 
+  let pageName = appState.pageName;
+  let permittedPageNames = 'default loadExistingOrder'.split(' ');
+  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Sell');
+
   let [lastUserInput, setLastUserInput] = useState('');
 
   let selectedVolumeQA = '100';
   let selectedAssetQA = 'GBPX';
   let selectedVolumeBA = ''; // Later, we calculate this from the price and the volumeQA.
   let selectedAssetBA = 'BTC';
+
+  // If we're reloading an existing order, load its details from the global state.
+  if (appState.pageName === 'loadExistingOrder') {
+    ({volumeQA: selectedVolumeQA, assetQA: selectedAssetQA} = appState.panels.sell);
+    ({volumeBA: selectedVolumeBA, assetBA: selectedAssetBA} = appState.panels.sell);
+  }
 
   // QA = Quote Asset
   let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
@@ -75,17 +85,16 @@ let Sell = () => {
   }
 
   let loadBalanceData = async () => {
-    // If we have a balance stored, display that first.
-    if (! _.isUndefined(appState.apiData.balance)) {
-      if (! _.isUndefined(appState.apiData.balance[assetBA])) {
-        let balanceValue = appState.apiData.balance[assetBA].balance;
-        setBalanceBA(balanceValue);
-      }
-    }
+    // Display the value we have in storage first.
+    let balanceValue1 = appState.getBalance(assetBA);
+    setBalanceBA(balanceValue1);
     // Load the balance from the server.
     await appState.loadBalances();
-    let balanceValue = appState.apiData.balance[assetBA].balance;
-    setBalanceBA(balanceValue);
+    // Display the new value, if it's different.
+    let balanceValue2 = appState.getBalance(assetBA);
+    if (balanceValue1 != balanceValue2) {
+      setBalanceBA(balanceValue2);
+    }
   }
   // When the user changes the assetBA, reload the balance data.
   useEffect(() => {
@@ -220,6 +229,15 @@ let Sell = () => {
   }
 
   let startSellRequest = async () => {
+    // Check if the user's balance is large enough for this order volume.
+    if (Big(balanceBA).lt(Big(volumeBA))) {
+      let msg = `User's ${assetBA} balance (${balanceBA}) is less than the specified ${assetBA} sell volume (${volumeBA}).`;
+      log(msg);
+      appState.changeState('InsufficientBalance', 'sell');
+      return;
+    }
+    // Save the order data internally.
+    _.assign(appState.panels.sell, {volumeQA, assetQA, volumeBA, assetBA});
     // We send the SELL order to the server.
     let fxmarket = assetBA + '/' + assetQA;
     log(`Send order to server: SELL ${volumeBA} ${fxmarket} @ MARKET ${volumeQA}`);

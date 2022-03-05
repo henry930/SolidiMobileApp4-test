@@ -258,6 +258,16 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       log("User balances loaded from server.");
     }
 
+    this.getBalance = (asset) => {
+      // Get the balance held in the appState.
+      // Handle off-exchange symbols:
+      if (asset == 'GBPX') asset = 'GBP';
+      if (asset == 'EURX') asset = 'EUR';
+      if (_.isUndefined(this.state.apiData.balance)) return '';
+      if (_.isUndefined(this.state.apiData.balance[asset])) return '';
+      return this.state.apiData.balance[asset].balance;
+    }
+
     this.startLockAppTimer = async () => {
       let waitTimeMinutes = 120; // Future: Set to 30 mins.
       let waitTimeSeconds = waitTimeMinutes * 60;
@@ -331,6 +341,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       loadUserInfo: this.loadUserInfo,
       userInfoLoaded: false,
       loadBalances: this.loadBalances,
+      getBalance: this.getBalance,
       startLockAppTimer: this.startLockAppTimer,
       cancelTimers: this.cancelTimers,
       getOrderStatus: this.getOrderStatus,
