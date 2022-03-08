@@ -30,8 +30,8 @@ let InsufficientBalance = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'InsufficientBalance');
 
   // Testing:
-  _.assign(appState.panels.buy, {volumeQA: '100', assetQA: 'GBPX', volumeBA: '0.05', assetBA: 'BTC'});
-  _.assign(appState.panels.sell, {volumeQA: '100', assetQA: 'GBPX', volumeBA: '0.05', assetBA: 'BTC'});
+  _.assign(appState.panels.buy, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
+  _.assign(appState.panels.sell, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
   _.assign(appState.apiData, {
     balance: {
       BTC: {"balance": "0.00000000"},
