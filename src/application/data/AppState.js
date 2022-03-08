@@ -217,6 +217,44 @@ class AppStateProvider extends Component {
       });
     }
 
+    this.startLockAppTimer = async () => {
+      let waitTimeMinutes = 120; // Future: Set to 30 mins.
+      let waitTimeSeconds = waitTimeMinutes * 60;
+      let lockApp = () => {
+        let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
+        log(msg);
+        // Stash the current state.
+        let currentState = {mainPanelState: this.state.mainPanelState, pageName: this.state.pageName};
+        this.state.stashState(currentState);
+        this.state.authenticateUser();
+      }
+      setTimeout(lockApp, waitTimeSeconds * 1000);
+    }
+
+    this.cancelTimers = () => {
+      /* Cancel any existing timers. */
+      if (this.state.panels.buy.timerID) {
+        clearInterval(this.state.panels.buy.timerID);
+        this.state.panels.buy.timerID = null;
+        log(`Cleared interval: buy`);
+      }
+      if (this.state.panels.sell.timerID) {
+        clearInterval(this.state.panels.buy.timerID);
+        this.state.panels.sell.timerID = null;
+        log(`Cleared interval: sell`);
+      }
+      if (this.state.panels.makePayment.timerID) {
+        clearInterval(this.state.panels.makePayment.timerID);
+        this.state.panels.makePayment.timerID = null;
+        log(`Cleared interval: makePayment`);
+      }
+      if (this.state.panels.waitingForPayment.timerID) {
+        clearInterval(this.state.panels.waitingForPayment.timerID);
+        this.state.panels.waitingForPayment.timerID = null;
+        log(`Cleared interval: waitingForPayment`);
+      }
+    }
+
     // This is called immediately after a successful Login or PIN entry.
     this.loadUserInfo = async () => {
       // User info
@@ -298,44 +336,6 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       return this.state.apiData.ticker[fxmarket2];
     }
 
-    this.startLockAppTimer = async () => {
-      let waitTimeMinutes = 120; // Future: Set to 30 mins.
-      let waitTimeSeconds = waitTimeMinutes * 60;
-      let lockApp = () => {
-        let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
-        log(msg);
-        // Stash the current state.
-        let currentState = {mainPanelState: this.state.mainPanelState, pageName: this.state.pageName};
-        this.state.stashState(currentState);
-        this.state.authenticateUser();
-      }
-      setTimeout(lockApp, waitTimeSeconds * 1000);
-    }
-
-    this.cancelTimers = () => {
-      /* Cancel any existing timers. */
-      if (this.state.panels.buy.timerID) {
-        clearInterval(this.state.panels.buy.timerID);
-        this.state.panels.buy.timerID = null;
-        log(`Cleared interval: buy`);
-      }
-      if (this.state.panels.sell.timerID) {
-        clearInterval(this.state.panels.buy.timerID);
-        this.state.panels.sell.timerID = null;
-        log(`Cleared interval: sell`);
-      }
-      if (this.state.panels.makePayment.timerID) {
-        clearInterval(this.state.panels.makePayment.timerID);
-        this.state.panels.makePayment.timerID = null;
-        log(`Cleared interval: makePayment`);
-      }
-      if (this.state.panels.waitingForPayment.timerID) {
-        clearInterval(this.state.panels.waitingForPayment.timerID);
-        this.state.panels.waitingForPayment.timerID = null;
-        log(`Cleared interval: waitingForPayment`);
-      }
-    }
-
     this.getOrderStatus = async ({orderID}) => {
       let data = await this.state.apiClient.privateMethod({
         httpMethod: 'POST',
@@ -368,14 +368,14 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       authenticateUser: this.authenticateUser,
       choosePIN: this.choosePIN,
       loadPIN: this.loadPIN,
+      startLockAppTimer: this.startLockAppTimer,
+      cancelTimers: this.cancelTimers,
       loadUserInfo: this.loadUserInfo,
       userInfoLoaded: false,
       loadBalances: this.loadBalances,
       getBalance: this.getBalance,
       loadPrices: this.loadPrices,
       getPrice: this.getPrice,
-      startLockAppTimer: this.startLockAppTimer,
-      cancelTimers: this.cancelTimers,
       getOrderStatus: this.getOrderStatus,
       apiData: {
         ticker: {},
