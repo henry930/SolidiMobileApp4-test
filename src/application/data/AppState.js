@@ -24,7 +24,8 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 
 // Misc
-let lj = (x) => console.log(JSON.stringify(x));
+let jd = JSON.stringify;
+let lj = (x) => console.log(jd(x));
 
 // Dev
 let tier = 'dev';
@@ -286,22 +287,79 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       log("User info loaded from server.");
     }
 
+    this.loadMarkets = async () => {
+      let data = await this.state.apiClient.publicMethod({
+        httpMethod: 'GET',
+        apiMethod: 'market',
+        params: {},
+      });
+      // Tmp: For development:
+      // Sample markets.
+      data = [
+        'BTC/GBPX',
+        'ETH/GBPX',
+        'BTC/EURX',
+        'ETH/EURX',
+      ]
+      // End tmp
+      // Remove off-exchange 'X' from ticker symbols.
+      data = data.map(market => {
+        let [baseAsset, quoteAsset] = market.split('/');
+        if (quoteAsset == 'GBPX') quoteAsset = 'GBP';
+        if (quoteAsset == 'EURX') quoteAsset = 'EUR';
+        let market2 = baseAsset + '/' + quoteAsset;
+        return market2;
+      });
+      // If the data differs from existing data, save it. (This will cause a component reload.)
+      let msg = "Markets loaded from server.";
+      if (jd(data) === jd(this.state.apiData.market)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState. " + jd(data));
+        this.state.apiData.market = data;
+      }
+      return data;
+    }
+
+    this.getMarkets = () => {
+      let defaultList = ['BTC/GBP'];
+      let markets = this.state.apiData.market;
+      if (_.isEmpty(markets)) return defaultList;
+      return markets;
+    }
+
+    this.getBaseAssets = () => {
+      let markets = this.getMarkets();
+      let baseAssets = markets.map(x => x.split('/')[0]);
+      return _.uniq(baseAssets);
+    }
+
+    this.getQuoteAssets = () => {
+      let markets = this.getMarkets();
+      let quoteAssets = markets.map(x => x.split('/')[1]);
+      return _.uniq(quoteAssets);
+    }
+
     this.loadBalances = async () => {
       let data = await this.state.apiClient.privateMethod({
         httpMethod: 'POST',
         apiMethod: 'balance',
         params: {},
       });
-      this.state.apiData.balance = data;
-      log("User balances loaded from server.");
+      let msg = "User balances loaded from server.";
+      if (jd(data) === jd(this.state.apiData.balance)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState.");
+        this.state.apiData.balance = data;
+      }
+      return data;
     }
 
     this.getBalance = (asset) => {
       // Get the balance held in the appState.
-      // Handle off-exchange symbols:
-      if (asset == 'GBPX') asset = 'GBP';
-      if (asset == 'EURX') asset = 'EUR';
-      if (_.isUndefined(this.state.apiData.balance[asset])) return '';
+      // Note: Currently, no ETH balance appearing in the data. Why not ?
+      if (_.isUndefined(this.state.apiData.balance[asset])) return '[loading]';
       return this.state.apiData.balance[asset].balance;
     }
 
@@ -311,29 +369,37 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         apiMethod: 'ticker',
         params: {},
       });
-      this.state.apiData.ticker = data;
       // Tmp: For development:
       // Sample prices.
-      let ticker = {
+      data = {
         'BTC/GBPX': '2000.00',
         'ETH/GBPX': '100.00',
         'BTC/EURX': '3000.00',
         'ETH/EURX': '150.00',
       }
-      _.assign(this.state.apiData, {ticker});
       // End tmp
-      log("Prices loaded from server.");
+      // Remove off-exchange 'X' from ticker symbols.
+      data = _.mapKeys(data, (value, key) => {
+        let [baseAsset, quoteAsset] = key.split('/');
+        if (quoteAsset == 'GBPX') quoteAsset = 'GBP';
+        if (quoteAsset == 'EURX') quoteAsset = 'EUR';
+        let key2 = baseAsset + '/' + quoteAsset;
+        return key2;
+      });
+      let msg = "Prices loaded from server.";
+      if (jd(data) === jd(this.state.apiData.ticker)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState. " + jd(data));
+        this.state.apiData.ticker = data;
+      }
+      return data;
     }
 
     this.getPrice = (fxmarket) => {
       // Get the price held in the appState.
-      let [assetBA, assetQA] = fxmarket.split('/');
-      // Handle off-exchange symbols:
-      if (assetQA == 'GBP') assetQA = 'GBPX';
-      if (assetQA == 'EUR') assetQA = 'EURX';
-      let fxmarket2 = assetBA + '/' + assetQA;
-      if (_.isUndefined(this.state.apiData.ticker[fxmarket2])) return '0';
-      return this.state.apiData.ticker[fxmarket2];
+      if (_.isUndefined(this.state.apiData.ticker[fxmarket])) return '0';
+      return this.state.apiData.ticker[fxmarket];
     }
 
     this.getOrderStatus = async ({orderID}) => {
@@ -372,12 +438,17 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       cancelTimers: this.cancelTimers,
       loadUserInfo: this.loadUserInfo,
       userInfoLoaded: false,
+      loadMarkets: this.loadMarkets,
+      getMarkets: this.getMarkets,
+      getBaseAssets: this.getBaseAssets,
+      getQuoteAssets: this.getQuoteAssets,
       loadBalances: this.loadBalances,
       getBalance: this.getBalance,
       loadPrices: this.loadPrices,
       getPrice: this.getPrice,
       getOrderStatus: this.getOrderStatus,
       apiData: {
+        market: {},
         ticker: {},
         balance: {},
       },
@@ -457,6 +528,10 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       userAgent: this.state.userAgent, apiKey:'', apiSecret:'',
       domain: this.state.domain,
     });
+
+    // Call public methods that provide useful data.
+    this.state.loadMarkets();
+    this.state.loadPrices();
 
     // === End setup
 

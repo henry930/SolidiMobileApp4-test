@@ -14,6 +14,20 @@ import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 
+// Misc
+let jd = JSON.stringify;
+
+
+/*
+Note: In future, if we start adding crypto-crypto markets, we'll need to distinguish between available and non-available assets pairs.
+Example: If LTC is the selected quoteAsset, and it's only a quoteAsset for the BTC/LTC market, then when the user opens the baseAsset dropdown, the two options should be:
+- [Show all assets]
+- BTC (Bitcoin)
+If the user selects "Show all assets", and then e.g. ETH, then we should not show the current price or a "Sell now" button. Instead, we should show:
+"Solidi does not currently support this market. Please choose from one of the following markets."
+and then include a FlatList with the markets that include either the selected baseAsset or the selected quoteAsset.
+*/
+
 
 
 
@@ -27,10 +41,24 @@ let Sell = () => {
 
   let [lastUserInput, setLastUserInput] = useState('');
 
-  let selectedVolumeQA = '100';
-  let selectedAssetQA = 'GBP';
+  // Defaults.
+  let defaultMarkets = appState.getMarkets();
+  let defaultBaseAssets = ['BTC'];
+  let defaultQuoteAssets = ['GBP'];
   let selectedVolumeBA = ''; // Later, we calculate this from the price and the volumeQA.
   let selectedAssetBA = 'BTC';
+  let selectedVolumeQA = '100';
+  let selectedAssetQA = 'GBP';
+
+  // Function that derives dropdown properties from an asset list.
+  let deriveAssetItems = (assets) => {
+    return assets.map(x => {
+      let a = assetsInfo[x];
+      return {label: a.displayString, value: a.displaySymbol};
+    });
+  }
+  let baseAssetItems = deriveAssetItems(defaultBaseAssets);
+  let quoteAssetItems = deriveAssetItems(defaultQuoteAssets);
 
   // If we're reloading an existing order, load its details from the global state.
   if (appState.pageName === 'loadExistingOrder') {
@@ -38,62 +66,78 @@ let Sell = () => {
     ({volumeBA: selectedVolumeBA, assetBA: selectedAssetBA} = appState.panels.sell);
   }
 
-  // QA = Quote Asset
-  let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
-  let [openQA, setOpenQA] = useState(false);
-  let [assetQA, setAssetQA] = useState(selectedAssetQA);
-  let quoteAssets = 'GBP EUR'.split(' ');
-  let quoteAssetItems = quoteAssets.map(x => {
-    let a = assetsInfo[x];
-    return {label: a.displayString, value: a.displaySymbol};
-  });
-  let [itemsQA, setItemsQA] = useState(quoteAssetItems);
-
+  // Dropdown State:
   // BA = Base Asset
   let [volumeBA, setVolumeBA] = useState(selectedVolumeBA);
   let [openBA, setOpenBA] = useState(false);
   let [assetBA, setAssetBA] = useState(selectedAssetBA);
-  // Future: Load baseAssets from "list of enabled markets" ?
-  let baseAssets = 'BTC ETH'.split(' ');
-  let baseAssetItems = baseAssets.map(x => {
-    let a = assetsInfo[x];
-    return {label: a.displayString, value: a.displaySymbol};
-  });
   let [itemsBA, setItemsBA] = useState(baseAssetItems);
+  // QA = Quote Asset
+  let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
+  let [openQA, setOpenQA] = useState(false);
+  let [assetQA, setAssetQA] = useState(selectedAssetQA);
+  let [itemsQA, setItemsQA] = useState(quoteAssetItems);
 
+  // More state.
+  let [markets, setMarkets] = useState(defaultMarkets);
+  let [baseAssets, setBaseAssets] = useState(defaultBaseAssets);
+  let [quoteAssets, setQuoteAssets] = useState(defaultQuoteAssets);
   let [balanceBA, setBalanceBA] = useState('');
   let [marketPrice, setMarketPrice] = useState('');
-
 
   // Initial setup.
   useEffect( () => {
     if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
+    loadMarketData();
     loadPriceData();
     loadBalanceData();
   }, []); // Pass empty array to only run once on mount.
 
 
+  let loadMarketData = async () => {
+    // First, get the markets we have in storage.
+    let markets = appState.getMarkets();
+    loadAssetData();
+    // Reload data from the server.
+    let markets2 = await appState.loadMarkets();
+    // Store the new data, if it's different, so that our display updates.
+    if (markets !== markets2) setMarkets(markets2);
+    loadAssetData();
+  }
+
+  let loadAssetData = () => {
+    let baseAssets2 = appState.getBaseAssets();
+    // If the asset list has changed, save the state.
+    if (baseAssets != baseAssets2) {
+      let baseAssetItems = deriveAssetItems(baseAssets2);
+      setItemsBA(baseAssetItems);
+    }
+    let quoteAssets2 = appState.getQuoteAssets();
+    // If the asset list has changed, save the state.
+    if (quoteAssets != quoteAssets2) {
+      let quoteAssetItems = deriveAssetItems(quoteAssets2);
+      setItemsQA(quoteAssetItems);
+    }
+  }
+
   let loadPriceData = async () => {
     let market = assetBA + '/' + assetQA;
-    // Display the value we have in storage first.
+    // First, get the price we have in storage.
     let price = appState.getPrice(market);
     setMarketPrice(price);
-    // Load the prices from the server.
+    // Reload data from the server.
     await appState.loadPrices();
+    let price2 = appState.getPrice(market);
     // Tmp: To mimic price changes during testing, increment the price slightly.
     /*
     let dp = assetsInfo[assetQA].decimalPlaces;
     let priceX = (Big(price).plus(Big('1.01'))).toFixed(dp);
     appState.apiData.ticker[market] = priceX;
-    price = priceX;
+    price2 = priceX;
     */
     // End tmp.
-    // Display the new value, if it's different.
-    let price2 = appState.getPrice(market);
-    if (price != price2) {
-      setMarketPrice(price2);
-    }
-    log(`Price data loaded from server. Focus: ${market} market. Price: ${price2}`);
+    // Store the new data, if it's different, so that our display updates.
+    if (price != price2) setMarketPrice(price2);
     // Need to recalculate volumeBA if the price has changed.
     // Note: The QA volume will stay at its current value.
     calculateVolumeBA();
@@ -101,14 +145,14 @@ let Sell = () => {
 
   let loadBalanceData = async () => {
     // Display the value we have in storage first.
-    let balanceValue1 = appState.getBalance(assetBA);
-    setBalanceBA(balanceValue1);
+    let balance1 = appState.getBalance(assetBA);
+    setBalanceBA(balance1);
     // Load the balance from the server.
     await appState.loadBalances();
     // Display the new value, if it's different.
-    let balanceValue2 = appState.getBalance(assetBA);
-    if (balanceValue1 != balanceValue2) {
-      setBalanceBA(balanceValue2);
+    let balance2 = appState.getBalance(assetBA);
+    if (balance1 !== balance2) {
+      setBalanceBA(balance2);
     }
   }
   // When the user changes the assetBA, reload the balance data.
@@ -181,6 +225,12 @@ let Sell = () => {
     calculateVolumeQA();
   }, [volumeBA]);
 
+  // Recalculate volumeBA when the assetBA or the assetQA is changed in a dropdown.
+  // Hold the volumeQA constant.
+  useEffect(() => {
+    calculateVolumeBA();
+  }, [assetBA, assetQA]);
+
   let validateAndSetVolumeBA = (newVolumeBA) => {
     setLastUserInput('volumeBA');
     let baseDP = assetsInfo[assetBA].decimalPlaces;
@@ -224,12 +274,13 @@ let Sell = () => {
   }
 
   let generatePriceDescription = () => {
-    let market = selectedAssetBA + '/' + selectedAssetQA;
+    let market = assetBA + '/' + assetQA;
     let price = appState.getPrice(market);
-    let dp = assetsInfo[selectedAssetQA].decimalPlaces;
+    log(`Market price for ${market} market = ${price}`);
+    let dp = assetsInfo[assetQA].decimalPlaces;
     let priceString = Big(price).toFixed(dp);
-    let displayStringBA = assetsInfo[selectedAssetBA].displaySymbol;
-    let displayStringQA = assetsInfo[selectedAssetQA].displaySymbol;
+    let displayStringBA = assetsInfo[assetBA].displaySymbol;
+    let displayStringQA = assetsInfo[assetQA].displaySymbol;
     let description = `1 ${displayStringBA} = ${priceString} ${displayStringQA}`;
     return description;
   }
@@ -296,7 +347,7 @@ let Sell = () => {
           value={volumeQA}
         />
         <DropDownPicker
-          placeholder={assetsInfo[selectedAssetQA].displayString}
+          placeholder={assetsInfo[assetQA].displayString}
           style={styles.quoteAsset}
           containerStyle={styles.quoteAssetContainer}
           open={openQA}
@@ -317,7 +368,7 @@ let Sell = () => {
           value={volumeBA}
         />
         <DropDownPicker
-          placeholder={assetsInfo[selectedAssetBA].displayString}
+          placeholder={assetsInfo[assetBA].displayString}
           style={styles.baseAsset}
           containerStyle={styles.baseAssetContainer}
           open={openBA}
@@ -330,7 +381,7 @@ let Sell = () => {
       </View>
 
       <View style={styles.balanceWrapper}>
-        <Text style={styles.descriptionText}>Your balance: {balanceBA} {assetBA}</Text>
+        <Text style={styles.descriptionText}>Your balance: {balanceBA} {(balanceBA != '[loading]') && assetBA}</Text>
       </View>
 
       <View style={styles.descriptionWrapper}>
