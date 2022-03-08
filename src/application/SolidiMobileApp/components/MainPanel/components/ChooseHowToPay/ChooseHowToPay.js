@@ -35,6 +35,10 @@ let ChooseHowToPay = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToPay');
 
   let [paymentChoice, setPaymentChoice] = React.useState(pageName);
+  let [balanceQA, setBalanceQA] = useState('');
+  let [disablePayWithBalanceButton, setDisablePayWithBalanceButton] = useState(false);
+  let [stylePayWithBalanceButton, setStylePayWithBalanceButton] = useState(stylePWBButton);
+  let [stylePayWithBalanceButtonText, setStylePayWithBalanceButtonText] = useState(stylePWBButtonText);
 
   // Testing:
   _.assign(appState.panels.buy, {volumeQA: '1000', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
@@ -43,6 +47,41 @@ let ChooseHowToPay = () => {
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
 
   let zeroVolumeQA = '0.' + '0'.repeat(assetsInfo[assetQA].decimalPlaces);
+
+
+  // Initial setup.
+  useEffect( () => {
+    loadBalanceData();
+  }, []); // Pass empty array to only run once on mount.
+
+
+  let loadBalanceData = async () => {
+    // Display the value we have in storage first.
+    let balance1 = appState.getBalance(assetQA);
+    setBalanceQA(balance1);
+    // Load the balance from the server.
+    await appState.loadBalances();
+    // Display the new value, if it's different.
+    let balance2 = appState.getBalance(assetQA);
+    if (balance1 !== balance2) {
+      setBalanceQA(balance2);
+    }
+    checkBalance();
+  }
+
+  // Disable the "Pay with balance" button if the balance is too small.
+  let checkBalance = async () => {
+    let balanceQA = appState.getBalance(assetQA);
+    if(Big(volumeQA).gt(Big(balanceQA))) {
+      setDisablePayWithBalanceButton(true);
+      setStylePayWithBalanceButton(stylePWBButtonDisabled);
+      setStylePayWithBalanceButtonText(stylePWBButtonTextDisabled);
+    } else { // enforce reset in case user goes back and changes the volumeQA.
+      setDisablePayWithBalanceButton(false);
+      setStylePayWithBalanceButton(stylePWBButton);
+      setStylePayWithBalanceButtonText(stylePWBButtonText);
+    }
+  }
 
   let readPaymentConditions = async () => {
     appState.changeState('ReadArticle', 'payment_conditions');
@@ -60,8 +99,10 @@ let ChooseHowToPay = () => {
   }
 
   let payWithBalance = async () => {
+    // We disable the "Pay with balance" button if the balance isn't large enough, but we still double-check the balance value here.
+    // We reload the balances just in case the user has performed another action in the meantime.
     await appState.loadBalances();
-    let balanceQA = appState.apiData.balance[assetQA].balance;
+    let balanceQA = appState.getBalance(assetQA);
     let dp = assetsInfo[assetQA].decimalPlaces;
     if (Big(balanceQA).lt(Big(volumeQA))) {
       let diffString = Big(volumeQA).minus(Big(balanceQA)).toFixed(dp);
@@ -79,6 +120,7 @@ let ChooseHowToPay = () => {
       appState.changeState('PurchaseSuccessful');
     }
   }
+
 
   return (
 
@@ -102,12 +144,16 @@ let ChooseHowToPay = () => {
           </View>
 
           <RadioButton.Item label="Pay with balance" value="balance"
-            color={colors.standardButtonText}
-            style={styles.button} labelStyle={styles.buttonLabel} />
+            disabled={disablePayWithBalanceButton}
+            style={stylePayWithBalanceButton} labelStyle={styles.buttonLabel} />
 
           <View style={styles.buttonDetail}>
-            <Text style={styles.bold}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
-            <Text style={styles.bold}>{`\u2022  `} Processed instantly</Text>
+            <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
+            <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Processed instantly</Text>
+            <Text style={styles.bold}>{`\u2022  `} Your balance: {balanceQA} {(balanceQA != '[loading]') && assetQA}</Text>
+            {disablePayWithBalanceButton &&
+              <Text style={styles.bold}>{`\u2022  `} (Balance is too low for this option)</Text>
+            }
           </View>
 
         </RadioButton.Group>
@@ -224,6 +270,29 @@ let styles = StyleSheet.create({
     paddingHorizontal: scaledWidth(30),
   },
 
+});
+
+
+let stylePWBButton = StyleSheet.create({
+  borderWidth: 1,
+  borderRadius: 18,
+  backgroundColor: colors.standardButton,
+});
+
+let stylePWBButtonDisabled = StyleSheet.create({
+  borderWidth: 1,
+  borderRadius: 18,
+  backgroundColor: colors.greyedOutIcon,
+});
+
+
+let stylePWBButtonText = StyleSheet.create({
+  fontWeight: 'bold',
+});
+
+let stylePWBButtonTextDisabled = StyleSheet.create({
+  fontWeight: 'bold',
+  color: colors.greyedOutIcon,
 });
 
 
