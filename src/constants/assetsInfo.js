@@ -21,25 +21,11 @@ export const assetsInfo = {
     displaySymbol: 'EUR',
     displayString: 'EUR (Euro)',
   },
-  'EURX': {
-    name: 'Euro',
-    type: 'fiat',
-    decimalPlaces: 2,
-    displaySymbol: 'EUR', // different
-    displayString: 'EUR (Euro)',
-  },
   'GBP': {
     name: 'British Pound',
     type: 'fiat',
     decimalPlaces: 2,
     displaySymbol: 'GBP',
-    displayString: 'GBP (British Pound)',
-  },
-  'GBPX': {
-    name: 'British Pound',
-    type: 'fiat',
-    decimalPlaces: 2,
-    displaySymbol: 'GBP', // different
     displayString: 'GBP (British Pound)',
   },
   'LTC': {
