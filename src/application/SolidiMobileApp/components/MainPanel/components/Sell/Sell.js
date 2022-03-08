@@ -64,6 +64,15 @@ let Sell = () => {
   let [balanceBA, setBalanceBA] = useState('');
   let [marketPrice, setMarketPrice] = useState('');
 
+
+  // Initial setup.
+  useEffect( () => {
+    if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
+    loadPriceData();
+    loadBalanceData();
+  }, []); // Pass empty array to only run once on mount.
+
+
   let loadPriceData = async () => {
     let market = assetBA + '/' + assetQA;
     // Display the value we have in storage first.
@@ -106,13 +115,6 @@ let Sell = () => {
   useEffect(() => {
     loadBalanceData();
   }, [assetBA]);
-
-  // Initial setup.
-  useEffect( () => {
-    if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
-    loadPriceData();
-    loadBalanceData();
-  }, []); // Pass empty array to only run once on mount.
 
   // Handle recalculating volumeBA when:
   // - the price changes.
