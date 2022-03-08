@@ -27,13 +27,24 @@ let Buy = () => {
 
   let [lastUserInput, setLastUserInput] = useState('');
 
-  // Note: On the app, we think in terms of GBP, but on the server, the fxmarkets are in terms of GBPX (GBP that is off-exchange).
-  // Therefore, here, we use 'GBPX'.
-
-  let selectedVolumeQA = '100';
-  let selectedAssetQA = 'GBPX';
+  // Defaults.
+  let defaultMarkets = appState.getMarkets();
+  let defaultBaseAssets = ['BTC'];
+  let defaultQuoteAssets = ['GBP'];
   let selectedVolumeBA = ''; // Later, we calculate this from the price and the volumeQA.
   let selectedAssetBA = 'BTC';
+  let selectedVolumeQA = '100';
+  let selectedAssetQA = 'GBP';
+
+  // Function that derives dropdown properties from an asset list.
+  let deriveAssetItems = (assets) => {
+    return assets.map(x => {
+      let a = assetsInfo[x];
+      return {label: a.displayString, value: a.displaySymbol};
+    });
+  }
+  let baseAssetItems = deriveAssetItems(defaultBaseAssets);
+  let quoteAssetItems = deriveAssetItems(defaultQuoteAssets);
 
   // If we're reloading an existing order, load its details from the global state.
   if (appState.pageName === 'userHasClickedBuyButton') {
@@ -41,58 +52,81 @@ let Buy = () => {
     ({volumeBA: selectedVolumeBA, assetBA: selectedAssetBA} = appState.panels.buy);
   }
 
-  // QA = Quote Asset
-  let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
-  let [openQA, setOpenQA] = useState(false);
-  let [assetQA, setAssetQA] = useState(selectedAssetQA);
-  // Future: Load quoteAssets from "list of enabled markets" ?
-  let quoteAssets = 'GBPX EURX'.split(' ');
-  let quoteAssetItems = quoteAssets.map(x => {
-    let a = assetsInfo[x];
-    return {label: a.displayString, value: a.displaySymbol};
-  });
-  let [itemsQA, setItemsQA] = useState(quoteAssetItems);
-
+  // Dropdown State:
   // BA = Base Asset
   let [volumeBA, setVolumeBA] = useState(selectedVolumeBA);
   let [openBA, setOpenBA] = useState(false);
   let [assetBA, setAssetBA] = useState(selectedAssetBA);
-  // Future: Load baseAssets from "list of enabled markets" ?
-  let baseAssets = 'BTC ETH'.split(' ');
-  let baseAssetItems = baseAssets.map(x => {
-    let a = assetsInfo[x];
-    return {label: a.displayString, value: a.displaySymbol};
-  });
   let [itemsBA, setItemsBA] = useState(baseAssetItems);
+  // QA = Quote Asset
+  let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
+  let [openQA, setOpenQA] = useState(false);
+  let [assetQA, setAssetQA] = useState(selectedAssetQA);
+  let [itemsQA, setItemsQA] = useState(quoteAssetItems);
 
-  let loadPriceData = async () => {
-    let fxmarket = assetBA + '/' + assetQA;
-    let data = await appState.apiClient.publicMethod({
-      httpMethod: 'GET',
-      apiMethod: 'ticker',
-      params: {},
-    });
-    log(data)
-    // Tmp: To mimic price changes, increment the price slightly.
-    /*
-    let price = appState.apiData.prices[fxmarket];
-    let dp = assetsInfo[assetQA].decimalPlaces;
-    let price2 = (Big(price).minus(Big('1.01'))).toFixed(dp);
-    appState.apiData.prices[fxmarket] = price2;
-    */
-    // End tmp.
-    //log(`Price data loaded from server. Focus: ${fxmarket} market. Price: ${price2}`);
-    // Todo: Log the data, store it in the apiData, extract the relevant bits, calculate volumeBA that can be bought for the current QA volume, and use setVolumeBA to change the volumeBA value.
-    // The QA volume will stay at its current value.
-    // Need to recalculate volumeBA if the price has changed.
-    calculateVolumeBA();
-  }
+  // More state.
+  let [markets, setMarkets] = useState(defaultMarkets);
+  let [baseAssets, setBaseAssets] = useState(defaultBaseAssets);
+  let [quoteAssets, setQuoteAssets] = useState(defaultQuoteAssets);
+  let [marketPrice, setMarketPrice] = useState('');
+
 
   // Initial setup.
   useEffect( () => {
     if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
+    loadMarketData();
     loadPriceData();
   }, []); // Pass empty array to only run once on mount.
+
+
+  let loadMarketData = async () => {
+    // First, get the markets we have in storage.
+    let markets = appState.getMarkets();
+    loadAssetData();
+    // Reload data from the server.
+    let markets2 = await appState.loadMarkets();
+    // Store the new data, if it's different, so that our display updates.
+    if (markets !== markets2) setMarkets(markets2);
+    loadAssetData();
+  }
+
+  let loadAssetData = () => {
+    let baseAssets2 = appState.getBaseAssets();
+    // If the asset list has changed, save the state.
+    if (baseAssets != baseAssets2) {
+      let baseAssetItems = deriveAssetItems(baseAssets2);
+      setItemsBA(baseAssetItems);
+    }
+    let quoteAssets2 = appState.getQuoteAssets();
+    // If the asset list has changed, save the state.
+    if (quoteAssets != quoteAssets2) {
+      let quoteAssetItems = deriveAssetItems(quoteAssets2);
+      setItemsQA(quoteAssetItems);
+    }
+  }
+
+  let loadPriceData = async () => {
+    let market = assetBA + '/' + assetQA;
+    // First, get the price we have in storage.
+    let price = appState.getPrice(market);
+    setMarketPrice(price);
+    // Reload data from the server.
+    await appState.loadPrices();
+    let price2 = appState.getPrice(market);
+    // Tmp: To mimic price changes, increment the price slightly.
+    /*
+    let dp = assetsInfo[assetQA].decimalPlaces;
+    priceX = (Big(price).minus(Big('1.01'))).toFixed(dp);
+    appState.apiData.prices[fxmarket] = price2;
+    price2 = priceX;
+    */
+    // End tmp.
+    // Store the new data, if it's different, so that our display updates.
+    if (price != price2) setMarketPrice(price2);
+    // Need to recalculate volumeBA if the price has changed.
+    // Note: The QA volume will stay at its current value.
+    calculateVolumeBA();
+  }
 
   // Handle recalculating volumeBA when:
   // - the price changes.
@@ -105,11 +139,17 @@ let Buy = () => {
     } else if (lastUserInput == 'volumeBA') {
       // If the user changes volumeBA, this will cause volumeQA to be recalculated.
       // This clause prevents the volumeQA change causing volumeBA to be recalculated for a second time (which would be a recursive event loop).
-    } else if (appState.apiData.prices) {
+    } else {
       log('Recalculate base asset volume');
       let checkVolumeBA = _.isEmpty(volumeBA) ? '0' : volumeBA;
       let market = assetBA + '/' + assetQA;
-      let price = appState.apiData.prices[market];
+      let price = appState.getPrice(market);
+      if (price === '0') {
+        // Price data has not yet been retrieved from server.
+        setVolumeBA('[loading]');
+        log('asdqwe')
+        return;
+      }
       let baseDP = assetsInfo[assetBA].decimalPlaces;
       let newVolumeBA = Big(volumeQA).div(Big(price)).toFixed(baseDP);
       // If new value of volumeBA is different, update it.
@@ -132,11 +172,16 @@ let Buy = () => {
     } else if (lastUserInput == 'volumeQA') {
       // If the user changes volumeQA, this will cause volumeBA to be recalculated.
       // This clause prevents the volumeBA change causing volumeQA to be recalculated for a second time (which would be a recursive event loop).
-    } else if (appState.apiData.prices) {
+    } else {
       log('Recalculate quote asset volume');
       let checkVolumeQA = _.isEmpty(volumeQA) ? '0' : volumeQA;
       let market = assetBA + '/' + assetQA;
-      let price = appState.apiData.prices[market];
+      let price = appState.getPrice(market);
+      if (price === '0') {
+        // Price data has not yet been retrieved from server.
+        setVolumeQA('[loading]');
+        return;
+      }
       let quoteDP = assetsInfo[assetQA].decimalPlaces;
       let newVolumeQA = Big(volumeBA).mul(Big(price)).toFixed(quoteDP);
       if (Big(newVolumeQA) !== Big(checkVolumeQA)) {
@@ -148,6 +193,12 @@ let Buy = () => {
   useEffect(() => {
     calculateVolumeQA();
   }, [volumeBA]);
+
+  // Recalculate volumeBA when the assetBA or the assetQA is changed in a dropdown.
+  // Hold the volumeQA constant.
+  useEffect(() => {
+    calculateVolumeBA();
+  }, [assetBA, assetQA]);
 
   let validateAndSetVolumeBA = (newVolumeBA) => {
     setLastUserInput('volumeBA');
@@ -192,12 +243,13 @@ let Buy = () => {
   }
 
   let generatePriceDescription = () => {
-    let market = selectedAssetBA + '/' + selectedAssetQA;
-    let price = appState.apiData.prices[market];
-    let dp = assetsInfo[selectedAssetQA].decimalPlaces;
+    let market = assetBA + '/' + assetQA;
+    let price = appState.getPrice(market);
+    log(`Market price for ${market} market = ${price}`);
+    let dp = assetsInfo[assetQA].decimalPlaces;
     let priceString = Big(price).toFixed(dp);
-    let displayStringBA = assetsInfo[selectedAssetBA].displaySymbol;
-    let displayStringQA = assetsInfo[selectedAssetQA].displaySymbol;
+    let displayStringBA = assetsInfo[assetBA].displaySymbol;
+    let displayStringQA = assetsInfo[assetQA].displaySymbol;
     let description = `1 ${displayStringBA} = ${priceString} ${displayStringQA}`;
     return description;
   }
@@ -215,8 +267,8 @@ let Buy = () => {
   }
 
   let startBuyRequest = async () => {
-    // If the user isn't authenticated, push them into the auth sequence.
 
+    // If the user isn't authenticated, push them into the auth sequence.
     if (! appState.user.isAuthenticated) {
       // This happens here, rather than in setMainPanelState, because we want the user to make the choice to buy prior to having to authenticate.
       // Save the order details in the global state.
@@ -229,13 +281,13 @@ let Buy = () => {
 
     // At this point, the user is already authenticated, or has just returned from the auth sequence.
     // We send the BUY order to the server.
-    let fxmarket = assetBA + '/' + assetQA;
-    log(`Send order to server: BUY ${volumeBA} ${fxmarket} @ MARKET ${volumeQA}`);
+    let market = assetBA + '/' + assetQA;
+    log(`Send order to server: BUY ${volumeBA} ${market} @ MARKET ${volumeQA}`);
     let data = await appState.apiClient.privateMethod({
       httpMethod: 'POST',
       apiMethod: 'buy',
       params: {
-        fxmarket,
+        fxmarket: market,
         amount: volumeBA,
         price: volumeQA,
       },
@@ -275,7 +327,7 @@ let Buy = () => {
           value={volumeQA}
         />
         <DropDownPicker
-          placeholder={assetsInfo[selectedAssetQA].displayString}
+          placeholder={assetsInfo[assetQA].displayString}
           style={styles.quoteAsset}
           containerStyle={styles.quoteAssetContainer}
           open={openQA}
@@ -296,7 +348,7 @@ let Buy = () => {
           value={volumeBA}
         />
         <DropDownPicker
-          placeholder={assetsInfo[selectedAssetBA].displayString}
+          placeholder={assetsInfo[assetBA].displayString}
           style={styles.baseAsset}
           containerStyle={styles.baseAssetContainer}
           open={openBA}
