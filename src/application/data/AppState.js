@@ -299,7 +299,7 @@ class AppStateProvider extends Component {
     // This is called immediately after a successful Login or PIN entry.
     this.loadUserInfo = async () => {
       // Load user info
-      let data = await this.state.apiClient.privateMethod({httpMethod: 'POST', apiMethod: 'user'});
+      let data = await this.state.privateMethod({httpMethod: 'POST', apiMethod: 'user'});
       let keyNames = `address_1, address_2, address_3, address_4,
 bank_limit, btc_limit, country, crypto_limit, email, firstname, freewithdraw,
 landline, lastname, mobile, mon_bank_limit, mon_btc_limit, mon_crypto_limit,
@@ -315,7 +315,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         this.state.user.info.user = data;
       }
       // Load user's GBP deposit details.
-      let data2 = await this.state.apiClient.privateMethod({httpMethod: 'POST', apiMethod: 'deposit_details/GBP'});
+      let data2 = await this.state.privateMethod({httpMethod: 'POST', apiMethod: 'deposit_details/GBP'});
       // Example result:
       // {"data2": {"accountname": "Solidi", "accountno": "00001036", "reference": "SHMPQKC", "result": "success", "sortcode": "040476"}}
       let keyNames2 = `accountname, accountno, reference, result, sortcode`.replace(/,/g, '').split(' ').filter(x => x);
@@ -342,7 +342,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     }
 
     this.loadMarkets = async () => {
-      let data = await this.state.apiClient.publicMethod({
+      let data = await this.state.publicMethod({
         httpMethod: 'GET',
         apiMethod: 'market',
         params: {},
@@ -388,7 +388,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     }
 
     this.loadBalances = async () => {
-      let data = await this.state.apiClient.privateMethod({
+      let data = await this.state.privateMethod({
         httpMethod: 'POST',
         apiMethod: 'balance',
         params: {},
@@ -414,7 +414,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     }
 
     this.loadPrices = async () => {
-      let data = await this.state.apiClient.publicMethod({
+      let data = await this.state.publicMethod({
         httpMethod: 'GET',
         apiMethod: 'ticker',
         params: {},
@@ -446,7 +446,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     }
 
     this.getOrderStatus = async ({orderID}) => {
-      let data = await this.state.apiClient.privateMethod({
+      let data = await this.state.privateMethod({
         httpMethod: 'POST',
         apiMethod: 'order_status/' + orderID,
         params: {},

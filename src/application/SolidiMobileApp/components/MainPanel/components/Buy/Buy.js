@@ -283,7 +283,7 @@ let Buy = () => {
     // We send the BUY order to the server.
     let market = assetBA + '/' + assetQA;
     log(`Send order to server: BUY ${volumeBA} ${market} @ MARKET ${volumeQA}`);
-    let data = await appState.apiClient.privateMethod({
+    let data = await appState.privateMethod({
       httpMethod: 'POST',
       apiMethod: 'buy',
       params: {

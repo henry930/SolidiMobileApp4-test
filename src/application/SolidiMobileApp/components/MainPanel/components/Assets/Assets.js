@@ -37,7 +37,7 @@ let Assets = () => {
   ]);
 
   let getData = async () => {
-    let data = await appState.apiClient.privateMethod({
+    let data = await appState.privateMethod({
       httpMethod: 'POST',
       apiMethod: 'balance',
       params: {},
