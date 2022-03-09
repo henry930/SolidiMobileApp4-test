@@ -152,7 +152,7 @@ let ChooseHowToPay = () => {
             <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Processed instantly</Text>
             <Text style={styles.bold}>{`\u2022  `} Your balance: {balanceQA} {(balanceQA != '[loading]') && assetQA}</Text>
             {disablePayWithBalanceButton &&
-              <Text style={styles.bold}>{`\u2022  `} (Balance is too low for this option)</Text>
+              <Text style={styles.balanceLowText}>{`\u2022  `} (Balance is too low for this option)</Text>
             }
           </View>
 
@@ -269,7 +269,10 @@ let styles = StyleSheet.create({
     marginTop: scaledHeight(20),
     paddingHorizontal: scaledWidth(30),
   },
-
+  balanceLowText: {
+    fontWeight: 'bold',
+    color: 'red',
+  },
 });
 
 
