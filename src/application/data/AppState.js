@@ -182,8 +182,8 @@ class AppStateProvider extends Component {
 
     this.abortAllRequests = () => {
       let controllers = this.state.abortControllers;
+      log({controllers})
       // Remove aborted controllers.
-      // Future problem: If the user switches back and forth between screens fast enough, it's perhaps possible that the reassignment here of the activeControllers to controllers will miss some new requests.
       let activeControllers = _.entries(controllers).filter(([key, value]) => value !== 'aborted');
       controllers = _.fromPairs(activeControllers);
       // Abort any active controllers.
@@ -192,6 +192,8 @@ class AppStateProvider extends Component {
         controllers[controllerID] = 'aborted';
         log(`Aborted controller ${controllerID}`)
       }
+      // Future problem: If the user switches back and forth between screens fast enough, it's perhaps possible that the reassignment here of the altered controllers object to the appState will not include some new requests.
+      this.state.abortControllers = controllers;
     }
 
     this.publicMethod = (args) => {

@@ -147,7 +147,6 @@ let Buy = () => {
       if (price === '0') {
         // Price data has not yet been retrieved from server.
         setVolumeBA('[loading]');
-        log('asdqwe')
         return;
       }
       let baseDP = assetsInfo[assetBA].decimalPlaces;

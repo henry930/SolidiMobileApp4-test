@@ -149,7 +149,7 @@ export default class SolidiRestAPIClientLibrary {
       return data;
     } catch(err) {
       if (err.name == 'AbortError') {
-        if (requestCompleted) {
+        if (requestCompleted) { // This doesn't appear to ever run.
           let msg = `Attempt to abort but already completed: ${uri}`;
           log(msg);
         } else {
