@@ -46,7 +46,7 @@ let MakePayment = () => {
       // Call the server to find out if the user made the payment but did not click "I have paid" button.
       // If the payment has arrived, the order will have been filled.
       let orderStatus = appState.getOrderStatus({orderID: appState.panels.buy.orderID});
-      if (orderStatus == 'filled') {
+      if (orderStatus == 'settled') {
         appState.changeState('PurchaseSuccessful');
       } else {
         appState.changeState('PaymentNotMade');

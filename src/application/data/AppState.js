@@ -466,6 +466,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         params: {},
       });
       // Todo: Look at data, and return 'live' or 'filled'.
+      // Alternatively: call 'order/' + orderid, and check "settlement_status" value.
       let orderStatus = 'live'; //tmp
       let knownStatuses = 'live settled'.split(' ');
       misc.confirmItemInArray('knownStatuses', knownStatuses, orderStatus, 'getOrderStatus');

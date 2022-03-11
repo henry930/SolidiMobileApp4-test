@@ -87,7 +87,7 @@ let WaitingForPayment = () => {
     }
     // Call the server to check if the payment has arrived (if it has, the order will have been filled).
     let orderStatus = appState.getOrderStatus({orderID: appState.panels.buy.orderID});
-    if (orderStatus == 'filled') {
+    if (orderStatus == 'settled') {
       clearInterval(appState.panels.waitingForPayment.timerID);
       appState.changeState('PurchaseSuccessful');
     }
