@@ -18,6 +18,7 @@ import PurchaseSuccessful from './PurchaseSuccessful/PurchaseSuccessful';
 import InsufficientBalance from './InsufficientBalance/InsufficientBalance';
 import ReadArticle from './ReadArticle/ReadArticle';
 import ChooseHowToReceivePayment from './ChooseHowToReceivePayment/ChooseHowToReceivePayment';
+import RequestTimeout from './RequestTimeout/RequestTimeout';
 
 
 export {
@@ -41,4 +42,5 @@ export {
   InsufficientBalance,
   ReadArticle,
   ChooseHowToReceivePayment,
+  RequestTimeout,
 };

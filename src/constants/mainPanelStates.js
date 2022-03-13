@@ -19,6 +19,7 @@ export const mainPanelStates = [
   'InsufficientBalance',
   'ReadArticle',
   'ChooseHowToReceivePayment',
+  'RequestTimeout',
 ];
 
 export default mainPanelStates;
