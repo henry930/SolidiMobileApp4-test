@@ -17,7 +17,7 @@ let Test = () => {
 
   let switchPanel = async () => {
     setTimeout( () => {
-      appState.setMainPanelState({mainPanelState: mainPanelStates.HISTORY});
+      appState.setMainPanelState({mainPanelState: 'History'});
     }, 500);
   }
 
