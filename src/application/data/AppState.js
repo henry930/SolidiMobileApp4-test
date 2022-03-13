@@ -78,6 +78,7 @@ class AppStateProvider extends Component {
       A state history entry consists of:
       - mainPanelState
       - pageName
+      Don't store a reloaded stashed state in the history list.
       */
       let stateHistoryList = this.state.stateHistoryList;
       let storeHistoryState = (! stashed && ! this.nonHistoryPanels.includes(mainPanelState))
@@ -103,9 +104,9 @@ class AppStateProvider extends Component {
       }
       // Finally, change to new state.
       if (makeFinalSwitch) {
-        this.setState({mainPanelState, pageName});
         this.state.stateChangeID += 1;
         log(`New stateChangeID: ${this.state.stateChangeID}`);
+        this.setState({mainPanelState, pageName});
       }
     }
 
