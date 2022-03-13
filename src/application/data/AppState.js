@@ -333,6 +333,11 @@ class AppStateProvider extends Component {
         this.state.panels.waitingForPayment.timerID = null;
         log(`Cleared interval: waitingForPayment`);
       }
+      if (this.state.panels.requestTimeout.timerID) {
+        clearInterval(this.state.panels.requestTimeout.timerID);
+        this.state.panels.requestTimeout.timerID = null;
+        log(`Cleared interval: requestTimeout`);
+      }
     }
 
     // This is called immediately after a successful Login or PIN entry.
@@ -589,6 +594,9 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
           timerID: null,
         },
         waitingForPayment: {
+          timerID: null,
+        },
+        requestTimeout: {
           timerID: null,
         },
       },
