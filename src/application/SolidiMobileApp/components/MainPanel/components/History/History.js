@@ -11,17 +11,22 @@ import Big from 'big.js';
 import misc from 'src/util/misc';
 import { assetsInfo, mainPanelStates } from 'src/constants';
 import AppStateContext from 'src/application/data';
-import { Button } from 'src/components/atomic';
+import { Button, Spinner } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
 
 let History = () => {
 
   let appState = useContext(AppStateContext);
+  let [isLoading, setIsLoading] = useState(true);
   let stateChangeID = appState.stateChangeID;
 
-  let [isLoading, setIsLoading] = useState(true);
-  let [reloadCount, setReloadCount] = useState(0);
+
+  // Initial setup.
+  useEffect(() => {
+    getData();
+  }, []);
+
 
   let getData = async () => {
     let data = await appState.privateMethod({
@@ -45,15 +50,6 @@ let History = () => {
     setIsLoading(false);
   }
 
-  let displayLoadingMsg = () => {
-    let loadingMsg = '';
-    return (
-      <View style={styles.loadingMsg}>
-        <Text>{loadingMsg}</Text>
-      </View>
-    );
-  }
-
   // Check to see if a category has been specified as this panel is loaded.
   let selectedCategory = 'orders'; // default value.
   let categories = 'transactions orders'.split(' ');
@@ -72,10 +68,6 @@ let History = () => {
     {label: 'All Transactions', value: 'transactions'},
   ]);
 
-  useEffect(() => {
-    getData();
-  }, [reloadCount]);
-
   let displayHistoryControls = () => {
 
     return (
@@ -92,7 +84,7 @@ let History = () => {
             setItems={setCategoryItems}
           />
         </View>
-        <Button title='Reload' onPress={ () => { setReloadCount(reloadCount+1); } } />
+        <Button title='Reload' onPress={ getData } />
       </View>
     );
   }
@@ -183,7 +175,7 @@ let History = () => {
   return (
     <View style={styles.panelContainer}>
       <View style={styles.historySection}>
-        {isLoading && displayLoadingMsg()}
+        { isLoading && <Spinner/> }
         {! isLoading && displayHistoryControls()}
         {! isLoading && category === 'transactions' &&
           renderTransactions()}
