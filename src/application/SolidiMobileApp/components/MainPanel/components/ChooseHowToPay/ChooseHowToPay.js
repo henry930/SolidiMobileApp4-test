@@ -29,19 +29,20 @@ https://callstack.github.io/react-native-paper/radio-button-item.html
 let ChooseHowToPay = () => {
 
   let appState = useContext(AppStateContext);
+  let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
   let permittedPageNames = 'direct_payment balance'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToPay');
 
-  let [paymentChoice, setPaymentChoice] = React.useState(pageName);
+  let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [balanceQA, setBalanceQA] = useState('');
   let [disablePayWithBalanceButton, setDisablePayWithBalanceButton] = useState(false);
   let [stylePayWithBalanceButton, setStylePayWithBalanceButton] = useState(stylePWBButton);
   let [stylePayWithBalanceButtonText, setStylePayWithBalanceButtonText] = useState(stylePWBButtonText);
 
   // Testing:
-  _.assign(appState.panels.buy, {volumeQA: '1000', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
+  _.assign(appState.panels.buy, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
 
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
@@ -61,6 +62,7 @@ let ChooseHowToPay = () => {
     setBalanceQA(balance1);
     // Load the balance from the server.
     await appState.loadBalances();
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     // Display the new value, if it's different.
     let balance2 = appState.getBalance(assetQA);
     if (balance1 !== balance2) {
@@ -100,8 +102,9 @@ let ChooseHowToPay = () => {
 
   let payWithBalance = async () => {
     // We disable the "Pay with balance" button if the balance isn't large enough, but we still double-check the balance value here.
-    // We reload the balances just in case the user has performed another action in the meantime.
+    // We reload the balances just in case they have changed in the meantime.
     await appState.loadBalances();
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     let balanceQA = appState.getBalance(assetQA);
     let dp = assetsInfo[assetQA].decimalPlaces;
     if (Big(balanceQA).lt(Big(volumeQA))) {
@@ -168,8 +171,8 @@ let ChooseHowToPay = () => {
       <View style={styles.horizontalRule}/>
 
       <View style={[styles.heading, styles.heading2]}>
-          <Text style={styles.headingText}>Your order</Text>
-        </View>
+        <Text style={styles.headingText}>Your order</Text>
+      </View>
 
       <View style={styles.orderDetailsSection}>
 
@@ -245,6 +248,9 @@ let styles = StyleSheet.create({
     marginVertical: scaledHeight(10),
     marginLeft: scaledWidth(15),
   },
+  conditionsButtonWrapper: {
+    marginBottom: scaledHeight(10),
+  },
   horizontalRule: {
     borderBottomColor: 'black',
     borderBottomWidth: 1,
@@ -261,9 +267,6 @@ let styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
-  },
-  conditionsButtonWrapper: {
-    marginBottom: scaledHeight(10),
   },
   confirmButtonWrapper: {
     marginTop: scaledHeight(20),
