@@ -41,6 +41,7 @@ let ChooseHowToReceivePayment = () => {
 
   let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [balanceQA, setBalanceQA] = useState('');
+  let [orderSubmitted, setOrderSubmitted] = useState(false);
 
   // Load user's external GBP account.
   let externalAccount = appState.user.info.defaultAccount.GBP;
@@ -92,16 +93,61 @@ let ChooseHowToReceivePayment = () => {
 
   let receivePayment = async () => {
     // We send the stored sell order.
-    await appState.sendSellOrder();
+    setOrderSubmitted(true);
+    let result = await appState.sendSellOrder();
+    if (result.error) {
+      // Future: Depending on the error, choose a next state.
+    }
     // Note: Do not exit here if stateChangeID has changed.
-    // Todo: Periodically check if order has completed.
-    // When order is complete, make a withdrawal (with no fee) to the user's primary external account.
-    //await appState.withdrawToPrimaryExternalAccount({volumeQA});
+    let orderID = appState.panels.sell.orderID;
+    let orderStatus = await waitForOrderToComplete({orderID});
+    if (orderStatus == 'timeout') {
+      // Future: If the order doesn't complete, change to an error page.
+    }
+    // Now that order has completed, make a withdrawal (with no fee) to the user's primary external account.
+    await appState.withdrawToPrimaryExternalAccount({volumeQA});
+    // Change to next state. Check if state has already changed.
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    appState.changeState('SaleSuccessful', 'direct_payment');
+  }
+
+  let waitForOrderToComplete = async ({orderID}) => {
+    // Periodically check if order has completed.
+    // Increase the period over time.
+    let intervalSeconds = 1; // Run this function locally every intervalSeconds.
+    let periodSeconds = 2; // Increment this period in order to gradually slow down the rate at which the API is called.
+    let count = 0;
+    let timerID, resolve, reject; // Initialise pieces.
+    let checkFunction = () => {
+      count += 1;
+      if (count % periodSeconds == 0) {
+        let orderStatus = appState.getOrderStatus({orderID: appState.panels.buy.orderID});
+        if (orderStatus == 'settled') {
+          resolve(orderStatus);
+        }
+      }
+      if (count == 10) periodSeconds = 3;
+      if (count == 20) periodSeconds = 5;
+      if (count == 30) {
+        clearInterval(timerID);
+        resolve('timeout');
+      }
+    }
+    // Set up a promise that finishes when the order completes.
+    return await new Promise((resolve2, reject2) => {
+      resolve = resolve2;
+      reject = reject2;
+      timerID = setInterval(checkFunction, intervalSeconds * 1000);
+    });
   }
 
   let receivePaymentToBalance = async () => {
+    setOrderSubmitted(true);
     // We send the stored sell order.
     await appState.sendSellOrder();
+    // Change to next state. Check if state has already changed.
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    appState.changeState('SaleSuccessful', 'balance');
   }
 
 
