@@ -12,8 +12,9 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
+
 /* Notes
-- We use this component to also display "paymentNotReceived", if the user clicks "I have paid", but 2 hours pass without us receiving the payment.
+- We also use this component to display "paymentNotReceived", if the user clicks "I have paid", but 2 hours pass without us receiving the payment.
 */
 
 
@@ -30,6 +31,13 @@ let PurchaseSuccessful = () => {
 
   let trustpilotURL = 'https://www.trustpilot.com/evaluate/solidi.co?stars=5';
 
+
+  // Initial setup.
+  useEffect( () => {
+    loadBalance();
+  }, []); // Pass empty array to only run once on mount.
+
+
   let viewAssets = () => {
     let pageName = assetsInfo[assetBA].type; // 'crypto' or 'fiat'.
     appState.changeState('Assets', pageName);
@@ -41,13 +49,10 @@ let PurchaseSuccessful = () => {
 
   let loadBalance = async () => {
     await appState.loadBalances();
-    let result = appState.apiData.balance[assetBA].balance;
+    let result = appState.getBalance(assetQA);
     result = '0.05000000' // Testing
     setBalanceBA(result);
   };
-  if (! balanceBA) {
-    loadBalance();
-  }
 
   return (
     <View style={styles.panelContainer}>
@@ -141,6 +146,9 @@ let styles = StyleSheet.create({
   bold: {
     fontWeight: 'bold',
   },
+  button: {
+
+  },
   button2: {
     marginTop: scaledHeight(20),
   },
@@ -152,7 +160,7 @@ let styles = StyleSheet.create({
 });
 
 
-const styleTrustpilotButton = StyleSheet.create({
+let styleTrustpilotButton = StyleSheet.create({
   image: {
     width: '100%',
   },
