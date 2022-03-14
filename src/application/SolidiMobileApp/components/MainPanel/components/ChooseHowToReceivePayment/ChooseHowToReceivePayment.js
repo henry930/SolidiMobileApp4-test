@@ -42,9 +42,6 @@ let ChooseHowToReceivePayment = () => {
   let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [balanceQA, setBalanceQA] = useState('');
 
-  // Testing:
-  _.assign(appState.panels.sell, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
-
   // Load user's external GBP account.
   let externalAccount = appState.user.info.defaultAccount.GBP;
 
