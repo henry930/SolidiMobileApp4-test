@@ -66,10 +66,10 @@ let PIN = () => {
       // Use the email and password to load the API Key and Secret from server.
       let {userAgent, domain} = appState;
       let apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
-      let apiMethod = 'login_mobile' + `/${email}`;
+      let apiRoute = 'login_mobile' + `/${email}`;
       let params = {password};
       let abortController = appState.createAbortController();
-      let data = await apiClient.publicMethod({httpMethod: 'POST', apiMethod, params, abortController});
+      let data = await apiClient.publicMethod({httpMethod: 'POST', apiRoute, params, abortController});
       let keyNames = 'apiKey, apiSecret'.split(', ');
       misc.confirmExactKeys('data', data, keyNames, 'submitLoginRequest');
       let {apiKey, apiSecret} = data;

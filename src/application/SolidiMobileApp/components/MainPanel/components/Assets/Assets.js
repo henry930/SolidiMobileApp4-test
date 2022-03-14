@@ -40,7 +40,7 @@ let Assets = () => {
   let getData = async () => {
     let data = await appState.privateMethod({
       httpMethod: 'POST',
-      apiMethod: 'balance',
+      apiRoute: 'balance',
       params: {},
     });
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;

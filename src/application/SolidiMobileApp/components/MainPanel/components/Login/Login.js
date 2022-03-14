@@ -43,9 +43,9 @@ let Login = () => {
       }
       // Load API Key and Secret from server.
       let apiClient = appState.apiClient;
-      let apiMethod = 'login_mobile' + `/${email}`;
+      let apiRoute = 'login_mobile' + `/${email}`;
       let params = {password};
-      let data = await apiClient.publicMethod({httpMethod: 'POST', apiMethod, params});
+      let data = await apiClient.publicMethod({httpMethod: 'POST', apiRoute, params});
       let keyNames = 'apiKey, apiSecret'.split(', ');
       misc.confirmExactKeys('data', data, keyNames, 'submitLoginRequest');
       let {apiKey, apiSecret} = data;

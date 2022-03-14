@@ -8,17 +8,17 @@ import CryptoJS from 'crypto-js';
 
 /* Examples of use
 
-let result = await apiClient.publicMethod({httpMethod: "GET", apiMethod: "hello"});
+let result = await apiClient.publicMethod({httpMethod: "GET", apiRoute: "hello"});
 
-let result = await apiClient.publicMethod({httpMethod: "POST", apiMethod: "hello2", params: {testparam1: 'foo'}});
+let result = await apiClient.publicMethod({httpMethod: "POST", apiRoute: "hello2", params: {testparam1: 'foo'}});
 
-let result = await apiClient.privateMethod({httpMethod: "POST", apiMethod: "privatehello", params: {testparam1: 'Private hello world'}})
+let result = await apiClient.privateMethod({httpMethod: "POST", apiRoute: "privatehello", params: {testparam1: 'Private hello world'}})
 
-let result = await apiClient.privateMethod({httpMethod: "POST", apiMethod: "transaction", params: {}})
+let result = await apiClient.privateMethod({httpMethod: "POST", apiRoute: "transaction", params: {}})
 
 let data = await appState.apiClient.privateMethod({
   httpMethod: 'POST',
-  apiMethod: 'transaction',
+  apiRoute: 'transaction',
   params: {}
 })
 
@@ -67,7 +67,7 @@ export default class SolidiRestAPIClientLibrary {
 
   async publicMethod(args, ...args2) {
     this._checkArgs2(args2, 'publicMethod');
-    let expected = 'httpMethod, apiMethod, abortController'.split(', ');
+    let expected = 'httpMethod, apiRoute, abortController'.split(', ');
     this._checkExpectedArgs(args, expected, 'publicMethod');
     if (_.isUndefined(args.params)) { args.params = {}; }
     if (_.isUndefined(args.apiVersion)) { args.apiVersion = 'v1'; }
@@ -77,7 +77,7 @@ export default class SolidiRestAPIClientLibrary {
 
   async privateMethod(args, ...args2) {
     this._checkArgs2(args2, 'privateMethod');
-    let expected = 'httpMethod, apiMethod, abortController'.split(', ');
+    let expected = 'httpMethod, apiRoute, abortController'.split(', ');
     this._checkExpectedArgs(args, expected, 'privateMethod');
     if (_.isUndefined(args.params)) { args.params = {}; }
     if (_.isUndefined(args.apiVersion)) { args.apiVersion = 'v1'; }
@@ -87,10 +87,10 @@ export default class SolidiRestAPIClientLibrary {
 
   async makeAPICall(args, ...args2) {
     this._checkArgs2(args2, 'makeAPICall');
-    let expected = 'privateAPICall, httpMethod, apiMethod, params, apiVersion, abortController'.split(', ');
+    let expected = 'privateAPICall, httpMethod, apiRoute, params, apiVersion, abortController'.split(', ');
     this._checkExactExpectedArgs(args, expected, 'makeAPICall');
-    let {privateAPICall, httpMethod, apiMethod, params, apiVersion, abortController} = args;
-    let path = `/api2/${apiVersion}/${apiMethod}`;
+    let {privateAPICall, httpMethod, apiRoute, params, apiVersion, abortController} = args;
+    let path = `/api2/${apiVersion}/${apiRoute}`;
     let uri = 'https://' + this.domain + path;
     if (params == null) params = {};
     if (_.keys(params).length > 0) {

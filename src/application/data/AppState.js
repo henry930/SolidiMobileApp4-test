@@ -218,10 +218,10 @@ class AppStateProvider extends Component {
     }
 
     this.publicMethod = async (args) => {
-      let {httpMethod, apiMethod, params} = args;
+      let {httpMethod, apiRoute, params} = args;
       if (_.isNil(httpMethod)) httpMethod = 'POST';
       let abortController = this.state.createAbortController();
-      let data = await this.state.apiClient.publicMethod({httpMethod, apiMethod, params, abortController});
+      let data = await this.state.apiClient.publicMethod({httpMethod, apiRoute, params, abortController});
       if (_.has(data, 'error')) {
         if (data.error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
@@ -233,10 +233,10 @@ class AppStateProvider extends Component {
     }
 
     this.privateMethod = async (args) => {
-      let {httpMethod, apiMethod, params} = args;
+      let {httpMethod, apiRoute, params} = args;
       if (_.isNil(httpMethod)) httpMethod = 'POST';
       let abortController = this.state.createAbortController();
-      let data = await this.state.apiClient.privateMethod({httpMethod, apiMethod, params, abortController});
+      let data = await this.state.apiClient.privateMethod({httpMethod, apiRoute, params, abortController});
       if (_.has(data, 'error')) {
         if (data.error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
@@ -345,7 +345,7 @@ class AppStateProvider extends Component {
     // This is called immediately after a successful Login or PIN entry.
     this.loadUserInfo = async () => {
       // 1) Load user info
-      let data = await this.state.privateMethod({apiMethod: 'user'});
+      let data = await this.state.privateMethod({apiRoute: 'user'});
       let keyNames = `address_1, address_2, address_3, address_4,
 bank_limit, btc_limit, country, crypto_limit, email, firstname, freewithdraw,
 landline, lastname, mobile, mon_bank_limit, mon_btc_limit, mon_crypto_limit,
@@ -361,7 +361,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         this.state.user.info.user = data;
       }
       // 2) Load user's GBP deposit details.
-      let data2 = await this.state.privateMethod({apiMethod: 'deposit_details/GBP'});
+      let data2 = await this.state.privateMethod({apiRoute: 'deposit_details/GBP'});
       // Example result:
       // {"data2": {"accountname": "Solidi", "accountno": "00001036", "reference": "SHMPQKC", "result": "success", "sortcode": "040476"}}
       let keyNames2 = `accountname, accountno, reference, result, sortcode`.replace(/,/g, '').split(' ').filter(x => x);
@@ -384,7 +384,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         this.state.user.info.depositDetails.GBP = detailsGBP;
       }
       // 3) Load user's default GBP account.
-      let data3 = await this.state.privateMethod({apiMethod: 'default_account/GBP'});
+      let data3 = await this.state.privateMethod({apiRoute: 'default_account/GBP'});
       // Data is a list of accounts. Each account is a JSON-encoded string containing these three keys:
       // accname, sortcode, accno.
       let keyNames3 = `accname, sortcode, accno`.replace(/,/g, '').split(' ').filter(x => x);
@@ -428,7 +428,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     this.loadMarkets = async () => {
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
-        apiMethod: 'market',
+        apiRoute: 'market',
         params: {},
       });
       // Tmp: For development:
@@ -474,7 +474,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     this.loadBalances = async () => {
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
-        apiMethod: 'balance',
+        apiRoute: 'balance',
         params: {},
       });
       data = _.mapKeys(data, (value, key) => misc.getStandardAsset(key));
@@ -501,7 +501,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     this.loadPrices = async () => {
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
-        apiMethod: 'ticker',
+        apiRoute: 'ticker',
         params: {},
       });
       // Tmp: For development:
@@ -533,7 +533,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     this.getOrderStatus = async ({orderID}) => {
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
-        apiMethod: 'order_status/' + orderID,
+        apiRoute: 'order_status/' + orderID,
         params: {},
       });
       // Todo: Look at data, and return 'live' or 'filled'.
@@ -550,7 +550,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       log(`Send order to server: SELL ${volumeBA} ${market} @ MARKET ${volumeQA}`);
       let data = await appState.privateMethod({
         httpMethod: 'POST',
-        apiMethod: 'sell',
+        apiRoute: 'sell',
         params: {
           fxmarket: market,
           amount: volumeBA,

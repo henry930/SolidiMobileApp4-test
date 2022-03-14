@@ -31,7 +31,7 @@ let History = () => {
   let getData = async () => {
     let data = await appState.privateMethod({
       httpMethod: 'POST',
-      apiMethod: 'transaction',
+      apiRoute: 'transaction',
       params: {}
     });
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
@@ -40,7 +40,7 @@ let History = () => {
     appState.setAPIData({key: 'transaction', data});
     let data2 = await appState.privateMethod({
       httpMethod: 'POST',
-      apiMethod: 'order',
+      apiRoute: 'order',
       params: {}
     });
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
