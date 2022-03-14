@@ -16,7 +16,8 @@ import { Test, Buy, Sell, Send, Receive, Assets, History,
   Notifications, Settings, Login, PIN, ChooseHowToPay,
   MakePayment, WaitingForPayment, BlankExampleComponent,
   PaymentNotMade, PurchaseSuccessful, InsufficientBalance,
-  ReadArticle, ChooseHowToReceivePayment, RequestTimeout } from './components';
+  ReadArticle, ChooseHowToReceivePayment, RequestTimeout,
+  SaleSuccessful } from './components';
 import AppStateContext from 'src/application/data';
 
 
@@ -76,6 +77,8 @@ const MainPanel = (props) => {
       return <ChooseHowToReceivePayment />
     } else if (appState.mainPanelState === 'RequestTimeout') {
       return <RequestTimeout />
+    } else if (appState.mainPanelState === 'SaleSuccessful') {
+      return <SaleSuccessful />
     } else {
       return <Text>Error in MainPanel.js: Unknown mainPanelState: {appState.mainPanelState}</Text>
     }
