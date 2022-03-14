@@ -219,6 +219,7 @@ class AppStateProvider extends Component {
 
     this.publicMethod = async (args) => {
       let {httpMethod, apiMethod, params} = args;
+      if (_.isNil(httpMethod)) httpMethod = 'POST';
       let abortController = this.state.createAbortController();
       let data = await this.state.apiClient.publicMethod({httpMethod, apiMethod, params, abortController});
       if (_.has(data, 'error')) {
@@ -233,6 +234,7 @@ class AppStateProvider extends Component {
 
     this.privateMethod = async (args) => {
       let {httpMethod, apiMethod, params} = args;
+      if (_.isNil(httpMethod)) httpMethod = 'POST';
       let abortController = this.state.createAbortController();
       let data = await this.state.apiClient.privateMethod({httpMethod, apiMethod, params, abortController});
       if (_.has(data, 'error')) {
@@ -342,8 +344,8 @@ class AppStateProvider extends Component {
 
     // This is called immediately after a successful Login or PIN entry.
     this.loadUserInfo = async () => {
-      // Load user info
-      let data = await this.state.privateMethod({httpMethod: 'POST', apiMethod: 'user'});
+      // 1) Load user info
+      let data = await this.state.privateMethod({apiMethod: 'user'});
       let keyNames = `address_1, address_2, address_3, address_4,
 bank_limit, btc_limit, country, crypto_limit, email, firstname, freewithdraw,
 landline, lastname, mobile, mon_bank_limit, mon_btc_limit, mon_crypto_limit,
@@ -358,8 +360,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         log(msg + " New data saved to appState. " + jd(data));
         this.state.user.info.user = data;
       }
-      // Load user's GBP deposit details.
-      let data2 = await this.state.privateMethod({httpMethod: 'POST', apiMethod: 'deposit_details/GBP'});
+      // 2) Load user's GBP deposit details.
+      let data2 = await this.state.privateMethod({apiMethod: 'deposit_details/GBP'});
       // Example result:
       // {"data2": {"accountname": "Solidi", "accountno": "00001036", "reference": "SHMPQKC", "result": "success", "sortcode": "040476"}}
       let keyNames2 = `accountname, accountno, reference, result, sortcode`.replace(/,/g, '').split(' ').filter(x => x);
@@ -369,8 +371,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       misc.confirmExactKeys('data2', data2, keyNames2, 'loadUserInfo');
       let detailsGBP = {
         accountName: data2.accountname,
-        accountNumber: data2.accountno,
         sortCode: data2.sortcode,
+        accountNumber: data2.accountno,
         reference: data2.reference,
       }
       // If the data differs from existing data, save it.
@@ -381,6 +383,44 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         log(msg + " New data saved to appState. " + jd(detailsGBP));
         this.state.user.info.depositDetails.GBP = detailsGBP;
       }
+      // 3) Load user's default GBP account.
+      let data3 = await this.state.privateMethod({apiMethod: 'default_account/GBP'});
+      // Data is a list of accounts. Each account is a JSON-encoded string containing these three keys:
+      // accname, sortcode, accno.
+      let keyNames3 = `accname, sortcode, accno`.replace(/,/g, '').split(' ').filter(x => x);
+      let defaultAccounts = [];
+      for (let account of data3) {
+        account = JSON.parse(account);
+        misc.confirmExactKeys('account', account, keyNames3, 'loadUserInfo');
+        let account2 = {
+          accountName: account.accname,
+          sortCode: account.sortcode,
+          accountNumber: account.accno,
+        }
+        defaultAccounts.push(account2);
+      }
+      // Tmp: Testing:
+      defaultAccounts = [{
+        accountName: 'Mr John Fish, Esq',
+        sortCode: '12-12-13',
+        accountNumber: '123090342',
+      }]
+      // Note: Don't let user get through onboarding without providing a default account.
+      if (defaultAccounts.length == 0) {
+        let msg = `At least one default GBP account is required.`;
+        throw new Error(msg);
+      }
+      // We'll just use the first default account for now.
+      let defaultAccount = defaultAccounts[0];
+      // If the data differs from existing data, save it.
+      msg = "User info (default account GBP) loaded from server.";
+      if (jd(defaultAccount) === jd(this.state.user.info.defaultAccount.GBP)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState. " + jd(defaultAccount));
+        this.state.user.info.defaultAccount.GBP = defaultAccount;
+      }
+      // X) Finish.
       this.state.userInfoLoaded = true;
       this.loadBalances();
     }
@@ -583,10 +623,17 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
           depositDetails: {
             GBP: {
               accountName: null,
-              accountNumber: null,
               sortCode: null,
+              accountNumber: null,
               reference: null,
-            }
+            },
+          },
+          defaultAccount: {
+            GBP: {
+              accountName: null,
+              sortCode: null,
+              accountNumber: null,
+            },
           },
         },
         pin: '',
@@ -675,6 +722,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
           this.loadUserInfo();
         }
       }
+      this.state.onStartDevTesting();
 
       _.assign(this.state.panels.buy, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
 

@@ -45,13 +45,8 @@ let ChooseHowToReceivePayment = () => {
   // Testing:
   _.assign(appState.panels.sell, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
 
-  // Todo: Load user's primary external account in appState.loadUserInfo(), and access it here.
-  // Testing:
-  let externalAccount = {
-    accountName: 'Mr John Fish',
-    sortCode: '12-12-13',
-    accountNumber: '123090342',
-  };
+  // Load user's external GBP account.
+  let externalAccount = appState.user.info.defaultAccount.GBP;
 
    // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.sell);
