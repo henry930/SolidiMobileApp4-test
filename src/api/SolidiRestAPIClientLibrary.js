@@ -4,6 +4,10 @@ import { Buffer } from "buffer";
 import CryptoJS from 'crypto-js';
 
 
+// Shortcuts
+let jd = JSON.stringify;
+
+
 
 
 /* Examples of use
@@ -168,8 +172,11 @@ export default class SolidiRestAPIClientLibrary {
       try {
         data = JSON.parse(data);
       } catch(err) {
-        log(data);
-        throw Error("Cannot parse data into JSON.");
+        console.error(data);
+        throw new Error("Cannot parse data into JSON.");
+      }
+      if (data.error) {
+        //console.error(uri + ' ' + jd(data));
       }
       return data;
     } catch(err) {
