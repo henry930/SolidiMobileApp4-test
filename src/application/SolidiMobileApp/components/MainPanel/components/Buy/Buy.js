@@ -285,6 +285,7 @@ let Buy = () => {
     // We send the BUY order to the server.
     let market = assetBA + '/' + assetQA;
     log(`Send order to server: BUY ${volumeBA} ${market} @ MARKET ${volumeQA}`);
+    market = misc.getSolidiServerMarket(market);
     let data = await appState.privateMethod({
       httpMethod: 'POST',
       apiRoute: 'buy',

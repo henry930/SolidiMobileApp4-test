@@ -74,7 +74,7 @@ let PurchaseSuccessful = () => {
       </View>
 
       <View style={styles.button}>
-        <StandardButton title="View assets" onPress={ viewAssets } />
+        <StandardButton title="View your assets" onPress={ viewAssets } />
       </View>
 
       <View style={styles.button2}>

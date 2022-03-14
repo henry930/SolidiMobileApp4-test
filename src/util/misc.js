@@ -73,6 +73,22 @@ let getStandardMarket = (market) => {
 }
 
 
+let getSolidiServerAsset = (asset) => {
+  if (asset == 'GBP') asset = 'GBPX';
+  if (asset == 'EUR') asset = 'EURX';
+  return asset;
+}
+
+
+let getSolidiServerMarket = (market) => {
+  let [baseAsset, quoteAsset] = market.split('/');
+  baseAsset = getSolidiServerAsset(baseAsset);
+  quoteAsset = getSolidiServerAsset(quoteAsset);
+  let market2 = baseAsset + '/' + quoteAsset;
+  return market2;
+}
+
+
 let misc = {
   confirmKeys,
   confirmExactKeys,
@@ -80,6 +96,8 @@ let misc = {
   capitalise,
   getStandardAsset,
   getStandardMarket,
+  getSolidiServerAsset,
+  getSolidiServerMarket,
 }
 
 

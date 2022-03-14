@@ -19,6 +19,7 @@ import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 let MakePayment = () => {
 
   let appState = useContext(AppStateContext);
+  let stateChangeID = appState.stateChangeID;
 
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
