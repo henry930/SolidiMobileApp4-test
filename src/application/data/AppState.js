@@ -228,6 +228,11 @@ class AppStateProvider extends Component {
           this.state.stashCurrentState();
           this.changeState('RequestTimeout');
         }
+        if (data.error == 'cannot_parse_data') {
+          // Future:
+          //this.state.stashCurrentState();
+          //this.changeState('DataProblem');
+        }
       }
       return data;
     }
@@ -504,6 +509,9 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         apiRoute: 'ticker',
         params: {},
       });
+      /* Example errors
+      {"error":"Insufficient currency"}
+      */
       // Tmp: For development:
       // Sample prices.
       data = {
@@ -545,10 +553,11 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     }
 
     this.sendSellOrder = async () => {
-      ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.sell);
+      ({volumeQA, volumeBA, assetQA, assetBA} = this.state.panels.sell);
       let market = assetBA + '/' + assetQA;
       log(`Send order to server: SELL ${volumeBA} ${market} @ MARKET ${volumeQA}`);
-      let data = await appState.privateMethod({
+      market = misc.getSolidiServerMarket(market);
+      let data = await this.state.privateMethod({
         httpMethod: 'POST',
         apiRoute: 'sell',
         params: {
@@ -559,11 +568,15 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       });
       /*
       Example error response:
-
+      {"error": "Insufficient Funds"}
       */
       // Store the orderID. Later, we'll use it to check the order's status.
-      appState.panels.sell.orderID = data.id;
+      this.state.panels.sell.orderID = data.id;
       return data;
+    }
+
+    this.withdrawToPrimaryExternalAccount = async () => {
+      // Todo: Call the withdraw route. Set fee = 0. (?)
     }
 
     // The actual state object of the app.
@@ -605,6 +618,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       getPrice: this.getPrice,
       getOrderStatus: this.getOrderStatus,
       sendSellOrder: this.sendSellOrder,
+      withdrawToPrimaryExternalAccount: this.withdrawToPrimaryExternalAccount,
       stateChangeID: 0,
       abortControllers: {},
       apiData: {
