@@ -653,6 +653,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       /* Example data:
       {"id": 9094}
       */
+      // Todo: Store list of withdraw IDs. View them later, and see whether they have completed.
     }
 
     // The actual state object of the app.
