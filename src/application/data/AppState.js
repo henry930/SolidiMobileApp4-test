@@ -700,6 +700,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
           symbolQA: '',
           volumeBA: 0,
           symbolBA: '',
+          feeQA: 0,
+          totalQA: 0,
         },
         makePayment: {
           timerID: null,

@@ -26,7 +26,7 @@ let SaleSuccessful = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'SaleSuccessful');
 
   // Load order details.
-  ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.sell);
+  ({volumeQA, volumeBA, assetQA, assetBA, totalQA} = appState.panels.sell);
 
   let [balanceQA, setBalanceQA] = useState(''); // this is equivalent to 0 when initialised.
 
@@ -79,7 +79,7 @@ let SaleSuccessful = () => {
           <View>
 
           <View style={styles.infoItem}>
-            <Text style={styles.bold}>{`\u2022  `} Your Solidi account has been credited with {volumeQA} {assetsInfo[assetQA].displayString}.</Text>
+            <Text style={styles.bold}>{`\u2022  `} Your Solidi account has been credited with {totalQA} {assetsInfo[assetQA].displayString}.</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -93,7 +93,7 @@ let SaleSuccessful = () => {
         { (pageName == 'direct_payment') &&
 
           <View style={styles.infoItem}>
-            <Text style={styles.bold}>{`\u2022  `} Your payment of {volumeQA} {assetsInfo[assetQA].displayString} should arrive within 8 hours.</Text>
+            <Text style={styles.bold}>{`\u2022  `} Your payment of {totalQA} {assetsInfo[assetQA].displayString} should arrive within 8 hours.</Text>
           </View>
 
         }
