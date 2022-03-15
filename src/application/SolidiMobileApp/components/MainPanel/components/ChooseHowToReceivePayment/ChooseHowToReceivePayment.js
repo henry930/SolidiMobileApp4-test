@@ -41,6 +41,8 @@ let ChooseHowToReceivePayment = () => {
 
   let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [balanceQA, setBalanceQA] = useState('');
+  let [feeQA, setFeeQA] = useState(0); // This is the fee that we use and display.
+  let [totalQA, setTotalQA] = useState(0);
   let [orderSubmitted, setOrderSubmitted] = useState(false);
 
   // Load user's external GBP account.
@@ -49,13 +51,17 @@ let ChooseHowToReceivePayment = () => {
    // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.sell);
 
-  let zeroVolumeQA = '0.' + '0'.repeat(assetsInfo[assetQA].decimalPlaces);
-
 
   // Initial setup.
   useEffect( () => {
-    loadBalanceData();
+    setup();
   }, []); // Pass empty array to only run once on mount.
+
+  let setup = async () => {
+    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
+    await loadBalanceData();
+    await loadFeeData();
+  }
 
 
   let loadBalanceData = async () => {
@@ -72,28 +78,68 @@ let ChooseHowToReceivePayment = () => {
     }
   }
 
+  let loadFeeData = async () => {
+    // Display the value we have in storage first.
+    let fee1 = appState.getFee({feeType: 'withdraw', asset: 'GBP'});
+    setFeeAndTotal(fee1);
+    // Load the fee from the server.
+    await appState.loadFees();
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    // Display the new value, if it's different.
+    let fee2 = appState.getFee({feeType: 'withdraw', asset: 'GBP'});
+    fee2 = '0.5'; // testing
+    if (fee1 !== fee2) {
+      setFeeAndTotal(fee2);
+    }
+  }
+
+  let setFeeAndTotal = (fee) => {
+    let dp = assetsInfo[assetQA].decimalPlaces;
+    if (paymentChoice == 'direct_payment') {
+      let newFeeQA = Big(fee).toFixed(dp);
+      log(`newFeeQA: ${newFeeQA}`);
+      setFeeQA(newFeeQA);
+      let newTotalQA = Big(volumeQA).minus(Big(fee)).toFixed(dp);
+      log(`newTotalQA: ${newTotalQA}`);
+      setTotalQA(newTotalQA);
+    } else {
+      if (totalQA != volumeQA) {
+        let newFeeQA = Big(0).toFixed(dp);
+        log(`newFeeQA: ${newFeeQA}`);
+        setFeeQA(newFeeQA);
+        setTotalQA(volumeQA);
+      }
+    }
+  }
+  useEffect( () => {
+    loadFeeData();
+  }, [paymentChoice]); // Recalculate the fee and total if the user chooses another option.
+
   let readPaymentConditions = async () => {
     appState.changeState('ReadArticle', 'payment_conditions');
   }
 
   let confirmReceivePaymentChoice = async () => {
+    // Change the display.
+    setOrderSubmitted(true);
+    // Save the fee and total in the appState.
+    _.assign(appState.panels.sell, {feeQA, totalQA});
+    // Choose the receive-payment function.
     if (paymentChoice === 'direct_payment') {
       // Make a direct payment to the customer's primary external fiat account.
       // Future: People may be paid directly with crypto, not just fiat.
       await receivePayment();
-      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      //appState.changeState('SaleComplete');
     } else {
       // Pay with balance.
       await receivePaymentToBalance();
-      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      //appState.changeState('SaleComplete');
     }
+    // Change to next state. Check if state has already changed.
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    appState.changeState('SaleSuccessful', paymentChoice);
   }
 
   let receivePayment = async () => {
     // We send the stored sell order.
-    setOrderSubmitted(true);
     let result = await appState.sendSellOrder();
     if (result.error) {
       // Future: Depending on the error, choose a next state.
@@ -105,10 +151,8 @@ let ChooseHowToReceivePayment = () => {
       // Future: If the order doesn't complete, change to an error page.
     }
     // Now that order has completed, make a withdrawal to the user's primary external account.
-    await appState.withdrawToPrimaryExternalAccount({volumeQA});
-    // Change to next state. Check if state has already changed.
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    appState.changeState('SaleSuccessful', 'direct_payment');
+    let addressInfo = appState.user.info.defaultAccount.GBP;
+    await appState.sendWithdraw({asset:assetQA, volume:totalQA, addressInfo});
   }
 
   let waitForOrderToComplete = async ({orderID}) => {
@@ -142,12 +186,8 @@ let ChooseHowToReceivePayment = () => {
   }
 
   let receivePaymentToBalance = async () => {
-    setOrderSubmitted(true);
     // We send the stored sell order.
     await appState.sendSellOrder();
-    // Change to next state. Check if state has already changed.
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    appState.changeState('SaleSuccessful', 'balance');
   }
 
 
@@ -168,7 +208,7 @@ let ChooseHowToReceivePayment = () => {
           style={styles.button} labelStyle={styles.buttonLabel} />
 
         <View style={styles.buttonDetail}>
-          <Text style={styles.bold}>{`\u2022  `} Get paid in 8 hours - No fee!</Text>
+          <Text style={styles.bold}>{`\u2022  `} Get paid in 8 hours</Text>
           <Text style={styles.bold}>{`\u2022  `} Paying to {externalAccount.accountName}</Text>
           <Text style={styles.bold}>{`\u2022  `} Sort Code - {externalAccount.sortCode}</Text>
           <Text style={styles.bold}>{`\u2022  `} Account Number - {externalAccount.accountNumber}</Text>
@@ -213,12 +253,12 @@ let ChooseHowToReceivePayment = () => {
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>Fee</Text>
-          <Text style={styles.bold}>{zeroVolumeQA} {assetsInfo[assetQA].displaySymbol}</Text>
+          <Text style={styles.bold}>{feeQA} {assetsInfo[assetQA].displaySymbol}</Text>
         </View>
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>Total</Text>
-          <Text style={styles.bold}>{volumeQA} {assetsInfo[assetQA].displaySymbol}</Text>
+          <Text style={styles.bold}>{totalQA} {assetsInfo[assetQA].displaySymbol}</Text>
         </View>
 
       </View>
