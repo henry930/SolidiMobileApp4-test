@@ -552,6 +552,31 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       return orderStatus;
     }
 
+    this.sendBuyOrder = async () => {
+      ({volumeQA, volumeBA, assetQA, assetBA} = this.state.panels.buy);
+      let market = assetBA + '/' + assetQA;
+      log(`Send order to server: BUY ${volumeBA} ${market} @ MARKET ${volumeQA}`);
+      market = misc.getSolidiServerMarket(market);
+      let data = await appState.privateMethod({
+        httpMethod: 'POST',
+        apiRoute: 'buy',
+        params: {
+          fxmarket: market,
+          amount: volumeBA,
+          price: volumeQA,
+        },
+      });
+      /*
+      Example data:
+      {"id":11,"datetime":1643047261277,"type":0,"price":"100","amount":"0.05"}
+      Example error response:
+      */
+      // Store the orderID. Later, we'll use it to check the order's status.
+      log(`OrderID: ${data.id}`);
+      this.state.panels.buy.orderID = data.id;
+      return data;
+    }
+
     this.sendSellOrder = async () => {
       ({volumeQA, volumeBA, assetQA, assetBA} = this.state.panels.sell);
       let market = assetBA + '/' + assetQA;
