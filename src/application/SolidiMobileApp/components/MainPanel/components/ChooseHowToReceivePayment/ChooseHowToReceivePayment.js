@@ -104,7 +104,7 @@ let ChooseHowToReceivePayment = () => {
     if (orderStatus == 'timeout') {
       // Future: If the order doesn't complete, change to an error page.
     }
-    // Now that order has completed, make a withdrawal (with no fee) to the user's primary external account.
+    // Now that order has completed, make a withdrawal to the user's primary external account.
     await appState.withdrawToPrimaryExternalAccount({volumeQA});
     // Change to next state. Check if state has already changed.
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
