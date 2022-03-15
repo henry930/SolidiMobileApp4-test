@@ -89,6 +89,13 @@ let getSolidiServerMarket = (market) => {
 }
 
 
+let sleep = async (timeSeconds) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, timeSeconds * 1000);
+  });
+}
+
+
 let misc = {
   confirmKeys,
   confirmExactKeys,
@@ -98,6 +105,7 @@ let misc = {
   getStandardMarket,
   getSolidiServerAsset,
   getSolidiServerMarket,
+  sleep,
 }
 
 
