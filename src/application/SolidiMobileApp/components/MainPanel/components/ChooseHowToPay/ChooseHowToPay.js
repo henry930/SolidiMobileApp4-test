@@ -91,7 +91,7 @@ let ChooseHowToPay = () => {
 
   let confirmPaymentChoice = async () => {
     if (paymentChoice === 'direct_payment') {
-      // Pay directly.
+      // Pay directly from external fiat account.
       // Future: People may pay directly with crypto, not just fiat.
       appState.changeState('MakePayment');
     } else {
