@@ -314,9 +314,11 @@ class AppStateProvider extends Component {
       let waitTimeMinutes = 120; // Future: Set to 30 mins.
       let waitTimeSeconds = waitTimeMinutes * 60;
       let callLockApp = () => {
-        let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
-        log(msg);
-        this.state.lockApp();
+        if (appState.mainPanelState !== 'PIN') {
+          let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
+          log(msg);
+          this.state.lockApp();
+        }
       }
       setTimeout(callLockApp, waitTimeSeconds * 1000);
     }
