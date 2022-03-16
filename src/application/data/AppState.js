@@ -305,18 +305,20 @@ class AppStateProvider extends Component {
       });
     }
 
+    this.lockApp = () => {
+      this.state.stashCurrentState();
+      this.state.authenticateUser();
+    }
+
     this.startLockAppTimer = async () => {
       let waitTimeMinutes = 120; // Future: Set to 30 mins.
       let waitTimeSeconds = waitTimeMinutes * 60;
-      let lockApp = () => {
+      let callLockApp = () => {
         let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
         log(msg);
-        // Stash the current state.
-        let currentState = {mainPanelState: this.state.mainPanelState, pageName: this.state.pageName};
-        this.state.stashState(currentState);
-        this.state.authenticateUser();
+        this.state.lockApp();
       }
-      setTimeout(lockApp, waitTimeSeconds * 1000);
+      setTimeout(callLockApp, waitTimeSeconds * 1000);
     }
 
     this.cancelTimers = () => {
@@ -681,6 +683,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       authenticateUser: this.authenticateUser,
       choosePIN: this.choosePIN,
       loadPIN: this.loadPIN,
+      lockApp: this.lockApp,
       startLockAppTimer: this.startLockAppTimer,
       cancelTimers: this.cancelTimers,
       loadUserInfo: this.loadUserInfo,
