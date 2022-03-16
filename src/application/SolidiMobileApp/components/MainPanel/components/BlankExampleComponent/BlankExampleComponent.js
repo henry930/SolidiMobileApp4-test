@@ -14,11 +14,36 @@ import { Button, StandardButton, ImageButton, Spinner } from 'src/components/ato
 import misc from 'src/util/misc';
 
 
+/* Notes
+
+
+*/
+
+
 
 
 let BlankExampleComponent = () => {
 
   let appState = useContext(AppStateContext);
+  let stateChangeID = appState.stateChangeID;
+
+  let pageName = appState.pageName;
+  let permittedPageNames = 'default'.split(' ');
+  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'BlankExampleComponent');
+
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array to only run once on mount.
+
+
+  let setup = async () => {
+    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
+    // await loadBalanceData();
+    // await loadUserData();
+  }
+
 
   return (
     <View style={styles.panelContainer}>
