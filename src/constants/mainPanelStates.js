@@ -21,6 +21,7 @@ export const mainPanelStates = [
   'ChooseHowToReceivePayment',
   'RequestTimeout',
   'SaleSuccessful',
+  'PersonalDetails',
 ];
 
 export default mainPanelStates;

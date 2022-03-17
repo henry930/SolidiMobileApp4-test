@@ -20,6 +20,7 @@ import ReadArticle from './ReadArticle/ReadArticle';
 import ChooseHowToReceivePayment from './ChooseHowToReceivePayment/ChooseHowToReceivePayment';
 import RequestTimeout from './RequestTimeout/RequestTimeout';
 import SaleSuccessful from './SaleSuccessful/SaleSuccessful';
+import PersonalDetails from './PersonalDetails/PersonalDetails';
 
 
 export {
@@ -45,4 +46,5 @@ export {
   ChooseHowToReceivePayment,
   RequestTimeout,
   SaleSuccessful,
+  PersonalDetails,
 };
