@@ -25,6 +25,7 @@ import misc from 'src/util/misc';
 let BlankExampleComponent = () => {
 
   let appState = useContext(AppStateContext);
+  let [isLoading, setIsLoading] = useState(true);
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
@@ -35,13 +36,14 @@ let BlankExampleComponent = () => {
   // Initial setup.
   useEffect( () => {
     setup();
-  }, []); // Pass empty array to only run once on mount.
+  }, []); // Pass empty array so that we only run once on mount.
 
 
   let setup = async () => {
     // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
-    // await loadBalanceData();
     // await loadUserData();
+    // await loadBalanceData();
+    setIsLoading(false);
   }
 
 
