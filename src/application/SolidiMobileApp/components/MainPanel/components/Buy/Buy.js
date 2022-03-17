@@ -310,7 +310,7 @@ let Buy = () => {
       <View>
 
       <View style={styles.heading}>
-        <Text style={styles.headingText}>Buy now</Text>
+        <Text style={styles.headingText}>Buy</Text>
       </View>
 
       <Text style={styles.descriptionText}>I want to spend:</Text>

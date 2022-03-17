@@ -328,7 +328,7 @@ let Sell = () => {
       <View>
 
       <View style={styles.heading}>
-        <Text style={styles.headingText}>Sell now</Text>
+        <Text style={styles.headingText}>Sell</Text>
       </View>
 
       <Text style={styles.descriptionText}>I want to get:</Text>
