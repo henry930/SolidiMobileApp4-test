@@ -61,6 +61,7 @@ let MakePayment = () => {
     let timerID = setInterval(incrementTimeElapsed, intervalSeconds * 1000);
     appState.panels.makePayment.timerID = timerID;
   }
+  // Update the display whenever timeElapsedMarker is reset.
   useEffect(() => {}, [timeElapsedMarker]);
 
   let copyToClipboard = async (x) => {

@@ -12,6 +12,7 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
+
 /* Notes
 - We use this component to also display "paymentNotReceived", if the user clicks "I have paid", but 2 hours pass without us receiving the payment.
 */

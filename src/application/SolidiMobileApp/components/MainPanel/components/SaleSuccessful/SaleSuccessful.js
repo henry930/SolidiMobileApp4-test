@@ -35,8 +35,14 @@ let SaleSuccessful = () => {
 
   // Initial setup.
   useEffect( () => {
-    loadBalance();
-  }, []); // Pass empty array to only run once on mount.
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
+    await loadBalance();
+  }
 
 
   let viewAssets = () => {
@@ -54,6 +60,7 @@ let SaleSuccessful = () => {
 
   let loadBalance = async () => {
     await appState.loadBalances();
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     let result = appState.getBalance(assetQA);
     result = '100.00' // Testing
     setBalanceQA(result);

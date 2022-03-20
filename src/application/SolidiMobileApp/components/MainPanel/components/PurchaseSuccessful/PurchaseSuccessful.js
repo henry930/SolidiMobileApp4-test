@@ -23,6 +23,7 @@ import misc from 'src/util/misc';
 let PurchaseSuccessful = () => {
 
   let appState = useContext(AppStateContext);
+  let stateChangeID = appState.stateChangeID;
 
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
@@ -34,8 +35,14 @@ let PurchaseSuccessful = () => {
 
   // Initial setup.
   useEffect( () => {
-    loadBalance();
-  }, []); // Pass empty array to only run once on mount.
+    setup();
+  }, []); // Pass empty array so that we only run once on mount.
+
+
+  let setup = async () => {
+    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
+    await loadBalance();
+  }
 
 
   let viewAssets = () => {
@@ -49,6 +56,7 @@ let PurchaseSuccessful = () => {
 
   let loadBalance = async () => {
     await appState.loadBalances();
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     let result = appState.getBalance(assetQA);
     result = '0.05000000' // Testing
     setBalanceBA(result);

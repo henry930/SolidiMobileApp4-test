@@ -39,7 +39,7 @@ let PIN = () => {
   if (appState.pageName === 'choose') {
     pinStatus = 'choose';
   }
-  log({pinStatus})
+  log({pinStatus});
 
   let _finishProcess = async () => {
     let pinStored = await hasUserSetPinCode(appState.appName);

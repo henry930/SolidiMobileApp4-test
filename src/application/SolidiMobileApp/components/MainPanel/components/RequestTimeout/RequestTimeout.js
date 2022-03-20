@@ -40,7 +40,7 @@ let RequestTimeout = () => {
     let timerID = setInterval(incrementTimeElapsed, intervalSeconds * 1000);
     appState.panels.requestTimeout.timerID = timerID;
   }
-  // Update the display every intervalSeconds.
+  // Update the display whenever remainingTimeSeconds is reset.
   useEffect(() => {}, [remainingTimeSeconds]);
 
   let tryAgain = () => {
