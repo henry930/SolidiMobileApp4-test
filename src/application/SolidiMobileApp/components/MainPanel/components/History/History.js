@@ -26,8 +26,15 @@ let History = () => {
 
   // Initial setup.
   useEffect(() => {
-    getData();
-  }, []);
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
+    await getData();
+    setIsLoading(false); // Causes re-render.
+  }
 
 
   let getData = async () => {
@@ -43,13 +50,12 @@ let History = () => {
     let data2 = await appState.privateMethod({
       httpMethod: 'POST',
       apiRoute: 'order',
-      params: {}
+      params: {},
     });
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     // Example data:
     // {"results": [{"date": "14 Feb 2022", "fxmarket": "BTC/GBPX", "id": 31, "ocount": "1", "order_age": "147", "order_type": "Limit", "price": "100.00000000", "qty": "0.05000000", "s1_id": null, "s1_status": null, "s2_id": null, "s2_status": null, "side": "Buy", "status": "LIVE", "time": "17:34:42", "unixtime": "1644860082"}], "total": "1"}
     appState.setAPIData({key: 'order', data:data2});
-    setIsLoading(false);
   }
 
   // Check to see if a category has been specified as this panel is loaded.
@@ -176,8 +182,17 @@ let History = () => {
 
   return (
     <View style={styles.panelContainer}>
+
       <View style={styles.historySection}>
+
         { isLoading && <Spinner/> }
+
+        {! isLoading &&
+          <View style={[styles.heading, styles.heading1]}>
+            <Text style={styles.headingText}>History</Text>
+          </View>
+        }
+
         {! isLoading && displayHistoryControls()}
         {! isLoading && category === 'transactions' &&
           renderTransactions()}
@@ -197,8 +212,20 @@ const styles = StyleSheet.create({
     paddingTop: scaledHeight(15),
     paddingHorizontal: scaledWidth(15),
   },
+  heading: {
+    alignItems: 'center',
+  },
+  heading1: {
+    marginTop: scaledHeight(10),
+    marginBottom: scaledHeight(30),
+  },
+  headingText: {
+    fontSize: normaliseFont(20),
+    fontWeight: 'bold',
+  },
   historySection: {
     height: '100%',
+    //borderWidth: 1, // testing
   },
   historyControls: {
     width: '100%',
@@ -209,9 +236,11 @@ const styles = StyleSheet.create({
   },
   historyCategoryWrapper: {
     width: '50%',
+    //borderWidth: 1, // testing
   },
   flatListWrapper: {
-    height: '90%',
+    height: '80%',
+    //borderWidth: 1, // testing
   },
   flatListItem: {
     marginTop: scaledHeight(10),
