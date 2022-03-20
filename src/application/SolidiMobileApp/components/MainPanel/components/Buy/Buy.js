@@ -82,9 +82,15 @@ let Buy = () => {
   // Initial setup.
   useEffect( () => {
     if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
-    loadMarketData();
-    loadPriceData();
+    setup();
   }, []); // Pass empty array to only run once on mount.
+
+
+  let setup = async () => {
+    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
+    await loadMarketData();
+    await loadPriceData();
+  }
 
 
   let loadMarketData = async () => {
