@@ -4,10 +4,6 @@ import { Buffer } from "buffer";
 import CryptoJS from 'crypto-js';
 
 
-// Shortcuts
-let jd = JSON.stringify;
-
-
 
 
 /* Examples of use

@@ -5,6 +5,11 @@
 import _ from 'lodash';
 
 
+let log = console.log;
+let jd = JSON.stringify;
+let lj = (x) => log(jd(x));
+
+
 function confirmKeys(objName, obj, keyNames, functionName) {
   // Confirm that an object has certain keys.
   for (let k of keyNames) {
@@ -102,6 +107,9 @@ let splitStringIntoArray = (s) => {
 
 
 let misc = {
+  log,
+  jd,
+  lj,
   confirmKeys,
   confirmExactKeys,
   confirmItemInArray,

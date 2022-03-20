@@ -14,8 +14,7 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 import { mainPanelStates } from 'src/constants';
 
-// Misc
-let lj = (x) => console.log(JSON.stringify(x));
+
 
 
 let Login = () => {
