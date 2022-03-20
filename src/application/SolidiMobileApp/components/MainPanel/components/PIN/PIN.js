@@ -70,6 +70,10 @@ let PIN = () => {
       let params = {password};
       let abortController = appState.createAbortController();
       let data = await apiClient.publicMethod({httpMethod: 'POST', apiRoute, params, abortController});
+      if (data.error) {
+        let msg = `Error in PIN._finishProcess: ${misc.jd(data)}`
+        console.error(msg);
+      }
       let keyNames = 'apiKey, apiSecret'.split(', ');
       misc.confirmExactKeys('data', data, keyNames, 'submitLoginRequest');
       let {apiKey, apiSecret} = data;
