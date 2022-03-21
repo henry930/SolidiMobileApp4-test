@@ -193,9 +193,8 @@ class AppStateProvider extends Component {
     this.createAbortController = () => {
       // Prepare for cancelling requests if the user changes screen.
       let controller = new AbortController();
-      // Get a random integer from 0 to 999999:
-      do {
-        var controllerID = Math.floor(Math.random() * 10**6);
+      // Get a random integer from 0 to 999999.
+      do { var controllerID = Math.floor(Math.random() * 10**6);
       } while (_.keys(this.state.abortControllers).includes(controllerID));
       this.state.abortControllers[controllerID] = controller;
       return controller;
@@ -245,7 +244,7 @@ class AppStateProvider extends Component {
         } else {
           // Todo: For any other errors, switch to an error description page.
           let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}):`;
-          msg += String(error);
+          msg += misc.jd(error);
           console.error(msg);
         }
         return;
@@ -256,7 +255,7 @@ class AppStateProvider extends Component {
         }
       } catch(err) {
         let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}):`;
-        msg += String(err);
+        msg += misc.jd(err);
         console.error(msg);
         // Todo: switch to an error description page.
       }
@@ -282,8 +281,8 @@ class AppStateProvider extends Component {
           //pass
         } else {
           // Todo: For any other errors, switch to an error description page.
-          let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}):`;
-          msg += String(error);
+          let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}, params=${misc.jd(params)}):`;
+          msg += misc.jd(error);
           console.error(msg);
         }
         return;
@@ -294,7 +293,7 @@ class AppStateProvider extends Component {
         }
       } catch(err) {
         let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}):`;
-        msg += String(err);
+        msg += misc.jd(err);
         console.error(msg);
         // Todo: switch to an error description page.
       }
@@ -450,6 +449,10 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       });
       // Example result:
       // {"data": {"accountname": "Solidi", "accountno": "00001036", "reference": "SHMPQKC", "result": "success", "sortcode": "040476"}}
+      if (! _.has(data, 'result')) {
+        console.error(data);
+        return;
+      }
       if (data.result != 'success') {
         // Future: User needs to verify some information first: address, identity.
       }
