@@ -656,7 +656,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         log(msg + " No change.");
       } else {
         log(msg + " New data saved to appState.");
-        this.state.setAPIData({key:'balance', data});
+        //this.state.setAPIData({key:'balance', data});
+        this.state.apiData.balance = data;
       }
       return data;
     }
