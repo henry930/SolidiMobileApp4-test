@@ -300,9 +300,11 @@ class AppStateProvider extends Component {
       return data;
     }
 
+    // Useful during development.
     this.setAPIData = ({key, data}) => {
       let msg = `setAPIData: set state.apiData.${key} to hold: ${JSON.stringify(data, null, 2)}`;
-      log('setAPIData: ' + key)
+      log(msg);
+      //log('setAPIData: ' + key);
       let apiData = {...this.state.apiData}
       apiData[key] = data;
       this.setState({apiData});
@@ -580,17 +582,14 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
 
     this.loadBalances = async () => {
       let data = await this.state.privateMethod({apiRoute: 'balance'});
-      // Todo: Handle this error inside privateMethod.
-      /* Example error
-      {"error":"Incorrect nonce"}
-      */
       data = _.mapKeys(data, (value, key) => misc.getStandardAsset(key));
+      data = _.mapValues(data, (value, key) => value.balance);
       let msg = "User balances loaded from server.";
       if (jd(data) === jd(this.state.apiData.balance)) {
         log(msg + " No change.");
       } else {
         log(msg + " New data saved to appState.");
-        this.state.apiData.balance = data;
+        this.state.setAPIData({key:'balance', data});
       }
       return data;
     }
@@ -600,7 +599,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       // Note: Currently, no ETH balance appearing in the data. Why not ?
       if (_.isUndefined(this.state.apiData.balance)) return '[loading]';
       if (_.isUndefined(this.state.apiData.balance[asset])) return '[loading]';
-      let balance = this.state.apiData.balance[asset].balance;
+      let balance = this.state.apiData.balance[asset];
       let dp = assetsInfo[asset].decimalPlaces;
       let balanceString = Big(balance).toFixed(dp);
       return balanceString;

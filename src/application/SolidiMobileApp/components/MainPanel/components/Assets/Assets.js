@@ -46,76 +46,15 @@ let Assets = () => {
 
   let setup = async () => {
     await getData();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     setIsLoading(false); // Causes re-render.
   }
 
 
   let getData = async () => {
-    let data = await appState.privateMethod({
-      httpMethod: 'POST',
-      apiRoute: 'balance',
-      params: {},
-    });
+    await appState.loadBalances();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    // Example data:
-/*
-{
-  "BTC": {
-    "shortname": "Bitcoin",
-    "confirms": 6,
-    "deposit_enabled": 0,
-    "withdraw_enabled": 0,
-    "free_fee": "0.00000000",
-    "high_fee": "0.00030000",
-    "immed_fee": "0.00050000",
-    "dp": 8,
-    "deposit_msg": null,
-    "withdraw_msg": null,
-    "balance": "0.00000000"
-  },
-  "GBP": {
-    "shortname": "GBP",
-    "confirms": 1,
-    "deposit_enabled": 0,
-    "withdraw_enabled": 0,
-    "free_fee": "0.50000000",
-    "high_fee": "0.50000000",
-    "immed_fee": "0.50000000",
-    "dp": 2,
-    "deposit_msg": null,
-    "withdraw_msg": null,
-    "balance": "9598.00000000"
-  },
-  "LTC": {
-    "shortname": "Litecoin",
-    "confirms": 12,
-    "deposit_enabled": 0,
-    "withdraw_enabled": 0,
-    "free_fee": "0.00000000",
-    "high_fee": "0.00005100",
-    "immed_fee": "0.00011000",
-    "dp": 8,
-    "deposit_msg": null,
-    "withdraw_msg": null,
-    "balance": "0.00000000"
-  },
-  "XRP": {
-    "shortname": "Ripple",
-    "confirms": 20,
-    "deposit_enabled": 0,
-    "withdraw_enabled": 0,
-    "free_fee": "-1.00000000",
-    "high_fee": "-1.00000000",
-    "immed_fee": "0.02000000",
-    "dp": 6,
-    "deposit_msg": null,
-    "withdraw_msg": null,
-    "balance": "0.00000000"
-  }
-}
-*/
-    appState.setAPIData({key: 'balance', data});
+    // Todo: Need to cause a re-render. E.g. increment the reloadCount.
+    // Alternatively, write a "reload" function, which handles the re-render step.
   }
 
   let renderControls = () => {
@@ -140,7 +79,7 @@ let Assets = () => {
 
   let renderAssetItem = ({ item }) => {
     // Example item:
-    // {"asset": "XRP", "balance": "0.00000000", "confirms": 20, "deposit_enabled": 0, "deposit_msg": null, "dp": 6, "free_fee": "-1.00000000", "high_fee": "-1.00000000", "immed_fee": "0.02000000", "shortname": "Ripple", "withdraw_enabled": 0, "withdraw_msg": null}
+    // {"asset": "XRP", "balance": "0.00000000"}
     let asset = item.asset;
     let volume = item.balance;
     let assetDP = assetsInfo[asset].decimalPlaces;
@@ -157,14 +96,10 @@ let Assets = () => {
 
   let renderAssets = () => {
     // FlatList requires a list input.
-    // Transform the stored asset data into a list, sorted by asset symbol (e.g. "BTC").
+    // Transform the asset balance properties into a list of objects, sorted by asset symbol (e.g. "BTC").
     let data = appState.apiData.balance;
     let assets = _.keys(data).sort();
-    let data2 = assets.map(asset => {
-      let item = data[asset];
-      item.asset = asset;
-      return item;
-    });
+    let data2 = assets.map(asset => ( {asset, balance: data[asset]} ) );
     // Filter depending on dropdown category.
     let data3 = data2.filter(item => assetsInfo[item.asset].type == category);
     return (
