@@ -649,6 +649,30 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       return _.uniq(quoteAssets);
     }
 
+    this.loadCountries = async () => {
+      let data = await this.state.publicMethod({
+        httpMethod: 'GET',
+        apiRoute: 'country',
+        params: {},
+      });
+      // If the data differs from existing data, save it.
+      let msg = "Country data loaded from server.";
+      if (jd(data) === jd(this.state.apiData.country)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState. ");
+        this.state.apiData.country = data;
+      }
+      return data;
+    }
+
+    this.getCountries = () => {
+      let defaultList = [{code: 'GB', name: 'United Kingdom'}];
+      let countries = this.state.apiData.country;
+      if (_.isEmpty(countries)) return defaultList;
+      return countries;
+    }
+
     this.loadBalances = async () => {
       let data = await this.state.privateMethod({apiRoute: 'balance'});
       data = _.mapKeys(data, (value, key) => misc.getStandardAsset(key));
@@ -865,6 +889,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       getAssetInfo: this.getAssetInfo,
       loadMarkets: this.loadMarkets,
       getMarkets: this.getMarkets,
+      loadCountries: this.loadCountries,
+      getCountries: this.getCountries,
       getBaseAssets: this.getBaseAssets,
       getQuoteAssets: this.getQuoteAssets,
       loadBalances: this.loadBalances,

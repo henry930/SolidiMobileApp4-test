@@ -27,7 +27,7 @@ Need to use zIndex values carefully to ensure that the opened dropdown appears a
 let PersonalDetails = () => {
 
   let appState = useContext(AppStateContext);
-  let [isLoading, setIsLoading] = useState(true);
+  let [renderCount, triggerRender] = useState(0);
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
 
@@ -64,6 +64,18 @@ let PersonalDetails = () => {
     updateUserData({detail: 'gender', value: gender});
   }, [gender]);
 
+    // Country dropdown (for address)
+    let [country, setCountry] = useState('United Kingdom');
+    let [openCountry, setOpenCountry] = useState(false);
+    useEffect( () => { if (! firstRender)
+      updateUserData({detail: 'country', value: country});
+    }, [country]);
+    let generateCountryOptionsList = () => {
+      let countries = appState.getCountries();
+      let result = countries.map(x => { return {label: x.name, value: x.code} });
+      return result;
+    }
+
 
   // Initial setup.
   useEffect( () => {
@@ -73,8 +85,9 @@ let PersonalDetails = () => {
 
   let setup = async () => {
     await loadUserData();
-    //if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    //setIsLoading(false); // Causes re-render.
+    await appState.loadCountries();
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    triggerRender(renderCount+1);
   }
 
 
@@ -394,17 +407,23 @@ address_1 address_2 address_3 address_4 postcode country
 
         {renderError('country')}
 
-        <View style={styles.detail}>
+        <View style={[styles.detail, {zIndex:1}]}>
           <View style={styles.detailName}>
-            <Text style={styles.detailNameText}>Country</Text>
+            <Text style={styles.detailNameText}>{`\u2022  `}Country</Text>
           </View>
-          <View>
-          <TextInput defaultValue={details.user.country}
-              style={[styles.detailValue, styles.editableTextInput]}
-              onEndEditing = {event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'country', value});
-              }}
+          <View style={[styles.detailValue, {paddingVertical:0, paddingLeft: 0}]}>
+            <DropDownPicker
+              listMode="SCROLLVIEW"
+              scrollViewProps={{nestedScrollEnabled: true}}
+              placeholder={country}
+              open={openCountry}
+              value={country}
+              items={ generateCountryOptionsList() }
+              //items={genderOptionsList}
+              setOpen={setOpenCountry}
+              setValue={setCountry}
+              style={[styles.detailDropdown]}
+              textStyle = {styles.detailDropdownText}
             />
           </View>
         </View>
