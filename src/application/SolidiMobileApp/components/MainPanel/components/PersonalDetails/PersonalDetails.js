@@ -40,7 +40,6 @@ let PersonalDetails = () => {
   let [details, setDetails] = useState(details1);
 
   let [errorDisplay, setErrorDisplay] = useState({});
-  let runningUpdate = useRef(false);
 
 
   // Tmp
@@ -50,7 +49,9 @@ let PersonalDetails = () => {
   let titleOptions = 'Mr Mrs Ms'.split(' ');
   let titleOptionsList = titleOptions.map(x => ({label: x, value: x}) );
   let [openTitle, setOpenTitle] = useState(false);
-  useEffect( () => { if (! firstRender) runNewUpdate({title}); }, [title]);
+  useEffect( () => { if (! firstRender)
+    updateUserData({detail: 'title', value: title});
+  }, [title]);
 
   // Tmp
   let initialGender = 'Male'; // this should be loaded from the user info.
@@ -59,7 +60,9 @@ let PersonalDetails = () => {
   let genderOptions = 'Male Female'.split(' ');
   let genderOptionsList = genderOptions.map(x => ({label: x, value: x}) );
   let [openGender, setOpenGender] = useState(false);
-  useEffect( () => { if (! firstRender) runNewUpdate({gender}); }, [gender]);
+  useEffect( () => { if (! firstRender)
+    updateUserData({detail: 'gender', value: gender});
+  }, [gender]);
 
 
   // Initial setup.
@@ -73,21 +76,6 @@ let PersonalDetails = () => {
     await loadUserData();
     //if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     //setIsLoading(false); // Causes re-render.
-  }
-
-
-  let runNewUpdate = async (update) => {
-    if (runningUpdate.current) {
-      // If this function has already been called elsewhere, sleep a bit and retry.
-      await misc.sleep(0.2 + Math.random());
-      runNewUpdate(update);
-    } else {
-      runningUpdate.current = true;
-      let detail = _.keys(update)[0];
-      let value = _.values(update)[0];
-      await updateUserData({detail, value});
-      runningUpdate.current = false;
-    }
   }
 
 
