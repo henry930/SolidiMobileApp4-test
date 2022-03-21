@@ -1,7 +1,16 @@
+// React imports
+import React, { useRef } from 'react';
+
+
 // Imports
 import _ from 'lodash';
 import { Buffer } from "buffer";
 import CryptoJS from 'crypto-js';
+import { resolve } from 'path';
+
+
+// Shortcuts
+let jd = JSON.stringify;
 
 
 
@@ -27,6 +36,15 @@ let data = await appState.apiClient.privateMethod({
 
 
 
+let sleep = async (timeSeconds) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, timeSeconds * 1000);
+  });
+}
+
+
+
+
 export default class SolidiRestAPIClientLibrary {
 
   constructor(args, ...args2) {
@@ -34,6 +52,8 @@ export default class SolidiRestAPIClientLibrary {
     let expected = 'userAgent, apiKey, apiSecret, domain'.split(', ');
     this._checkExactExpectedArgs(args, expected, 'constructor');
     _.assign(this, args);
+    this.prevNonce = Date.now(); // milliseconds
+    this.activeRequest = false;
   }
 
   _checkArgs2(args2, methodName) {
@@ -72,7 +92,7 @@ export default class SolidiRestAPIClientLibrary {
     if (_.isUndefined(args.params)) { args.params = {}; }
     if (_.isUndefined(args.apiVersion)) { args.apiVersion = 'v1'; }
     args.privateAPICall = false;
-    return this.makeAPICall(args);
+    return this.queueAPICall(args);
   }
 
   async privateMethod(args, ...args2) {
@@ -82,7 +102,34 @@ export default class SolidiRestAPIClientLibrary {
     if (_.isUndefined(args.params)) { args.params = {}; }
     if (_.isUndefined(args.apiVersion)) { args.apiVersion = 'v1'; }
     args.privateAPICall = true;
-    return this.makeAPICall(args);
+    return this.queueAPICall(args);
+  }
+
+  async queueAPICall(args, ...args2) {
+    /*
+    Problem:
+    - The server enforces incrementing nonces.
+    - We need to guarantee that requests arrive at the server in a specific order.
+    - If they don't, some of them will come back with "Incorrect nonce" errors.
+    Solution:
+    - We wait until each request returns prior to sending another one.
+    - We do this by locking here while making a request.
+    Notes:
+    - This isn't a great queue system and doesn't guarantee order. Requests may be processed after later requests.
+    - Order can guaranteed in a React Native page / component by using 'await'.
+    */
+    if (this.activeRequest) {
+      // Sleep a bit and retry.
+      let value = Math.random(); // Between 0 and 1.
+      value = value / 100; // Between 0 and 0.01 seconds.
+      //log(`API request: apiRoute=${args.apiRoute}: params=${jd(args.params)}: Sleeping ${value} seconds.`);
+      await sleep(value);
+      return this.queueAPICall(args);
+    }
+    this.activeRequest = true;
+    let result = await this.makeAPICall(args);
+    this.activeRequest = false;
+    return result;
   }
 
   async makeAPICall(args, ...args2) {
@@ -102,7 +149,11 @@ export default class SolidiRestAPIClientLibrary {
     let postData = null;
     if ('POST'.split().includes(httpMethod)) {
       let params2 = _.assign({}, params);
-      params2.nonce = Date.now() * 1000;
+      let nonce = Date.now();
+      if (nonce <= this.prevNonce) nonce = this.prevNonce + 1;
+      this.prevNonce = nonce;
+      params2.nonce = nonce;
+      //log(`API request: apiRoute=${apiRoute}: nonce=${nonce}: params=${jd(params)}`);
       postData = JSON.stringify(params2);
     }
     let headers = {
