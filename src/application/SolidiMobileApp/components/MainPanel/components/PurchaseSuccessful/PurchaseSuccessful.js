@@ -40,7 +40,6 @@ let PurchaseSuccessful = () => {
 
 
   let setup = async () => {
-    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
     await loadBalance();
   }
 

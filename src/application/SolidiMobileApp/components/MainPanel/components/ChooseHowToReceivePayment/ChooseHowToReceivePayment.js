@@ -58,7 +58,6 @@ let ChooseHowToReceivePayment = () => {
   }, []); // Pass empty array to only run once on mount.
 
   let setup = async () => {
-    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
     await loadBalanceData();
     await loadFeeData();
   }

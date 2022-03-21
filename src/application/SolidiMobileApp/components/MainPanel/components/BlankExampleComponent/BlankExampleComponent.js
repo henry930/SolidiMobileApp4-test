@@ -41,7 +41,6 @@ let BlankExampleComponent = () => {
 
 
   let setup = async () => {
-    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
     // await loadUserData();
     // await loadBalanceData();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;

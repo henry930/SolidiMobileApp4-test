@@ -31,7 +31,6 @@ let History = () => {
 
 
   let setup = async () => {
-    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
     await getData();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     setIsLoading(false); // Causes re-render.

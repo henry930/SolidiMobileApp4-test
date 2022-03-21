@@ -920,7 +920,6 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
 
     // Call public methods that provide useful data.
     let setup = async () => {
-      // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
       await this.state.loadMarkets();
       await this.state.loadPrices();
     }

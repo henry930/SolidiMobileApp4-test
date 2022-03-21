@@ -99,7 +99,6 @@ let Sell = () => {
 
   let setup = async () => {
     if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
-    // Avoid "Incorrect nonce" errors by doing the API calls sequentially.
     await loadMarketData();
     await loadPriceData();
     await loadBalanceData();
