@@ -17,7 +17,7 @@ const Header = (props) => {
 
   let appState = useContext(AppStateContext);
 
-  let showLogoOnly = appState.mainPanelState === 'PIN';
+  let pinMode = appState.mainPanelState === 'PIN';
 
   // Prepare back button.
   // It will set mainPanelState to the previous state in the history,
@@ -33,18 +33,23 @@ const Header = (props) => {
   // Check whether to include back button.
   let includeBackButton = false;
   if (appState.stateHistoryList.length > 1) {
-    if (! showLogoOnly) {
+    if (! pinMode) {
       includeBackButton = true;
     }
   }
 
-  // Check whether to include notification and menu buttons.
-  let includeNotificationButton = ! showLogoOnly;
-  let includeMenuButton = includeNotificationButton;
+  // Check whether to include notification button.
+  let includeNotificationButton = ! pinMode;
 
 
   let isSettingsButtonSelected = 'Settings' === appState.mainPanelState;
   let _styleSettingsButton = isSettingsButtonSelected ? styleSettingsButtonSelected : styleSettingsButton;
+
+
+  let changeState = (mainPanelState) => {
+    if (pinMode) return; // In pinMode, disable Header buttons.
+    appState.changeState(mainPanelState);
+  }
 
 
   return (
@@ -55,21 +60,21 @@ const Header = (props) => {
       <View style={styles.buttonWrapper}>
         <ImageButton imageName='solidi'
           styles={styleLogoButton}
-          onPress={ () => { appState.changeState('Test') } }
+          onPress={ () => { changeState('Test') } }
         />
       </View>
       <View style={styles.buttonWrapper}>
         {/*
         Future: Build notification section.
         { includeNotificationButton && <Button title='Alerts' styles={styleNotificationButton}
-          onPress={ () => { appState.changeState('notifications) } }
+          onPress={ () => { changeState('notifications) } }
         /> }
         */}
       </View>
       <View style={styles.buttonWrapper}>
         <ImageButton imageName='user' imageType='icon'
           styles={_styleSettingsButton}
-          onPress={ () => { appState.changeState('Settings') } }
+          onPress={ () => { changeState('Settings') } }
         />
       </View>
     </View>
