@@ -99,6 +99,7 @@ let PIN = () => {
     <View style={styles.panelContainer}>
       <PINCode
         status = {pinStatus}
+        // Note: The PINCode component uses the pinCodeKeychainName to store a newly chosen PIN in the Keychain.
         pinCodeKeychainName = {appState.appName}
         touchIDDisabled = {true}
         finishProcess = {() => _finishProcess()}
