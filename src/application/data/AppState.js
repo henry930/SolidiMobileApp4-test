@@ -922,7 +922,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         balance: {},
       },
       domain: 'solidi.co',
-      userAgent: "Solidi Mobile App 3",
+      userAgent: "Solidi Mobile App 4",
       user: {
         isAuthenticated: false,
         email: '',
