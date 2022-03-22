@@ -311,47 +311,63 @@ class AppStateProvider extends Component {
     }
 
     this.authenticateUser = () => {
-      if (! this.state.user.pin) {
-        this.state.setMainPanelState({mainPanelState: 'Login'});
-      } else {
-        this.state.setMainPanelState({mainPanelState: 'PIN'});
-      }
+      // If email (and password) aren't present, go to Login.
+      // Note: The PIN is kept in storage even if the user logs out.
+      if (! this.state.user.email) return this.state.changeState('Login');
+      // Otherwise, if we have PIN, go to PIN entry.
+      if (this.state.user.pin) return this.state.changeState('PIN');
+      // Other, go to Login.
+      return this.state.changeState('Login');
     }
 
-    this.choosePIN = () => {
+    this.deletePIN = async (deleteFromKeychain=false) => {
       // Delete the PIN in memory.
       this.state.user.pin = '';
-      /*
-      - Delete the PIN stored in the keychain.
-      - Note: This is done using a promise, so there will be a slight delay.
-      - However, the time taken to go through the choose PIN screens is much greater.
-      */
-      deleteUserPinCode(this.state.appName);
-      log('PIN deleted.')
+      let msg = 'PIN deleted from app memory.';
+      if (deleteFromKeychain) {
+        await deleteUserPinCode(this.state.appName);
+        msg += ' PIN also deleted from Keychain storage.';
+      }
+      log(msg);
+    }
+
+    this.choosePIN = async () => {
+      await this.state.deletePIN(deleteFromKeychain=true);
       // If user hasn't logged in, they need to do so first.
       if (! this.state.user.isAuthenticated) {
         // We send them to the login page, which will ask them to choose a PIN afterwards.
-        this.state.setMainPanelState({mainPanelState: 'Login'});
-        return;
+        return this.state.setMainPanelState({mainPanelState: 'Login'});
       }
       this.state.setMainPanelState({mainPanelState: 'PIN', pageName: 'choose'});
     }
 
-    this.loadPIN = () => {
+    this.loadPIN = async () => {
       /*
       - We load the PIN from the keychain if it exists.
       - This uses a promise - there will be a slight delay while the data is retrieved.
       - However: The user would have to be very fast indeed to click Buy on the initial BUY page before this completes.
       */
-      Keychain.getInternetCredentials(this.state.appName).then((credentials) => {
-        // Example result:
-        // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
-        if (credentials) {
-          let pin = credentials.password;
-          this.state.user.pin = pin;
-          log(`PIN loaded: ${pin}`);
-        }
-      });
+      let credentials = await Keychain.getInternetCredentials(this.state.appName);
+      // Example result:
+      // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
+      if (credentials) {
+        let pin = credentials.password;
+        this.state.user.pin = pin;
+        log(`PIN loaded: ${pin}`);
+      } else {
+        log(`No PIN found in Keychain.`);
+      }
+    }
+
+    this.logout = async () => {
+      // Delete user's email and password from memory and from keychain.
+      this.state.user.email = '';
+      this.state.user.password = '';
+      await Keychain.resetInternetCredentials(this.state.domain);
+      // Set user to 'not authenticated'.
+      this.state.user.isAuthenticated = false;
+      // Change state.
+      this.state.changeState('Buy');
     }
 
     this.lockApp = () => {
@@ -365,7 +381,7 @@ class AppStateProvider extends Component {
       if (! _.isNil(currentTimerID)) {
         clearTimeout(currentTimerID);
       }
-      let waitTimeMinutes = 1; // Future: Set to 30 mins.
+      let waitTimeMinutes = 120; // Future: Set to 30 mins.
       let waitTimeSeconds = waitTimeMinutes * 60;
       let callLockApp = () => {
         if (this.state.mainPanelState !== 'PIN') {
@@ -883,8 +899,10 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       privateMethod: this.privateMethod,
       setAPIData: this.setAPIData,
       authenticateUser: this.authenticateUser,
+      deletePIN: this.deletePIN,
       choosePIN: this.choosePIN,
       loadPIN: this.loadPIN,
+      logout: this.logout,
       lockApp: this.lockApp,
       resetLockAppTimer: this.resetLockAppTimer,
       cancelTimers: this.cancelTimers,
