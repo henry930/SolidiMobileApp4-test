@@ -36,6 +36,15 @@ let ChooseHowToPay = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToPay');
   if (pageName == 'default') pageName = 'direct_payment';
 
+
+  /* At this point, the user is already authenticated, or has just returned from the auth sequence.
+  - We send the BUY order to the server.
+  - It's an escrow order - we escrow the baseAsset and wait for the payment to arrive.
+  - No need to await the result.
+  */
+  appState.sendBuyOrder();
+
+
   let [renderCount, triggerRender] = useState(0);
   let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [disablePayWithBalanceButton, setDisablePayWithBalanceButton] = useState(false);

@@ -31,7 +31,7 @@ let Buy = () => {
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
-  let permittedPageNames = 'default userHasClickedBuyButton'.split(' ');
+  let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Buy');
 
   let [lastUserInput, setLastUserInput] = useState('');
@@ -54,12 +54,6 @@ let Buy = () => {
   }
   let baseAssetItems = deriveAssetItems(defaultBaseAssets);
   let quoteAssetItems = deriveAssetItems(defaultQuoteAssets);
-
-  // If we're reloading an existing order, load its details from the global state.
-  if (appState.pageName === 'userHasClickedBuyButton') {
-    ({volumeQA: selectedVolumeQA, assetQA: selectedAssetQA} = appState.panels.buy);
-    ({volumeBA: selectedVolumeBA, assetBA: selectedAssetBA} = appState.panels.buy);
-  }
 
   // Dropdown State:
   // BA = Base Asset
@@ -285,30 +279,23 @@ let Buy = () => {
 
   let startBuyRequest = async () => {
 
+    // Save the order details in the global state.
+    _.assign(appState.panels.buy, {volumeQA, assetQA, volumeBA, assetBA});
+
+    // Store the fact that we have an active BUY order.
+    appState.panels.buy.activeOrder = true;
+
     // If the user isn't authenticated, push them into the auth sequence.
     if (! appState.user.isAuthenticated) {
       // This happens here, rather than in setMainPanelState, because we want the user to make the choice to buy prior to having to authenticate.
-      // Save the order details in the global state.
-      _.assign(appState.panels.buy, {volumeQA, assetQA, volumeBA, assetBA});
-      // Stash the BUY state for later retrieval.
-      appState.stashState({mainPanelState: 'Buy', pageName: 'userHasClickedBuyButton'});
-      appState.authenticateUser();
-      return;
+      // After authentication, we'll redirect to ChooseHowToPay.
+      return appState.authenticateUser();
     }
 
-    // At this point, the user is already authenticated, or has just returned from the auth sequence.
-    // We send the BUY order to the server.
-    // It's an escrow order - we escrow the baseAsset and wait for the payment to arrive.
-    // No need to await the result.
-    appState.sendBuyOrder();
-    // We transfer to the payment sequence.
-    appState.changeState('ChooseHowToPay', 'direct_payment');
+    // We transfer to the payment choice page (which will send the order as it initialises).
+    return appState.changeState('ChooseHowToPay');
   }
 
-  // Submit the order automatically if we have returned from auth sequence.
-  if (appState.pageName === 'userHasClickedBuyButton') {
-    startBuyRequest();
-  }
 
   return (
 

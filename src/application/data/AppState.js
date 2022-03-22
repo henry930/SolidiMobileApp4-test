@@ -774,6 +774,12 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     }
 
     this.sendBuyOrder = async () => {
+      if (! this.state.panels.buy.activeOrder) {
+        log('sendBuyOrder: No active BUY order.');
+        return;
+      }
+      // Ensure that this order only gets processed once.
+      this.state.panels.buy.activeOrder = false;
       ({volumeQA, volumeBA, assetQA, assetBA} = this.state.panels.buy);
       let market = assetBA + '/' + assetQA;
       log(`Send order to server: BUY ${volumeBA} ${market} @ MARKET ${volumeQA}`);
@@ -968,6 +974,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         pin: '',
       },
       authRequired: [
+        'ChooseHowToPay',
         'History',
       ],
       apiClient: null,
@@ -975,6 +982,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       lockAppTimerID: null,
       panels: {
         buy: {
+          activeOrder: false,
           timerID: null,
           orderID: null,
           volumeQA: 0,
