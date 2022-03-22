@@ -96,12 +96,14 @@ let PIN = () => {
       // Load and store user info.
       await appState.loadUserInfo();
     }
-    // Change mainPanel.
-    if (! _.isEmpty(appState.stashedState)) {
+    // Change state.
+    if (appState.panels.buy.activeOrder) {
+      return appState.changeState('ChooseHowToPay');
+    } else if (! _.isEmpty(appState.stashedState)) {
       return appState.loadStashedState();
     } else {
       // Change to BUY state by default.
-      return appState.setMainPanelState({mainPanelState: 'Buy'});
+      return appState.changeState('Buy');
     }
   }
 

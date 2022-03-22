@@ -63,16 +63,17 @@ let Login = () => {
       }
       // Load and store user info.
       await appState.loadUserInfo();
-      // Change mainPanel.
+      // Change state.
       if (! appState.user.pin) {
-        appState.setMainPanelState({mainPanelState: 'PIN', pageName: 'choose'});
-      } else if (_.isEmpty(appState.stashedState)) {
-        // Change to BUY state by default.
-        appState.setMainPanelState({mainPanelState: 'Buy'});
+        return appState.changeState({mainPanelState: 'PIN', pageName: 'choose'});
+      } else if (appState.panels.buy.activeOrder) {
+        return appState.changeState('ChooseHowToPay');
+      } else if (! _.isEmpty(appState.stashedState)) {
+        return appState.loadStashedState();
       } else {
-        appState.loadStashedState();
+        // Change to BUY state by default.
+        return appState.changeState('Buy');
       }
-      return;
     } catch(err) {
       log(err);
       setErrorMessage(err.message);
