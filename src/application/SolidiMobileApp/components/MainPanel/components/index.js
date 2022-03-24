@@ -22,6 +22,7 @@ import RequestTimeout from './RequestTimeout/RequestTimeout';
 import SaleSuccessful from './SaleSuccessful/SaleSuccessful';
 import PersonalDetails from './PersonalDetails/PersonalDetails';
 import ContactUs from './ContactUs/ContactUs';
+import BankAccounts from './BankAccounts/BankAccounts';
 
 
 export {
@@ -49,4 +50,5 @@ export {
   SaleSuccessful,
   PersonalDetails,
   ContactUs,
+  BankAccounts,
 };

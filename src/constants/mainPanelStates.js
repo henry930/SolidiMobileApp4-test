@@ -23,6 +23,7 @@ export const mainPanelStates = [
   'SaleSuccessful',
   'PersonalDetails',
   'ContactUs',
+  'BankAccounts',
 ];
 
 export default mainPanelStates;
