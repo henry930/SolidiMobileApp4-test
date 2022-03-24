@@ -178,7 +178,6 @@ let styleTrustpilotButton = StyleSheet.create({
   view: {
     width: scaledWidth(300),
     height: scaledHeight(120),
-
   },
 });
 
