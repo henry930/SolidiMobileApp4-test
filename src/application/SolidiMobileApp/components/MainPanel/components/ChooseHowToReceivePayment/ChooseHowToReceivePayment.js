@@ -9,7 +9,7 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { assetsInfo, mainPanelStates, colors } from 'src/constants';
+import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
@@ -36,8 +36,9 @@ let ChooseHowToReceivePayment = () => {
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
-  let permittedPageNames = 'direct_payment balance'.split(' ');
+  let permittedPageNames = 'default direct_payment balance'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToReceivePayment');
+  if (pageName == 'default') pageName = 'balance';
 
   let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [balanceQA, setBalanceQA] = useState('');
@@ -46,6 +47,7 @@ let ChooseHowToReceivePayment = () => {
   let [orderSubmitted, setOrderSubmitted] = useState(false);
 
   // Load user's external GBP account.
+  // Todo: Reload the account data in setup by calling: await appState.loadUserInfo();
   let externalAccount = appState.user.info.defaultAccount.GBP;
 
    // Load order details.
@@ -93,7 +95,7 @@ let ChooseHowToReceivePayment = () => {
   }
 
   let setFeeAndTotal = (fee) => {
-    let dp = assetsInfo[assetQA].decimalPlaces;
+    let dp = appState.getAssetInfo(assetQA).decimalPlaces;
     if (paymentChoice == 'direct_payment') {
       let newFeeQA = Big(fee).toFixed(dp);
       log(`newFeeQA: ${newFeeQA}`);
@@ -209,8 +211,8 @@ let ChooseHowToReceivePayment = () => {
         <View style={styles.buttonDetail}>
           <Text style={styles.bold}>{`\u2022  `} Get paid in 8 hours</Text>
           <Text style={styles.bold}>{`\u2022  `} Paying to {externalAccount.accountName}</Text>
-          <Text style={styles.bold}>{`\u2022  `} Sort Code - {externalAccount.sortCode}</Text>
-          <Text style={styles.bold}>{`\u2022  `} Account Number - {externalAccount.accountNumber}</Text>
+          <Text style={styles.bold}>{`\u2022  `} Sort Code: {externalAccount.sortCode}</Text>
+          <Text style={styles.bold}>{`\u2022  `} Account Number: {externalAccount.accountNumber}</Text>
         </View>
 
         <RadioButton.Item label="Paid to balance" value="balance"
@@ -242,22 +244,22 @@ let ChooseHowToReceivePayment = () => {
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>You sell</Text>
-          <Text style={styles.bold}>{volumeBA} {assetsInfo[assetBA].displaySymbol}</Text>
+          <Text style={styles.bold}>{volumeBA} {appState.getAssetInfo(assetBA).displaySymbol}</Text>
         </View>
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>You get</Text>
-          <Text style={styles.bold}>{volumeQA} {assetsInfo[assetQA].displaySymbol}</Text>
+          <Text style={styles.bold}>{volumeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
         </View>
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>Fee</Text>
-          <Text style={styles.bold}>{feeQA} {assetsInfo[assetQA].displaySymbol}</Text>
+          <Text style={styles.bold}>{feeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
         </View>
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>Total</Text>
-          <Text style={styles.bold}>{totalQA} {assetsInfo[assetQA].displaySymbol}</Text>
+          <Text style={styles.bold}>{totalQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
         </View>
 
       </View>
