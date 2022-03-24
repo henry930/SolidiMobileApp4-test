@@ -9,7 +9,7 @@ import _ from 'lodash';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { assetsInfo, mainPanelStates, colors } from 'src/constants';
+import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 
@@ -94,7 +94,7 @@ let MakePayment = () => {
 
       <View style={styles.instructionsSection}>
         <View style={styles.instructionItem}>
-          <Text style={styles.bold}>{`\u2022  `} You are buying {volumeBA} {assetsInfo[assetBA].displayString} for {volumeQA} {assetsInfo[assetQA].displayString}.</Text>
+          <Text style={styles.bold}>{`\u2022  `} You are buying {volumeBA} {appState.getAssetInfo(assetBA).displayString} for {volumeQA} {appState.getAssetInfo(assetQA).displayString}.</Text>
         </View>
         <View style={styles.instructionItem}>
           <Text style={styles.bold}>{`\u2022  `} Send payment now using your online or telephone banking.</Text>
@@ -120,7 +120,7 @@ let MakePayment = () => {
         <View style={styles.paymentDetailsLine}>
           <Text style={styles.paymentDetailText}>Amount</Text>
           <View style={styles.paymentDetailValue}>
-            <Text style={styles.paymentDetailText}>{volumeQA} {assetsInfo[assetQA].displaySymbol}</Text>
+            <Text style={styles.paymentDetailText}>{volumeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
             <ImageButton imageName='clone' imageType='icon'
               styles={styleCopyButton}
               onPress={ () => { copyToClipboard(volumeQA) } }
