@@ -1175,7 +1175,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
 
       _.assign(this.state.panels.buy, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
 
-      _.assign(this.state.panels.sell, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
+      _.assign(this.state.panels.sell, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC', totalQA: '100'});
 
       _.assign(this.state.user.info.depositDetails.GBP, {
         accountName: 'Solidi',
