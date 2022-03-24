@@ -299,14 +299,8 @@ address_1 address_2 address_3 address_4 postcode country
           <View style={styles.detailName}>
             <Text style={styles.detailNameText}>Mobile</Text>
           </View>
-          <View>
-          <TextInput defaultValue={details.user.mobile}
-              style={[styles.detailValue, styles.editableTextInput]}
-              onEndEditing = {event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'mobile', value});
-              }}
-            />
+          <View style={styles.detailValue}>
+            <Text style={styles.detailValueText}>{details.user.mobile}</Text>
           </View>
         </View>
 
