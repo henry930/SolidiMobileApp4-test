@@ -52,7 +52,7 @@ let ContactUs = () => {
         <Text style={styles.headingText}>Contact Us</Text>
       </View>
 
-      <Text style={styles.bold}>Please click the button below to visit the Contact Us page on our website.</Text>
+      <Text style={styles.bold}>Please tap the button below to visit the Contact Us page on our website.</Text>
 
       <View style={styles.buttonSection}>
         <StandardButton title="Contact Us"
