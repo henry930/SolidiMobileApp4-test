@@ -58,9 +58,9 @@ let Sell = () => {
 
   // Function that derives dropdown properties from an asset list.
   let deriveAssetItems = (assets) => {
-    return assets.map(x => {
-      let a = appState.getAssetInfo(x);
-      return {label: a.displayString, value: a.displaySymbol};
+    return assets.map(asset => {
+      let info = appState.getAssetInfo(asset);
+      return {label: info.displayString, value: info.displaySymbol};
     });
   }
   let baseAssetItems = deriveAssetItems(defaultBaseAssets);
