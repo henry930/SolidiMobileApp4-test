@@ -8,7 +8,7 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { assetsInfo, mainPanelStates, colors } from 'src/constants';
+import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
@@ -34,8 +34,8 @@ let InsufficientBalance = () => {
   _.assign(appState.panels.sell, {volumeQA: '100', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
   _.assign(appState.apiData, {
     balance: {
-      BTC: {"balance": "0.00000000"},
-      GBP: {"balance": "8900.00000000"},
+      BTC: "0.00000000",
+      GBP: "8900.00000000",
     },
   });
 
@@ -47,11 +47,11 @@ let InsufficientBalance = () => {
     ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.sell);
   }
 
-  // We assume that prior to loading this component, we have retrieved the balances from the API. So, here we can just load them directly.
+  // We assume that prior to loading this component, (i.e. during previous pageloads), we have retrieved the balances from the API. So, here we can just load them directly.
   let balanceBA = appState.getBalance(assetBA);
   let balanceQA = appState.getBalance(assetQA);
-  let dpBA = assetsInfo[assetBA].decimalPlaces;
-  let dpQA = assetsInfo[assetQA].decimalPlaces;
+  let dpBA = appState.getAssetInfo(assetBA).decimalPlaces;
+  let dpQA = appState.getAssetInfo(assetQA).decimalPlaces;
   let balanceString, volumeString, diffString;
   if (pageName == 'buy') {
     balanceString = Big(balanceQA).toFixed(dpQA);
@@ -69,15 +69,15 @@ let InsufficientBalance = () => {
 
   let makeDeposit = () => {
     let asset;
-    if (pageName == 'buy') asset = assetsInfo[assetQA].displaySymbol;
-    if (pageName == 'sell') asset = assetsInfo[assetBA].displaySymbol;
+    if (pageName == 'buy') asset = appState.getAssetInfo(assetQA).displaySymbol;
+    if (pageName == 'sell') asset = appState.getAssetInfo(assetBA).displaySymbol;
     appState.changeState('Receive', asset);
   }
 
   let getOrderDetails = () => {
     let details = '';
-    let displayStringBA = assetsInfo[assetBA].displayString;
-    let displayStringQA = assetsInfo[assetQA].displayString;
+    let displayStringBA = appState.getAssetInfo(assetBA).displayString;
+    let displayStringQA = appState.getAssetInfo(assetQA).displayString;
     if (pageName == 'buy') {
       details += `Buy ${volumeBA} ${displayStringBA} for ${volumeQA} ${displayStringQA}.`;
     } else if (pageName == 'sell') {
@@ -148,7 +148,7 @@ let InsufficientBalance = () => {
 
             <View style={styles.infoItem}>
               <Text style={styles.bold}>Option 2:</Text>
-              <Text>{'\n'}Increase your {assetsInfo[assetQA].displaySymbol} balance by making a deposit.</Text>
+              <Text>{'\n'}Increase your {appState.getAssetInfo(assetQA).displaySymbol} balance by making a deposit.</Text>
             </View>
 
             <View style={styles.button}>
