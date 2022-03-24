@@ -8,7 +8,7 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { assetsInfo, mainPanelStates, colors } from 'src/constants';
+import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
@@ -45,7 +45,7 @@ let SaleSuccessful = () => {
 
 
   let viewAssets = () => {
-    let pageName = assetsInfo[assetBA].type; // 'crypto' or 'fiat'.
+    let pageName = appState.getAssetInfo(assetBA).type; // 'crypto' or 'fiat'.
     appState.changeState('Assets', pageName);
   }
 
@@ -77,7 +77,7 @@ let SaleSuccessful = () => {
       <View style={styles.infoSection}>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your sale of {volumeBA} {assetsInfo[assetBA].displayString} has been processed.</Text>
+          <Text style={styles.bold}>{`\u2022  `} Your sale of {volumeBA} {appState.getAssetInfo(assetBA).displayString} has been processed.</Text>
         </View>
 
         { (pageName == 'balance') &&
@@ -85,11 +85,11 @@ let SaleSuccessful = () => {
           <View>
 
           <View style={styles.infoItem}>
-            <Text style={styles.bold}>{`\u2022  `} Your Solidi account has been credited with {totalQA} {assetsInfo[assetQA].displayString}.</Text>
+            <Text style={styles.bold}>{`\u2022  `} Your Solidi account has been credited with {totalQA} {appState.getAssetInfo(assetQA).displayString}.</Text>
           </View>
 
           <View style={styles.infoItem}>
-            <Text style={styles.bold}>{`\u2022  `} Your new {assetsInfo[assetQA].displaySymbol} balance is: { (balanceQA > 0) ? balanceQA : ''}</Text>
+            <Text style={styles.bold}>{`\u2022  `} Your new {appState.getAssetInfo(assetQA).displaySymbol} balance is: { (balanceQA > 0) ? balanceQA : ''}</Text>
           </View>
 
           </View>
@@ -99,7 +99,7 @@ let SaleSuccessful = () => {
         { (pageName == 'direct_payment') &&
 
           <View style={styles.infoItem}>
-            <Text style={styles.bold}>{`\u2022  `} Your payment of {totalQA} {assetsInfo[assetQA].displayString} should arrive within 8 hours.</Text>
+            <Text style={styles.bold}>{`\u2022  `} Your payment of {totalQA} {appState.getAssetInfo(assetQA).displayString} should arrive within 8 hours.</Text>
           </View>
 
         }
