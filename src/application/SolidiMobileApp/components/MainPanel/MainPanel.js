@@ -17,7 +17,8 @@ import { Test, Buy, Sell, Send, Receive, Assets, History,
   MakePayment, WaitingForPayment, BlankExampleComponent,
   PaymentNotMade, PurchaseSuccessful, InsufficientBalance,
   ReadArticle, ChooseHowToReceivePayment, RequestTimeout,
-  SaleSuccessful, PersonalDetails, ContactUs, BankAccounts } from './components';
+  SaleSuccessful, PersonalDetails, ContactUs, BankAccounts,
+  Security } from './components';
 import AppStateContext from 'src/application/data';
 
 
@@ -85,6 +86,8 @@ const MainPanel = (props) => {
       return <ContactUs />
     } else if (appState.mainPanelState === 'BankAccounts') {
       return <BankAccounts />
+    } else if (appState.mainPanelState === 'Security') {
+      return <Security />
     } else {
       return <Text>Error in MainPanel.js: Unknown mainPanelState: {appState.mainPanelState}</Text>
     }

@@ -24,6 +24,7 @@ export const mainPanelStates = [
   'PersonalDetails',
   'ContactUs',
   'BankAccounts',
+  'Security',
 ];
 
 export default mainPanelStates;

@@ -23,6 +23,7 @@ import SaleSuccessful from './SaleSuccessful/SaleSuccessful';
 import PersonalDetails from './PersonalDetails/PersonalDetails';
 import ContactUs from './ContactUs/ContactUs';
 import BankAccounts from './BankAccounts/BankAccounts';
+import Security from './Security/Security';
 
 
 export {
@@ -51,4 +52,5 @@ export {
   PersonalDetails,
   ContactUs,
   BankAccounts,
+  Security,
 };
