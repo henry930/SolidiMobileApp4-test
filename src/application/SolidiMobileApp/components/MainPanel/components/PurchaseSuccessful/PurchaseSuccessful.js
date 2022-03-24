@@ -56,7 +56,7 @@ let PurchaseSuccessful = () => {
   let loadBalance = async () => {
     await appState.loadBalances();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    let result = appState.getBalance(assetQA);
+    let result = appState.getBalance(assetBA);
     result = '0.05000000' // Testing
     setBalanceBA(result);
   };
