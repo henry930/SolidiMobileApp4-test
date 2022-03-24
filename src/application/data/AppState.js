@@ -583,32 +583,6 @@ class AppStateProvider extends Component {
       return countries;
     }
 
-    this.loadBalances = async () => {
-      let data = await this.state.privateMethod({apiRoute: 'balance'});
-      data = _.mapKeys(data, (value, key) => misc.getStandardAsset(key));
-      data = _.mapValues(data, (value, key) => value.balance);
-      let msg = "User balances loaded from server.";
-      if (jd(data) === jd(this.state.apiData.balance)) {
-        log(msg + " No change.");
-      } else {
-        log(msg + " New data saved to appState.");
-        //this.state.setAPIData({key:'balance', data});
-        this.state.apiData.balance = data;
-      }
-      return data;
-    }
-
-    this.getBalance = (asset) => {
-      // Get the balance held in the appState.
-      // Note: Currently, no ETH balance appearing in the data. Why not ?
-      if (_.isUndefined(this.state.apiData.balance)) return '[loading]';
-      if (_.isUndefined(this.state.apiData.balance[asset])) return '[loading]';
-      let balance = this.state.apiData.balance[asset];
-      let dp = this.state.getAssetInfo(asset).decimalPlaces;
-      let balanceString = Big(balance).toFixed(dp);
-      return balanceString;
-    }
-
     this.loadPrices = async () => {
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
@@ -822,6 +796,32 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       }
     }
 
+    this.loadBalances = async () => {
+      let data = await this.state.privateMethod({apiRoute: 'balance'});
+      data = _.mapKeys(data, (value, key) => misc.getStandardAsset(key));
+      data = _.mapValues(data, (value, key) => value.balance);
+      let msg = "User balances loaded from server.";
+      if (jd(data) === jd(this.state.apiData.balance)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState.");
+        //this.state.setAPIData({key:'balance', data});
+        this.state.apiData.balance = data;
+      }
+      return data;
+    }
+
+    this.getBalance = (asset) => {
+      // Get the balance held in the appState.
+      // Note: Currently, no ETH balance appearing in the data. Why not ?
+      if (_.isUndefined(this.state.apiData.balance)) return '[loading]';
+      if (_.isUndefined(this.state.apiData.balance[asset])) return '[loading]';
+      let balance = this.state.apiData.balance[asset];
+      let dp = this.state.getAssetInfo(asset).decimalPlaces;
+      let balanceString = Big(balance).toFixed(dp);
+      return balanceString;
+    }
+
     this.getOrderStatus = async ({orderID}) => {
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
@@ -993,8 +993,6 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       getCountries: this.getCountries,
       getBaseAssets: this.getBaseAssets,
       getQuoteAssets: this.getQuoteAssets,
-      loadBalances: this.loadBalances,
-      getBalance: this.getBalance,
       loadPrices: this.loadPrices,
       getPrices: this.getPrices,
       getPrice: this.getPrice,
@@ -1008,6 +1006,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       getUserInfo: this.getUserInfo,
       loadDepositDetails: this.loadDepositDetails,
       loadDefaultAccounts: this.loadDefaultAccounts,
+      loadBalances: this.loadBalances,
+      getBalance: this.getBalance,
       getOrderStatus: this.getOrderStatus,
       sendBuyOrder: this.sendBuyOrder,
       sendSellOrder: this.sendSellOrder,
