@@ -7,7 +7,7 @@ import _ from 'lodash';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { assetsInfo, mainPanelStates, colors } from 'src/constants';
+import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
@@ -45,7 +45,7 @@ let PurchaseSuccessful = () => {
 
 
   let viewAssets = () => {
-    let pageName = assetsInfo[assetBA].type; // 'crypto' or 'fiat'.
+    let pageName = appState.getAssetInfo(assetBA).type; // 'crypto' or 'fiat'.
     appState.changeState('Assets', pageName);
   }
 
@@ -72,15 +72,15 @@ let PurchaseSuccessful = () => {
       <View style={styles.infoSection}>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your payment of {volumeQA} {assetsInfo[assetQA].displayString} has been processed.</Text>
+          <Text style={styles.bold}>{`\u2022  `} Your payment of {volumeQA} {appState.getAssetInfo(assetQA).displayString} has been processed.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your Solidi account has been credited with {volumeBA} {assetsInfo[assetBA].displayString}.</Text>
+          <Text style={styles.bold}>{`\u2022  `} Your Solidi account has been credited with {volumeBA} {appState.getAssetInfo(assetBA).displayString}.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your new {assetsInfo[assetBA].displaySymbol} balance is: { (balanceBA > 0) ? balanceBA : ''}</Text>
+          <Text style={styles.bold}>{`\u2022  `} Your new {appState.getAssetInfo(assetBA).displaySymbol} balance is: { (balanceBA > 0) ? balanceBA : ''}</Text>
         </View>
 
       </View>
