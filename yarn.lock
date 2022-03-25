@@ -6190,6 +6190,11 @@
   "resolved" "https://registry.npmjs.org/react-native-keychain/-/react-native-keychain-8.0.0.tgz"
   "version" "8.0.0"
 
+"react-native-logs@4.0.1":
+  "integrity" "sha512-SplLnxAbBOgzjVoIRcLIv7QO/wnmGhPwaGWUYu5FVg2LI9ZsBO3f3xjYH7Go2wZRhPG3BIkSgB/woBicBjwmLg=="
+  "resolved" "https://registry.npmjs.org/react-native-logs/-/react-native-logs-4.0.1.tgz"
+  "version" "4.0.1"
+
 "react-native-paper@4.11.2":
   "integrity" "sha512-r+M5unY9Avez4we/RijVh4iy8gqxK93R4840aZmbakOJLIuxjfNh3B6SuoxBEbR6diuPRbKVeWHKju4mhltxWw=="
   "resolved" "https://registry.npmjs.org/react-native-paper/-/react-native-paper-4.11.2.tgz"
