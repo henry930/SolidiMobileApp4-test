@@ -65,7 +65,7 @@ let Login = () => {
       await appState.loadUserInfo();
       // Change state.
       if (! appState.user.pin) {
-        return appState.changeState({mainPanelState: 'PIN', pageName: 'choose'});
+        return appState.changeState('PIN', 'choose');
       } else if (appState.panels.buy.activeOrder) {
         return appState.changeState('ChooseHowToPay');
       } else if (! _.isEmpty(appState.stashedState)) {
