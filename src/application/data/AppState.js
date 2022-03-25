@@ -23,13 +23,17 @@ import { mainPanelStates, footerButtonList } from 'src/constants';
 import SolidiRestAPIClientLibrary from 'src/api/SolidiRestAPIClientLibrary';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
+import appTier from 'src/constants/appTier';
 
-// Misc
+// Logger
+import logger from 'src/util/logger';
+let logger2 = logger.extend('AppState');
+let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+
+// Shortcuts
 let jd = JSON.stringify;
-let lj = (x) => console.log(jd(x));
 
-// Dev
-let tier = 'dev';
+
 
 
 let AppStateContext = React.createContext();
@@ -41,7 +45,7 @@ class AppStateProvider extends Component {
     super(props);
 
     // Can set this initial state for testing.
-    this.initialMainPanelState = 'Sell';
+    this.initialMainPanelState = 'Buy';
     this.initialPageName = 'default';
 
     // Misc
@@ -51,6 +55,7 @@ class AppStateProvider extends Component {
     this.nonHistoryPanels = ['PIN'];
     this.appName = 'SolidiMobileApp';
     this.apiVersion = '1';
+    this.appTier = appTier;
 
     // Shortcut function for changing the mainPanelState.
     this.changeState = (stateName, pageName) => {
@@ -1134,7 +1139,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     this.resetLockAppTimer();
 
     // Tweak app state for dev work.
-    if (tier === 'dev') {
+    if (appTier === 'dev') {
       this.state.domain = 't3.solidi.co';
     }
 
@@ -1155,7 +1160,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     // === End setup
 
     // Tweak app state for dev work.
-    if (tier === 'dev') {
+    if (appTier === 'dev') {
       // Use test values for accessing a dev API.
       let apiKey = 'WmgwEP7RqaF9morLAiDauluX146BdUO9g5GVUNMkXsukQW5qeIBI35F5';
       let apiSecret = 'aMGnGuxXzdSu0EOY6jiWgonu7Ycb4SgeFWClq9i0nbuoPjnWDFST4gnbfAmjtDx8zau0kN0HYv5OOtKs8DldTJp9';
