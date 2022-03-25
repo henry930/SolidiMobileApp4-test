@@ -39,7 +39,7 @@ let Buy = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Buy');
 
   // Keep track of the last user action that changed an aspect of the order.
-  let [lastUserInput, setLastUserInput] = useState('');
+  let [lastUserInput, setLastUserInput] = useState('volumeQA');
 
   // Defaults.
   let selectedAssetBA = 'BTC';
@@ -56,27 +56,26 @@ let Buy = () => {
   }
 
   // Functions that derive dropdown properties from the current lists of base and quote assets.
-  let baseAssetItems2 = () => { return deriveAssetItems(appState.getBaseAssets()) }
-  let quoteAssetItems2 = () => { return deriveAssetItems(appState.getQuoteAssets()) }
+  let baseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
+  let quoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
 
   // Dropdown State:
   // BA = Base Asset
   let [volumeBA, setVolumeBA] = useState(selectedVolumeBA);
   let [openBA, setOpenBA] = useState(false);
   let [assetBA, setAssetBA] = useState(selectedAssetBA);
-  let [itemsBA, setItemsBA] = useState(baseAssetItems2());
+  let [itemsBA, setItemsBA] = useState(baseAssetItems());
   // QA = Quote Asset
   let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
   let [openQA, setOpenQA] = useState(false);
   let [assetQA, setAssetQA] = useState(selectedAssetQA);
-  let [itemsQA, setItemsQA] = useState(quoteAssetItems2());
+  let [itemsQA, setItemsQA] = useState(quoteAssetItems());
 
   let [newAPIVersion, setNewAPIVersion] = useState(false);
 
 
   // Initial setup.
   useEffect( () => {
-    if (_.isEmpty(lastUserInput)) setLastUserInput('volumeQA');
     setup();
   }, []); // Pass empty array to only run once on mount.
 
@@ -87,8 +86,8 @@ let Buy = () => {
     await appState.loadPrices();
     let apiCheck = await appState.checkForNewAPIVersion();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    setItemsBA(baseAssetItems2());
-    setItemsQA(quoteAssetItems2());
+    setItemsBA(baseAssetItems());
+    setItemsQA(quoteAssetItems());
     calculateVolumeBA();
     setNewAPIVersion(apiCheck);
   }
@@ -98,6 +97,7 @@ let Buy = () => {
   // - the price changes.
   // - the user changes the volumeQA value.
   let calculateVolumeBA = (args) => {
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     log(`Check whether volumeBA should be recalculated. assetBA = ${assetBA}`);
     // Defaults
     if (_.isNil(args)) args = {};
@@ -112,9 +112,11 @@ let Buy = () => {
     if (_.isEmpty(volumeQA)) {
       // pass
     } else if (lastUserInput == 'volumeBA' && ! priceStringChange && ! assetChange) {
-      // If the user changes volumeBA, this will cause volumeQA to be recalculated.
-      // This clause prevents the volumeQA change causing volumeBA to be recalculated for a second time (which would be a recursive event loop).
-      // However, if there has been a change in one of the market prices, or the user has changed an asset, then we should recalculate.
+      /*
+      - If the user changes volumeBA, this will cause volumeQA to be recalculated.
+      - This clause prevents the volumeQA change causing volumeBA to be recalculated for a second time (which would be a recursive event loop).
+      - However, if there has been a change in one of the market prices, or the user has changed an asset, then we should recalculate.
+      */
     } else {
       log('Recalculate base asset volume');
       let checkVolumeBA = _.isEmpty(volumeBA) ? '0' : volumeBA;
@@ -129,7 +131,7 @@ let Buy = () => {
       */
       if (priceStringChange && ! priceChange) {
         log(`No change in price (${price}). Stopping recalculation of volumeBA.`);
-        return
+        return;
       }
       let baseDP = appState.getAssetInfo(assetBA).decimalPlaces;
       let newVolumeBA = Big(volumeQA).div(Big(price)).toFixed(baseDP);
@@ -256,7 +258,7 @@ let Buy = () => {
   Note: setInterval runs in a separate execution context.
   - The only way that it can affect the main page is by updating state.
   - It can't retrieve state from the main page.
-  - So: We update state using the results of the API call.
+  - So: We update state (and trigger a reload) using the results of the API call.
   */
   let checkPrice = async () => {
     await appState.loadPrices();
@@ -285,7 +287,7 @@ let Buy = () => {
 
     /* Check if the user is not logged in.
     - This happens here, rather than in setMainPanelState, because we want the user to make the choice to buy prior to having to authenticate.
-    - After authentication, we'll redirect to ChooseHowToPay (which will send the order as it initialises).
+    - After authentication, we'll redirect to ChooseHowToPay (which will send the order as it loads).
     */
     if (! appState.user.isAuthenticated) {
       return appState.authenticateUser();
