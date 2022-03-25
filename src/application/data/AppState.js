@@ -55,7 +55,7 @@ class AppStateProvider extends Component {
     // Shortcut function for changing the mainPanelState.
     this.changeState = (stateName, pageName) => {
       if (! mainPanelStates.includes(stateName)) {
-        throw Error(`Unrecognised stateName: ${stateName}`);
+        throw Error(`Unrecognised stateName: ${JSON.stringify(stateName)}`);
       }
       this.state.setMainPanelState({mainPanelState: stateName, pageName});
     }
@@ -491,7 +491,8 @@ class AppStateProvider extends Component {
       if (jd(data) === jd(this.state.apiData.asset_info)) {
         log(msg + " No change.");
       } else {
-        log(msg + " New data saved to appState. " + jd(data));
+        msg += " New data saved to appState."
+        //msg += ' ' + jd(data));
         this.state.apiData.asset_info = data;
       }
       return data;
