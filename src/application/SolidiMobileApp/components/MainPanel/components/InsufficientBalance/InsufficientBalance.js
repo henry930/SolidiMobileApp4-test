@@ -87,10 +87,6 @@ let InsufficientBalance = () => {
   }
 
   let sellBalanceBA = () => {
-    // Change the order volume to equal the balanceBA.
-    appState.panels.sell.volumeBA = balanceBA;
-    // Todo:
-    //appState.panels.sell.volumeQA = appState.calculateVolumeQAFromVolumeBA(volumeBA);
     // Go back to the sell page.
     appState.changeState('Sell', 'loadExistingOrder');
   }
