@@ -13,20 +13,15 @@ let Test = () => {
 
   let appState = useContext(AppStateContext);
 
-  appState.loadPIN();
-
-  let switchPanel = async () => {
-    setTimeout( () => {
-      appState.setMainPanelState({mainPanelState: 'History'});
-    }, 500);
-  }
-
   useEffect(() => {
-    switchPanel();
+    //pass
   }, []);
 
   return (
     <View style={styles.panelContainer}>
+
+      <Text style={styles.headingText}>BlankExampleComponent2</Text>
+
       <Text>Status: </Text>
       <StandardButton title='Log out' style={styleButton}
         onPress={ () => { appState.logOut(); } }
