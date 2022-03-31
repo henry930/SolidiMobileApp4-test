@@ -252,8 +252,11 @@ class AppStateProvider extends Component {
         } else if (error == 'aborted') {
           //pass
         } else if (error == 'request_failed') {
-          let pageName = this.state.stashedState.mainPanelState;
-          this.changeState('RequestFailed', pageName);
+          if (this.state.mainPanelState !== 'RequestFailed') {
+            let pageName = this.state.stashedState.mainPanelState;
+            this.changeState('RequestFailed', pageName);
+          }
+          // We only arrive at this point if we've had a "request_failed" error from a second request. No point doing anything extra about it.
         } else {
           // Todo: For any other errors, switch to an error description page.
           let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}):`;
