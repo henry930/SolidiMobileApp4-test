@@ -24,6 +24,7 @@ import PersonalDetails from './PersonalDetails/PersonalDetails';
 import ContactUs from './ContactUs/ContactUs';
 import BankAccounts from './BankAccounts/BankAccounts';
 import Security from './Security/Security';
+import RequestFailed from './RequestFailed/RequestFailed';
 
 
 export {
@@ -53,4 +54,5 @@ export {
   ContactUs,
   BankAccounts,
   Security,
+  RequestFailed,
 };
