@@ -33,6 +33,8 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 // Shortcuts
 let jd = JSON.stringify;
 
+// Settings
+let appDomain = 'solidi.co';
 
 
 
@@ -218,7 +220,7 @@ class AppStateProvider extends Component {
       for (let [controllerID, controller] of _.entries(controllers)) {
         if (controller !== 'aborted') controller.abort();
         controllers[controllerID] = 'aborted';
-        log(`Aborted controller ${controllerID}`)
+        log(`Aborted controller ${controllerID}`);
       }
       // Future problem: If the user switches back and forth between screens fast enough, it's perhaps possible that the reassignment here of the altered controllers object to the appState will not include some new requests.
       this.state.abortControllers = controllers;
@@ -453,6 +455,7 @@ class AppStateProvider extends Component {
         apiRoute: 'api_latest_version',
         httpMethod: 'GET',
       });
+      // if (! .has(data, 'api_latest_version')) this.state.changeState('Error');
       let newAPIVersion = data.api_latest_version === this.state.apiVersion;
       return newAPIVersion;
     }
@@ -1045,7 +1048,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
         ticker: {},
       },
       priceLoadCount: 0,
-      domain: 'solidi.co',
+      domain: appDomain,
       userAgent: "Solidi Mobile App 4",
       user: {
         isAuthenticated: false,
@@ -1161,6 +1164,9 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
 
     // Tweak app state for dev work.
     if (appTier === 'dev') {
+
+      this.state.domain = 't3.solidi.co';
+
       // Use test values for accessing a dev API.
       let apiKey = 'WmgwEP7RqaF9morLAiDauluX146BdUO9g5GVUNMkXsukQW5qeIBI35F5';
       let apiSecret = 'aMGnGuxXzdSu0EOY6jiWgonu7Ycb4SgeFWClq9i0nbuoPjnWDFST4gnbfAmjtDx8zau0kN0HYv5OOtKs8DldTJp9';
