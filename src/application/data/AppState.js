@@ -539,6 +539,10 @@ class AppStateProvider extends Component {
       return this.state.apiData.asset_info[asset];
     }
 
+    this.getAssets = () => {
+      return _.keys(this.state.apiData.asset_info).sort();
+    }
+
     this.loadMarkets = async () => {
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
@@ -1014,6 +1018,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       checkForNewAPIVersion: this.checkForNewAPIVersion,
       loadAssetsInfo: this.loadAssetsInfo,
       getAssetInfo: this.getAssetInfo,
+      getAssets: this.getAssets,
       loadMarkets: this.loadMarkets,
       getMarkets: this.getMarkets,
       loadCountries: this.loadCountries,
