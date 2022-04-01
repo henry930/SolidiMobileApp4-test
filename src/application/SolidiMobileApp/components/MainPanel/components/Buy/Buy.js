@@ -420,11 +420,12 @@ let styles = StyleSheet.create({
   },
   quoteAssetWrapper: {
     paddingVertical: scaledHeight(20),
-    width: '80%',
+    width: '100%',
     flexDirection: "row",
     justifyContent: 'space-between',
     alignItems: 'center',
     zIndex: 2,
+    //borderWidth: 1, // testing
   },
   volumeQA: {
     height: 40,
