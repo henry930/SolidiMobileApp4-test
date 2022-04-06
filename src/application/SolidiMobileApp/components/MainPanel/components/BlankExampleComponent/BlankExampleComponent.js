@@ -46,9 +46,14 @@ let BlankExampleComponent = () => {
 
 
   let setup = async () => {
-    // await appState.loadUserInfo();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    triggerRender(renderCount+1);
+    try {
+      // await appState.loadUserInfo();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      triggerRender(renderCount+1);
+    } catch(err) {
+      let msg = `Send.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 
