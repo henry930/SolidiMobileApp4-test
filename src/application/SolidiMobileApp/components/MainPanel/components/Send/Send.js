@@ -507,11 +507,19 @@ let Send = () => {
       let msg = `Please supply: ${missingList.join(', ')}`;
       return setErrorMessage(msg);
     }
+    // Store the withdraw details in the global appState.
+    // These will be loaded later by the SendSuccessful page.
+    _.assign(appState.panels.send, {asset:assetSA, volume:total, addressProperties, priority});
+    // Send the withdraw request to the server.
     let result = await appState.sendWithdraw({asset:assetSA, volume:total, addressInfo:addressProperties, priority, functionName:'startSendRequest'});
+    // Check to see if the server returned an error.
+    // Stop and display the error message if so.
     if (_.has(result, 'error')) {
       let msg = result.error;
       return setErrorMessage(msg);
     }
+    // Change state.
+    appState.changeState('SendSuccessful');
   }
 
 
