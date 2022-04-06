@@ -569,6 +569,10 @@ class AppStateProvider extends Component {
       return this.state.apiData.asset_info[asset];
     }
 
+    this.getAssetsInfo = () => {
+      return this.state.apiData.asset_info;
+    }
+
     this.getAssets = () => {
       return _.keys(this.state.apiData.asset_info).sort();
     }
@@ -718,6 +722,25 @@ class AppStateProvider extends Component {
     this.setPrevPrice = ({market, price}) => {
       // Useful during development.
       this.state.prevAPIData.ticker[market] = price;
+    }
+
+    this.getZeroValue = (asset) => {
+      // Get a zero value with the right number of decimal places for the asset.
+      let dp = this.state.getAssetInfo(asset).decimalPlaces;
+      let value = Big(0).toFixed(dp);
+      return value;
+    }
+
+    this.getFullDecimalValue = ({asset, value, functionName}) => {
+      // Add zeros to the value to get the full number of decimal places for the asset.
+      if (_.isNil(functionName)) functionName = '[Unspecified location]';
+      if (! misc.isNumericString(value)) {
+        log(`${functionName}.getFullDecimalValue: value '${value}' is not a numeric string.`);
+        return '[loading]';
+      }
+      let dp = this.state.getAssetInfo(asset).decimalPlaces;
+      let value2 = Big(value).toFixed(dp);
+      return value2;
     }
 
 
@@ -1049,6 +1072,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       checkForNewAPIVersion: this.checkForNewAPIVersion,
       loadAssetsInfo: this.loadAssetsInfo,
       getAssetInfo: this.getAssetInfo,
+      getAssetsInfo: this.getAssetsInfo,
       getAssets: this.getAssets,
       loadMarkets: this.loadMarkets,
       getMarkets: this.getMarkets,
@@ -1062,6 +1086,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       getPrevPrice: this.getPrevPrice,
       setPrice: this.setPrice,
       setPrevPrice: this.setPrevPrice,
+      getZeroValue: this.getZeroValue,
+      getFullDecimalValue: this.getFullDecimalValue,
       /* END Public API methods */
       /* Private API methods */
       loadUserInfo: this.loadUserInfo,
