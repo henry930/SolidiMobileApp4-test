@@ -979,35 +979,65 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
     this.loadFees = async () => {
       // For now, we only load withdrawal fees.
       let data = await this.state.privateMethod({apiRoute:'fee'});
-      /* Example error:
-      {"error": "Incorrect nonce"}
-      */
+      if (data == 'DisplayedError') return;
       /* Example data:
-      [{"name":"BTC","free_fee":"0.00000000"},{"name":"GBP","free_fee":"0.50000000"}]
+      [
+        {
+          "asset": "BTC",
+          "withdraw": {
+            "low_fee": "0.00000000",
+            "medium_fee": "0.00030000",
+            "high_fee": "0.00050000"
+          }
+        },
+        {
+          "asset": "GBP",
+          "withdraw": {
+            "low_fee": "0.50000000",
+            "medium_fee": "0.50000000",
+            "high_fee": "0.50000000"
+          }
+        },
+      ]
       */
       // Data also contains 'GBPX', which we ignore.
       // Restructure data.
-      let newFees = {};
+      let withdrawFees = {};
       for (let x of data) {
-        newFees[x.name] = x.free_fee;
+        withdrawFees[x.asset] = {
+          low: x.withdraw.low_fee,
+          medium: x.withdraw.medium_fee,
+          high: x.withdraw.high_fee,
+        }
       }
       let msg = "Withdrawal fee data loaded from server.";
-      if (jd(newFees) === jd(this.state.fees.withdraw)) {
+      if (jd(withdrawFees) === jd(this.state.fees.withdraw)) {
         log(msg + " No change.");
       } else {
         log(msg + " New data saved to appState.");
-        this.state.fees.withdraw = newFees;
+        this.state.fees.withdraw = withdrawFees;
       }
-      return newFees;
+      return withdrawFees;
     }
 
-    this.getFee = ({feeType, asset}) => {
+    this.getFee = ({feeType, asset, priority}) => {
       // Get a fee held in the appState.
-      // feeType = deposit, withdraw.
-      if (! 'deposit withdraw'.split(' ').includes(feeType))
-        throw new Error(`Unrecognised feeType: ${feeType}`);
-      if (_.isNil(this.state.fees[feeType][asset])) return '[loading]';
-      let fee = this.state.fees[feeType][asset];
+      // feeType options: deposit, withdraw.
+      // priority options: low, medium, high.
+      if (! 'deposit withdraw'.split(' ').includes(feeType)) {
+        console.error(`Unrecognised feeType: ${feeType}`);
+      }
+      if (! 'low medium high'.split(' ').includes(priority)) {
+        console.error(`Unrecognised priority: ${priority}`);
+      }
+      if (_.isNil(this.state.fees[feeType][asset])) {
+        log(`No fee found for fees.${feeType}.${asset}.`)
+        return '[loading]';
+      }
+      if (_.isNil(this.state.fees[feeType][asset][priority])) {
+        console.error(`${asset} ${feeType} fees do not include priority '${priority}'`);
+      }
+      let fee = this.state.fees[feeType][asset][priority];
       let dp = this.state.getAssetInfo(asset).decimalPlaces;
       let feeString = Big(fee).toFixed(dp);
       return feeString;
