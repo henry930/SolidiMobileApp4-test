@@ -197,7 +197,7 @@ export default class SolidiRestAPIClientLibrary {
       }
       if (postData) options.body = postData;
       let msg = `Calling ${uri}`;
-      log(msg)
+      log(msg);
       let response = await fetch(uri, options);
       let data = await response.text();
       //log("Response: " + data);
@@ -213,18 +213,25 @@ export default class SolidiRestAPIClientLibrary {
 */
       data = data.replace(/[\r\n]+/gm, ''); // remove line breaks
       //log({data})
-      let timeoutSection = '<html><head><title>504 Gateway Time-out</title></head>';
+      // Error 502: Bad Gateway
+      let timeoutSection = '<html><head><title>502 Bad Gateway</title></head>';
       let n = timeoutSection.length;
       let firstSection = data.slice(0, n);
       if (firstSection == timeoutSection) {
+        return {error: 'request_failed'};
+      }
+      // Error 504: Gateway Time-out
+      let timeoutSection2 = '<html><head><title>504 Gateway Time-out</title></head>';
+      let n2 = timeoutSection2.length;
+      let firstSection2 = data.slice(0, n2);
+      if (firstSection2 == timeoutSection2) {
         return {error: 'timeout'};
       }
       try {
         data = JSON.parse(data);
       } catch(err) {
-        // Future: return {error: 'bad_data', data}, and switch to a page that displays it.
-        console.error(data);
-        throw new Error("Cannot parse data into JSON.");
+        log(`Can't parse received data: ${data}`);
+        return {error: 'cannot_parse_data', data};
       }
       if (data.error) {
         //console.error(uri + ' ' + jd(data));
