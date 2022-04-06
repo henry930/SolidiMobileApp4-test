@@ -55,7 +55,7 @@ export default class SolidiRestAPIClientLibrary {
     let expected = 'userAgent, apiKey, apiSecret, domain'.split(', ');
     this._checkExactExpectedArgs(args, expected, 'constructor');
     _.assign(this, args);
-    this.prevNonce = Date.now(); // milliseconds
+    this.prevNonce = Date.now() * 1000; // Note: Date.now() returns a value in milliseconds.
     this.activeRequest = false;
   }
 
@@ -152,7 +152,7 @@ export default class SolidiRestAPIClientLibrary {
     let postData = null;
     if ('POST'.split().includes(httpMethod)) {
       let params2 = _.assign({}, params);
-      let nonce = Date.now();
+      let nonce = Date.now() * 1000;
       if (nonce <= this.prevNonce) nonce = this.prevNonce + 1;
       this.prevNonce = nonce;
       params2.nonce = nonce;
