@@ -499,6 +499,7 @@ class AppStateProvider extends Component {
           decimalPlaces: 8,
           displaySymbol: 'ETH',
           displayString: 'ETH (Ethereum)',
+          addressProperties: 'address'.split(' '),
         },
         'EUR': {
           name: 'Euro',
@@ -506,6 +507,15 @@ class AppStateProvider extends Component {
           decimalPlaces: 2,
           displaySymbol: 'EUR',
           displayString: 'EUR (Euro)',
+          addressProperties: 'accountName BIC IBAN'.split(' '),
+        },
+        'XRP': {
+          name: 'Ripple',
+          type: 'crypto',
+          decimalPlaces: 6,
+          displaySymbol: 'XRP',
+          displayString: 'XRP (Ripple)',
+          addressProperties: 'address destinationTag'.split(' '),
         },
       });
       // If the data differs from existing data, save it.
@@ -529,6 +539,7 @@ class AppStateProvider extends Component {
           decimalPlaces: 8,
           displaySymbol: 'BTC',
           displayString: 'BTC (Bitcoin)',
+          addressProperties: [],
         },
         'GBP': {
           name: 'British Pound',
@@ -536,6 +547,7 @@ class AppStateProvider extends Component {
           decimalPlaces: 2,
           displaySymbol: 'GBP',
           displayString: 'GBP (British Pound)',
+          addressProperties: [],
         },
       }
       let blankAsset = {
@@ -544,6 +556,7 @@ class AppStateProvider extends Component {
         decimalPlaces: 2,
         displaySymbol: '[loading]',
         displayString: '[loading]',
+        addressProperties: [],
       }
       let dataUnavailable = _.isNil(this.state.apiData.asset_info) ||
         (_.isNil(this.state.apiData.asset_info[asset]));
