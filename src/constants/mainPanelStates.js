@@ -26,6 +26,7 @@ export const mainPanelStates = [
   'BankAccounts',
   'Security',
   'RequestFailed',
+  'Error',
 ];
 
 export default mainPanelStates;

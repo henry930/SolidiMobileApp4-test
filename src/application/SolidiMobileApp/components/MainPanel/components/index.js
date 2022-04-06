@@ -25,6 +25,7 @@ import ContactUs from './ContactUs/ContactUs';
 import BankAccounts from './BankAccounts/BankAccounts';
 import Security from './Security/Security';
 import RequestFailed from './RequestFailed/RequestFailed';
+import Error from './Error/Error';
 
 
 export {
@@ -55,4 +56,5 @@ export {
   BankAccounts,
   Security,
   RequestFailed,
+  Error,
 };
