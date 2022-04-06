@@ -47,7 +47,7 @@ let BlankExampleComponent = () => {
 
   let setup = async () => {
     try {
-      // await appState.loadUserInfo();
+      await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {
