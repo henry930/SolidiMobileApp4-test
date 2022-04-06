@@ -236,32 +236,35 @@ class AppStateProvider extends Component {
       let abortController = this.state.createAbortController();
       let data = await this.state.apiClient.publicMethod({httpMethod, apiRoute, params, abortController});
       if (_.has(data, 'error')) {
-        if (data.error == 'timeout') {
+        let error = data.error;
+        if (error == 'cannot_parse_data') {
+          this.state.switchToErrorState({message:JSON.stringify(data)});
+          return 'DisplayedError';
+        } else if (error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
           this.state.stashCurrentState();
           this.changeState('RequestTimeout');
-        }
-        let error = data.error;
-        if (error == 'cannot_parse_data') {
-          // Future:
-          //this.state.stashCurrentState();
-          //this.changeState('DataProblem');
-        } else if (error == 'Insufficient currency') {
-          // Todo: Fix 'ticker' function on backend.
-          //pass
+          return 'DisplayedError';
         } else if (error == 'aborted') {
           //pass
         } else if (error == 'request_failed') {
           if (this.state.mainPanelState !== 'RequestFailed') {
             let pageName = this.state.stashedState.mainPanelState;
             this.changeState('RequestFailed', pageName);
+            return 'DisplayedError';
           }
           // We only arrive at this point if we've had a "request_failed" error from a second request. No point doing anything extra about it.
+        } else if (_.isString(error) && error.startsWith('ValidationError:')) {
+          // This is a user-input validation error.
+          // The page that sent the request should display it to the user.
+          return data;
         } else {
-          // Todo: For any other errors, switch to an error description page.
-          let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}):`;
-          msg += misc.jd(error);
-          console.error(msg);
+          // For any other errors, switch to an error description page.
+          let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}, params=${misc.jd(params)}):`;
+          if (! _.isString(error)) error = JSON.stringify(error);
+          msg += ' ' + String(error);
+          this.state.switchToErrorState({message:msg});
+          return 'DisplayedError';
         }
         return;
       }
@@ -272,8 +275,8 @@ class AppStateProvider extends Component {
       } catch(err) {
         let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}):`;
         msg += misc.jd(err);
-        console.error(msg);
-        // Todo: switch to an error description page.
+        this.state.switchToErrorState({message:msg});
+        return 'DisplayedError';
       }
       return data;
     }
@@ -289,20 +292,31 @@ class AppStateProvider extends Component {
       let data = await this.state.apiClient.privateMethod({httpMethod, apiRoute, params, abortController});
       if (_.has(data, 'error')) {
         let error = data.error;
-        if (error == 'timeout') {
+        if (error == 'cannot_parse_data') {
+          this.state.switchToErrorState({message:JSON.stringify(data)});
+          return 'DisplayedError';
+        } else if (error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
           this.state.stashCurrentState();
           this.changeState('RequestTimeout');
+          return 'DisplayedError';
         } else if (error == 'aborted') {
           //pass
         } else if (error == 'request_failed') {
           this.state.stashCurrentState();
           this.changeState('RequestFailed');
+          return 'DisplayedError';
+        } else if (_.isString(error) && error.startsWith('ValidationError:')) {
+          // This is a user-input validation error.
+          // The page that sent the request should display it to the user.
+          return data;
         } else {
-          // Todo: For any other errors, switch to an error description page.
+          // For any other errors, switch to an error description page.
           let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}, params=${misc.jd(params)}):`;
-          msg += misc.jd(error);
-          console.error(msg);
+          if (! _.isString(error)) error = JSON.stringify(error);
+          msg += ' ' + String(error);
+          this.state.switchToErrorState({message:msg});
+          return 'DisplayedError';
         }
         return;
       }
@@ -313,8 +327,8 @@ class AppStateProvider extends Component {
       } catch(err) {
         let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}):`;
         msg += misc.jd(err);
-        console.error(msg);
-        // Todo: switch to an error description page.
+        this.state.switchToErrorState({message:msg});
+        return 'DisplayedError';
       }
       return data;
     }
@@ -441,14 +455,15 @@ class AppStateProvider extends Component {
       }
     }
 
-    this.switchToErrorState = ({error}) => {
+    this.switchToErrorState = ({message}) => {
       /* Future:
       - An error code.
       - Send an error report to an API route.
       */
-      this.state.error.message = error;
+      log(`switchToErrorState: ${message}`);
+      this.state.error.message = message;
       this.state.stashCurrentState();
-      this.state.changeState('Error'); // Todo
+      this.state.changeState('Error');
     }
 
 
