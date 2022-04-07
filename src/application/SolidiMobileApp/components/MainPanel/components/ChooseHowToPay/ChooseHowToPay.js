@@ -73,8 +73,8 @@ let ChooseHowToPay = () => {
   let setup = async () => {
     await appState.loadAssetsInfo();
     await appState.loadBalances();
-    await checkBalance();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    await checkBalance();
     triggerRender(renderCount+1);
   }
 
