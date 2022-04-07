@@ -13,6 +13,11 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
+// Logger
+import logger from 'src/util/logger';
+let logger2 = logger.extend('Security');
+let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+
 
 /* Notes
 
@@ -33,9 +38,6 @@ let Security = () => {
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Security');
 
-  // This call will return empty default values if the data has not yet been loaded.
-  let [details, setDetails] = useState(appState.getUserInfo());
-
   let [passwordVisible, setPasswordVisible] = useState(false);
   let [pinVisible, setPINVisible] = useState(false);
 
@@ -47,10 +49,14 @@ let Security = () => {
 
 
   let setup = async () => {
-    await appState.loadUserInfo();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    setDetails(appState.getUserInfo());
-    triggerRender(renderCount+1);
+    try {
+      await appState.loadUserInfo();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      triggerRender(renderCount+1);
+    } catch(err) {
+      let msg = `Security.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 
