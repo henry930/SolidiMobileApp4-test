@@ -38,6 +38,7 @@ When the user selects "pay to my external account", we need to also send a withd
 let ChooseHowToReceivePayment = () => {
 
   let appState = useContext(AppStateContext);
+  let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
@@ -45,10 +46,8 @@ let ChooseHowToReceivePayment = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToReceivePayment');
   if (pageName == 'default') pageName = 'balance';
 
+  // State
   let [paymentChoice, setPaymentChoice] = useState(pageName);
-  let [balanceQA, setBalanceQA] = useState('');
-  let [feeQA, setFeeQA] = useState(0); // This is the fee that we use and display.
-  let [totalQA, setTotalQA] = useState(0);
   let [orderSubmitted, setOrderSubmitted] = useState(false);
 
   // Load user's external GBP account.
@@ -64,71 +63,64 @@ let ChooseHowToReceivePayment = () => {
     setup();
   }, []); // Pass empty array to only run once on mount.
 
+
   let setup = async () => {
-    await loadBalanceData();
-    await loadFeeData();
-  }
-
-
-  let loadBalanceData = async () => {
-    // Display the value we have in storage first.
-    let balance1 = appState.getBalance(assetQA);
-    setBalanceQA(balance1);
-    // Load the balance from the server.
-    await appState.loadBalances();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    // Display the new value, if it's different.
-    let balance2 = appState.getBalance(assetQA);
-    if (balance1 !== balance2) {
-      setBalanceQA(balance2);
+    try {
+      await appState.loadBalances();
+      await appState.loadFees();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      triggerRender(renderCount+1);
+    } catch(err) {
+      let msg = `ChooseHowToReceivePayment.setup: Error = ${err}`;
+      console.log(msg);
     }
   }
 
-  let loadFeeData = async () => {
-    // Display the value we have in storage first.
-    let fee1 = appState.getFee({feeType: 'withdraw', asset: 'GBP', priority: 'low'});
-    setFeeAndTotal(fee1);
-    // Load the fee from the server.
-    await appState.loadFees();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    // Display the new value, if it's different.
-    let fee2 = appState.getFee({feeType: 'withdraw', asset: 'GBP', priority: 'low'});
-    fee2 = '0.5'; // testing
-    if (fee1 !== fee2) {
-      setFeeAndTotal(fee2);
-    }
-  }
 
-  let setFeeAndTotal = (fee) => {
+  let calculateFeeQA = () => {
+    let fee = appState.getFee({feeType: 'withdraw', asset: 'GBP', priority: 'low'});
+    fee = '0.5'; // testing
+    if (! misc.isNumericString(fee)) return '[loading]';
     let dp = appState.getAssetInfo(assetQA).decimalPlaces;
+    let newFeeQA = 'error';
     if (paymentChoice == 'direct_payment') {
-      let newFeeQA = Big(fee).toFixed(dp);
-      log(`newFeeQA: ${newFeeQA}`);
-      setFeeQA(newFeeQA);
-      let newTotalQA = Big(volumeQA).minus(Big(fee)).toFixed(dp);
-      log(`newTotalQA: ${newTotalQA}`);
-      setTotalQA(newTotalQA);
+      newFeeQA = Big(fee).toFixed(dp);
     } else {
-      if (totalQA != volumeQA) {
-        let newFeeQA = Big(0).toFixed(dp);
-        log(`newFeeQA: ${newFeeQA}`);
-        setFeeQA(newFeeQA);
-        setTotalQA(volumeQA);
-      }
+      // We currently don't charge a fee if the user pays with balance.
+      newFeeQA = Big(0).toFixed(dp);
     }
+    log(`newFeeQA: ${newFeeQA}`);
+    return newFeeQA;
   }
-  useEffect( () => {
-    loadFeeData();
-  }, [paymentChoice]); // Recalculate the fee and total if the user chooses another option.
+
+
+  let calculateTotalQA = () => {
+    let feeQA = calculateFeeQA();
+    if (! misc.isNumericString(feeQA)) return '[loading]';
+    let dp = appState.getAssetInfo(assetQA).decimalPlaces;
+    let newTotalQA = 'error';
+    if (paymentChoice == 'direct_payment') {
+      newTotalQA = Big(volumeQA).minus(Big(feeQA)).toFixed(dp);
+    } else {
+      // If user chooses "pay with balance", reset total to be the entire volumeQA.
+      newTotalQA = volumeQA;
+    }
+    log(`newTotalQA: ${newTotalQA}`);
+    return newTotalQA;
+  }
+
 
   let readPaymentConditions = async () => {
     appState.changeState('ReadArticle', 'payment_conditions');
   }
 
+
   let confirmReceivePaymentChoice = async () => {
     // Change the display.
     setOrderSubmitted(true);
     // Save the fee and total in the appState.
+    let feeQA = calculateFeeQA();
+    let totalQA = calculateTotalQA();
     _.assign(appState.panels.sell, {feeQA, totalQA});
     // Choose the receive-payment function.
     if (paymentChoice === 'direct_payment') {
@@ -143,6 +135,7 @@ let ChooseHowToReceivePayment = () => {
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     appState.changeState('SaleSuccessful', paymentChoice);
   }
+
 
   let receivePayment = async () => {
     // We send the stored sell order.
@@ -160,6 +153,7 @@ let ChooseHowToReceivePayment = () => {
     let addressInfo = appState.user.info.defaultAccounts.GBP;
     await appState.sendWithdraw({asset:assetQA, volume:totalQA, addressInfo});
   }
+
 
   let waitForOrderToComplete = async ({orderID}) => {
     // Periodically check if order has completed.
@@ -191,9 +185,18 @@ let ChooseHowToReceivePayment = () => {
     });
   }
 
+
   let receivePaymentToBalance = async () => {
     // We send the stored sell order.
     await appState.sendSellOrder();
+  }
+
+
+  let getBalanceString = () => {
+    let b = appState.getBalance(assetQA);
+    let result = b;
+    if (misc.isNumericString(b)) result += ' ' + assetQA;
+    return result;
   }
 
 
@@ -227,7 +230,7 @@ let ChooseHowToReceivePayment = () => {
         <View style={styles.buttonDetail}>
           <Text style={styles.bold}>{`\u2022  `} Paid to your Solidi balance - No fee!</Text>
           <Text style={styles.bold}>{`\u2022  `} Processed instantly</Text>
-          <Text style={styles.bold}>{`\u2022  `} Your balance: {balanceQA} {(balanceQA != '[loading]') && assetQA}</Text>
+          <Text style={styles.bold}>{`\u2022  `} Your balance: {getBalanceString()}</Text>
         </View>
 
         </RadioButton.Group>
@@ -249,22 +252,22 @@ let ChooseHowToReceivePayment = () => {
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>You sell</Text>
-          <Text style={styles.bold}>{volumeBA} {appState.getAssetInfo(assetBA).displaySymbol}</Text>
+          <Text style={styles.bold}>{volumeBA} {assetBA}</Text>
         </View>
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>You get</Text>
-          <Text style={styles.bold}>{volumeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
+          <Text style={styles.bold}>{volumeQA} {assetQA}</Text>
         </View>
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>Fee</Text>
-          <Text style={styles.bold}>{feeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
+          <Text style={styles.bold}>{calculateFeeQA()} {assetQA}</Text>
         </View>
 
         <View style={styles.orderDetailsLine}>
           <Text style={styles.bold}>Total</Text>
-          <Text style={styles.bold}>{totalQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
+          <Text style={styles.bold}>{calculateTotalQA()} {assetQA}</Text>
         </View>
 
       </View>
