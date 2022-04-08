@@ -821,34 +821,48 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       return details;
     }
 
-    this.loadDepositDetails = async () => {
-      let keyNames = `accountname, accountno, reference, result, sortcode`;
-      keyNames = misc.splitStringIntoArray(keyNames);
+    this.loadDepositDetailsForAsset = async (asset) => {
+      // These are the internal Solidi addresses / accounts that we provide for each user.
+      let funcName = 'loadDepositDetailsForAsset';
+      if (_.isEmpty(asset)) { console.error(`${funcName}: Asset required`); return; }
+      let assets = this.state.getAssets();
+      if (! assets.includes(asset)) { console.error(`${funcName}: Unrecognised asset: ${asset}`); return; }
       let data = await this.state.privateMethod({
-        functionName: 'loadDepositDetails',
-        apiRoute: 'deposit_details/GBP',
-        keyNames,
+        functionName: 'loadDepositDetailsForAsset',
+        apiRoute: `deposit_details/${asset}`,
       });
       if (data == 'DisplayedError') return;
       // Example result for GBP:
-      // {"data": {"accountname": "Solidi", "accountno": "00001036", "reference": "SHMPQKC", "result": "success", "sortcode": "040476"}}
-      if (data.result != 'success') {
-        // Future: User needs to verify some personal information first: address, identity.
+      /*
+      {
+        "result": "success",
+        "sortCode": "040476",
+        "accountNumber": "00001036",
+        "accountName": "Solidi",
+        "reference": "SHMPQKC"
       }
-      let detailsGBP = {
-        accountName: data.accountname,
-        sortCode: data.sortcode,
-        accountNumber: data.accountno,
-        reference: data.reference,
-      }
+      */
+     delete data.result;
+     let details = data;
       // If the data differs from existing data, save it.
-      msg = "User info (deposit details GBP) loaded from server.";
-      if (jd(detailsGBP) === jd(this.state.user.info.depositDetails.GBP)) {
+      msg = `User info (deposit details ${asset}) loaded from server.`;
+      if (jd(details) === jd(this.state.user.info.depositDetails[asset])) {
         log(msg + " No change.");
       } else {
-        log(msg + " New data saved to appState. " + jd(detailsGBP));
-        this.state.user.info.depositDetails.GBP = detailsGBP;
+        log(msg + " New data saved to appState. " + jd(details));
+        this.state.user.info.depositDetails[asset] = details;
       }
+    }
+
+    this.getDepositDetailsForAsset = (asset) => {
+      let funcName = 'getDepositDetailsForAsset';
+      if (_.isEmpty(asset)) { console.error(`${funcName}: Asset required`); return; }
+      let assets = this.state.getAssets();
+      if (! assets.includes(asset)) { return '[loading]'; }
+      if (_.isUndefined(this.state.user.info.depositDetails)) return '[loading]';
+      if (_.isUndefined(this.state.user.info.depositDetails[asset])) return '[loading]';
+      let addressProperties = this.state.user.info.depositDetails[asset];
+      return addressProperties;
     }
 
     this.loadDefaultAccounts = async () => {
@@ -1151,7 +1165,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       loadUserInfo: this.loadUserInfo,
       loadUser: this.loadUser,
       getUserInfo: this.getUserInfo,
-      loadDepositDetails: this.loadDepositDetails,
+      loadDepositDetailsForAsset: this.loadDepositDetailsForAsset,
+      getDepositDetailsForAsset: this.getDepositDetailsForAsset,
       loadDefaultAccounts: this.loadDefaultAccounts,
       loadBalances: this.loadBalances,
       getBalance: this.getBalance,
