@@ -23,7 +23,9 @@
     "react-native-logs": "4.0.1",
     "react-native-paper": "4.11.2",
     "react-native-progress": "5.0.0",
+    "react-native-qrcode-svg": "6.1.2",
     "react-native-splash-screen": "3.3.0",
+    "react-native-svg": "12.3.0",
     "react-native-vector-icons": "9.0.0",
     "styled-components": "5.3.3"
   },
