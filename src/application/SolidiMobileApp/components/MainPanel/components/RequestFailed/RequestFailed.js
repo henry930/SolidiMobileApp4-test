@@ -31,9 +31,6 @@ let RequestFailed = () => {
 
   let appState = useContext(AppStateContext);
 
-  let previousState = appState.pageName;
-  // Don't check for permitted pageNames - this can be the name of any other main panel state.
-
   // Initial setup.
   useEffect( () => {
     setup();
@@ -59,7 +56,7 @@ let RequestFailed = () => {
 
       <View style={styles.infoSection}>
         <View style={styles.infoItem}>
-          <Text>Sorry! The server didn't respond. We weren't able to load the {previousState} panel.</Text>
+          <Text>Sorry! The server didn't respond. We weren't able to load the {appState.stashedState.mainPanelState} page.</Text>
         </View>
       </View>
 
