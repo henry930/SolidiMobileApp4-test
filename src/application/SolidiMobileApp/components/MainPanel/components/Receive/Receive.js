@@ -133,7 +133,7 @@ let Receive = () => {
       return (
         <View style={styles.depositDetails}>
           <View style={{alignItems:'center'}}>
-            <Text style={styles.errorMessage}>Error: Could not retrieve {accountString} details from server.{'\n'}</Text>
+            <Text style={styles.errorMessageText}>Error: Could not retrieve {accountString} details from server.{'\n'}</Text>
             <Button title="Tap here to contact us"
               onPress={ () => { appState.changeState('ContactUs') } }
               styles={styleContactUsButton}
@@ -157,16 +157,22 @@ let Receive = () => {
               />
             </View>
 
-            <View style={styles.scanString}>
+            <View style={styles.scanMessage}>
               <Text style={styles.bold}>Scan this QR code to deposit {assetString}</Text>
             </View>
 
-            {assetCA == 'XRP' &&
-              <View style={styles.detail}>
-                <Text style={styles.warningString}>Please note: The QR code does not include the XRP destination tag.</Text>
-              </View>
-            }
+          </View>
+        }
 
+        { (! _.isUndefined(addressProperties.warningMessage)) &&
+          <View style={styles.warningMessage}>
+            <Text style={styles.warningMessageText}>{addressProperties.warningMessage}</Text>
+          </View>
+        }
+
+        { (! _.isUndefined(addressProperties.infoMessage)) &&
+          <View style={styles.infoMessage}>
+            <Text style={styles.infoMessageText}>{addressProperties.infoMessage}</Text>
           </View>
         }
 
@@ -182,45 +188,77 @@ let Receive = () => {
         }
 
         { addressKeys.includes('destinationTag') &&
-          <View style={styles.detailWrapper}>
+          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
+            <View style={styles.detailLabel}>
+              <Text style={styles.detailText}>Destination Tag:</Text>
+            </View>
             <View style={styles.detail}>
-              <Text style={styles.detailText}>Destination Tag: </Text>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.destinationTag}</Text>
             </View>
           </View>
         }
 
         { addressKeys.includes('accountName') &&
-          <View style={styles.detailWrapper}>
+          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
+            <View style={styles.detailLabel}>
+              <Text style={styles.detailText}>Account Name:</Text>
+            </View>
             <View style={styles.detail}>
-              <Text style={styles.detailText}>Account Name: </Text>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.accountName}</Text>
             </View>
           </View>
         }
 
         { addressKeys.includes('sortCode') &&
-          <View style={styles.detailWrapper}>
+          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
+            <View style={styles.detailLabel}>
+              <Text style={styles.detailText}>Sort Code:</Text>
+            </View>
             <View style={styles.detail}>
-              <Text style={styles.detailText}>Sort Code: </Text>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.sortCode}</Text>
             </View>
           </View>
         }
 
         { addressKeys.includes('accountNumber') &&
-          <View style={styles.detailWrapper}>
+          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
+            <View style={styles.detailLabel}>
+              <Text style={styles.detailText}>Account Number:</Text>
+            </View>
             <View style={styles.detail}>
-              <Text style={styles.detailText}>Account Number: </Text>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.accountNumber}</Text>
             </View>
           </View>
         }
 
-        { addressKeys.includes('reference') &&
-          <View style={styles.detailWrapper}>
+        { addressKeys.includes('BIC') &&
+          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
+            <View style={styles.detailLabel}>
+              <Text style={styles.detailText}>BIC:</Text>
+            </View>
             <View style={styles.detail}>
-              <Text style={styles.detailText}>Reference: </Text>
+              <Text style={[styles.detailText, styles.bold]}>{addressProperties.BIC}</Text>
+            </View>
+          </View>
+        }
+
+        { addressKeys.includes('IBAN') &&
+          <View style={styles.detailWrapper}>
+            <View style={styles.detailLabel}>
+              <Text style={styles.detailText}>IBAN:</Text>
+            </View>
+            <View style={styles.detail}>
+              <Text style={[styles.detailText, styles.bold]}>{addressProperties.IBAN}</Text>
+            </View>
+          </View>
+        }
+
+        { addressKeys.includes('reference') &&
+          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
+            <View style={styles.detailLabel}>
+              <Text style={styles.detailText}>Reference:</Text>
+            </View>
+            <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.reference}</Text>
             </View>
           </View>
@@ -337,26 +375,48 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
     height: '60%', // bad practice ?
   },
-  errorMessage: {
+  errorMessageText: {
     fontWeight: 'bold',
     color: 'red',
   },
-  scanString: {
-    marginTop: scaledHeight(20),
-    alignItems: 'center',
-  },
-  warningString: {
-    color: 'red',
-  },
-  detailWrapper: {
+  scanMessage: {
+    //borderWidth: 1, // testing
     marginTop: scaledHeight(10),
     alignItems: 'center',
   },
-  detail: {
+  warningMessage: {
+    //borderWidth: 1, // testing
+    marginTop: scaledHeight(5),
+    alignItems: 'center',
+  },
+  warningMessageText: {
+    color: 'red',
+  },
+  infoMessage: {
+    marginTop: scaledHeight(10),
+    alignItems: 'center',
+  },
+  infoMessageText: {
+    fontWeight: 'bold',
+  },
+  detailWrapper: {
+    marginTop: scaledHeight(10),
+    paddingVertical: scaledHeight(10),
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  detailWrapperOneLine: {
+    paddingHorizontal: scaledHeight(15),
     flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  detail: {
+    //borderWidth: 1, // testing
+    maxWidth: '80%',
   },
   detailText: {
-    fontSize: normaliseFont(18),
+    fontSize: normaliseFont(16),
   },
 });
 
