@@ -257,8 +257,8 @@ class AppStateProvider extends Component {
           //pass
         } else if (error == 'request_failed') {
           if (this.state.mainPanelState !== 'RequestFailed') {
-            let pageName = this.state.stashedState.mainPanelState;
-            this.changeState('RequestFailed', pageName);
+            this.state.stashCurrentState();
+            this.changeState('RequestFailed');
             return 'DisplayedError';
           }
           // We only arrive at this point if we've had a "request_failed" error from a second request. No point doing anything extra about it.
@@ -312,9 +312,12 @@ class AppStateProvider extends Component {
         } else if (error == 'aborted') {
           //pass
         } else if (error == 'request_failed') {
-          this.state.stashCurrentState();
-          this.changeState('RequestFailed');
-          return 'DisplayedError';
+          if (this.state.mainPanelState !== 'RequestFailed') {
+            this.state.stashCurrentState();
+            this.changeState('RequestFailed');
+            return 'DisplayedError';
+          }
+          // We only arrive at this point if we've had a "request_failed" error from a second request. No point doing anything extra about it.
         } else if (_.isString(error) && error.startsWith('ValidationError:')) {
           // This is a user-input validation error.
           // The page that sent the request should display it to the user.
@@ -826,7 +829,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       let funcName = 'loadDepositDetailsForAsset';
       if (_.isEmpty(asset)) { console.error(`${funcName}: Asset required`); return; }
       let assets = this.state.getAssets();
-      if (! assets.includes(asset)) { console.error(`${funcName}: Unrecognised asset: ${asset}`); return; }
+      if (! assets.includes(asset)) { console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); return; }
       let data = await this.state.privateMethod({
         functionName: 'loadDepositDetailsForAsset',
         apiRoute: `deposit_details/${asset}`,
