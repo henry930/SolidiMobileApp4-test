@@ -67,6 +67,10 @@ INGDESMM
 - IBAN:
 ES91 2100 0418 4502 0005 1332
 
+
+- Address (XRP):
+rfLoKvknjaQQeVuhG7E2evSp93gjmkuuMq
+
 */
 
 
