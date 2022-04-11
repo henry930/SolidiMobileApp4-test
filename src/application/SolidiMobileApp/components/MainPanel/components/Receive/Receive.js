@@ -1,6 +1,7 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 // Other imports
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -143,6 +144,17 @@ let Receive = () => {
       )
     }
 
+
+    let copyToClipboard = async (x) => {
+      Clipboard.setString(x);
+      /* For testing */
+      /*
+      let text = await Clipboard.getString();
+      log(`Copy text to clipboard: ${text}`);
+      */
+    }
+
+
     return (
       <View style={styles.depositDetails}>
 
@@ -178,8 +190,14 @@ let Receive = () => {
 
         { addressKeys.includes('address') &&
           <View style={styles.detailWrapper}>
-            <View>
-              <Text style={styles.detailText}>Address:</Text>
+            <View style={styles.detailLabel}>
+              <View>
+                <Text style={styles.detailText}>Address:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.address) } }
+              />
             </View>
             <View>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.address}</Text>
@@ -190,7 +208,13 @@ let Receive = () => {
         { addressKeys.includes('destinationTag') &&
           <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
             <View style={styles.detailLabel}>
-              <Text style={styles.detailText}>Destination Tag:</Text>
+              <View>
+                <Text style={styles.detailText}>Destination Tag:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.destinationTag) } }
+              />
             </View>
             <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.destinationTag}</Text>
@@ -201,7 +225,13 @@ let Receive = () => {
         { addressKeys.includes('accountName') &&
           <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
             <View style={styles.detailLabel}>
-              <Text style={styles.detailText}>Account Name:</Text>
+              <View>
+                <Text style={styles.detailText}>Account Name:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.accountName) } }
+              />
             </View>
             <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.accountName}</Text>
@@ -212,7 +242,13 @@ let Receive = () => {
         { addressKeys.includes('sortCode') &&
           <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
             <View style={styles.detailLabel}>
-              <Text style={styles.detailText}>Sort Code:</Text>
+              <View>
+                <Text style={styles.detailText}>Sort Code:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.sortCode) } }
+              />
             </View>
             <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.sortCode}</Text>
@@ -223,7 +259,13 @@ let Receive = () => {
         { addressKeys.includes('accountNumber') &&
           <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
             <View style={styles.detailLabel}>
-              <Text style={styles.detailText}>Account Number:</Text>
+              <View>
+                <Text style={styles.detailText}>Account Number:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.accountNumber) } }
+              />
             </View>
             <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.accountNumber}</Text>
@@ -234,7 +276,13 @@ let Receive = () => {
         { addressKeys.includes('BIC') &&
           <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
             <View style={styles.detailLabel}>
-              <Text style={styles.detailText}>BIC:</Text>
+              <View>
+                <Text style={styles.detailText}>BIC:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.BIC) } }
+              />
             </View>
             <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.BIC}</Text>
@@ -245,7 +293,13 @@ let Receive = () => {
         { addressKeys.includes('IBAN') &&
           <View style={styles.detailWrapper}>
             <View style={styles.detailLabel}>
-              <Text style={styles.detailText}>IBAN:</Text>
+              <View>
+                <Text style={styles.detailText}>IBAN:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.IBAN) } }
+              />
             </View>
             <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.IBAN}</Text>
@@ -256,7 +310,13 @@ let Receive = () => {
         { addressKeys.includes('reference') &&
           <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
             <View style={styles.detailLabel}>
-              <Text style={styles.detailText}>Reference:</Text>
+              <View>
+                <Text style={styles.detailText}>Reference:</Text>
+              </View>
+              <ImageButton imageName='clone' imageType='icon'
+                styles={styleCopyButton}
+                onPress={ () => { copyToClipboard(addressProperties.reference) } }
+              />
             </View>
             <View style={styles.detail}>
               <Text style={[styles.detailText, styles.bold]}>{addressProperties.reference}</Text>
@@ -411,6 +471,10 @@ let styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  detailLabel: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   detail: {
     //borderWidth: 1, // testing
     maxWidth: '80%',
@@ -427,6 +491,19 @@ let styleContactUsButton = StyleSheet.create({
     padding: 0,
     fontSize: normaliseFont(14),
   },
+});
+
+
+let styleCopyButton = StyleSheet.create({
+  image: {
+    iconSize: 16,
+    iconColor: colors.greyedOutIcon,
+  },
+  view: {
+    marginLeft: scaledWidth(5),
+    //borderWidth: 1, // testing
+    height: scaledHeight(20),
+  }
 });
 
 
