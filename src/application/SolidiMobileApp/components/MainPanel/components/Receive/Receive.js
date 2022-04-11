@@ -23,7 +23,7 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
 /* Notes
 
-We refer to the asset (in the variable names etc) as the "chosen asset". (CA)
+We refer to the asset (in the variable names etc) as the "chosen asset" (CA).
 
 GBP deposit address comes with a user-specific "reference" e.g. 'SHMPQKC'.
 
