@@ -13,6 +13,11 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
+// Logger
+import logger from 'src/util/logger';
+let logger2 = logger.extend('BankAccounts');
+let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+
 
 /* Notes
 
@@ -28,14 +33,15 @@ let BankAccounts = () => {
   let [renderCount, triggerRender] = useState(0);
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
+  let [isLoading, setIsLoading] = useState(true);
 
   let pageName = appState.pageName;
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'BankAccounts');
 
 
-  let account1 = appState.user.info.defaultAccounts.GBP;
   let accountAsset = 'GBP';
+  let account1 = appState.getDefaultAccountForAsset(accountAsset);
 
 
   // Initial setup.
@@ -47,6 +53,7 @@ let BankAccounts = () => {
   let setup = async () => {
     await appState.loadUserInfo();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    setIsLoading(false);
     triggerRender(renderCount+1);
   }
 
@@ -59,13 +66,19 @@ let BankAccounts = () => {
         <Text style={styles.headingText}>Bank Account</Text>
       </View>
 
-      <View style={styles.bankAccount}>
-        <Text style={styles.bankAccountText}>Bank Account: {'\n'}</Text>
-        <Text style={styles.bankAccountText}>{`\u2022  `} {account1.accountName}</Text>
-        <Text style={styles.bankAccountText}>{`\u2022  `} Sort Code: {account1.sortCode}</Text>
-        <Text style={styles.bankAccountText}>{`\u2022  `} Account Number: {account1.accountNumber}</Text>
-        <Text style={styles.bankAccountText}>{`\u2022  `} Currency: {appState.getAssetInfo(accountAsset).displayString}</Text>
-      </View>
+      { isLoading && <Spinner/> }
+
+      { ! isLoading &&
+
+        <View style={styles.bankAccount}>
+          <Text style={styles.bankAccountText}>Bank Account: {'\n'}</Text>
+          <Text style={styles.bankAccountText}>{`\u2022  `} {account1.accountName}</Text>
+          <Text style={styles.bankAccountText}>{`\u2022  `} Sort Code: {account1.sortCode}</Text>
+          <Text style={styles.bankAccountText}>{`\u2022  `} Account Number: {account1.accountNumber}</Text>
+          <Text style={styles.bankAccountText}>{`\u2022  `} Currency: {appState.getAssetInfo(accountAsset).displayString}</Text>
+        </View>
+
+      }
 
     </View>
     </View>
