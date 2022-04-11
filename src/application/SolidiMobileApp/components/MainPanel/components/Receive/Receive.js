@@ -112,6 +112,16 @@ let Receive = () => {
   }
 
 
+  let copyToClipboard = async (x) => {
+    Clipboard.setString(x);
+    /* For testing */
+    /*
+    let text = await Clipboard.getString();
+    log(`Copy text to clipboard: ${text}`);
+    */
+  }
+
+
   let getDepositDetails = () => {
     /* Build section that includes:
     - Address / account details
@@ -143,17 +153,6 @@ let Receive = () => {
         </View>
       )
     }
-
-
-    let copyToClipboard = async (x) => {
-      Clipboard.setString(x);
-      /* For testing */
-      /*
-      let text = await Clipboard.getString();
-      log(`Copy text to clipboard: ${text}`);
-      */
-    }
-
 
     return (
       <View style={styles.depositDetails}>
