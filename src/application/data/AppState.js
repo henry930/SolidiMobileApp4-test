@@ -781,7 +781,7 @@ class AppStateProvider extends Component {
       await this.loadUser();
       await this.loadAssetsInfo();
       await this.loadDepositDetailsForAsset('GBP');
-      await this.loadDefaultAccounts();
+      await this.loadDefaultAccountForAsset('GBP');
       await this.loadBalances();
     }
 
@@ -848,7 +848,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
      delete data.result;
      let details = data;
       // If the data differs from existing data, save it.
-      msg = `User info (deposit details ${asset}) loaded from server.`;
+      msg = `Deposit details for asset=${asset} loaded from server.`;
       if (jd(details) === jd(this.state.user.info.depositDetails[asset])) {
         log(msg + " No change.");
       } else {
@@ -868,51 +868,41 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       return addressProperties;
     }
 
-    this.loadDefaultAccounts = async () => {
+    this.loadDefaultAccountForAsset = async (asset) => {
       // These are default accounts for withdrawals. They should be external addresses /accounts held by the user.
-      let data = await this.state.privateMethod({apiRoute: 'default_account/GBP'});
+      let funcName = 'loadDefaultAccountForAsset';
+      if (_.isEmpty(asset)) { console.error(`${funcName}: Asset required`); return; }
+      let assets = this.state.getAssets();
+      if (! assets.includes(asset)) { console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); return; }
+      let data = await this.state.privateMethod({
+        functionName: 'loadDefaultAccountForAsset',
+        apiRoute: `default_account/${asset}`,
+      });
       if (data == 'DisplayedError') return;
-      // Data is a list of accounts. Each account is a JSON-encoded string containing these three keys:
-      // accname, sortcode, accno.
-      let keyNames = `accname, sortcode, accno`;
-      keyNames = misc.splitStringIntoArray(keyNames);
-      let defaultAccounts = [];
-      for (let account of data) {
-        account = JSON.parse(account);
-        try {
-          misc.confirmExactKeys('account', account, keyNames, 'loadDefaultAccounts');
-        } catch(err) {
-          console.error(err);
-          // Todo: Switch to Error page.
-        }
-        let account2 = {
-          accountName: account.accname,
-          sortCode: account.sortcode,
-          accountNumber: account.accno,
-        }
-        defaultAccounts.push(account2);
-      }
-      // Tmp: Testing:
-      defaultAccounts = [{
-        accountName: 'Mr John Fish, Esq',
-        sortCode: '12-12-13',
-        accountNumber: '123090342',
-      }]
-      // Future: Elsewhere, don't let the user get through onboarding without providing a default account.
-      if (defaultAccounts.length == 0) {
-        let msg = `At least one default GBP account is required.`;
-        throw new Error(msg);
-      }
-      // We'll just use the first default account for now.
-      let defaultAccount = defaultAccounts[0];
+      // Example result for GBP:
+      /*
+      {"accountName":"Mr John Q Fish, Esq","sortCode":"83-44-05","accountNumber":"55566677"}
+      */
       // If the data differs from existing data, save it.
-      msg = "User info (default account GBP) loaded from server.";
-      if (jd(defaultAccount) === jd(this.state.user.info.defaultAccounts.GBP)) {
+      let account = data;
+      msg = `Default account for asset=${asset} loaded from server.`;
+      if (jd(account) === jd(this.state.user.info.defaultAccount[asset])) {
         log(msg + " No change.");
       } else {
-        log(msg + " New data saved to appState. " + jd(defaultAccount));
-        this.state.user.info.defaultAccounts.GBP = defaultAccount;
+        log(msg + " New data saved to appState. " + jd(account));
+        this.state.user.info.defaultAccount[asset] = account;
       }
+    }
+
+    this.getDefaultAccountForAsset = (asset) => {
+      let funcName = 'getDefaultAccountForAsset';
+      if (_.isEmpty(asset)) { console.error(`${funcName}: Asset required`); return; }
+      let assets = this.state.getAssets();
+      if (! assets.includes(asset)) { return '[loading]'; }
+      if (_.isUndefined(this.state.user.info.defaultAccount)) return '[loading]';
+      if (_.isUndefined(this.state.user.info.defaultAccount[asset])) return '[loading]';
+      let account = this.state.user.info.defaultAccount[asset];
+      return account;
     }
 
     this.loadBalances = async () => {
@@ -1170,7 +1160,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       getUserInfo: this.getUserInfo,
       loadDepositDetailsForAsset: this.loadDepositDetailsForAsset,
       getDepositDetailsForAsset: this.getDepositDetailsForAsset,
-      loadDefaultAccounts: this.loadDefaultAccounts,
+      loadDefaultAccountForAsset: this.loadDefaultAccountForAsset,
+      getDefaultAccountForAsset: this.getDefaultAccountForAsset,
       loadBalances: this.loadBalances,
       getBalance: this.getBalance,
       getOrderStatus: this.getOrderStatus,
@@ -1212,7 +1203,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
               reference: null,
             },
           },
-          defaultAccounts: {
+          defaultAccount: {
             GBP: {
               accountName: null,
               sortCode: null,
@@ -1347,12 +1338,6 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       _.assign(this.state.user.info.user, {"address_1": "foo", "address_2": "foo2", "address_3": null, "address_4": null, "bank_limit": "0.00", "btc_limit": "12.50000000", "country": null, "crypto_limit": "20.00", "email": "mr@pig.com", "firstname": "Mr", "freewithdraw": 0, "landline": null, "lastname": "Pig", "mobile": null, "mon_bank_limit": "0", "mon_btc_limit": "12.5", "mon_crypto_limit": "20", "postcode": "Casdij", "uuid": "ecb7e23a-a4ff-4c18-80d5-924fec8ee7d9", "year_bank_limit": "0", "year_btc_limit": "200", "year_crypto_limit": "200"});
 
       this.state.user.pin = '1112';
-
-      this.state.user.info.defaultAccounts.GBP = {
-        accountName: 'Mr John Fish, Esq',
-        sortCode: '12-12-13',
-        accountNumber: '123090342',
-      }
 
       _.assign(this.state.panels.send, {
         asset: 'GBP',
