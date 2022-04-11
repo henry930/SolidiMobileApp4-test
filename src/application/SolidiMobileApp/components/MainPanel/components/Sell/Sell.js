@@ -361,6 +361,10 @@ let Sell = () => {
           setOpen={setOpenQA}
           setValue={setAssetQA}
           setItems={setItemsQA}
+          searchable={true}
+          searchTextInputProps={{
+            maxLength: 15
+          }}
         />
       </View>
 
@@ -384,6 +388,10 @@ let Sell = () => {
           setItems={setItemsBA}
           onChangeValue={(value) => {
             //log({newAssetBA: value});
+          }}
+          searchable={true}
+          searchTextInputProps={{
+            maxLength: 15
           }}
         />
       </View>
