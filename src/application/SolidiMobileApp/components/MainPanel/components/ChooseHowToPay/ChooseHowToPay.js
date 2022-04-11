@@ -48,6 +48,7 @@ let ChooseHowToPay = () => {
   - No need to await the result.
   */
   appState.sendBuyOrder();
+  // To do: Actually, this doesn't seem right. This can return an "InsufficientFunds order".
 
 
   let [renderCount, triggerRender] = useState(0);
