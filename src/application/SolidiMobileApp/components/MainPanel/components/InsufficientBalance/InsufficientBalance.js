@@ -71,7 +71,8 @@ let InsufficientBalance = () => {
     let asset;
     if (pageName == 'buy') asset = appState.getAssetInfo(assetQA).displaySymbol;
     if (pageName == 'sell') asset = appState.getAssetInfo(assetBA).displaySymbol;
-    appState.changeState('Receive', asset);
+    //appState.changeState('Receive', asset); // Future
+    appState.changeState('Receive');
   }
 
   let getOrderDetails = () => {
