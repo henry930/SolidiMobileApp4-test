@@ -28,8 +28,6 @@ let Assets = () => {
   let [isLoading, setIsLoading] = useState(true);
   let stateChangeID = appState.stateChangeID;
 
-  let [reloadCount, setReloadCount] = useState(0);
-
   let selectedCategory = appState.pageName;
   if (selectedCategory == 'default') selectedCategory = 'crypto';
   let categories = 'crypto fiat'.split(' ');
