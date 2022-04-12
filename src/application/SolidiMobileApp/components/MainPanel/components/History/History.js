@@ -189,13 +189,11 @@ let History = () => {
 
       <View style={styles.historySection}>
 
-        { isLoading && <Spinner/> }
+        <View style={[styles.heading, styles.heading1]}>
+          <Text style={styles.headingText}>History</Text>
+        </View>
 
-        {! isLoading &&
-          <View style={[styles.heading, styles.heading1]}>
-            <Text style={styles.headingText}>History</Text>
-          </View>
-        }
+        { isLoading && <Spinner/> }
 
         {! isLoading && displayHistoryControls()}
         {! isLoading && category === 'transactions' &&

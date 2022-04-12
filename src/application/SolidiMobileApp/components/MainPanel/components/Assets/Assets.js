@@ -130,13 +130,11 @@ let Assets = () => {
   return (
     <View style={styles.panelContainer}>
 
-      { isLoading && <Spinner/> }
+      <View style={[styles.heading, styles.heading1]}>
+        <Text style={styles.headingText}>Assets</Text>
+      </View>
 
-      { ! isLoading &&
-        <View style={[styles.heading, styles.heading1]}>
-          <Text style={styles.headingText}>Assets</Text>
-        </View>
-      }
+      { isLoading && <Spinner/> }
 
       { ! isLoading && renderControls() }
       { ! isLoading && renderAssets() }
