@@ -89,10 +89,15 @@ let PersonalDetails = () => {
 
 
   let setup = async () => {
-    await loadUserData();
-    await appState.loadCountries();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    triggerRender(renderCount+1);
+    try {
+      await loadUserData();
+      await appState.loadCountries();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      triggerRender(renderCount+1);
+    } catch(err) {
+      let msg = `PersonalDetails.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

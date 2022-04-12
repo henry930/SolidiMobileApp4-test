@@ -36,9 +36,14 @@ let History = () => {
 
 
   let setup = async () => {
-    await getData();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    setIsLoading(false); // Causes re-render.
+    try {
+      await getData();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setIsLoading(false); // Causes re-render.
+    } catch(err) {
+      let msg = `History.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

@@ -72,11 +72,16 @@ let ChooseHowToPay = () => {
 
 
   let setup = async () => {
-    await appState.loadAssetsInfo();
-    await appState.loadBalances();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    await checkBalance();
-    triggerRender(renderCount+1);
+    try {
+      await appState.loadAssetsInfo();
+      await appState.loadBalances();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      await checkBalance();
+      triggerRender(renderCount+1);
+    } catch(err) {
+      let msg = `ChooseHowToPay.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

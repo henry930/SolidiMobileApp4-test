@@ -86,15 +86,20 @@ let Buy = () => {
 
 
   let setup = async () => {
-    await appState.loadAssetsInfo();
-    await appState.loadMarkets();
-    await appState.loadPrices();
-    let apiCheck = await appState.checkForNewAPIVersion();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    setItemsBA(baseAssetItems());
-    setItemsQA(quoteAssetItems());
-    calculateVolumeBA();
-    setNewAPIVersion(apiCheck);
+    try {
+      await appState.loadAssetsInfo();
+      await appState.loadMarkets();
+      await appState.loadPrices();
+      let apiCheck = await appState.checkForNewAPIVersion();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setItemsBA(baseAssetItems());
+      setItemsQA(quoteAssetItems());
+      calculateVolumeBA();
+      setNewAPIVersion(apiCheck);
+    } catch(err) {
+      let msg = `Buy.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

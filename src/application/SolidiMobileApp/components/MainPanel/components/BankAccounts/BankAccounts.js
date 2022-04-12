@@ -51,10 +51,15 @@ let BankAccounts = () => {
 
 
   let setup = async () => {
-    await appState.loadUserInfo();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    setIsLoading(false);
-    triggerRender(renderCount+1);
+    try {
+      await appState.loadUserInfo();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setIsLoading(false);
+      triggerRender(renderCount+1);
+    } catch(err) {
+      let msg = `BankAccounts.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

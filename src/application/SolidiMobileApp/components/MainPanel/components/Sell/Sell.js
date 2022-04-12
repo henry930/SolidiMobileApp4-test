@@ -104,15 +104,20 @@ let Sell = () => {
 
 
   let setup = async () => {
-    await appState.loadAssetsInfo();
-    await appState.loadMarkets();
-    await appState.loadPrices();
-    await appState.loadBalances();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    setItemsBA(baseAssetItems());
-    setItemsQA(quoteAssetItems());
-    setBalanceBA(appState.getBalance(assetBA));
-    calculateVolumeBA();
+    try {
+      await appState.loadAssetsInfo();
+      await appState.loadMarkets();
+      await appState.loadPrices();
+      await appState.loadBalances();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setItemsBA(baseAssetItems());
+      setItemsQA(quoteAssetItems());
+      setBalanceBA(appState.getBalance(assetBA));
+      calculateVolumeBA();
+    } catch(err) {
+      let msg = `Sell.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

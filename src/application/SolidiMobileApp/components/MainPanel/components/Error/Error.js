@@ -46,9 +46,14 @@ let Error = () => {
 
 
   let setup = async () => {
-    // await appState.loadUserInfo();
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    triggerRender(renderCount+1);
+    try {
+      // await appState.loadUserInfo();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      triggerRender(renderCount+1);
+    } catch(err) {
+      let msg = `Error.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

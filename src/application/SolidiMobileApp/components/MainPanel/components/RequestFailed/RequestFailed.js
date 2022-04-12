@@ -38,9 +38,16 @@ let RequestFailed = () => {
 
 
   let setup = async () => {
-    // await appState.loadUserInfo();
-    //if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    //triggerRender(renderCount+1);
+    try {
+      /* Example:
+      await appState.loadUserInfo();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      triggerRender(renderCount+1);
+      */
+    } catch(err) {
+      let msg = `RequestFailed.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 

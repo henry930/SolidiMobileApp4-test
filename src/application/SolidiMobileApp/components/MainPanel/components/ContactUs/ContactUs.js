@@ -41,7 +41,16 @@ let ContactUs = () => {
 
 
   let setup = async () => {
-
+    try {
+      /* Example:
+      await getData();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setIsLoading(false); // Causes re-render.
+      */
+    } catch(err) {
+      let msg = `ContactUs.setup: Error = ${err}`;
+      console.log(msg);
+    }
   }
 
 
