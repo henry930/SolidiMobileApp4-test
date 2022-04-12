@@ -69,7 +69,7 @@ let ChooseHowToReceivePayment = () => {
 
   let setup = async () => {
     try {
-      await appState.loadUserInfo();
+      await appState.loadInitialStuffAboutUser();
       await appState.loadBalances();
       await appState.loadFees();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;

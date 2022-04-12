@@ -777,25 +777,21 @@ class AppStateProvider extends Component {
 
 
     // This is called immediately after a successful Login or PIN entry.
-    this.loadUserInfo = async () => {
-      await this.loadUser();
+    this.loadInitialStuffAboutUser = async () => {
+      await this.loadUserInfo();
       await this.loadAssetsInfo();
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
       await this.loadBalances();
     }
 
-    this.loadUser = async () => {
-      let keyNames = `address_1, address_2, address_3, address_4,
-bank_limit, btc_limit, country, crypto_limit, email, firstname, freewithdraw,
-landline, lastname, mobile, mon_bank_limit, mon_btc_limit, mon_crypto_limit,
-postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
-`;
-      keyNames = misc.splitStringIntoArray(keyNames);
+    this.loadUserInfo = async () => {
+      /* Expected fields: (may change in future)
+      uuid email firstname lastname gender dob btc_limit bank_limit crypto_limit freewithdraw address_1 address_2 address_3 address_4 postcode country citizenship mon_btc_limit mon_bank_limit mon_crypto_limit year_btc_limit year_bank_limit year_crypto_limit title mobile landline
+      */
       let data = await this.state.privateMethod({
-        functionName: 'loadUser',
+        functionName: 'loadUserInfo',
         apiRoute: 'user',
-        keyNames,
       });
       if (data == 'DisplayedError') return;
       // If the data differs from existing data, save it.
@@ -808,20 +804,12 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       }
     }
 
-    this.getUserInfo = () => {
+    this.getUserInfo = (detailName) => {
       let details = this.state.user.info;
-      if (! _.isEmpty(details.user)) {
-        return details;
+      if (! _.has(details, detailName)) {
+        return '[loading]';
       }
-      // Otherwise, return specified empty slots that match the expected / required tree structure.
-      // Update: Perhaps this isn't necessary.
-      details = {
-        user: {
-          firstname: '',
-          lastname: '',
-        }
-      }
-      return details;
+      return details[detailName];
     }
 
     this.loadDepositDetailsForAsset = async (asset) => {
@@ -1155,8 +1143,8 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
       getFullDecimalValue: this.getFullDecimalValue,
       /* END Public API methods */
       /* Private API methods */
+      loadInitialStuffAboutUser: this.loadInitialStuffAboutUser,
       loadUserInfo: this.loadUserInfo,
-      loadUser: this.loadUser,
       getUserInfo: this.getUserInfo,
       loadDepositDetailsForAsset: this.loadDepositDetailsForAsset,
       getDepositDetailsForAsset: this.getDepositDetailsForAsset,
@@ -1321,7 +1309,7 @@ postcode, uuid, year_bank_limit, year_btc_limit, year_crypto_limit,
 
       // Method for loading data at the start of whatever component we're working on currently. Note: This is async, and can't be used during component creation.
       this.state.onStartDevTesting = () => {
-        this.loadUserInfo();
+        this.loadInitialStuffAboutUser();
       }
 
       _.assign(this.state.panels.buy, {volumeQA: '100.00', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});

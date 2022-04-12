@@ -40,7 +40,7 @@ let RequestFailed = () => {
   let setup = async () => {
     try {
       /* Example:
-      await appState.loadUserInfo();
+      await appState.loadInitialStuffAboutUser();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
       */

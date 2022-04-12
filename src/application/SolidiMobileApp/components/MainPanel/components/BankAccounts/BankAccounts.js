@@ -52,7 +52,7 @@ let BankAccounts = () => {
 
   let setup = async () => {
     try {
-      await appState.loadUserInfo();
+      await appState.loadInitialStuffAboutUser();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setIsLoading(false);
       triggerRender(renderCount+1);

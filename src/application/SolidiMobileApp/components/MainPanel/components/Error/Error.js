@@ -47,7 +47,7 @@ let Error = () => {
 
   let setup = async () => {
     try {
-      // await appState.loadUserInfo();
+      // await appState.loadInitialStuffAboutUser();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {

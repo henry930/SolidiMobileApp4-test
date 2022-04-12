@@ -106,7 +106,7 @@ let PersonalDetails = () => {
     let details1 = appState.getUserInfo();
     setDetails(details1);
     // Load the user info from the server.
-    await appState.loadUserInfo();
+    await appState.loadInitialStuffAboutUser();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     // Display the new value, if it's different.
     let details2 = appState.getUserInfo();

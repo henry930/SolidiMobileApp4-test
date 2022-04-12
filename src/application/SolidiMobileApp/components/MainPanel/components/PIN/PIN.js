@@ -99,8 +99,8 @@ let PIN = () => {
       appState.apiClient = apiClient;
       appState.user.isAuthenticated = true;
       _.assign(appState.user, {email, password});
-      // Load and store user info.
-      await appState.loadUserInfo();
+      // Load user stuff.
+      await appState.loadInitialStuffAboutUser();
     }
     // If we've entered (or chosen) a PIN, and the app was locked, set appLocked to false.
     appState.appLocked = false;

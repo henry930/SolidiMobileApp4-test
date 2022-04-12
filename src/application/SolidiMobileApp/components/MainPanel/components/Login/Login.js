@@ -66,8 +66,8 @@ let Login = () => {
         let msg = `loginCredentials (email=${email}, password=${password}) stored in keychain under ${appState.domain})`;
         log(msg);
       }
-      // Load and store user info.
-      await appState.loadUserInfo();
+      // Load user stuff.
+      await appState.loadInitialStuffAboutUser();
       // Change state.
       if (! appState.user.pin) {
         return appState.changeState('PIN', 'choose');
