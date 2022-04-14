@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Image, Text, StyleSheet, View } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 // Other imports
@@ -45,14 +45,25 @@ let Receive = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Receive');
 
 
- // Function that derives dropdown properties from an asset list.
- let deriveAssetItems = (assets) => {
+  // Function that derives dropdown properties from an asset list.
+  let deriveAssetItems = (assets) => {
     return assets.map(asset => {
       let info = appState.getAssetInfo(asset);
-      return {label: info.displayString, value: info.displaySymbol};
+      let assetIcon = appState.getAssetIcon(asset);
+      let assetItem = {
+        label: info.displayString,
+        value: info.displaySymbol,
+        icon: () => <Image source={assetIcon} style={{
+            width: scaledWidth(27),
+            height: scaledHeight(27),
+            resizeMode: 'cover',
+          }}
+        />,
+      }
+      return assetItem;
     });
   }
-  let getAssetItems = () => { return deriveAssetItems(appState.getAssets()) }
+  let generateAssetItems = () => { return deriveAssetItems(appState.getAssets()) }
 
   // Initial state:
   let selectedAssetCA = 'BTC';
@@ -61,7 +72,7 @@ let Receive = () => {
   // CA = Chosen Asset
   let [openCA, setOpenCA] = useState(false);
   let [assetCA, setAssetCA] = useState(selectedAssetCA);
-  let [itemsCA, setItemsCA] = useState(getAssetItems());
+  let [itemsCA, setItemsCA] = useState(generateAssetItems());
 
 
   // Initial setup.
@@ -73,9 +84,10 @@ let Receive = () => {
   let setup = async () => {
     try {
       await appState.loadAssetsInfo();
+      await appState.loadAssetIcons();
       await appState.loadDepositDetailsForAsset(assetCA);
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setItemsCA(getAssetItems());
+      setItemsCA(generateAssetItems());
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Receive.setup: Error = ${err}`;
@@ -357,6 +369,7 @@ let Receive = () => {
           searchTextInputProps={{
             maxLength: 15
           }}
+          maxHeight={scaledHeight(300)}
         />
         </View>
       </View>
