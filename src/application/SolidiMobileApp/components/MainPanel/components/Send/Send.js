@@ -33,7 +33,7 @@ Examples:
 Bitcoin (BTC):
 - Address
 
-British Pound (GBP):
+UK Pound (GBP):
 - Account Name
 - Sort Code
 - Account Number
