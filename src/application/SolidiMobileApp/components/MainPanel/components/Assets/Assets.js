@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { FlatList, Text, StyleSheet, View } from 'react-native';
+import { FlatList, Image, Text, StyleSheet, View } from 'react-native';
 
 // Other imports
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -25,8 +25,9 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let Assets = () => {
 
   let appState = useContext(AppStateContext);
-  let [isLoading, setIsLoading] = useState(true);
+  let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
+  let [isLoading, setIsLoading] = useState(true);
 
   let selectedCategory = appState.pageName;
   if (selectedCategory == 'default') selectedCategory = 'crypto';
@@ -49,22 +50,18 @@ let Assets = () => {
 
   let setup = async () => {
     try {
-      await getData();
+      await appState.loadBalances();
+      await appState.loadAssetsInfo();
+      await appState.loadAssetIcons();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setIsLoading(false); // Causes re-render.
+      setIsLoading(false);
+      triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Assets.setup: Error = ${err}`;
       console.log(msg);
     }
   }
 
-
-  let getData = async () => {
-    await appState.loadBalances();
-    await appState.loadAssetsInfo();
-    // Todo: Need to cause a re-render. E.g. increment the reloadCount.
-    // Alternatively, write a "reload" function, which handles the re-render step.
-  }
 
   let renderControls = () => {
     return (
@@ -81,7 +78,7 @@ let Assets = () => {
             setItems={setCategoryItems}
           />
         </View>
-        <Button title='Reload' onPress={ getData } />
+        <Button title='Reload' onPress={ setup } />
       </View>
     )
   }
@@ -98,8 +95,25 @@ let Assets = () => {
     let symbol = assetInfo.displaySymbol;
     return (
       <View style={styles.flatListItem}>
-        <Text style={[styles.assetText]}>{displayVolume}</Text>
-        <Text style={[styles.boldText, styles.assetText]}>{name} - {symbol}</Text>
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <Text style={[styles.assetText]}>{displayVolume}</Text>
+        </View>
+        <View style={{
+            flexDirection: 'row',
+            height: '100%',
+            //borderWidth: 1, //testing
+            alignItems: 'center',
+          }}>
+          <Text style={[styles.boldText, styles.assetText]}>{name} - {symbol}</Text>
+          <Image source={appState.getAssetIcon(asset)} style={{
+              width: scaledWidth(27),
+              height: scaledHeight(27),
+              resizeMode: 'cover',
+              //borderWidth: 1, //testing
+              marginLeft: scaledWidth(15),
+            }}
+          />
+        </View>
       </View>
     );
   }
