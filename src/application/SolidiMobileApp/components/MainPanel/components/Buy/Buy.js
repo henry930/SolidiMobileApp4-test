@@ -61,20 +61,20 @@ let Buy = () => {
   }
 
   // Functions that derive dropdown properties from the current lists of base and quote assets.
-  let baseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
-  let quoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
+  let generateBaseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
+  let generateQuoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
 
   // Dropdown State:
   // BA = Base Asset
   let [volumeBA, setVolumeBA] = useState(selectedVolumeBA);
   let [openBA, setOpenBA] = useState(false);
   let [assetBA, setAssetBA] = useState(selectedAssetBA);
-  let [itemsBA, setItemsBA] = useState(baseAssetItems());
+  let [itemsBA, setItemsBA] = useState(generateBaseAssetItems());
   // QA = Quote Asset
   let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
   let [openQA, setOpenQA] = useState(false);
   let [assetQA, setAssetQA] = useState(selectedAssetQA);
-  let [itemsQA, setItemsQA] = useState(quoteAssetItems());
+  let [itemsQA, setItemsQA] = useState(generateQuoteAssetItems());
 
   let [newAPIVersion, setNewAPIVersion] = useState(false);
 
@@ -92,8 +92,8 @@ let Buy = () => {
       await appState.loadPrices();
       let apiCheck = await appState.checkForNewAPIVersion();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setItemsBA(baseAssetItems());
-      setItemsQA(quoteAssetItems());
+      setItemsBA(generateBaseAssetItems());
+      setItemsQA(generateQuoteAssetItems());
       calculateVolumeBA();
       setNewAPIVersion(apiCheck);
     } catch(err) {
