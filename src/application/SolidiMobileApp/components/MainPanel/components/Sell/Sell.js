@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, TextInput, StyleSheet, View } from 'react-native';
+import { Image, Text, TextInput, StyleSheet, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
 // Other imports
@@ -65,12 +65,23 @@ let Sell = () => {
   let deriveAssetItems = (assets) => {
     return assets.map(asset => {
       let info = appState.getAssetInfo(asset);
-      return {label: info.displayString, value: info.displaySymbol};
+      let assetIcon = appState.getAssetIcon(asset);
+      let assetItem = {
+        label: info.displayString,
+        value: info.displaySymbol,
+        icon: () => <Image source={assetIcon} style={{
+            width: scaledWidth(27),
+            height: scaledHeight(27),
+            resizeMode: 'cover',
+          }}
+        />,
+      }
+      return assetItem;
     });
   }
   // Functions that derive dropdown properties from the current lists of base and quote assets.
-  let baseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
-  let quoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
+  let generateBaseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
+  let generateQuoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
 
   defaultBaseAssets = ['BTC']
   defaultQuoteAssets = ['GBP']
@@ -86,12 +97,12 @@ let Sell = () => {
   let [volumeBA, setVolumeBA] = useState(selectedVolumeBA);
   let [openBA, setOpenBA] = useState(false);
   let [assetBA, setAssetBA] = useState(selectedAssetBA);
-  let [itemsBA, setItemsBA] = useState(baseAssetItems());
+  let [itemsBA, setItemsBA] = useState(generateBaseAssetItems());
   // QA = Quote Asset
   let [volumeQA, setVolumeQA] = useState(selectedVolumeQA);
   let [openQA, setOpenQA] = useState(false);
   let [assetQA, setAssetQA] = useState(selectedAssetQA);
-  let [itemsQA, setItemsQA] = useState(quoteAssetItems());
+  let [itemsQA, setItemsQA] = useState(generateQuoteAssetItems());
 
   // More state.
   let [balanceBA, setBalanceBA] = useState(appState.getBalance(assetBA));
@@ -110,8 +121,8 @@ let Sell = () => {
       await appState.loadPrices();
       await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setItemsBA(baseAssetItems());
-      setItemsQA(quoteAssetItems());
+      setItemsBA(generateBaseAssetItems());
+      setItemsQA(generateQuoteAssetItems());
       setBalanceBA(appState.getBalance(assetBA));
       calculateVolumeBA();
     } catch(err) {
@@ -460,17 +471,17 @@ let styles = StyleSheet.create({
   },
   volumeQA: {
     height: scaledHeight(40),
-    width: scaledWidth(120),
+    width: scaledWidth(125),
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(20),
+    marginRight: scaledWidth(15),
+  },
+  quoteAssetContainer: {
+    width: scaledWidth(220),
   },
   quoteAsset: {
     height: scaledHeight(40),
-    width: scaledWidth(220),
-  },
-  quoteAssetContainer: {
     width: scaledWidth(220),
   },
   baseAssetWrapper: {
@@ -483,17 +494,17 @@ let styles = StyleSheet.create({
   },
   volumeBA: {
     height: scaledHeight(40),
-    width: scaledWidth(120),
+    width: scaledWidth(125),
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(20),
+    marginRight: scaledWidth(15),
+  },
+  baseAssetContainer: {
+    width: scaledWidth(220),
   },
   baseAsset: {
     height: scaledHeight(40),
-    width: scaledWidth(220),
-  },
-  baseAssetContainer: {
     width: scaledWidth(220),
   },
   balanceWrapper: {
