@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, TextInput, StyleSheet, View } from 'react-native';
+import { Image, Text, TextInput, StyleSheet, View } from 'react-native';
 
 // Other imports
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -91,10 +91,21 @@ let Send = () => {
  let deriveAssetItems = (assets) => {
     return assets.map(asset => {
       let info = appState.getAssetInfo(asset);
-      return {label: info.displayString, value: info.displaySymbol};
+      let assetIcon = appState.getAssetIcon(asset);
+      let assetItem = {
+        label: info.displayString,
+        value: info.displaySymbol,
+        icon: () => <Image source={assetIcon} style={{
+            width: scaledWidth(27),
+            height: scaledHeight(27),
+            resizeMode: 'cover',
+          }}
+        />,
+      }
+      return assetItem;
     });
   }
-  let getStoredAssetItems = () => { return deriveAssetItems(appState.getAssets()) }
+  let generateStoredAssetItems = () => { return deriveAssetItems(appState.getAssets()) }
 
   // Initial state:
   let selectedAssetSA = 'BTC';
@@ -105,7 +116,7 @@ let Send = () => {
   // SA = Stored Asset
   let [openSA, setOpenSA] = useState(false);
   let [assetSA, setAssetSA] = useState(selectedAssetSA);
-  let [itemsSA, setItemsSA] = useState(getStoredAssetItems());
+  let [itemsSA, setItemsSA] = useState(generateStoredAssetItems());
 
   // Address Properties state:
   let [address, setAddress] = useState('');
@@ -135,7 +146,7 @@ let Send = () => {
     }
     return label;
   }
-  let getPriorityItems = () => {
+  let generatePriorityItems = () => {
     let priorities = 'low medium high'.split(' ');
     return priorities.map(priority => {
       return {label: createPriorityLabel(priority), value: priority};
@@ -145,7 +156,7 @@ let Send = () => {
   // Dropdown state: Select priority
   let [priority, setPriority] = useState('low');
   let [openPriority, setOpenPriority] = useState(false);
-  let [itemsPriority, setItemsPriority] = useState(getPriorityItems());
+  let [itemsPriority, setItemsPriority] = useState(generatePriorityItems());
 
   let [transferFee, setTransferFee] = useState(selectFee('low'));
 
@@ -160,11 +171,12 @@ let Send = () => {
     try {
       await appState.loadFees();
       await appState.loadAssetsInfo();
+      await appState.loadAssetIcons();
       await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setBalanceSA(appState.getBalance(assetSA));
-      setItemsSA(getStoredAssetItems());
-      setItemsPriority(getPriorityItems())
+      setItemsSA(generateStoredAssetItems());
+      setItemsPriority(generatePriorityItems())
       setTransferFee(selectFee(priority));
       triggerRender(renderCount+1);
     } catch(err) {
@@ -193,7 +205,7 @@ let Send = () => {
         currentVolumeSA = zeroValue;
       }
       setBalanceSA(appState.getBalance(assetSA));
-      setItemsPriority(getPriorityItems());
+      setItemsPriority(generatePriorityItems());
       setTransferFee(selectFee(priority));
       let assetType = appState.getAssetInfo(assetSA).type;
       let destinationText = (assetType == 'crypto') ? ' this address' : ' this account';
