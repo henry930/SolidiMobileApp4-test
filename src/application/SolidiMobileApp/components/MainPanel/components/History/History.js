@@ -30,7 +30,7 @@ let History = () => {
   let [isLoading, setIsLoading] = useState(true);
 
 
-  // Check to see if a category has been specified as this panel is loaded.
+  // Check pageName to see if a category has been specified as this panel is loaded.
   let selectedCategory = 'orders'; // default value.
   let categories = 'transactions orders'.split(' ');
   let pageName = appState.pageName;
