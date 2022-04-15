@@ -42,6 +42,15 @@ let History = () => {
   }
 
 
+  // Dropdown state: Category
+  let [open, setOpen] = useState(false);
+  let [category, setCategory] = useState(selectedCategory);
+  let [categoryItems, setCategoryItems] = useState([
+    {label: 'Orders', value: 'orders'},
+    {label: 'All Transactions', value: 'transactions'},
+  ]);
+
+
   // Initial setup.
   useEffect(() => {
     setup();
@@ -60,15 +69,6 @@ let History = () => {
       console.log(msg);
     }
   }
-
-
-  // Dropdown state: Category
-  let [open, setOpen] = useState(false);
-  let [category, setCategory] = useState(selectedCategory);
-  let [categoryItems, setCategoryItems] = useState([
-    {label: 'Orders', value: 'orders'},
-    {label: 'All Transactions', value: 'transactions'},
-  ]);
 
 
   let displayHistoryControls = () => {
