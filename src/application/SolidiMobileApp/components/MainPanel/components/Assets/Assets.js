@@ -83,6 +83,7 @@ let Assets = () => {
     )
   }
 
+
   let renderAssetItem = ({ item }) => {
     // Example item:
     // {"asset": "XRP", "balance": "0.00000000"}
@@ -118,6 +119,7 @@ let Assets = () => {
     );
   }
 
+
   let renderAssets = () => {
     // FlatList requires a list input.
     // Transform the asset balance properties into a list of objects, sorted by asset symbol (e.g. "BTC").
@@ -140,6 +142,7 @@ let Assets = () => {
       </View>
     );
   }
+
 
   return (
     <View style={styles.panelContainer}>
