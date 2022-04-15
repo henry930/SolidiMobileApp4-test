@@ -25,8 +25,9 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let History = () => {
 
   let appState = useContext(AppStateContext);
-  let [isLoading, setIsLoading] = useState(true);
+  let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
+  let [isLoading, setIsLoading] = useState(true);
 
 
   // Initial setup.
@@ -37,29 +38,15 @@ let History = () => {
 
   let setup = async () => {
     try {
-      await getData();
+      await appState.loadOrders();
+      await appState.loadTransactions();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setIsLoading(false); // Causes re-render.
+      setIsLoading(false);
+      triggerRender(renderCount+1);
     } catch(err) {
       let msg = `History.setup: Error = ${err}`;
       console.log(msg);
     }
-  }
-
-
-  let getData = async () => {
-    let data = await appState.privateMethod({apiRoute: 'transaction'});
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    // Example data:
-    // {"total": 1, "transactions": [{"cur1": "GBP", "cur1amt": "10000.00000000", "cur2": "", "cur2amt": "0.00000000", "fee_cur": "", "fees": "0.00000000", "fxmarket": 1, "ref": "initial deposit", "short_desc": "Transfer In", "status": "A", "txn_code": "PI", "txn_date": "14 Feb 2022", "txn_time": "16:56"}]}
-    //appState.setAPIData({key: 'transaction', data});
-    appState.apiData.transaction = data;
-    let data2 = await appState.privateMethod({apiRoute: 'order'});
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    // Example data:
-    // {"results": [{"date": "14 Feb 2022", "fxmarket": "BTC/GBPX", "id": 31, "ocount": "1", "order_age": "147", "order_type": "Limit", "price": "100.00000000", "qty": "0.05000000", "s1_id": null, "s1_status": null, "s2_id": null, "s2_status": null, "side": "Buy", "status": "LIVE", "time": "17:34:42", "unixtime": "1644860082"}], "total": "1"}
-    //appState.setAPIData({key: 'order', data:data2});
-    appState.apiData.order = data2;
   }
 
   // Check to see if a category has been specified as this panel is loaded.
@@ -96,15 +83,15 @@ let History = () => {
             setItems={setCategoryItems}
           />
         </View>
-        <Button title='Reload' onPress={ getData } />
+        <Button title='Reload' onPress={ setup } />
       </View>
     );
   }
 
   let codeToType = (code) => {
     let convert = {
-      'PI': 'Deposit',
-      'PO': 'Withdrawal',
+      'PI': 'Receive', // == deposit
+      'PO': 'Send', // == withdrawal
       'FI': 'Fees',
       'FO': 'Fees',
       'BY': 'Buy',
@@ -115,21 +102,27 @@ let History = () => {
   }
 
   let renderTransactionItem = ({ item }) => {
-    let asset = item.cur1;
-    let volumeDP = appState.getAssetInfo(asset).decimalPlaces;
-    let volume = Big(item.cur1amt).toFixed(volumeDP);
+    let txnDate = item['date'];
+    let txnTime = item['time'];
+    let txnCode = item['code'];
+    let baseAsset = item['baseAsset'];
+    let baseDP = appState.getAssetInfo(baseAsset).decimalPlaces;
+    let baseAssetVolume = Big(item['baseAssetVolume']).toFixed(baseDP);
+    let reference = item['reference'];
     return (
       <View style={styles.flatListItem}>
-        <Text>{item.txn_date} {item.txn_time}</Text>
-        <Text style={styles.typeField}>{codeToType(item.txn_code)}</Text>
-        <Text>{volume} {appState.getAssetInfo(asset).displayString}</Text>
-        <Text>Reference: {item.ref}</Text>
+        <Text>{txnDate} {txnTime}</Text>
+        <Text style={styles.typeField}>{codeToType(txnCode)}</Text>
+        <Text>{baseAssetVolume} {appState.getAssetInfo(baseAsset).displayString}</Text>
+        <Text>Reference: {reference}</Text>
       </View>
     );
   }
 
   let renderTransactions = () => {
-    let data = appState.apiData.transaction.transactions;
+    //let data = appState.apiData.transaction.transactions;
+    let data = appState.getTransactions();
+    lj(data)
     return (
       <View style={styles.flatListWrapper}>
         <FlatList
@@ -145,30 +138,29 @@ let History = () => {
     );
   }
   let renderOrderItem = ({ item }) => {
-    let market = misc.getStandardMarket(item['fxmarket'])
+    let market = misc.getStandardMarket(item['market']);
+    let orderSide = item['side'];
     let [baseAsset, quoteAsset] = market.split('/');
-    let priceDP = appState.getAssetInfo(quoteAsset).decimalPlaces;
-    let price = Big(item.price).toFixed(priceDP);
-    let orderStatus = item.status;
+    let baseDP = appState.getAssetInfo(baseAsset).decimalPlaces;
+    let quoteDP = appState.getAssetInfo(quoteAsset).decimalPlaces;
+    let baseVolume = Big(item['baseVolume']).toFixed(baseDP);
+    let quoteVolume = Big(item['quoteVolume']).toFixed(quoteDP);
+    let orderStatus = item['status'];
+    let _styleOrder = orderStatus == 'LIVE' ? styles.liveOrderStatus : styles.settledOrderStatus
     return (
       <View style={styles.flatListItem}>
         <View style={styles.orderTopWrapper}>
-          <Text>{item.date} {item.time}</Text>
-          { orderStatus == 'LIVE' &&
-            <Text style={styles.liveOrderStatus}>{orderStatus}</Text>
-          }
-          { orderStatus == 'SETTLED' &&
-            <Text style={styles.settledOrderStatus}>{orderStatus}</Text>
-          }
+          <Text>{item['date']} {item['time']}</Text>
+          <Text style={_styleOrder}>{orderStatus}</Text>
         </View>
-        <Text style={styles.typeField}>{item.side} Order</Text>
-        <Text>Spent {price} {appState.getAssetInfo(quoteAsset).displaySymbol} to get {item.qty} {appState.getAssetInfo(baseAsset).displaySymbol}.</Text>
+        <Text style={styles.typeField}>{orderSide} Order</Text>
+        <Text>Spent {quoteVolume} {appState.getAssetInfo(quoteAsset).displaySymbol} to get {baseVolume} {appState.getAssetInfo(baseAsset).displaySymbol}.</Text>
       </View>
     );
   }
 
   let renderOrders = () => {
-    let data = appState.apiData.order.results;
+    let data = appState.getOrders();
     return (
       <View style={styles.flatListWrapper}>
         <FlatList
