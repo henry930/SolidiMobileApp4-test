@@ -1152,6 +1152,49 @@ class AppStateProvider extends Component {
       return data;
     }
 
+    this.loadOrders = async () => {
+      let data = await this.state.privateMethod({apiRoute: 'order'});
+      if (data == 'DisplayedError') return;
+      /* Example data:
+      [
+        {"age":"5172699","baseVolume":"0.05000000","date":"14 Feb 2022","id":31,"market":"BTC/GBPX","quoteVolume":"100.00000000","settlement1Id":null,"settlement1Status":null,"settlement2Id":null,"settlement2Status":null,"side":"Buy","status":"LIVE","time":"17:34:42","type":"Limit"}
+      ]
+      */
+      let msg = "Orders loaded from server.";
+      if (jd(data) === jd(this.state.apiData.order)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState.");
+        this.state.apiData.order = data;
+      }
+      return data;
+    }
+
+    this.getOrders = () => {
+      return this.state.apiData.order;
+    }
+
+    this.loadTransactions = async () => {
+      let data = await this.state.privateMethod({apiRoute: 'transaction'});
+      if (data == 'DisplayedError') return;
+      /* Example data:
+      [
+        {"baseAsset":"BTC","baseAssetVolume":"0.01000000","code":"PI","date":"23 Jan 2014","description":"Transfer In","fee":"0.00000000","feeAsset":"","id":1,"market":1,"quoteAsset":"","quoteAssetVolume":"0.00000000","reference":"07098f0b37472517eae73edd6ab41d14d8463a5fce9a081a3a364d1cccc9ec43","status":"A","time":"18:12"}
+      ]
+      */
+      let msg = "Transactions loaded from server.";
+      if (jd(data) === jd(this.state.apiData.transaction)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState.");
+        this.state.apiData.transaction = data;
+      }
+      return data;
+    }
+
+    this.getTransactions = () => {
+      return this.state.apiData.transaction;
+    }
 
 
 
@@ -1233,19 +1276,26 @@ class AppStateProvider extends Component {
       loadFees: this.loadFees,
       getFee: this.getFee,
       sendWithdraw: this.sendWithdraw,
+      loadOrders: this.loadOrders,
+      getOrders: this.getOrders,
+      loadTransactions: this.loadTransactions,
+      getTransactions: this.getTransactions,
       /* END Private API methods */
       stateChangeID: 0,
       abortControllers: {},
       appLocked: false,
       // In apiData, we store unmodified data retrieved from the API.
       // Each sub-object corresponds to a different API route, and should have the same name as that route.
+      // Note: Need to be careful about which are arrays and which are objects with keyed values.
       apiData: {
         asset_icon: {},
         balance: {},
-        country: {},
-        market: {},
+        country: [],
+        market: [],
+        order: [],
         personal_detail_option: {},
         ticker: {},
+        transaction: [],
       },
       prevAPIData: {
         ticker: {},
