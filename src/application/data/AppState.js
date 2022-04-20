@@ -1069,17 +1069,17 @@ class AppStateProvider extends Component {
         {
           "asset": "BTC",
           "withdraw": {
-            "low_fee": "0.00000000",
-            "medium_fee": "0.00030000",
-            "high_fee": "0.00050000"
+            "lowFee": "0.00000000",
+            "mediumFee": "0.00030000",
+            "highFee": "0.00050000"
           }
         },
         {
           "asset": "GBP",
           "withdraw": {
-            "low_fee": "0.50000000",
-            "medium_fee": "0.50000000",
-            "high_fee": "0.50000000"
+            "lowFee": "0.50000000",
+            "mediumFee": "0.50000000",
+            "highFee": "0.50000000"
           }
         },
       ]
@@ -1089,9 +1089,9 @@ class AppStateProvider extends Component {
       let withdrawFees = {};
       for (let x of data) {
         withdrawFees[x.asset] = {
-          low: x.withdraw.low_fee,
-          medium: x.withdraw.medium_fee,
-          high: x.withdraw.high_fee,
+          low: x.withdraw.lowFee,
+          medium: x.withdraw.mediumFee,
+          high: x.withdraw.highFee,
         }
       }
       let msg = "Withdrawal fee data loaded from server.";
