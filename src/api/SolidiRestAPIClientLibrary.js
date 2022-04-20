@@ -241,6 +241,9 @@ export default class SolidiRestAPIClientLibrary {
       if (_.isNull(result.error)) {
         return result.data;
       }
+      if (result.error == 'success') {
+        return {result: 'success'};
+      }
       //console.log(result.error);
       return {error: result.error};
     } catch(err) {
