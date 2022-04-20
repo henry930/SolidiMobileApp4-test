@@ -107,6 +107,24 @@ let History = () => {
   }
 
 
+  let renderTransactions = () => {
+    let data = appState.getTransactions();
+    return (
+      <View style={styles.flatListWrapper}>
+        <FlatList
+          style={styles.transactionList}
+          data={data}
+          renderItem={renderTransactionItem}
+          keyExtractor={(item, index) => index}
+          numColumns={1}
+          scrollEnabled='true'
+          contentContainerStyle={{justifyContent: 'center'}}
+        />
+      </View>
+    );
+  }
+
+
   let renderTransactionItem = ({ item }) => {
     let txnDate = item['date'];
     let txnTime = item['time'];
@@ -121,24 +139,6 @@ let History = () => {
         <Text style={styles.typeField}>{codeToType(txnCode)}</Text>
         <Text>{baseAssetVolume} {appState.getAssetInfo(baseAsset).displayString}</Text>
         <Text>Reference: {reference}</Text>
-      </View>
-    );
-  }
-
-
-  let renderTransactions = () => {
-    let data = appState.getTransactions();
-    return (
-      <View style={styles.flatListWrapper}>
-        <FlatList
-          style={styles.transactionList}
-          data={data}
-          renderItem={renderTransactionItem}
-          keyExtractor={(item, index) => index}
-          numColumns={1}
-          scrollEnabled='true'
-          contentContainerStyle={{justifyContent: 'center'}}
-        />
       </View>
     );
   }
