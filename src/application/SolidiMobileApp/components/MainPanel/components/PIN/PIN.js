@@ -27,6 +27,14 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('PIN');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
+/* Notes
+
+The PIN is stored in the Keychain under the app name e.g. "SolidiMobileApp".
+
+The Login credentials (username and password) are stored under the domain e.g. "solidi.co".
+
+*/
+
 
 
 
