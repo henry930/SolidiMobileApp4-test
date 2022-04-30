@@ -58,6 +58,12 @@ let Settings = () => {
       </View>
 
       <View style={styles.buttonWrapper}>
+        <StandardButton title='Contact Us'
+          onPress={ () => { appState.changeState('ContactUs'); } }
+        />
+      </View>
+
+      <View style={styles.buttonWrapper}>
         <StandardButton title='Log Out'
           onPress={ () => {
             appState.logout();
