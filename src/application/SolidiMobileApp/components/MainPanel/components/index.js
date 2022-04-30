@@ -27,6 +27,7 @@ import Security from './Security/Security';
 import RequestFailed from './RequestFailed/RequestFailed';
 import Error from './Error/Error';
 import SendSuccessful from './SendSuccessful/SendSuccessful';
+import Authenticate from './Authenticate/Authenticate';
 
 
 export {
@@ -59,4 +60,5 @@ export {
   RequestFailed,
   Error,
   SendSuccessful,
+  Authenticate,
 };
