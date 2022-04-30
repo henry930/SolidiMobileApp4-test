@@ -93,6 +93,7 @@ let Buy = () => {
 
   // More state
   let [newAPIVersion, setNewAPIVersion] = useState(false);
+  let [errorMessage, setErrorMessage] = useState('');
 
 
   // Initial setup.
@@ -113,6 +114,7 @@ let Buy = () => {
       setItemsQA(generateQuoteAssetItems());
       calculateVolumeBA();
       setNewAPIVersion(apiCheck);
+      setErrorMessage('');
     } catch(err) {
       let msg = `Buy.setup: Error = ${err}`;
       console.log(msg);
@@ -306,6 +308,11 @@ let Buy = () => {
 
   let startBuyRequest = async () => {
 
+    if (volumeBA == '[loading]') {
+      setErrorMessage(`Please wait a moment. Price data hasn't been loaded yet.`);
+      return;
+    }
+
     // Save the order details in the global state.
     _.assign(appState.panels.buy, {volumeQA, assetQA, volumeBA, assetBA});
 
@@ -413,6 +420,12 @@ let Buy = () => {
         <StandardButton title="Buy now" onPress={ startBuyRequest } />
       </View>
 
+      {!! errorMessage &&
+        <View style={styles.errorWrapper}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      }
+
       {newAPIVersion && upgradeRequired()}
 
       </View>
@@ -510,6 +523,13 @@ let styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginTop: scaledHeight(20),
+  },
+  errorWrapper: {
+    marginTop: scaledHeight(20),
+    marginBottom: scaledHeight(20),
+  },
+  errorText: {
+    color: 'red',
   },
   upgradeRequired: {
     marginTop: scaledHeight(40),
