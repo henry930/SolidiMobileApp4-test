@@ -401,18 +401,18 @@ class AppStateProvider extends Component {
     this.loadPIN = async () => {
       /*
       - We load the PIN from the keychain if it exists.
-      - This uses a promise - there will be a slight delay while the data is retrieved.
-      - However: The user would have to be very fast indeed to click Buy on the initial BUY page before this completes.
+      - This is async - there will be a slight delay while the data is retrieved.
+      -- However: The user would have to be very fast indeed to click Buy on the initial BUY page before this completes.
       */
       let credentials = await Keychain.getInternetCredentials(this.state.appName);
       // Example result:
       // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
-      if (credentials) {
+      if (! credentials) {
+        log(`No PIN found in Keychain.`);
+      } else {
         let pin = credentials.password;
         this.state.user.pin = pin;
         log(`PIN loaded: ${pin}`);
-      } else {
-        log(`No PIN found in Keychain.`);
       }
     }
 
@@ -1296,6 +1296,7 @@ class AppStateProvider extends Component {
         isAuthenticated: false,
         email: '',
         password: '',
+        pin: '',
         info: {
           // In info, we store a lot of user-specific data retrieved from the API.
           // It is often restructured into a new form, but remains partitioned by API route.
@@ -1316,7 +1317,6 @@ class AppStateProvider extends Component {
             },
           },
         },
-        pin: '',
       },
       authRequired: [
         'Assets',
@@ -1399,16 +1399,16 @@ class AppStateProvider extends Component {
 
     // === Call initial setup functions.
 
-    // Load the PIN.
-    this.loadPIN();
-
-    // Start the lock-app timer.
-    this.resetLockAppTimer();
-
     // Tweak app state for dev work.
     if (appTier === 'dev') {
       this.state.domain = 't3.solidi.co';
     }
+
+    // Load data from keychain.
+    this.loadPIN();
+
+    // Start the lock-app timer.
+    this.resetLockAppTimer();
 
     // Create a non-authenticated API client that can call public methods.
     this.state.apiClient = new SolidiRestAPIClientLibrary({
@@ -1432,13 +1432,15 @@ class AppStateProvider extends Component {
       this.state.domain = 't3.solidi.co';
 
       // Use test values for accessing a dev API.
+      /*
       let apiKey = 'WmgwEP7RqaF9morLAiDauluX146BdUO9g5GVUNMkXsukQW5qeIBI35F5';
       let apiSecret = 'aMGnGuxXzdSu0EOY6jiWgonu7Ycb4SgeFWClq9i0nbuoPjnWDFST4gnbfAmjtDx8zau0kN0HYv5OOtKs8DldTJp9';
       let email = 'johnqfish@foo.com';
       let password = 'mrfishsayshelloN6';
-      //_.assign(this.state.apiClient, {apiKey, apiSecret});
-      //this.state.user.isAuthenticated = true;
-      //_.assign(this.state.user, {email, password});
+      _.assign(this.state.apiClient, {apiKey, apiSecret});
+      this.state.user.isAuthenticated = true;
+      _.assign(this.state.user, {email, password});
+      */
 
       // Method for loading data at the start of whatever component we're working on currently. Note: This is async, and can't be used during component creation.
       this.state.onStartDevTesting = () => {
