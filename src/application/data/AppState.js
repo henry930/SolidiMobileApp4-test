@@ -676,19 +676,21 @@ class AppStateProvider extends Component {
         params: {},
       });
       if (data == 'DisplayedError') return;
-      /* Example errors
+      /* Example data:
+      {"BTC/GBP":{"price":"31712.51"},"ETH/GBP":{"price":"2324.00"},"LTC/GBP":{"price":"85.42"},"XRP/GBP":{"error":"Empty orderbook","price":null}}
+      */
+      /* Example error:
       {"error":"Insufficient currency"}
       */
       // Tmp: For development:
       // Sample prices.
       data = {
-        'BTC/GBPX': '2000.00',
-        'ETH/GBPX': '100.00',
-        'BTC/EURX': '3000.00',
-        'ETH/EURX': '150.00',
+        'BTC/GBP': {price: '2000.00'},
+        'ETH/GBP': {price: '100.00'},
+        'BTC/EUR': {price: '3000.00'},
+        'ETH/EUR': {price: '150.00'},
       }
       // End Tmp
-      data = _.mapKeys(data, (value, key) => misc.getStandardMarket(key));
       let msg = "Prices loaded from server.";
       this.state.priceLoadCount += 1;
       // Tmp 2: To mock price changes, decrement the price by a bit more on each load.
@@ -698,7 +700,7 @@ class AppStateProvider extends Component {
           if (market == 'BTC/GBP') continue;
           let [assetBA, assetQA] = market.split('/');
           let dp = this.state.getAssetInfo(assetQA).decimalPlaces;
-          let price = data[market];
+          let price = data[market].price;
           let x = Big('1.01').mul(Big(this.state.priceLoadCount));
           let price2 = (Big(price).minus(x)).toFixed(dp);
           data[market] = price2;
@@ -727,23 +729,25 @@ class AppStateProvider extends Component {
     this.getPrice = (market) => {
       // Get the price held in the appState.
       if (_.isUndefined(this.state.apiData.ticker[market])) return '0';
-      return this.state.apiData.ticker[market];
+      if (_.isUndefined(this.state.apiData.ticker[market].price)) return '0';
+      return this.state.apiData.ticker[market].price;
     }
 
     this.getPrevPrice = (market) => {
       // Get the previous price held in the appState.
       if (_.isUndefined(this.state.prevAPIData.ticker[market])) return '0';
-      return this.state.prevAPIData.ticker[market];
+      if (_.isUndefined(this.state.prevAPIData.ticker[market].price)) return '0';
+      return this.state.prevAPIData.ticker[market].price;
     }
 
     this.setPrice = ({market, price}) => {
       // Useful during development.
-      this.state.apiData.ticker[market] = price;
+      this.state.apiData.ticker[market].price = price;
     }
 
     this.setPrevPrice = ({market, price}) => {
       // Useful during development.
-      this.state.prevAPIData.ticker[market] = price;
+      this.state.prevAPIData.ticker[market].price = price;
     }
 
     this.getZeroValue = (asset) => {
