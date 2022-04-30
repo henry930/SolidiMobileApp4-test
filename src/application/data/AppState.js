@@ -1061,7 +1061,6 @@ class AppStateProvider extends Component {
     this.loadFees = async () => {
       // For now, we only load withdrawal fees.
       let data = await this.state.privateMethod({apiRoute:'fee'});
-      lj(data)
       if (data == 'DisplayedError') return;
       /* Example data:
       {
