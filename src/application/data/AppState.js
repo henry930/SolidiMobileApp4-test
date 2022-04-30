@@ -1436,19 +1436,20 @@ class AppStateProvider extends Component {
       let apiSecret = 'aMGnGuxXzdSu0EOY6jiWgonu7Ycb4SgeFWClq9i0nbuoPjnWDFST4gnbfAmjtDx8zau0kN0HYv5OOtKs8DldTJp9';
       let email = 'johnqfish@foo.com';
       let password = 'mrfishsayshelloN6';
-      _.assign(this.state.apiClient, {apiKey, apiSecret});
-      this.state.user.isAuthenticated = true;
-      _.assign(this.state.user, {email, password});
+      //_.assign(this.state.apiClient, {apiKey, apiSecret});
+      //this.state.user.isAuthenticated = true;
+      //_.assign(this.state.user, {email, password});
 
       // Method for loading data at the start of whatever component we're working on currently. Note: This is async, and can't be used during component creation.
       this.state.onStartDevTesting = () => {
         this.loadInitialStuffAboutUser();
       }
 
-      _.assign(this.state.panels.buy, {volumeQA: '100.00', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
+      //_.assign(this.state.panels.buy, {volumeQA: '100.00', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
 
-      _.assign(this.state.panels.sell, {volumeQA: '100.00', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC', totalQA: '100.00'});
+      //_.assign(this.state.panels.sell, {volumeQA: '100.00', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC', totalQA: '100.00'});
 
+      /*
       _.assign(this.state.user.info.depositDetails.GBP, {
         accountName: 'Solidi',
         accountNumber: '00012484',
@@ -1472,6 +1473,8 @@ class AppStateProvider extends Component {
         },
         priority: 'low',
       });
+
+      */
 
     }
 
