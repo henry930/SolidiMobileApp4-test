@@ -68,12 +68,9 @@ let Login = () => {
       appState.user.isAuthenticated = true;
       _.assign(appState.user, {email, password});
       // Store the email and password in the secure keychain storage.
-      let loginCredentialsStored = await Keychain.hasInternetCredentials(appState.domain)
-      if (! loginCredentialsStored) {
-        await Keychain.setInternetCredentials(appState.domain, email, password);
-        let msg = `loginCredentials (email=${email}, password=${password}) stored in keychain under ${appState.domain})`;
-        log(msg);
-      }
+      await Keychain.setInternetCredentials(appState.domain, email, password);
+      let msg = `loginCredentials (email=${email}, password=${password}) stored in keychain under ${appState.domain})`;
+      log(msg);
       // Load user stuff.
       await appState.loadInitialStuffAboutUser();
       // Change state.

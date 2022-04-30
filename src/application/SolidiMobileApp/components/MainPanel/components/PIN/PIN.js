@@ -74,7 +74,7 @@ let PIN = () => {
       // Example result:
       // {"password": "mrfishsayshelloN6", "server": "t3.solidi.co", "storage": "keychain", "username": "johnqfish@foo.com"}
       /* Issue:
-      - The user may have logged out, in which case the email and password have been deleted.
+      - The user may have previously logged out, in which case the email and password have been deleted.
       In this case:
       - Keychain.getInternetCredentials will return false.
       - We need to stop here and switch to Login page.
