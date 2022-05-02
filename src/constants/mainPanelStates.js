@@ -29,6 +29,7 @@ export const mainPanelStates = [
   'Error',
   'SendSuccessful',
   'Authenticate',
+  'Register',
 ];
 
 export default mainPanelStates;
