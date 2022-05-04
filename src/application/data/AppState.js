@@ -1046,6 +1046,7 @@ class AppStateProvider extends Component {
           baseAssetVolume: volumeBA,
           quoteAssetVolume: volumeQA,
         },
+        functionName: 'sendBuyOrder',
       });
       if (data == 'DisplayedError') return;
       /*
