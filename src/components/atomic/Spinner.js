@@ -7,7 +7,7 @@ let Spinner = () => {
   return (
     <View style={StyleSheet.create({
       height: '80%',
-      //borderWidth: 1,
+      //borderWidth: 1, //testing
       justifyContent: 'center',
     })}>
       <ActivityIndicator color={'blue'} size={'large'} />
