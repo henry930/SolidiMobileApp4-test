@@ -521,7 +521,9 @@ class AppStateProvider extends Component {
       });
       if (data == 'DisplayedError') return;
       // if (! .has(data, 'api_latest_version')) this.state.changeState('Error');
-      let newAPIVersion = data.api_latest_version === this.state.apiVersion;
+      let newAPIVersion = data.api_latest_version !== this.state.apiVersion;
+      let msg = `apiVersion in app: ${apiVersion}. Latest apiVersion from API data: ${data.api_latest_version}.`;
+      log(msg);
       return newAPIVersion;
     }
 
