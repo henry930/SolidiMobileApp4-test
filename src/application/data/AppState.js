@@ -205,6 +205,51 @@ class AppStateProvider extends Component {
       }
     }
 
+    this.generalSetup = async () => {
+      if (this.state.appTier == 'dev') {
+        this.state.domain = 't3.solidi.co';
+      }
+      // Create public API client.
+      if (! this.state.apiClient) {
+        let {userAgent, domain} = this.state;
+        this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
+      }
+      // Load public assets info.
+      if (! this.state.assetsInfoLoaded) {
+        await this.state.loadAssetsInfo();
+        this.state.assetsInfoLoaded = true;
+      }
+      if (this.state.appTier == 'dev') {
+        await this.state.login({email: 'johnqfish20@foo.com', password: 'bigFish6'});
+      }
+    }
+
+    this.login = async ({email, password}) => {
+      if (this.state.user.isAuthenticated) return;
+      // Create public API client.
+      let {userAgent, domain} = this.state;
+      let apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
+      // Use the email and password to load the API Key and Secret from the server.
+      let apiRoute = 'login_mobile' + `/${email}`;
+      let params = {password};
+      let abortController = this.state.createAbortController();
+      let data = await apiClient.publicMethod({httpMethod: 'POST', apiRoute, params, abortController});
+      let keyNames = 'apiKey, apiSecret'.split(', ');
+      misc.confirmExactKeys('data', data, keyNames, 'submitLoginRequest');
+      let {apiKey, apiSecret} = data;
+      // Store these access values in the global state.
+      _.assign(apiClient, {apiKey, apiSecret});
+      this.state.apiClient = apiClient;
+      this.state.user.isAuthenticated = true;
+      _.assign(this.state.user, {email, password});
+      // Store the email and password in the secure keychain storage.
+      await Keychain.setInternetCredentials(this.state.domain, email, password);
+      let msg = `loginCredentials (email=${email}, password=${password}) stored in keychain under ${this.state.domain})`;
+      log(msg);
+      // Load user stuff.
+      await this.state.loadInitialStuffAboutUser();
+    }
+
     this.createAbortController = () => {
       // Prepare for cancelling requests if the user changes screen.
       let controller = new AbortController();
@@ -1238,6 +1283,8 @@ class AppStateProvider extends Component {
       decrementStateHistory: this.decrementStateHistory,
       footerIndex: 0,
       setFooterIndex: this.setFooterIndex,
+      generalSetup: this.generalSetup,
+      login: this.login,
       createAbortController: this.createAbortController,
       abortAllRequests: this.abortAllRequests,
       publicMethod: this.publicMethod,
@@ -1326,6 +1373,7 @@ class AppStateProvider extends Component {
       apiVersion,
       devBasicAuth,
       userAgent: "Solidi Mobile App 4",
+      assetsInfoLoaded: false,
       user: {
         isAuthenticated: false,
         email: '',
