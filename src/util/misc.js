@@ -68,41 +68,6 @@ let capitalise = (s) => {
 }
 
 
-let getStandardAsset = (asset) => {
-  // Convert Solidi server asset symbol (e.g. "GBPX") to standard asset symbol (e.g. "GBP").
-  // Currently, we only need to remove the off-exchange 'X' from some ticker symbols.
-  if (asset == 'GBPX') asset = 'GBP';
-  if (asset == 'EURX') asset = 'EUR';
-  return asset;
-}
-
-
-let getStandardMarket = (market) => {
-  // Convert Solidi server market string (e.g. "BTC/GBPX") to standard market string (e.g. "BTC/GBP").
-  let [baseAsset, quoteAsset] = market.split('/');
-  baseAsset = getStandardAsset(baseAsset);
-  quoteAsset = getStandardAsset(quoteAsset);
-  let market2 = baseAsset + '/' + quoteAsset;
-  return market2;
-}
-
-
-let getSolidiServerAsset = (asset) => {
-  if (asset == 'GBP') asset = 'GBPX';
-  if (asset == 'EUR') asset = 'EURX';
-  return asset;
-}
-
-
-let getSolidiServerMarket = (market) => {
-  let [baseAsset, quoteAsset] = market.split('/');
-  baseAsset = getSolidiServerAsset(baseAsset);
-  quoteAsset = getSolidiServerAsset(quoteAsset);
-  let market2 = baseAsset + '/' + quoteAsset;
-  return market2;
-}
-
-
 let sleep = async (timeSeconds) => {
   return new Promise((resolve, reject) => {
     setTimeout(resolve, timeSeconds * 1000);
@@ -175,10 +140,6 @@ let misc = {
   confirmExactKeys,
   confirmItemInArray,
   capitalise,
-  getStandardAsset,
-  getStandardMarket,
-  getSolidiServerAsset,
-  getSolidiServerMarket,
   sleep,
   splitStringIntoArray,
   useFirstRender,
