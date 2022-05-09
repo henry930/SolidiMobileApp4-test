@@ -1118,6 +1118,7 @@ class AppStateProvider extends Component {
           market,
           baseAssetVolume: volumeBA,
           quoteAssetVolume: volumeQA,
+          orderType: 'IMMEDIATE_OR_CANCEL',
         },
         functionName: 'sendBuyOrder',
       });
@@ -1144,6 +1145,7 @@ class AppStateProvider extends Component {
           market,
           baseAssetVolume: volumeBA,
           quoteAssetVolume: volumeQA,
+          orderType: 'IMMEDIATE_OR_CANCEL',
         },
       });
       if (data == 'DisplayedError') return;
