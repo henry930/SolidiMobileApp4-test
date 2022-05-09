@@ -776,17 +776,18 @@ class AppStateProvider extends Component {
       */
       // Tmp: For development:
       // Sample prices.
-      data = {
-        'BTC/GBP': {price: '2000.00'},
-        'ETH/GBP': {price: '100.00'},
-        'BTC/EUR': {price: '3000.00'},
-        'ETH/EUR': {price: '150.00'},
+      let tmp1 = false;
+      if (tmp1) {
+        data = {
+          'BTC/GBP': {price: '2000.00'},
+          'ETH/GBP': {price: '100.00'},
+          'BTC/EUR': {price: '3000.00'},
+          'ETH/EUR': {price: '150.00'},
+        }
       }
       // End Tmp
-      let msg = "Prices loaded from server.";
-      this.state.priceLoadCount += 1;
       // Tmp 2: To mock price changes, decrement the price by a bit more on each load.
-      let tmp2 = true;
+      let tmp2 = false;
       if (tmp2) {
         for (let market of this.state.getMarkets()) {
           if (market == 'BTC/GBP') continue;
@@ -799,6 +800,8 @@ class AppStateProvider extends Component {
         }
       }
       // End Tmp 2
+      let msg = "Prices loaded from server.";
+      this.state.priceLoadCount += 1;
       if (jd(data) === jd(this.state.apiData.ticker)) {
         log(msg + " No change.");
       } else {
