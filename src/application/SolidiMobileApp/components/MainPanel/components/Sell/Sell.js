@@ -120,10 +120,9 @@ let Sell = () => {
 
   let setup = async () => {
     try {
-      await appState.loadAssetsInfo();
-      await appState.loadMarkets();
-      await appState.loadPrices();
+      await appState.generalSetup();
       await appState.loadBalances();
+      await appState.loadPrices();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setItemsBA(generateBaseAssetItems());
       setItemsQA(generateQuoteAssetItems());
