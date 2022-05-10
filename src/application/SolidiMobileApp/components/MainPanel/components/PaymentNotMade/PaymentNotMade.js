@@ -45,8 +45,9 @@ let PaymentNotMade = () => {
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
 
   let cancelOrder = () => {
-    log("Todo: cancel order");
+    //log("Todo: cancel order");
     // Todo: API call to cancel the order (and the related settlements, trades, and txns).
+    // Is this actually necessary, or will something on the server cancel the order instead ?
   }
 
   // Cancel the order.
