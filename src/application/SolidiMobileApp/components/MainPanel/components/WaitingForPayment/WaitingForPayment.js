@@ -46,7 +46,7 @@ let WaitingForPayment = () => {
   let [timeRemainingString, setTimeRemainingString] = useState('2 hours 00 minutes');
   let count = 0;
   let intervalSeconds = 2;
-  function incrementTimeElapsed () {
+  let incrementTimeElapsed = async () => {
     // Note: This function is a closure. It's holding the old values of several variables that (outside this function) get reset when the component is re-rendered.
     count += 1;
     timeElapsedSeconds += intervalSeconds;
@@ -90,8 +90,8 @@ let WaitingForPayment = () => {
       clearInterval(appState.panels.waitingForPayment.timerID);
       appState.changeState('PaymentNotReceived');
     }
-    // Call the server to check if the payment has arrived (if it has, the order will have been filled).
-    let orderStatus = appState.getOrderStatus({orderID: appState.panels.buy.orderID});
+    // Call the server to check if the payment has arrived (if it has, the order will have settled).
+    let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
     if (orderStatus == 'settled') {
       clearInterval(appState.panels.waitingForPayment.timerID);
       appState.changeState('PurchaseSuccessful');

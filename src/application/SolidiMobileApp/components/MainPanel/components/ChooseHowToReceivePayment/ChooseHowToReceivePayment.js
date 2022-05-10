@@ -166,10 +166,10 @@ let ChooseHowToReceivePayment = () => {
     let periodSeconds = 2; // Increment this period in order to gradually slow down the rate at which the API is called.
     let count = 0;
     let timerID, resolve, reject; // Initialise pieces.
-    let checkFunction = () => {
+    let checkFunction = async () => {
       count += 1;
       if (count % periodSeconds == 0) {
-        let orderStatus = appState.getOrderStatus({orderID: appState.panels.buy.orderID});
+        let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
         if (orderStatus == 'settled') {
           resolve(orderStatus);
         }
