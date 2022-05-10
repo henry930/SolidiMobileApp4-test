@@ -214,7 +214,7 @@ class AppStateProvider extends Component {
         let {userAgent, domain} = this.state;
         this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       }
-      // Load default public info.
+      // Load public info that rarely changes.
       if (! this.state.apiVersionLoaded) {
         await this.state.loadLatestAPIVersion();
         this.state.apiVersionLoaded = true;
