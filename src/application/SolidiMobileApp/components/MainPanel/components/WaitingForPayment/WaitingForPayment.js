@@ -48,6 +48,7 @@ let WaitingForPayment = () => {
   let intervalSeconds = 2;
   let incrementTimeElapsed = async () => {
     // Note: This function is a closure. It's holding the old values of several variables that (outside this function) get reset when the component is re-rendered.
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     count += 1;
     timeElapsedSeconds += intervalSeconds;
     //log(`count: ${count}, intervalSeconds: ${intervalSeconds}, timeElapsedSeconds: ${timeElapsedSeconds}.`)
@@ -91,7 +92,6 @@ let WaitingForPayment = () => {
       appState.changeState('PaymentNotReceived');
     }
     // Call the server to check if the payment has arrived (if it has, the order will have settled).
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
     if (orderStatus == 'settled') {
       clearInterval(appState.panels.waitingForPayment.timerID);
