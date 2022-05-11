@@ -1,6 +1,6 @@
 // React imports
-import React, { useContext, useEffect, useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Text, ScrollView, StyleSheet, View } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 
 // Other imports
@@ -24,6 +24,8 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
 The primary payment choice is "pay with external account" vs "pay with existing balance". This component handles that choice.
 
+Future: People may pay directly with crypto, not just fiat.
+
 https://callstack.github.io/react-native-paper/radio-button-item.html
 
 */
@@ -42,24 +44,30 @@ let ChooseHowToPay = () => {
   if (pageName == 'default') pageName = 'direct_payment';
 
 
-  /* At this point, the user is already authenticated, or has just returned from the auth sequence.
-  - We send the BUY order to the server.
-  - It's an escrow order - we escrow the baseAsset and wait for the payment to arrive.
-  - No need to await the result.
-  */
-  appState.sendBuyOrder();
-  // To do: Actually, this doesn't seem right. This can return an "InsufficientFunds error".
-
-
   let [renderCount, triggerRender] = useState(0);
+
+  // PayWithBalance Button state
   let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [disablePayWithBalanceButton, setDisablePayWithBalanceButton] = useState(false);
-  let [stylePayWithBalanceButton, setStylePayWithBalanceButton] = useState(stylePWBButton);
-  let [stylePayWithBalanceButtonText, setStylePayWithBalanceButtonText] = useState(stylePWBButtonText);
-  let [colorPWBButton, setColorPWBButton] = useState(colors.standardButtonText);
+  let [stylePayWithBalanceButton, setStylePayWithBalanceButton] = useState(stylePWBButtonDefault);
+  let [stylePayWithBalanceButtonText, setStylePayWithBalanceButtonText] = useState(stylePWBButtonTextDefault);
 
-  // Testing:
-  _.assign(appState.panels.buy, {volumeQA: '100.10', assetQA: 'GBP', volumeBA: '0.05', assetBA: 'BTC'});
+  // Confirm Button state
+  let [disableConfirmButton, setDisableConfirmButton] = useState(false);
+  let [styleConfirmButton, setStyleConfirmButton] = useState(styleConfirmButtonDefault);
+
+  // Misc
+  let refScrollView = useRef();
+  let [sendOrderMessage, setSendOrderMessage] = useState('');
+  let [priceChangeMessage, setPriceChangeMessage] = useState('');
+
+  // Testing
+  let [test, setTest] = useState(false);
+  if (! test) {
+    // Create an order.
+    _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC'});
+    appState.panels.buy.activeOrder = true;
+  }
 
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
@@ -67,6 +75,7 @@ let ChooseHowToPay = () => {
 
   // Initial setup.
   useEffect( () => {
+    //setTest(true);
     setup();
   }, []); // Pass empty array to only run once on mount.
 
@@ -97,12 +106,10 @@ let ChooseHowToPay = () => {
       setDisablePayWithBalanceButton(true);
       setStylePayWithBalanceButton(stylePWBButtonDisabled);
       setStylePayWithBalanceButtonText(stylePWBButtonTextDisabled);
-      // Future: setColorPWBButton() to a different color ?
     } else { // enforce reset in case user goes back and changes the volumeQA.
       setDisablePayWithBalanceButton(false);
-      setStylePayWithBalanceButton(stylePWBButton);
-      setStylePayWithBalanceButtonText(stylePWBButtonText);
-      //setColorPWBButton(colors.standardButtonText);
+      setStylePayWithBalanceButton(stylePWBButtonDefault);
+      setStylePayWithBalanceButtonText(stylePWBButtonTextDefault);
     }
   }
 
@@ -111,12 +118,24 @@ let ChooseHowToPay = () => {
   }
 
   let confirmPaymentChoice = async () => {
+    // Future: If there's no active BUY order, display an error message.
+    // - (The user can arrive to this page without an active order by pressing the Back button.)
+    log('confirmPaymentChoice button clicked.')
+    setDisableConfirmButton(true);
+    setStyleConfirmButton(styleConfirmButtonDisabled);
+    setSendOrderMessage('Sending order...');
+    refScrollView.current.scrollToEnd();
     if (paymentChoice === 'direct_payment') {
-      // Pay directly from external fiat account.
-      // Future: People may pay directly with crypto, not just fiat.
-      appState.changeState('MakePayment');
+      // Choice: Pay directly from external fiat account.
+      let data = await appState.sendBuyOrder({paymentMethod: 'solidi'});
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      if (data.result == 'PRICE_CHANGE') {
+        await handlePriceChange(data);
+      } else {
+        appState.changeState('MakePayment');
+      }
     } else {
-      // Pay with balance.
+      // Choice: Pay with balance.
       payWithBalance();
     }
   }
@@ -139,10 +158,30 @@ let ChooseHowToPay = () => {
     } else {
       // Todo: Call to the server and instruct it to pay for the order with the user's balance.
       // [API call goes here]
-      // Todo: Call to the server to confirm the successful completion of the order.
-      // [API call goes here]
       appState.changeState('PurchaseSuccessful');
     }
+  }
+
+
+  let handlePriceChange = async (data) => {
+    /* If the price has changed, we'll:
+    - Update the stored order values and re-render.
+    - Tell the user what's happened and ask them if they'd like to go ahead.
+    */
+    let newVolumeQA = data.quoteAssetVolume;
+    let priceDown = Big(volumeQA).gt(Big(newVolumeQA));
+    appState.panels.buy.volumeQA = newVolumeQA;
+    volumeQA = appState.panels.buy.volumeQA;
+    appState.panels.buy.activeOrder = true;
+    await checkBalance(); // user's balance may now be greater than volumeQA.
+    setDisableConfirmButton(false);
+    setStyleConfirmButton(styleConfirmButtonDefault);
+    setSendOrderMessage('');
+    let suffix = priceDown ? 'in your favour!' : '.';
+    let msg = `The market price has shifted${suffix} Your order has been updated. Please check the details and click "Confirm & Pay" again to proceed.`;
+    setPriceChangeMessage(msg);
+    refScrollView.current.scrollToEnd();
+    triggerRender(renderCount+1);
   }
 
 
@@ -154,79 +193,98 @@ let ChooseHowToPay = () => {
         <Text style={styles.headingText}>Choose how you want to pay</Text>
       </View>
 
-      <View style={styles.selectPaymentMethodSection}>
+      <View style={styles.scrollDownMessage}>
+        <Text style={styles.scrollDownMessageText}>(Scroll down to Confirm & Pay)</Text>
+      </View>
 
-        <RadioButton.Group onValueChange={x => setPaymentChoice(x)} value={paymentChoice}>
+      <View style={[styles.horizontalRule, styles.horizontalRule1]}/>
 
-          <RadioButton.Item label="Pay directly to Solidi" value="direct_payment"
-            color={colors.standardButtonText}
-            style={styles.button} labelStyle={styles.buttonLabel} />
+      <ScrollView ref={refScrollView} showsVerticalScrollIndicator={true}>
 
-          <View style={styles.buttonDetail}>
-            <Text style={styles.bold}>{`\u2022  `} Fast & Easy - No fee!</Text>
-            <Text style={styles.bold}>{`\u2022  `} Usually processed in under a minute</Text>
+        <View style={styles.selectPaymentMethodSection}>
+
+          <RadioButton.Group onValueChange={x => setPaymentChoice(x)} value={paymentChoice}>
+
+            <RadioButton.Item label="Pay directly to Solidi" value="direct_payment"
+              color={colors.standardButtonText}
+              style={styles.button} labelStyle={styles.buttonLabel} />
+
+            <View style={styles.buttonDetail}>
+              <Text style={styles.bold}>{`\u2022  `} Fast & Easy - No fee!</Text>
+              <Text style={styles.bold}>{`\u2022  `} Usually processed in under a minute</Text>
+            </View>
+
+            <RadioButton.Item label="Pay with balance" value="balance"
+              disabled={disablePayWithBalanceButton}
+              style={stylePayWithBalanceButton} labelStyle={styles.buttonLabel} />
+
+            <View style={styles.buttonDetail}>
+              <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
+              <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Processed instantly</Text>
+              <Text style={styles.bold}>{`\u2022  `} Your balance: {balanceQA()} {(balanceQA() != '[loading]') && assetQA}</Text>
+              {disablePayWithBalanceButton &&
+                <Text style={styles.balanceLowText}>{`\u2022  `} (Balance is too low for this option)</Text>
+              }
+            </View>
+
+          </RadioButton.Group>
+
+        </View>
+
+        <View style={styles.conditionsButtonWrapper}>
+          <Button title="Our payment conditions" onPress={ readPaymentConditions }
+            styles={styleConditionButton}/>
+        </View>
+
+        <View style={styles.horizontalRule}/>
+
+        <View style={[styles.heading, styles.heading2]}>
+          <Text style={styles.headingText}>Your order</Text>
+        </View>
+
+        <View style={styles.orderDetailsSection}>
+
+          <View style={styles.orderDetailsLine}>
+            <Text style={styles.bold}>You buy</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{volumeBA} {assetBA}</Text>
           </View>
 
-          <RadioButton.Item label="Pay with balance" value="balance"
-            disabled={disablePayWithBalanceButton}
-            color={colorPWBButton}
-            style={stylePayWithBalanceButton} labelStyle={styles.buttonLabel} />
-
-          <View style={styles.buttonDetail}>
-            <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
-            <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Processed instantly</Text>
-            <Text style={styles.bold}>{`\u2022  `} Your balance: {balanceQA()} {(balanceQA() != '[loading]') && assetQA}</Text>
-            {disablePayWithBalanceButton &&
-              <Text style={styles.balanceLowText}>{`\u2022  `} (Balance is too low for this option)</Text>
-            }
+          <View style={styles.orderDetailsLine}>
+            <Text style={styles.bold}>You spend</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'})} {assetQA}</Text>
           </View>
 
-        </RadioButton.Group>
+          <View style={styles.orderDetailsLine}>
+            <Text style={styles.bold}>Fee</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{zeroVolumeQA()} {assetQA}</Text>
+          </View>
 
-      </View>
+          <View style={styles.orderDetailsLine}>
+            <Text style={styles.bold}>Total</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'})} {assetQA}</Text>
+          </View>
 
-      <View style={styles.conditionsButtonWrapper}>
-        <Button title="Our payment conditions" onPress={ readPaymentConditions }
-          styles={styleConditionButton}/>
-      </View>
-
-      <View style={styles.horizontalRule}/>
-
-      <View style={[styles.heading, styles.heading2]}>
-        <Text style={styles.headingText}>Your order</Text>
-      </View>
-
-      <View style={styles.orderDetailsSection}>
-
-        <View style={styles.orderDetailsLine}>
-          <Text style={styles.bold}>You buy</Text>
-          <Text style={[styles.monospaceText, styles.bold]}>{volumeBA} {appState.getAssetInfo(assetBA).displaySymbol}</Text>
         </View>
 
-        <View style={styles.orderDetailsLine}>
-          <Text style={styles.bold}>You spend</Text>
-          <Text style={[styles.monospaceText, styles.bold]}>{volumeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
+        <View style={styles.horizontalRule}/>
+
+        <View style={styles.priceChangeMessage}>
+          <Text style={styles.priceChangeMessageText}>{priceChangeMessage}</Text>
         </View>
 
-        <View style={styles.orderDetailsLine}>
-          <Text style={styles.bold}>Fee</Text>
-          <Text style={[styles.monospaceText, styles.bold]}>{zeroVolumeQA()} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
+        <View style={styles.confirmButtonWrapper}>
+          <StandardButton title={"Confirm & Pay"} onPress={ confirmPaymentChoice }
+            disabled={disableConfirmButton}
+            styles={styleConfirmButton}
+          />
+          <View style={styles.sendOrderMessage}>
+            <Text style={styles.sendOrderMessageText}>{sendOrderMessage}</Text>
+          </View>
         </View>
 
-        <View style={styles.orderDetailsLine}>
-          <Text style={styles.bold}>Total</Text>
-          <Text style={[styles.monospaceText, styles.bold]}>{volumeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
-        </View>
+      </ScrollView>
 
-      </View>
-
-      <View style={styles.horizontalRule}/>
-
-      <View style={styles.confirmButtonWrapper}>
-        <StandardButton title="Confirm & Pay" onPress={ confirmPaymentChoice } />
-      </View>
-
-      </View>
+    </View>
 
   )
 
@@ -257,6 +315,14 @@ let styles = StyleSheet.create({
     fontSize: normaliseFont(20),
     fontWeight: 'bold',
   },
+  scrollDownMessage: {
+    marginVertical: scaledHeight(10),
+    alignItems: 'center',
+  },
+  scrollDownMessageText: {
+    fontSize: normaliseFont(16),
+    fontWeight: 'bold',
+  },
   button: {
     borderWidth: 1,
     borderRadius: 18,
@@ -278,7 +344,11 @@ let styles = StyleSheet.create({
     borderBottomWidth: 1,
     marginHorizontal: scaledWidth(30),
   },
+  horizontalRule1: {
+    marginBottom: scaledHeight(10),
+  },
   orderDetailsSection: {
+    //borderWidth: 1, //testing
     marginVertical: scaledHeight(20),
     paddingHorizontal: scaledWidth(30),
   },
@@ -291,8 +361,13 @@ let styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   confirmButtonWrapper: {
+    //borderWidth: 1, //testing
     marginTop: scaledHeight(20),
+    marginBottom: scaledHeight(100),
     paddingHorizontal: scaledWidth(30),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   balanceLowText: {
     fontWeight: 'bold',
@@ -302,10 +377,25 @@ let styles = StyleSheet.create({
     // For Android, a second solution may be needed.
     fontVariant: ['tabular-nums'],
   },
+  priceChangeMessage: {
+    //borderWidth: 1, //testing
+    marginTop: scaledHeight(20),
+  },
+  priceChangeMessageText: {
+    fontSize: normaliseFont(16),
+    fontWeight: 'bold',
+    color: 'red',
+  },
+  sendOrderMessage: {
+    //borderWidth: 1, //testing
+  },
+  sendOrderMessageText: {
+    color: 'red',
+  },
 });
 
 
-let stylePWBButton = StyleSheet.create({
+let stylePWBButtonDefault = StyleSheet.create({
   borderWidth: 1,
   borderRadius: 18,
   backgroundColor: colors.standardButton,
@@ -318,7 +408,7 @@ let stylePWBButtonDisabled = StyleSheet.create({
 });
 
 
-let stylePWBButtonText = StyleSheet.create({
+let stylePWBButtonTextDefault = StyleSheet.create({
   fontWeight: 'bold',
 });
 
@@ -331,6 +421,20 @@ let stylePWBButtonTextDisabled = StyleSheet.create({
 let styleConditionButton = StyleSheet.create({
   view: {
 
+  },
+});
+
+
+let styleConfirmButtonDefault = StyleSheet.create({
+  view: {
+    backgroundColor: colors.standardButton,
+  },
+});
+
+
+let styleConfirmButtonDisabled = StyleSheet.create({
+  view: {
+    backgroundColor: colors.greyedOutIcon,
   },
 });
 
