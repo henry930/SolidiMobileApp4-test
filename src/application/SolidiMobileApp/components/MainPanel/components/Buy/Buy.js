@@ -311,14 +311,16 @@ let Buy = () => {
     }
 
     // Save the order details in the global state.
-    _.assign(appState.panels.buy, {volumeQA, assetQA, volumeBA, assetBA});
+    let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'Buy'});
+    let volumeBA2 = appState.getFullDecimalValue({asset: assetBA, value: volumeBA, functionName: 'Buy'});
+    _.assign(appState.panels.buy, {volumeQA:volumeQA2, assetQA, volumeBA:volumeBA2, assetBA});
 
     // Store the fact that we have an active BUY order.
     appState.panels.buy.activeOrder = true;
 
-    /* Check if the user is not logged in.
-    - This happens here, rather than in setMainPanelState, because we want the user to make the choice to buy prior to having to authenticate.
-    - After authentication, we'll redirect to ChooseHowToPay (which will send the order as it loads).
+    /* Check if the user is logged in, and redirect them if they aren't.
+    - This happens here, rather than earlier, because we want the user to make the choice to buy prior to having to authenticate.
+    - After authentication, we'll redirect to ChooseHowToPay (which will send the order when the user clicks the "Confirm & Pay" button).
     */
     if (! appState.user.isAuthenticated) {
       return appState.authenticateUser();
