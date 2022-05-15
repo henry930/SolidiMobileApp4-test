@@ -62,8 +62,7 @@ let ChooseHowToPay = () => {
   let [priceChangeMessage, setPriceChangeMessage] = useState('');
 
   // Testing
-  let [test, setTest] = useState(false);
-  if (! test) {
+  if (appState.panels.buy.volumeQA == '0') {
     // Create an order.
     _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC'});
     appState.panels.buy.activeOrder = true;
@@ -75,7 +74,6 @@ let ChooseHowToPay = () => {
 
   // Initial setup.
   useEffect( () => {
-    //setTest(true);
     setup();
   }, []); // Pass empty array to only run once on mount.
 
