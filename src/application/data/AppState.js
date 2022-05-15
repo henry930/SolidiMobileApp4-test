@@ -1188,7 +1188,7 @@ class AppStateProvider extends Component {
 
     this.confirmPaymentOfBuyOrder = async (params) => {
       let {orderID} = params;
-      let data = await this.state.privateMethod({apiRoute: `order/user_has_paid/${orderID}`});
+      let data = await this.state.privateMethod({apiRoute: `order/${orderID}/user_has_paid`});
       /* Example response:
 {"result":"success"}
       */
