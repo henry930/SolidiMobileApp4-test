@@ -168,6 +168,9 @@ let ChooseHowToPay = () => {
     */
     let newVolumeQA = data.quoteAssetVolume;
     let priceDown = Big(volumeQA).gt(Big(newVolumeQA));
+    let dpQA = appState.getAssetInfo(assetQA).decimalPlaces;
+    let priceDiff = Big(volumeQA).minus(Big(newVolumeQA)).toFixed(dpQA);
+    log(`volumeQA = ${volumeQA}, newVolumeQA = ${newVolumeQA}, priceDiff = ${priceDiff}`);
     appState.panels.buy.volumeQA = newVolumeQA;
     volumeQA = appState.panels.buy.volumeQA;
     appState.panels.buy.activeOrder = true;
@@ -175,7 +178,7 @@ let ChooseHowToPay = () => {
     setDisableConfirmButton(false);
     setStyleConfirmButton(styleConfirmButtonDefault);
     setSendOrderMessage('');
-    let suffix = priceDown ? 'in your favour!' : '.';
+    let suffix = priceDown ? ' in your favour!' : '.';
     let msg = `The market price has shifted${suffix} Your order has been updated. Please check the details and click "Confirm & Pay" again to proceed.`;
     setPriceChangeMessage(msg);
     refScrollView.current.scrollToEnd();
@@ -319,7 +322,8 @@ let styles = StyleSheet.create({
   },
   scrollDownMessageText: {
     fontSize: normaliseFont(16),
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
+    color: 'red',
   },
   button: {
     borderWidth: 1,
