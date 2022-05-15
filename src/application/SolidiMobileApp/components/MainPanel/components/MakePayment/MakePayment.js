@@ -26,8 +26,34 @@ let MakePayment = () => {
   let appState = useContext(AppStateContext);
   let stateChangeID = appState.stateChangeID;
 
+  let [paymentConfirmed, setPaymentConfirmed] = useState(false);
+
+  // Testing
+  if (appState.panels.buy.volumeQA == '0') {
+    // Create an order.
+    _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC'});
+    appState.panels.buy.activeOrder = true;
+    appState.panels.buy.orderID = 7200;
+  }
+
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array to only run once on mount.
+
+
+  let setup = async () => {
+    try {
+      await appState.generalSetup();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    } catch(err) {
+      let msg = `MakePayment.setup: Error = ${err}`;
+      console.log(msg);
+    }
+  }
 
   // Load deposit account details.
   let detailsGBP = appState.user.info.depositDetails.GBP;
@@ -40,10 +66,12 @@ let MakePayment = () => {
   // Set up progress bar.
   let timeElapsedSeconds = 0;
   let maxTimeAllowedSeconds = 30 * 60; // 30 minutes.
+  //maxTimeAllowedSeconds = 2 * 60; //testing
   let [timeElapsedMarker, setTimeElapsedMarker] = useState(0.0); // between 0 and 1.
   let intervalSeconds = 3;
   let incrementTimeElapsed = async () => {
     // Note: This function is a closure. It's holding the old values of several variables that (outside this function) get reset when the component is re-rendered.
+    if (appState.stateChangeIDHasChanged(stateChangeID, 'MakePayment')) return;
     timeElapsedSeconds += intervalSeconds;
     let newMarkerValue = timeElapsedSeconds / parseFloat(maxTimeAllowedSeconds);
     setTimeElapsedMarker(newMarkerValue);
@@ -51,11 +79,11 @@ let MakePayment = () => {
       // Stop the timer.
       clearInterval(appState.panels.makePayment.timerID);
       // Call the server to find out if the user made the payment but did not click "I have paid" button.
-      // If the payment has arrived, the order will have been filled.
-      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      // If the payment has arrived, the order will have settled on the server.
       let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
+      //log({orderStatus})
       // Change to next state.
-      if (orderStatus == 'settled') {
+      if (orderStatus == 'SETTLED') {
         appState.changeState('PurchaseSuccessful');
       } else {
         appState.changeState('PaymentNotMade');
@@ -63,7 +91,10 @@ let MakePayment = () => {
     }
   }
   // Set the timer on load.
-  if (_.isNil(appState.panels.makePayment.timerID)) {
+  if (
+    ! paymentConfirmed &&
+    _.isNil(appState.panels.makePayment.timerID)
+  ) {
     let timerID = setInterval(incrementTimeElapsed, intervalSeconds * 1000);
     appState.panels.makePayment.timerID = timerID;
   }
@@ -80,10 +111,12 @@ let MakePayment = () => {
   }
 
   let confirmPayment = async () => {
-    // Todo: Tell the server that the user has clicked "I have paid".
-    // The relevant settlement's status needs to be updated to "S" (for "Sent")
-    // [API call goes here]
+    log("confirmPayment button has been clicked.");
+    // Tell the server that the user has clicked "I have paid".
+    // - The relevant settlement's status needs to be updated to "S" (for "Sent").
+    await appState.confirmPaymentOfBuyOrder({orderID: appState.panels.buy.orderID});
     // Continue to next stage.
+    setPaymentConfirmed(true);
     clearInterval(appState.panels.makePayment.timerID);
     appState.changeState('WaitingForPayment');
   }
@@ -100,7 +133,7 @@ let MakePayment = () => {
 
       <View style={styles.instructionsSection}>
         <View style={styles.instructionItem}>
-          <Text style={styles.bold}>{`\u2022  `} You are buying {volumeBA} {appState.getAssetInfo(assetBA).displayString} for {volumeQA} {appState.getAssetInfo(assetQA).displayString}.</Text>
+          <Text style={styles.bold}>{`\u2022  `} You are buying {volumeBA} {appState.getAssetInfo(assetBA).displayString} for {appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'MakePayment'})} {appState.getAssetInfo(assetQA).displayString}.</Text>
         </View>
         <View style={styles.instructionItem}>
           <Text style={styles.bold}>{`\u2022  `} Send payment now using your online or telephone banking.</Text>
@@ -126,7 +159,7 @@ let MakePayment = () => {
         <View style={styles.paymentDetailsLine}>
           <Text style={styles.paymentDetailText}>Amount</Text>
           <View style={styles.paymentDetailValue}>
-            <Text style={styles.paymentDetailText}>{volumeQA} {appState.getAssetInfo(assetQA).displaySymbol}</Text>
+            <Text style={styles.paymentDetailText}>{appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'MakePayment'})} {assetQA}</Text>
             <ImageButton imageName='clone' imageType='icon'
               styles={styleCopyButton}
               onPress={ () => { copyToClipboard(volumeQA) } }
