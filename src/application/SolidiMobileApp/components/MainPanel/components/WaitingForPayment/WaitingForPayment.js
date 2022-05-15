@@ -22,6 +22,9 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let WaitingForPayment = () => {
 
   let appState = useContext(AppStateContext);
+  let stateChangeID = appState.stateChangeID;
+
+  let [paymentReceived, setPaymentReceived] = useState(false);
 
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
@@ -48,7 +51,7 @@ let WaitingForPayment = () => {
   let intervalSeconds = 2;
   let incrementTimeElapsed = async () => {
     // Note: This function is a closure. It's holding the old values of several variables that (outside this function) get reset when the component is re-rendered.
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    if (appState.stateChangeIDHasChanged(stateChangeID, 'WaitingForPayment')) return;
     count += 1;
     timeElapsedSeconds += intervalSeconds;
     //log(`count: ${count}, intervalSeconds: ${intervalSeconds}, timeElapsedSeconds: ${timeElapsedSeconds}.`)
@@ -94,12 +97,16 @@ let WaitingForPayment = () => {
     // Call the server to check if the payment has arrived (if it has, the order will have settled).
     let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
     if (orderStatus == 'settled') {
+      setPaymentReceived(true);
       clearInterval(appState.panels.waitingForPayment.timerID);
       appState.changeState('PurchaseSuccessful');
     }
   }
   // Set the initial timer on load.
-  if (_.isNil(appState.panels.waitingForPayment.timerID)) {
+  if (
+    ! paymentReceived &&
+    _.isNil(appState.panels.waitingForPayment.timerID)
+  ) {
     let timerID = setInterval(incrementTimeElapsed, intervalSeconds * 1000);
     appState.panels.waitingForPayment.timerID = timerID;
   }
