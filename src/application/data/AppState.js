@@ -958,7 +958,6 @@ class AppStateProvider extends Component {
       await this.loadUserInfo();
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
-      await this.loadBalances();
     }
 
     this.loadUserInfo = async () => {
