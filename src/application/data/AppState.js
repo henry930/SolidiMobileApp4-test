@@ -1187,6 +1187,14 @@ class AppStateProvider extends Component {
       return data;
     }
 
+    this.confirmPaymentOfBuyOrder = async (params) => {
+      let {orderID} = params;
+      let data = await this.state.privateMethod({apiRoute: `order/user_has_paid/${orderID}`});
+      /* Example response:
+{"result":"success"}
+      */
+    }
+
     this.sendSellOrder = async () => {
       ({volumeQA, volumeBA, assetQA, assetBA} = this.state.panels.sell);
       let market = assetBA + '/' + assetQA;
@@ -1419,6 +1427,7 @@ class AppStateProvider extends Component {
       getBalance: this.getBalance,
       fetchOrderStatus: this.fetchOrderStatus,
       sendBuyOrder: this.sendBuyOrder,
+      confirmPaymentOfBuyOrder: this.confirmPaymentOfBuyOrder,
       sendSellOrder: this.sendSellOrder,
       loadFees: this.loadFees,
       getFee: this.getFee,
