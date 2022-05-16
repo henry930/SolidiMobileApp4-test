@@ -110,6 +110,7 @@ let Sell = () => {
 
   // More state.
   let [balanceBA, setBalanceBA] = useState(appState.getBalance(assetBA));
+  let [errorMessage, setErrorMessage] = useState('');
 
 
   // Initial setup.
@@ -128,6 +129,7 @@ let Sell = () => {
       setItemsQA(generateQuoteAssetItems());
       setBalanceBA(appState.getBalance(assetBA));
       calculateVolumeBA();
+      setErrorMessage('');
     } catch(err) {
       let msg = `Sell.setup: Error = ${err}`;
       console.log(msg);
@@ -135,13 +137,13 @@ let Sell = () => {
   }
 
 
+  // When the user changes the assetBA, select the balance value appropriately, and also reload it, in case it has changed.
   let loadBalanceData = async () => {
     setBalanceBA(appState.getBalance(assetBA));
     await appState.loadBalances();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     setBalanceBA(appState.getBalance(assetBA));
   }
-  // When the user changes the assetBA, change the balance data, and also reload it.
   useEffect(() => {
     if (! firstRender) loadBalanceData();
   }, [assetBA]);
@@ -334,16 +336,38 @@ let Sell = () => {
 
   let startSellRequest = async () => {
 
+    if (volumeBA == '[loading]') {
+      return setErrorMessage(`Please wait a moment. Price data hasn't been loaded yet.`);
+    }
+
+    // Check if the user has supplied a default account at which they can receive a payment.
+    // Note: Not all SELL orders require a receiving external account, but we check here anyway and redirect if necessary.
+    let account = appState.getDefaultAccountForAsset(assetQA);
+    lj({account})
+    // We're only handling GBP at the moment.
+    let {accountName, sortCode, accountNumber} = account;
+    if (_.isEmpty(accountName) || _.isEmpty(sortCode) || _.isEmpty(accountNumber)) {
+      let msg = `No default account found for ${assetQA}. Redirecting so that user can input account details.`;
+      log(msg);
+      appState.stashCurrentState();
+      return appState.changeState('BankAccounts');
+    }
+
     // Save the order details in the global state.
-    _.assign(appState.panels.sell, {volumeQA, assetQA, volumeBA, assetBA});
+    // We enforce the full decimal value just in case.
+    let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'Sell'});
+    let volumeBA2 = appState.getFullDecimalValue({asset: assetBA, value: volumeBA, functionName: 'Sell'});
+    _.assign(appState.panels.sell, {volumeQA:volumeQA2, assetQA, volumeBA:volumeBA2, assetBA});
+
+    // Store the fact that we have an active SELL order.
+    appState.panels.sell.activeOrder = true;
 
     // Check if the user's balance is large enough for this order volume.
     let balanceBA = appState.getBalance(assetBA);
     if (Big(balanceBA).lt(Big(volumeBA))) {
       let msg = `User's ${assetBA} balance (${balanceBA}) is less than the specified ${assetBA} sell volume (${volumeBA}).`;
       log(msg);
-      appState.changeState('InsufficientBalance', 'sell');
-      return;
+      return appState.changeState('InsufficientBalance', 'sell');
     }
 
     // Transfer to the receive-payment sequence (which will send the order).
@@ -428,6 +452,12 @@ let Sell = () => {
       <View style={styles.buttonWrapper}>
         <StandardButton title="Sell now" onPress={ startSellRequest } />
       </View>
+
+      {!! errorMessage &&
+        <View style={styles.errorWrapper}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      }
 
       </View>
 
@@ -522,6 +552,13 @@ let styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginTop: scaledHeight(20),
+  },
+  errorWrapper: {
+    marginTop: scaledHeight(20),
+    marginBottom: scaledHeight(20),
+  },
+  errorText: {
+    color: 'red',
   },
 });
 
