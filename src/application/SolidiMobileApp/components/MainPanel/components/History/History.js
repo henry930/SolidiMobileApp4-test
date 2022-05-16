@@ -163,7 +163,7 @@ let History = () => {
 
 
   let renderOrderItem = ({ item }) => {
-    let market = misc.getStandardMarket(item['market']);
+    let market = item['market'];
     let orderSide = item['side'];
     let [baseAsset, quoteAsset] = market.split('/');
     let baseDP = appState.getAssetInfo(baseAsset).decimalPlaces;
