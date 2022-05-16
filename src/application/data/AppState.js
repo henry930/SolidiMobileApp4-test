@@ -1077,6 +1077,31 @@ class AppStateProvider extends Component {
       return account;
     }
 
+    this.updateDefaultAccountForAsset = async (asset, params) => {
+      let funcName = 'updateDefaultAccountForAsset';
+      if (_.isEmpty(asset)) { console.error(`${funcName}: Asset required`); return; }
+      let assets = this.state.getAssets();
+      if (! assets.includes(asset)) { console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); return; }
+      let data = await this.state.privateMethod({
+        functionName: 'updateDefaultAccountForAsset',
+        apiRoute: `default_account/${asset}/update`,
+        params,
+        functionName: funcName,
+      });
+      if (data == 'DisplayedError') return;
+      if (data.result == 'success') {
+        let msg = `Updated ${asset} default account with parameters = ${params}`;
+        log(msg);
+        // Save data in local storage.
+        this.state.user.info.defaultAccount[asset] = params;
+      }
+      if (_.has(data, 'error')) {
+        let msg = `Error returned from API request: ${JSON.stringify(data.error)}`;
+        logger.error(msg);
+      }
+      return data;
+    }
+
     this.loadBalances = async () => {
       let data = await this.state.privateMethod({apiRoute: 'balance'});
       if (data == 'DisplayedError') return;
@@ -1429,6 +1454,7 @@ class AppStateProvider extends Component {
       getDepositDetailsForAsset: this.getDepositDetailsForAsset,
       loadDefaultAccountForAsset: this.loadDefaultAccountForAsset,
       getDefaultAccountForAsset: this.getDefaultAccountForAsset,
+      updateDefaultAccountForAsset: this.updateDefaultAccountForAsset,
       loadBalances: this.loadBalances,
       getBalance: this.getBalance,
       fetchOrderStatus: this.fetchOrderStatus,
