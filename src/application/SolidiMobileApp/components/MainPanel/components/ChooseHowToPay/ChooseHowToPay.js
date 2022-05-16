@@ -161,16 +161,19 @@ let ChooseHowToPay = () => {
     /* If the price has changed, we'll:
     - Update the stored order values and re-render.
     - Tell the user what's happened and ask them if they'd like to go ahead.
+    - Note: We keep baseAssetVolume constant (i.e. the amount the user is buying), so we update quoteAssetVolume.
+    - Future: Keep quoteAssetVolume constant, and recalculate baseAssetVolume ?
     */
     let newVolumeQA = output.quoteAssetVolume;
     let priceDown = Big(volumeQA).gt(Big(newVolumeQA));
     let dpQA = appState.getAssetInfo(assetQA).decimalPlaces;
     let priceDiff = Big(volumeQA).minus(Big(newVolumeQA)).toFixed(dpQA);
-    log(`volumeQA = ${volumeQA}, newVolumeQA = ${newVolumeQA}, priceDiff = ${priceDiff}`);
+    log(`price change: volumeQA = ${volumeQA}, newVolumeQA = ${newVolumeQA}, priceDiff = ${priceDiff}`);
+    // Rewrite the order and save it.
     appState.panels.buy.volumeQA = newVolumeQA;
     volumeQA = appState.panels.buy.volumeQA;
     appState.panels.buy.activeOrder = true;
-    await checkBalance(); // user's balance may now be greater than volumeQA.
+    await checkBalance(); // User's balance may now be greater than volumeQA.
     setDisableConfirmButton(false);
     setSendOrderMessage('');
     let suffix = priceDown ? ' in your favour!' : '.';
