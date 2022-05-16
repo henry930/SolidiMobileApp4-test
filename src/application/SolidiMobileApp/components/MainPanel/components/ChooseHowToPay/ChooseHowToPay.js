@@ -149,10 +149,17 @@ let ChooseHowToPay = () => {
       log(msg);
       // Next step
       appState.changeState('InsufficientBalance', 'buy');
+      return;
     } else {
-      // Todo: Call to the server and instruct it to pay for the order with the user's balance.
-      // [API call goes here]
+      // Call to the server and instruct it to pay for the order with the user's balance.
+      let output = await appState.sendBuyOrder({paymentMethod: 'balance'});
+      //lj(output);
+      if (output.result == 'PRICE_CHANGE') {
+        await handlePriceChange(output);
+        return;
+      }
       appState.changeState('PurchaseSuccessful');
+      return;
     }
   }
 
