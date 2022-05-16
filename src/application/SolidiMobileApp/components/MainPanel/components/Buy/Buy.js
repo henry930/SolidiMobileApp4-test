@@ -306,11 +306,11 @@ let Buy = () => {
   let startBuyRequest = async () => {
 
     if (volumeBA == '[loading]') {
-      setErrorMessage(`Please wait a moment. Price data hasn't been loaded yet.`);
-      return;
+      return setErrorMessage(`Please wait a moment. Price data hasn't been loaded yet.`);
     }
 
     // Save the order details in the global state.
+    // We enforce the full decimal value just in case.
     let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'Buy'});
     let volumeBA2 = appState.getFullDecimalValue({asset: assetBA, value: volumeBA, functionName: 'Buy'});
     _.assign(appState.panels.buy, {volumeQA:volumeQA2, assetQA, volumeBA:volumeBA2, assetBA});
