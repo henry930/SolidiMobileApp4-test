@@ -212,6 +212,7 @@ let ChooseHowToReceivePayment = () => {
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     if (output.result == 'PRICE_CHANGE') {
       await handlePriceChange(output);
+      return;
     } else {
       // Change to next state. Check if state has already changed.
       if (appState.stateChangeIDHasChanged(stateChangeID, 'ChooseHowToReceivePayment')) return;
