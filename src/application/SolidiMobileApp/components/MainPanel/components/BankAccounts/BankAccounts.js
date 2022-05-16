@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text, TextInput, StyleSheet, View } from 'react-native';
 
 // Other imports
 import _ from 'lodash';
@@ -31,7 +31,6 @@ let BankAccounts = () => {
 
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
-  let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
   let [isLoading, setIsLoading] = useState(true);
 
@@ -40,8 +39,20 @@ let BankAccounts = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'BankAccounts');
 
 
+  // For now, we're just handling GBP (not e.g. EUR).
   let accountAsset = 'GBP';
-  let account1 = appState.getDefaultAccountForAsset(accountAsset);
+  let account1 = {};
+
+
+  // Misc
+  let [updateMessage, setUpdateMessage] = useState('');
+  let [errorMessage, setErrorMessage] = useState('');
+
+
+  // Bank Account state
+  let [accountName, setAccountName] = useState('');
+  let [sortCode, setSortCode] = useState('');
+  let [accountNumber, setAccountNumber] = useState('');
 
 
   // Initial setup.
@@ -52,13 +63,54 @@ let BankAccounts = () => {
 
   let setup = async () => {
     try {
+      await appState.generalSetup();
       await appState.loadInitialStuffAboutUser();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      account1 = appState.getDefaultAccountForAsset(accountAsset);
+      setAccountName(account1.accountName);
+      setSortCode(account1.sortCode);
+      setAccountNumber(account1.accountNumber);
+      setUpdateMessage('');
       setIsLoading(false);
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `BankAccounts.setup: Error = ${err}`;
       console.log(msg);
+    }
+  }
+
+
+  let updateBankAccountDetails = async () => {
+    let params = {accountName, sortCode, accountNumber};
+    setUpdateMessage('');
+    let output = await appState.updateDefaultAccountForAsset('GBP', params);
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    // Future: The error should be an object with 'code' and 'message' properties.
+    if (_.has(output, 'error')) {
+      let error = output.error;
+      if (_.isObject(error)) {
+        if (_.isEmpty(error)) {
+          error = 'Received an empty error object ({}) from the server.'
+        } else {
+          error = JSON.stringify(error);
+        }
+      }
+      setErrorMessage(error);
+    } else if (output.result == 'success') {
+      await misc.sleep(0.1);
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setUpdateMessage('Update successful');
+      setErrorMessage('');
+      await misc.sleep(0.1);
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      // tmp
+      if (_.isEmpty(accountName) || _.isEmpty(sortCode) || _.isEmpty(accountNumber)) {
+        return;
+      }
+      // If there's a stashed state (e.g. the Sell page), return to it.
+      if (! _.isEmpty(appState.stashedState)) {
+        return appState.loadStashedState();
+      }
     }
   }
 
@@ -74,13 +126,78 @@ let BankAccounts = () => {
       { isLoading && <Spinner/> }
 
       { ! isLoading &&
+        (_.isEmpty(accountName) && _.isEmpty(sortCode) && _.isEmpty(accountNumber)) &&
+        _.isEmpty(errorMessage) &&
+        <View style={styles.initialMessage}>
+          <Text style={styles.initialMessageText}>Please enter your bank account details.</Text>
+        </View>
+      }
+
+      { ! isLoading && ! _.isEmpty(errorMessage) &&
+        <View style={styles.errorMessage}>
+          <Text style={styles.errorMessageText}>{errorMessage}</Text>
+        </View>
+      }
+
+      { ! isLoading &&
 
         <View style={styles.bankAccount}>
-          <Text style={styles.bankAccountText}>Bank Account: {'\n'}</Text>
-          <Text style={styles.bankAccountText}>{`\u2022  `} {account1.accountName}</Text>
-          <Text style={styles.bankAccountText}>{`\u2022  `} Sort Code: {account1.sortCode}</Text>
-          <Text style={styles.bankAccountText}>{`\u2022  `} Account Number: {account1.accountNumber}</Text>
-          <Text style={styles.bankAccountText}>{`\u2022  `} Currency: {appState.getAssetInfo(accountAsset).displayString}</Text>
+
+          <View style={styles.detail}>
+            <View style={styles.detailName}>
+              <Text style={styles.detailNameText}>{`\u2022  `}Account Name</Text>
+            </View>
+            <View>
+              <TextInput defaultValue={appState.getDefaultAccountForAsset(accountAsset).accountName}
+                style={[styles.detailValue, styles.editableTextInput]}
+                onChangeText={setAccountName}
+                autoCompleteType='off'
+              />
+            </View>
+          </View>
+
+          <View style={styles.detail}>
+            <View style={styles.detailName}>
+              <Text style={styles.detailNameText}>{`\u2022  `}Sort Code</Text>
+            </View>
+            <View>
+              <TextInput defaultValue={appState.getDefaultAccountForAsset(accountAsset).sortCode}
+                style={[styles.detailValue, styles.editableTextInput]}
+                onChangeText={setSortCode}
+                autoCompleteType='off'
+              />
+            </View>
+          </View>
+
+          <View style={styles.detail}>
+            <View style={styles.detailName}>
+              <Text style={styles.detailNameText}>{`\u2022  `}Account Number</Text>
+            </View>
+            <View>
+              <TextInput defaultValue={appState.getDefaultAccountForAsset(accountAsset).accountNumber}
+                style={[styles.detailValue, styles.editableTextInput]}
+                onChangeText={setAccountNumber}
+                autoCompleteType='off'
+              />
+            </View>
+          </View>
+
+          <View style={styles.detail}>
+            <View style={styles.detailName}>
+              <Text style={styles.detailNameText}>{`\u2022  `}Currency</Text>
+            </View>
+            <View>
+            <Text style={styles.detailNameText}>{appState.getAssetInfo(accountAsset).displayString}</Text>
+            </View>
+          </View>
+
+          <View style={styles.buttonWrapper}>
+            <StandardButton title="Update details" onPress={ updateBankAccountDetails } />
+            <View style={styles.updateMessage}>
+              <Text style={styles.updateMessageText}>{updateMessage}</Text>
+            </View>
+          </View>
+
         </View>
 
       }
@@ -101,13 +218,13 @@ let styles = StyleSheet.create({
   },
   panelSubContainer: {
     paddingTop: scaledHeight(10),
-    paddingHorizontal: scaledWidth(30),
+    //paddingHorizontal: scaledWidth(30),
   },
   heading: {
     alignItems: 'center',
   },
   heading1: {
-    marginTop: scaledHeight(10),
+    marginBottom: scaledHeight(40),
   },
   headingText: {
     fontSize: normaliseFont(20),
@@ -116,17 +233,72 @@ let styles = StyleSheet.create({
   bold: {
     fontWeight: 'bold',
   },
-  bankAccount: {
-    marginTop: scaledHeight(60),
-    padding: scaledWidth(20),
-    paddingTop: scaledWidth(15),
-    borderWidth: 1,
+  initialMessage: {
+    alignItems: 'center',
+    marginBottom: scaledHeight(20),
+    //borderWidth: 1, //testing
   },
-  bankAccountText: {
-    marginTop: scaledHeight(5),
+  initialMessageText: {
+    color: 'red',
+  },
+  bankAccount: {
+    marginTop: scaledHeight(20),
+    //borderWidth: 1, //testing
+  },
+  detail: {
+    //borderWidth: 1, // testing
+    marginBottom: scaledHeight(10),
+    flexDirection: 'row',
+    flexWrap: 'wrap', // Allows long detail value to move onto the next line.
+    alignItems: 'center',
+  },
+  detailName: {
+    paddingRight: scaledWidth(10),
+    paddingVertical: scaledHeight(10),
+    //borderWidth: 1, // testing
+    minWidth: '45%', // Expands with length of detail name.
+  },
+  detailNameText: {
+    fontSize: normaliseFont(16),
     fontWeight: 'bold',
+  },
+  detailValue: {
+    //borderWidth: 1, // testing
+    paddingLeft: scaledWidth(10),
+    paddingVertical: scaledHeight(10),
+    minWidth: '55%',
+  },
+  detailValueText: {
+    //borderWidth: 1, // testing
     fontSize: normaliseFont(16),
   },
+  editableTextInput: {
+    borderWidth: 1,
+    borderRadius: 16,
+    borderColor: colors.greyedOutIcon,
+    fontSize: normaliseFont(16),
+  },
+  buttonWrapper: {
+    marginTop: scaledHeight(20),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  updateMessage: {
+    //borderWidth: 1, //testing
+  },
+  updateMessageText: {
+    color: 'red',
+  },
+  errorMessage: {
+    //borderWidth: 1, //testing
+    paddingHorizontal: scaledHeight(15),
+    paddingVertical: scaledHeight(15),
+  },
+  errorMessageText: {
+    fontSize: normaliseFont(16),
+    color: 'red',
+  }
 });
 
 
