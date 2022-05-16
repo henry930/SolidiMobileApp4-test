@@ -22,8 +22,6 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
 /* Notes
 
-The primary payment choice is "pay with external account" vs "pay with existing balance". This component handles that choice.
-
 Future: People may pay directly with crypto, not just fiat.
 
 https://callstack.github.io/react-native-paper/radio-button-item.html
@@ -37,17 +35,17 @@ let ChooseHowToPay = () => {
 
   let appState = useContext(AppStateContext);
   let stateChangeID = appState.stateChangeID;
+  let [renderCount, triggerRender] = useState(0);
 
   let pageName = appState.pageName;
   let permittedPageNames = 'default direct_payment balance'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToPay');
   if (pageName == 'default') pageName = 'direct_payment';
 
-
-  let [renderCount, triggerRender] = useState(0);
+  // State
+  let [paymentChoice, setPaymentChoice] = useState(pageName);
 
   // PayWithBalance Button state
-  let [paymentChoice, setPaymentChoice] = useState(pageName);
   let [disablePayWithBalanceButton, setDisablePayWithBalanceButton] = useState(false);
   let [stylePayWithBalanceButton, setStylePayWithBalanceButton] = useState(stylePWBButtonDefault);
   let [stylePayWithBalanceButtonText, setStylePayWithBalanceButtonText] = useState(stylePWBButtonTextDefault);
@@ -103,11 +101,11 @@ let ChooseHowToPay = () => {
     if(Big(volumeQA).gt(Big(balanceQA))) {
       setDisablePayWithBalanceButton(true);
       setStylePayWithBalanceButton(stylePWBButtonDisabled);
-      setStylePayWithBalanceButtonText(stylePWBButtonTextDisabled);
+      setStylePWBButtonAdditionalText(stylePWBButtonAdditionalTextDisabled);
     } else { // enforce reset in case user goes back and changes the volumeQA.
       setDisablePayWithBalanceButton(false);
       setStylePayWithBalanceButton(stylePWBButtonDefault);
-      setStylePayWithBalanceButtonText(stylePWBButtonTextDefault);
+      setStylePWBButtonAdditionalText(stylePWBButtonAdditionalTextDefault);
     }
   }
 
@@ -118,17 +116,17 @@ let ChooseHowToPay = () => {
   let confirmPaymentChoice = async () => {
     // Future: If there's no active BUY order, display an error message.
     // - (The user can arrive to this page without an active order by pressing the Back button.)
-    log('confirmPaymentChoice button clicked.')
+    log('confirmPaymentChoice button clicked.');
     setDisableConfirmButton(true);
     setStyleConfirmButton(styleConfirmButtonDisabled);
     setSendOrderMessage('Sending order...');
     refScrollView.current.scrollToEnd();
     if (paymentChoice === 'direct_payment') {
       // Choice: Pay directly from external fiat account.
-      let data = await appState.sendBuyOrder({paymentMethod: 'solidi'});
+      let output = await appState.sendBuyOrder({paymentMethod: 'solidi'});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      if (data.result == 'PRICE_CHANGE') {
-        await handlePriceChange(data);
+      if (output.result == 'PRICE_CHANGE') {
+        await handlePriceChange(output);
       } else {
         appState.changeState('MakePayment');
       }
@@ -161,12 +159,12 @@ let ChooseHowToPay = () => {
   }
 
 
-  let handlePriceChange = async (data) => {
+  let handlePriceChange = async (output) => {
     /* If the price has changed, we'll:
     - Update the stored order values and re-render.
     - Tell the user what's happened and ask them if they'd like to go ahead.
     */
-    let newVolumeQA = data.quoteAssetVolume;
+    let newVolumeQA = output.quoteAssetVolume;
     let priceDown = Big(volumeQA).gt(Big(newVolumeQA));
     let dpQA = appState.getAssetInfo(assetQA).decimalPlaces;
     let priceDiff = Big(volumeQA).minus(Big(newVolumeQA)).toFixed(dpQA);
@@ -220,8 +218,8 @@ let ChooseHowToPay = () => {
               style={stylePayWithBalanceButton} labelStyle={styles.buttonLabel} />
 
             <View style={styles.buttonDetail}>
-              <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
-              <Text style={stylePayWithBalanceButtonText}>{`\u2022  `} Processed instantly</Text>
+              <Text style={stylePWBButtonAdditionalText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
+              <Text style={stylePWBButtonAdditionalText}>{`\u2022  `} Processed instantly</Text>
               <Text style={styles.bold}>{`\u2022  `} Your balance: {balanceQA()} {(balanceQA() != '[loading]') && assetQA}</Text>
               {disablePayWithBalanceButton &&
                 <Text style={styles.balanceLowText}>{`\u2022  `} (Balance is too low for this option)</Text>
@@ -274,7 +272,8 @@ let ChooseHowToPay = () => {
         </View>
 
         <View style={styles.confirmButtonWrapper}>
-          <StandardButton title={"Confirm & Pay"} onPress={ confirmPaymentChoice }
+          <StandardButton title={"Confirm & Pay"}
+            onPress={ confirmPaymentChoice }
             disabled={disableConfirmButton}
             styles={styleConfirmButton}
           />
@@ -410,11 +409,11 @@ let stylePWBButtonDisabled = StyleSheet.create({
 });
 
 
-let stylePWBButtonTextDefault = StyleSheet.create({
+let stylePWBButtonAdditionalTextDefault = StyleSheet.create({
   fontWeight: 'bold',
 });
 
-let stylePWBButtonTextDisabled = StyleSheet.create({
+let stylePWBButtonAdditionalTextDisabled = StyleSheet.create({
   fontWeight: 'bold',
   color: colors.greyedOutIcon,
 });
