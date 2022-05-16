@@ -520,6 +520,8 @@ class AppStateProvider extends Component {
 
     this.lockApp = () => {
       this.state.appLocked = true;
+      this.cancelTimers();
+      this.abortAllRequests();
       this.state.stashCurrentState();
       this.state.authenticateUser();
     }
@@ -577,6 +579,7 @@ class AppStateProvider extends Component {
       this.state.error.message = message;
       this.state.stashCurrentState();
       this.cancelTimers();
+      this.abortAllRequests();
       this.state.changeState('Error');
     }
 
