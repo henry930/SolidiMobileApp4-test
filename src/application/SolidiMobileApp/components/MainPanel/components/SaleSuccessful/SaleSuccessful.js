@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Linking, Text, StyleSheet, View } from 'react-native';
 
 // Other imports
 import _ from 'lodash';
