@@ -48,7 +48,7 @@ let ChooseHowToPay = () => {
   // PayWithBalance Button state
   let [disablePayWithBalanceButton, setDisablePayWithBalanceButton] = useState(false);
   let [stylePayWithBalanceButton, setStylePayWithBalanceButton] = useState(stylePWBButtonDefault);
-  let [stylePayWithBalanceButtonText, setStylePayWithBalanceButtonText] = useState(stylePWBButtonTextDefault);
+  let [stylePWBButtonAdditionalText, setStylePWBButtonAdditionalText] = useState(stylePWBButtonAdditionalTextDefault);
 
   // Confirm Button state
   let [disableConfirmButton, setDisableConfirmButton] = useState(false);
