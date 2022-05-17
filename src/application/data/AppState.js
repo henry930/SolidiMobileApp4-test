@@ -1210,7 +1210,7 @@ class AppStateProvider extends Component {
       */
       // To do: Check for "limits exceeded" error.
       // Need to change state to an error / explanation page.
-      // Store the orderID. Later, we'll use it to check the order's status.
+      // Store the orderID.
       if (data.orderID) {
         log(`BUY orderID: ${data.orderID}`);
         this.state.panels.buy.orderID = data.orderID;
@@ -1252,7 +1252,7 @@ class AppStateProvider extends Component {
         functionName: 'sendSellOrder',
       });
       if (data == 'DisplayedError') return;
-      // Store the orderID. Later, we'll use it to check the order's status.
+      // Store the orderID.
       if (data.orderID) {
         log(`OrderID: ${data.id}`);
         this.state.panels.sell.orderID = data.id;
