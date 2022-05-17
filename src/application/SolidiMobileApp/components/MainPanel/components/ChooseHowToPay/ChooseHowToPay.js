@@ -229,7 +229,9 @@ let ChooseHowToPay = () => {
 
             <RadioButton.Item label="Pay directly to Solidi" value="direct_payment"
               color={colors.standardButtonText}
-              style={styles.button} labelStyle={styles.buttonLabel} />
+              style={styles.button}
+              labelStyle={styles.buttonLabel}
+            />
 
             <View style={styles.buttonDetail}>
               <Text style={styles.bold}>{`\u2022  `} Fast & Easy - No fee!</Text>
@@ -237,8 +239,11 @@ let ChooseHowToPay = () => {
             </View>
 
             <RadioButton.Item label="Pay with balance" value="balance"
+              color={colors.standardButtonText}
               disabled={disablePayWithBalanceButton}
-              style={stylePayWithBalanceButton} labelStyle={styles.buttonLabel} />
+              style={stylePayWithBalanceButton}
+              labelStyle={styles.buttonLabel}
+            />
 
             <View style={styles.buttonDetail}>
               <Text style={stylePWBButtonAdditionalText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
