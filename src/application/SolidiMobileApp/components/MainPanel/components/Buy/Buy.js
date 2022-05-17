@@ -50,7 +50,7 @@ let Buy = () => {
   let selectedAssetBA = 'BTC';
   let selectedVolumeBA = '[loading]'; // Later, we calculate this from the price and the volumeQA.
   let selectedAssetQA = 'GBP';
-  let selectedVolumeQA = '100';
+  let selectedVolumeQA = '10';
 
   // Function that derives dropdown properties from an asset list.
   let deriveAssetItems = (assets) => {
