@@ -148,11 +148,11 @@ let ChooseHowToReceivePayment = () => {
     // Choose the receive-payment function.
     // Note: These functions are currently identical, but may diverge in future. Keep them separate.
     if (paymentChoice === 'direct_payment') {
-      // Make a direct payment to the customer's primary external fiat account.
+      // Choice: Make a direct payment to the customer's primary external fiat account.
       // Note: In this case, the server will perform a withdrawal automatically after filling the order.
       await receivePayment();
     } else {
-      // Pay with balance.
+      // Choice: Pay with balance.
       await receivePaymentToBalance();
     }
   }
