@@ -59,6 +59,7 @@ let History = () => {
 
   let setup = async () => {
     try {
+      await appState.generalSetup();
       await appState.loadOrders();
       await appState.loadTransactions();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
@@ -171,7 +172,9 @@ let History = () => {
     let baseVolume = Big(item['baseVolume']).toFixed(baseDP);
     let quoteVolume = Big(item['quoteVolume']).toFixed(quoteDP);
     let orderStatus = item['status'];
-    let _styleOrder = orderStatus == 'LIVE' ? styles.liveOrderStatus : styles.settledOrderStatus
+    let _styleOrder = styles.settledOrderStatus;
+    if (orderStatus == 'LIVE') _styleOrder = styles.liveOrderStatus;
+    if (orderStatus == 'CANCELLED') _styleOrder = styles.cancelledOrderStatus;
     return (
       <View style={styles.flatListItem}>
         <View style={styles.orderTopWrapper}>
@@ -258,12 +261,16 @@ let styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: "space-between",
   },
+  settledOrderStatus: {
+    color: 'blue',
+    fontWeight: '500',
+  },
   liveOrderStatus: {
     color: 'green',
     fontWeight: '500',
   },
-  settledOrderStatus: {
-    color: 'blue',
+  cancelledOrderStatus: {
+    color: 'darkgrey',
     fontWeight: '500',
   },
   typeField: {
