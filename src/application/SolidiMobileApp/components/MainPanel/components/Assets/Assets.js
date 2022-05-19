@@ -135,7 +135,7 @@ let Assets = () => {
           renderItem={renderAssetItem}
           keyExtractor={(item, index) => index}
           numColumns={1}
-          scrollEnabled='true'
+          scrollEnabled={true}
           contentContainerStyle={{justifyContent: 'center'}}
         />
       </View>

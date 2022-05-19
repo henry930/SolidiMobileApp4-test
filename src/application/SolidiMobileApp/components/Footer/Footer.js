@@ -103,7 +103,7 @@ const Footer = (props) => {
         renderItem={renderPanelButton}
         keyExtractor={(item, index) => index}
         numColumns={4}
-        scrollEnabled='false'
+        scrollEnabled={false}
         contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
       >
       </FlatList>

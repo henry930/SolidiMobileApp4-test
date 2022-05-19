@@ -118,7 +118,7 @@ let History = () => {
           renderItem={renderTransactionItem}
           keyExtractor={(item, index) => index}
           numColumns={1}
-          scrollEnabled='true'
+          scrollEnabled={true}
           contentContainerStyle={{justifyContent: 'center'}}
         />
       </View>
@@ -155,7 +155,7 @@ let History = () => {
           renderItem={renderOrderItem}
           keyExtractor={(item, index) => index}
           numColumns={1}
-          scrollEnabled='true'
+          scrollEnabled={true}
           contentContainerStyle={{justifyContent: 'center'}}
         />
       </View>
