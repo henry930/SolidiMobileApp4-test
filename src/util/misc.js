@@ -43,6 +43,16 @@ function confirmExactKeys(objName, obj, keyNames, functionName) {
 }
 
 
+function hasExactKeys(objName, obj, keyNames, functionName) {
+  let foundKeys = _.keys(obj);
+  foundKeys.sort();
+  keyNames.sort();
+  if (jd(foundKeys) === jd(keyNames)) return true;
+  return false;
+}
+
+
+
 function itemInArray(arrayName, arrayObj, item, functionName) {
   if (! arrayObj instanceof Array) return false;
   for (let x of arrayObj) {
@@ -156,6 +166,7 @@ let misc = {
   lj,
   confirmKeys,
   confirmExactKeys,
+  hasExactKeys,
   itemInArray,
   confirmItemInArray,
   capitalise,
