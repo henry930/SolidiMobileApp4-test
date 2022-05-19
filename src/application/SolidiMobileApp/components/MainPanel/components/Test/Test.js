@@ -25,7 +25,8 @@ let Test = () => {
 
   let setup = async () => {
     try {
-      await appState.loadAssetIcons();
+      await appState.generalSetup();
+      await appState.loadPrices();
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Test.setup: Error = ${err}`;
