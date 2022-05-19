@@ -699,7 +699,7 @@ let styles = StyleSheet.create({
     marginRight: scaledWidth(20),
   },
   storedAssetDropdown: {
-    height: 40,
+    height: scaledHeight(40),
     width: scaledWidth(220),
   },
   storedAssetDropdownContainer: {
@@ -714,7 +714,7 @@ let styles = StyleSheet.create({
     zIndex: 1,
   },
   priorityDropdown: {
-    height: 40,
+    height: scaledHeight(40),
     width: '100%',
   },
   priorityDropdownContainer: {
