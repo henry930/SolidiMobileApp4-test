@@ -212,8 +212,8 @@ let Buy = () => {
       let newVolumeQA = Big(volumeBA).mul(Big(price)).toFixed(quoteDP);
       if (! Big(newVolumeQA).eq(Big(checkVolumeQA))) {
         log("New quote asset volume: " + newVolumeQA);
-        setErrorMessage('');
         setVolumeQA(newVolumeQA);
+        setErrorMessage('');
       }
     }
   }
