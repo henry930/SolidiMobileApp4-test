@@ -321,7 +321,7 @@ let Sell = () => {
 
   // Set an interval timer that periodically reloads the price data from the server.
   let checkTimeSeconds = 15000; // Todo: At end, change this to 15.
-  checkTimeSeconds = 10; // Testing
+  //checkTimeSeconds = 10; // Testing
   // Timer function.
   /*
   Note: setInterval runs in a separate execution context.
