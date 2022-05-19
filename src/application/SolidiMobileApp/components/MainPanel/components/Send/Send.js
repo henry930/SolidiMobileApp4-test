@@ -252,6 +252,8 @@ let Send = () => {
           value={address}
           placeholder={appState.getAssetInfo(assetSA).displayString + ' address goes here'}
           placeholderTextColor={colors.placeHolderTextColor}
+          autoCorrect={false}
+          autoCapitalize={'none'}
         />
       </View>
     )
@@ -271,6 +273,7 @@ let Send = () => {
             value={destinationTag}
             //placeholder={'52'}
             //placeholderTextColor={colors.placeHolderTextColor}
+            autoCorrect={false}
           />
         </View>
       </View>
@@ -289,6 +292,7 @@ let Send = () => {
             value={accountName}
             placeholder={appState.getAssetInfo(assetSA).displayString + ' account name goes here'}
             placeholderTextColor={colors.placeHolderTextColor}
+            autoCorrect={false}
           />
         </View>
       </View>
@@ -309,6 +313,7 @@ let Send = () => {
             value={sortCode}
             placeholder={'12-34-56'}
             placeholderTextColor={colors.placeHolderTextColor}
+            autoCorrect={false}
           />
         </View>
       </View>
@@ -329,6 +334,7 @@ let Send = () => {
             value={accountNumber}
             placeholder={'123456789'}
             placeholderTextColor={colors.placeHolderTextColor}
+            autoCorrect={false}
           />
         </View>
       </View>
@@ -349,6 +355,7 @@ let Send = () => {
             value={BIC}
             placeholder={'INGDESMM'}
             placeholderTextColor={colors.placeHolderTextColor}
+            autoCorrect={false}
           />
         </View>
       </View>
@@ -369,6 +376,7 @@ let Send = () => {
             value={BIC}
             placeholder={'ES91 2100 0418 4502 0005 1332'}
             placeholderTextColor={colors.placeHolderTextColor}
+            autoCorrect={false}
           />
         </View>
       </View>
@@ -528,6 +536,7 @@ let Send = () => {
     _.assign(appState.panels.send, {asset:assetSA, volume:total, addressProperties, priority});
     // Send the withdraw request to the server.
     let result = await appState.sendWithdraw({asset:assetSA, volume:total, addressInfo:addressProperties, priority, functionName:'startSendRequest'});
+    if (result == 'DisplayedError') return;
     // Check to see if the server returned an error.
     // Stop and display the error message if so.
     if (_.has(result, 'error')) {
@@ -568,7 +577,7 @@ let Send = () => {
 
       <View style={styles.storedAssetWrapper}>
         <TextInput
-          placeholder={'0.50'}
+          placeholder={'0.1532'}
           style={styles.volumeSA}
           onChangeText={validateAndSetVolumeSA}
           value={volumeSA}
