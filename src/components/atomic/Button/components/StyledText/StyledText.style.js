@@ -15,7 +15,7 @@ const { style } = StyleSheet.create({
       },
       android: {
         color: 'white',
-        fontWeight: 500,
+        fontWeight: '500',
       },
     }),
   },
