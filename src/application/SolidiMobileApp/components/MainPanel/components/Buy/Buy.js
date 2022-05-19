@@ -111,7 +111,6 @@ let Buy = () => {
       setItemsQA(generateQuoteAssetItems());
       calculateVolumeBA();
       setNewAPIVersion(appState.checkLatestAPIVersion());
-      setErrorMessage('');
     } catch(err) {
       let msg = `Buy.setup: Error = ${err}`;
       console.log(msg);
@@ -153,10 +152,14 @@ let Buy = () => {
       }
       /*
       Check if: We are triggering based on a price change.
-      But: A price change has not occurrred in this specific market.
+      But: A price change has not occurred in this specific market.
       */
       if (priceStringChange && ! priceChange) {
         log(`No change in price (${price}). Stopping recalculation of volumeBA.`);
+        return;
+      }
+      if (_.isNil(price)) {
+        setErrorMessage('Cannot load prices: Empty market');
         return;
       }
       let baseDP = appState.getAssetInfo(assetBA).decimalPlaces;
@@ -168,6 +171,7 @@ let Buy = () => {
       ) {
         log("New base asset volume: " + newVolumeBA);
         setVolumeBA(newVolumeBA);
+        setErrorMessage('');
       }
     }
   }
@@ -200,10 +204,15 @@ let Buy = () => {
         setVolumeQA('[loading]');
         return;
       }
+      if (_.isNil(price)) {
+        setErrorMessage('Cannot load prices: Empty market');
+        return;
+      }
       let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
       let newVolumeQA = Big(volumeBA).mul(Big(price)).toFixed(quoteDP);
       if (! Big(newVolumeQA).eq(Big(checkVolumeQA))) {
         log("New quote asset volume: " + newVolumeQA);
+        setErrorMessage('');
         setVolumeQA(newVolumeQA);
       }
     }
@@ -268,7 +277,10 @@ let Buy = () => {
     let price = appState.getPrice(market);
     log(`Market price for ${market} market = ${price}`);
     let dp = appState.getAssetInfo(assetQA).decimalPlaces;
-    let priceString = Big(price).toFixed(dp);
+    let priceString = '[loading]';
+    if (misc.isNumericString((price))) {
+      priceString = Big(price).toFixed(dp);
+    }
     let displayStringBA = appState.getAssetInfo(assetBA).displaySymbol;
     let displayStringQA = appState.getAssetInfo(assetQA).displaySymbol;
     let description = `1 ${displayStringBA} = ${priceString} ${displayStringQA}`;
