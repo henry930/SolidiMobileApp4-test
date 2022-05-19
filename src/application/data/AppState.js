@@ -841,15 +841,15 @@ class AppStateProvider extends Component {
 
     this.getPrice = (market) => {
       // Get the price held in the appState.
-      if (_.isUndefined(this.state.apiData.ticker[market])) return '0';
-      if (_.isUndefined(this.state.apiData.ticker[market].price)) return '0';
+      if (_.isUndefined(this.state.apiData.ticker[market])) return null;
+      if (_.isUndefined(this.state.apiData.ticker[market].price)) return null;
       return this.state.apiData.ticker[market].price;
     }
 
     this.getPrevPrice = (market) => {
       // Get the previous price held in the appState.
-      if (_.isUndefined(this.state.prevAPIData.ticker[market])) return '0';
-      if (_.isUndefined(this.state.prevAPIData.ticker[market].price)) return '0';
+      if (_.isUndefined(this.state.prevAPIData.ticker[market])) return null;
+      if (_.isUndefined(this.state.prevAPIData.ticker[market].price)) return null;
       return this.state.prevAPIData.ticker[market].price;
     }
 
