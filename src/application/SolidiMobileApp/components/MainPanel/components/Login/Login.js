@@ -100,6 +100,7 @@ let Login = () => {
           onChangeText={setEmail}
           value={email}
           autoCapitalize={'none'}
+          autoCorrect={false}
         />
       </View>
 
