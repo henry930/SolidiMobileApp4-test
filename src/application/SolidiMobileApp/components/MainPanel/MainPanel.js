@@ -1,4 +1,3 @@
-
 // React imports
 import React, {useContext} from 'react';
 import {
@@ -25,7 +24,7 @@ import AppStateContext from 'src/application/data';
 
 
 
-const MainPanel = (props) => {
+let MainPanel = (props) => {
 
   let {style:styleArg} = props;
 
@@ -113,7 +112,7 @@ const MainPanel = (props) => {
 };
 
 
-const styles = StyleSheet.create({
+let styles = StyleSheet.create({
   mainPanel: {
     alignItems: 'center',
     backgroundColor: colors.mainPanelBackground,

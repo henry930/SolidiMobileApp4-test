@@ -19,7 +19,7 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
 
 
-const Footer = (props) => {
+let Footer = (props) => {
 
   let {style: styleArg} = props;
 

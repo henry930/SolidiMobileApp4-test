@@ -12,7 +12,7 @@ import ImageLookup from 'src/images';
 
 
 
-const Header = (props) => {
+let Header = (props) => {
 
   let {style: styleArg} = props;
 
@@ -82,7 +82,7 @@ const Header = (props) => {
 };
 
 
-const styles = StyleSheet.create({
+let styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
 });
 
 
-const styleBackButton = StyleSheet.create({
+let styleBackButton = StyleSheet.create({
   image: {
     iconSize: 22,
     iconColor: colors.greyedOutIcon,
@@ -126,7 +126,7 @@ styleSettingsButtonSelected = StyleSheet.create({
 });
 
 
-const styleNotificationButton = StyleSheet.create({
+let styleNotificationButton = StyleSheet.create({
   text: {
     fontSize: normaliseFont(18),
   }
