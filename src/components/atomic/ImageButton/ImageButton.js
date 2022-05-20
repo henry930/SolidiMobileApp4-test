@@ -18,13 +18,20 @@ import _ from 'lodash';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 // Internal imports
-import { colors } from 'src/constants';
 import StyledView from './StyledView';
 import StyledImage from './StyledImage';
 import StyledText from './StyledText';
+import { colors } from 'src/constants';
+
+// Logger
+import logger from 'src/util/logger';
+let logger2 = logger.extend('ImageButton');
+let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
 
-const ImageButton = ({
+
+
+let ImageButton = ({
   title,
   disabled,
   styles,
@@ -32,7 +39,7 @@ const ImageButton = ({
   imageType,
   ...rest
 }) => {
-  const Touchable = Platform.select({
+  let Touchable = Platform.select({
     ios: TouchableHighlight,
     android: TouchableNativeFeedback,
   });
@@ -49,6 +56,14 @@ const ImageButton = ({
   if (! _.isUndefined(styles.image) && ! _.isUndefined(styles.image.iconColor))
     iconColor = styles.image.iconColor;
 
+  // Add some default styling to the View.
+  let styleView = defaultStyle.view;
+  if (! _.isNil(styles)) {
+    if (styles.view) {
+      styleView = StyleSheet.flatten([styleView, styles.view]);
+    }
+  }
+
 
   return (
     <Touchable
@@ -61,7 +76,7 @@ const ImageButton = ({
       {...rest}
     >
       <View>
-        <StyledView disabled={disabled} styles={styles.view}>
+        <StyledView disabled={disabled} styles={styleView}>
           { imageType === 'image' &&
             <StyledImage imageName={imageName} disabled={disabled} styles={styles.image} />
           }
@@ -79,6 +94,16 @@ const ImageButton = ({
   );
 };
 
+
+let defaultStyle = {
+  view: {
+    // Elevation is set to 0 to avoid a slight drop-shadow on the ImageButton's internal View on Android.
+    elevation: 0,
+    backgroundColor: colors.defaultBackground,
+  }
+}
+
+
 ImageButton.defaultProps = {
   disabled: false,
   imageType: 'image',
@@ -89,6 +114,7 @@ ImageButton.defaultProps = {
     text: {},
   },
 };
+
 
 ImageButton.propTypes = {
   imageName: PropTypes.string.isRequired,
@@ -102,5 +128,6 @@ ImageButton.propTypes = {
     text: PropTypes.object,
   }),
 };
+
 
 export default ImageButton;
