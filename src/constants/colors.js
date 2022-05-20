@@ -4,6 +4,7 @@ export const colors = {
   mainPanelBackground: 'white',
   unavailableButton: 'white',
   footerPanelButton: 'white',
+  buttonText: '#007AFF', // type of blue.
   standardButton: 'rgb(20, 80, 255)',
   standardButtonText: 'white',
   linkText: 'rgb(29, 117, 253)',
