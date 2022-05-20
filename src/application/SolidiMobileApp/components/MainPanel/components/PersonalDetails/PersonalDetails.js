@@ -201,7 +201,7 @@ address1 address2 address3 address4 postcode country
           <Text style={styles.sectionHeadingText}>Basic Details</Text>
         </View>
 
-        <View style={[styles.detail, {zIndex:1}]}>
+        <View style={[styles.detail, {zIndex:2}]}>
           <View style={styles.detailName}>
             <Text style={styles.detailNameText}>{`\u2022  `}Title</Text>
           </View>
