@@ -237,7 +237,10 @@ address1 address2 address3 address4 postcode country
               let value = event.nativeEvent.text;
               updateUserData({detail:'firstName', value});
             }}
+            autoComplete={'off'}
             autoCompleteType='off'
+            autoCapitalize={'words'}
+            autoCorrect={false}
           />
           </View>
         </View>
@@ -255,7 +258,10 @@ address1 address2 address3 address4 postcode country
               let value = event.nativeEvent.text;
               updateUserData({detail:'middleNames', value});
             }}
+            autoComplete={'off'}
             autoCompleteType='off'
+            autoCapitalize={'words'}
+            autoCorrect={false}
           />
           </View>
         </View>
@@ -273,7 +279,10 @@ address1 address2 address3 address4 postcode country
               let value = event.nativeEvent.text;
               updateUserData({detail:'lastName', value});
             }}
+            autoComplete={'off'}
             autoCompleteType='off'
+            autoCapitalize={'words'}
+            autoCorrect={false}
           />
           </View>
         </View>
@@ -407,6 +416,10 @@ address1 address2 address3 address4 postcode country
                 let value = event.nativeEvent.text;
                 updateUserData({detail:'address1', value});
               }}
+              autoComplete={'off'}
+              autoCompleteType='off'
+              autoCapitalize={'none'}
+              autoCorrect={false}
             />
           </View>
         </View>
@@ -424,6 +437,10 @@ address1 address2 address3 address4 postcode country
                 let value = event.nativeEvent.text;
                 updateUserData({detail:'address2', value});
               }}
+              autoComplete={'off'}
+              autoCompleteType='off'
+              autoCapitalize={'none'}
+              autoCorrect={false}
             />
           </View>
         </View>
@@ -441,6 +458,10 @@ address1 address2 address3 address4 postcode country
                 let value = event.nativeEvent.text;
                 updateUserData({detail:'address3', value});
               }}
+              autoComplete={'off'}
+              autoCompleteType='off'
+              autoCapitalize={'none'}
+              autoCorrect={false}
             />
           </View>
         </View>
@@ -458,6 +479,10 @@ address1 address2 address3 address4 postcode country
                 let value = event.nativeEvent.text;
                 updateUserData({detail:'address4', value});
               }}
+              autoComplete={'off'}
+              autoCompleteType='off'
+              autoCapitalize={'none'}
+              autoCorrect={false}
             />
           </View>
         </View>
@@ -475,6 +500,10 @@ address1 address2 address3 address4 postcode country
                 let value = event.nativeEvent.text;
                 updateUserData({detail:'postcode', value});
               }}
+              autoComplete={'off'}
+              autoCompleteType='off'
+              autoCapitalize={'none'}
+              autoCorrect={false}
             />
           </View>
         </View>
