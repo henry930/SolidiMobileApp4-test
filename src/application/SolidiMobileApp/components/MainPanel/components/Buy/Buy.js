@@ -94,6 +94,7 @@ let Buy = () => {
   // More state
   let [newAPIVersion, setNewAPIVersion] = useState(false);
   let [errorMessage, setErrorMessage] = useState('');
+  let [loadingPrices, setLoadingPrices] = useState(true);
 
 
   // Initial setup.
@@ -111,6 +112,7 @@ let Buy = () => {
       setItemsQA(generateQuoteAssetItems());
       calculateVolumeBA();
       setNewAPIVersion(appState.checkLatestAPIVersion());
+      setLoadingPrices(false);
     } catch(err) {
       let msg = `Buy.setup: Error = ${err}`;
       console.log(msg);
@@ -281,6 +283,7 @@ let Buy = () => {
     if (misc.isNumericString((price))) {
       priceString = Big(price).toFixed(dp);
     }
+    if (loadingPrices) priceString = '[loading]';
     let displayStringBA = appState.getAssetInfo(assetBA).displaySymbol;
     let displayStringQA = appState.getAssetInfo(assetQA).displaySymbol;
     let description = `1 ${displayStringBA} = ${priceString} ${displayStringQA}`;

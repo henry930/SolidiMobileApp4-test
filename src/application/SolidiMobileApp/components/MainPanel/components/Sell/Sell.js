@@ -111,6 +111,7 @@ let Sell = () => {
   // More state.
   let [balanceBA, setBalanceBA] = useState(appState.getBalance(assetBA));
   let [errorMessage, setErrorMessage] = useState('');
+  let [loadingPrices, setLoadingPrices] = useState(true);
 
 
   // Initial setup.
@@ -129,6 +130,7 @@ let Sell = () => {
       setItemsQA(generateQuoteAssetItems());
       setBalanceBA(appState.getBalance(assetBA));
       calculateVolumeBA();
+      setLoadingPrices(false);
     } catch(err) {
       let msg = `Sell.setup: Error = ${err}`;
       console.log(msg);
@@ -312,6 +314,7 @@ let Sell = () => {
     if (misc.isNumericString((price))) {
       priceString = Big(price).toFixed(dp);
     }
+    if (loadingPrices) priceString = '[loading]';
     let displayStringBA = appState.getAssetInfo(assetBA).displaySymbol;
     let displayStringQA = appState.getAssetInfo(assetQA).displaySymbol;
     let description = `1 ${displayStringBA} = ${priceString} ${displayStringQA}`;
