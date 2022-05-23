@@ -1,0 +1,59 @@
+
+
+
+https://developer.android.com/distribute/google-play/resources/icon-design-specifications
+
+When creating your artwork, ensure it conforms to the following:
+
+- Final size: 512px x 512px
+- Format: 32-bit PNG
+- Color space: sRGB
+- Max file size: 1024KB
+- Shape: Full square – Google Play dynamically handles masking. Radius will be equivalent to 20% of icon size.
+- Shadow: None – Google Play dynamically handles shadows. See 'Shadows' section below on including shadows within your artwork.
+
+
+
+
+https://stackoverflow.com/questions/12768128/android-launcher-icon-size
+
+
+Answer:
+
+Android icons require five separate sizes for different screen pixel densities. Icons for lower resolution are created automatically from the baseline.
+
+Launcher icons (.Png)
+
+48 × 48 (mdpi) [baseline]
+72 × 72 (hdpi)
+96 × 96 (xhdpi)
+144 × 144 (xxhdpi)
+192 × 192 (xxxhdpi)
+512 × 512 (Google Play store)
+
+
+
+
+
+Handle round icons:
+In AndroidManifest.xml, change
+android:roundIcon="@mipmap/ic_launcher_round"
+to:
+android:roundIcon="@mipmap/ic_launcher"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
