@@ -86,6 +86,7 @@ let styles = StyleSheet.create({
   panelSubContainer: {
     //paddingTop: scaledHeight(10),
     //paddingHorizontal: scaledWidth(30),
+    //borderWidth: 1, // testing
   },
   heading: {
     alignItems: 'center',
@@ -99,8 +100,8 @@ let styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   mainScrollView: {
-    //borderWidth: 1,
     height: '80%',
+    //borderWidth: 1, // testing
   },
   bold: {
     fontWeight: 'bold',
