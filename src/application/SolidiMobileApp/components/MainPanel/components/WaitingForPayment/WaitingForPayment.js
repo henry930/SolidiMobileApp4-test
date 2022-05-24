@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text, StyleSheet, View, ScrollView } from 'react-native';
 import * as Progress from 'react-native-progress';
 
 // Other imports
@@ -122,6 +122,8 @@ let WaitingForPayment = () => {
         <Text style={styles.headingText}>Waiting for your payment</Text>
       </View>
 
+      <ScrollView showsVerticalScrollIndicator={true} style={styles.mainScrollView}>
+
       <View style={styles.textItem}>
         <Text style={styles.bold}>Thank you for sending your payment.</Text>
       </View>
@@ -172,6 +174,8 @@ let WaitingForPayment = () => {
         <Text>{`\u2022  `} If your payment has not been registered after 2 hours, please contact us.</Text>
       </View>
 
+      </ScrollView>
+
     </View>
     </View>
 
@@ -189,6 +193,8 @@ let styles = StyleSheet.create({
   panelSubContainer: {
     paddingTop: scaledHeight(10),
     paddingHorizontal: scaledWidth(30),
+    height: '100%',
+    //borderWidth: 1, // testing
   },
   heading: {
     alignItems: 'center',
