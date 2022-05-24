@@ -124,8 +124,9 @@ let styles = StyleSheet.create({
     paddingTop: scaledHeight(10),
     //paddingHorizontal: scaledWidth(30),
     paddingHorizontal: scaledWidth(0),
+    height: '100%',
+    //borderWidth: 1, // testing
   },
-
   heading: {
     alignItems: 'center',
   },
