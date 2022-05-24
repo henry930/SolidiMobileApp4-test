@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, TextInput, StyleSheet, View } from 'react-native';
+import { Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
 
 // Other imports
 import _ from 'lodash';
@@ -80,6 +80,8 @@ let Security = () => {
         <Text style={styles.headingText}>Security</Text>
       </View>
 
+      <ScrollView showsVerticalScrollIndicator={true} style={styles.mainScrollView}>
+
       <View style={styles.detail}>
         <View style={styles.detailName}>
           <Text style={styles.detailNameText}>{`\u2022  `}Password</Text>
@@ -137,6 +139,8 @@ let Security = () => {
         } } />
       </View>
 
+      </ScrollView>
+
     </View>
     </View>
   )
@@ -155,6 +159,7 @@ let styles = StyleSheet.create({
   panelSubContainer: {
     //paddingTop: scaledHeight(10),
     //paddingHorizontal: scaledWidth(30),
+    height: '100%',
     //borderWidth: 1, // testing
   },
   heading: {
