@@ -38,6 +38,13 @@ let SendSuccessful = () => {
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'SendSuccessful');
 
+  // Testing
+  if (appState.panels.send.volume == null) {
+    // Create an order.
+    _.assign(appState.panels.send, {volume: '10.00', asset: 'GBP', priority: 'low', addressProperties: {accountName: 'Marge Fish', sortCode: '12-12-33', accountNumber: '11231123'}});
+    appState.panels.buy.activeOrder = true;
+  }
+
   // Load transfer details.
   ({asset, volume, addressProperties, priority} = appState.panels.send);
 
