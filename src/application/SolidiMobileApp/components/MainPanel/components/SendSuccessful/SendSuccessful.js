@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text, StyleSheet, View, ScrollView } from 'react-native';
 
 // Other imports
 import _ from 'lodash';
@@ -82,6 +82,8 @@ let SendSuccessful = () => {
       <View style={[styles.heading, styles.heading1]}>
         <Text style={styles.headingText}>Send successful!</Text>
       </View>
+
+      <ScrollView showsVerticalScrollIndicator={true} style={styles.mainScrollView}>
 
       <View style={[styles.infoSection, styles.infoSection1]}>
 
@@ -174,6 +176,8 @@ let SendSuccessful = () => {
         <StandardButton title="Buy an asset" onPress={ () => appState.changeState('Buy') } />
       </View>
 
+      </ScrollView>
+
     </View>
     </View>
   )
@@ -191,6 +195,8 @@ let styles = StyleSheet.create({
   panelSubContainer: {
     paddingTop: scaledHeight(10),
     paddingHorizontal: scaledWidth(30),
+    height: '100%',
+    //borderWidth: 1, // testing
   },
   heading: {
     alignItems: 'center',
