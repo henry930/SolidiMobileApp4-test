@@ -45,8 +45,33 @@ let PaymentNotMade = () => {
     timePeriod = '2 hours'
   }
 
+  // Testing (for if we load this page directly).
+  if (appState.panels.buy.volumeQA == '0') {
+    // Create an order.
+    _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC'});
+    appState.panels.buy.activeOrder = true;
+    appState.panels.buy.orderID = 7200;
+  }
+
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
+
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    try {
+      await appState.generalSetup();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    } catch(err) {
+      let msg = `PaymentNotMade.setup: ${err}`;
+      console.log(msg);
+    }
+  }
 
   let viewAssets = () => {
     let pageName = appState.getAssetInfo(assetQA).type; // 'crypto' or 'fiat'.
@@ -56,6 +81,7 @@ let PaymentNotMade = () => {
   let buyAgain = () => {
     appState.changeState('Buy');
   }
+
 
   return (
     <View style={styles.panelContainer}>
