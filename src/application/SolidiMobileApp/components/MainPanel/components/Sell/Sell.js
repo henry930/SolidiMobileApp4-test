@@ -83,9 +83,6 @@ let Sell = () => {
   let generateBaseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
   let generateQuoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
 
-  defaultBaseAssets = ['BTC']
-  defaultQuoteAssets = ['GBP']
-
   // If we're reloading an existing order, load its details from the global state.
   if (appState.pageName === 'loadExistingOrder') {
     ({volumeQA: selectedVolumeQA, assetQA: selectedAssetQA} = appState.panels.sell);
@@ -323,8 +320,8 @@ let Sell = () => {
 
 
   // Set an interval timer that periodically reloads the price data from the server.
-  let checkTimeSeconds = 15000; // Todo: At end, change this to 15.
-  //checkTimeSeconds = 10; // Testing
+  let checkTimeSeconds = 15;
+  //checkTimeSeconds = 15000; // For use during development.
   // Timer function.
   /*
   Note: setInterval runs in a separate execution context.
