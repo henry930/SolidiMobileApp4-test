@@ -123,7 +123,7 @@ let Login = () => {
 
       <View style={styles.buttonWrapper}>
         <Button title="Don't have an account? Click here."
-          onPress={ () => { appState.changeState('Register') } }
+          onPress={ () => { appState.changeState('Register', 'nonAuto') } }
         />
       </View>
 

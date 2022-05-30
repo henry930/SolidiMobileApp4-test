@@ -38,7 +38,7 @@ let Register = () => {
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
-  let permittedPageNames = 'default'.split(' ');
+  let permittedPageNames = 'default nonAuto'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Register');
 
 
@@ -99,7 +99,9 @@ let Register = () => {
               - After a successful registration, the front-end will log in using the supplied details.
               - We pick up the event here, and change to the Login screen.
               */
-              appState.changeState('Login');
+              if (pageName != 'nonAuto') {
+                appState.changeState('Login');
+              }
             }
           }}
         />
