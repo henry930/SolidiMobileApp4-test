@@ -87,15 +87,7 @@ let BankAccounts = () => {
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     // Future: The error should be an object with 'code' and 'message' properties.
     if (_.has(output, 'error')) {
-      let error = output.error;
-      if (_.isObject(error)) {
-        if (_.isEmpty(error)) {
-          error = 'Received an empty error object ({}) from the server.'
-        } else {
-          error = JSON.stringify(error);
-        }
-      }
-      setErrorMessage(error);
+      setErrorMessage(misc.itemToString(output.error));
     } else if (output.result == 'success') {
       await misc.sleep(0.1);
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;

@@ -158,6 +158,19 @@ let removeFinalDecimalPointIfItExists = (v) => {
 }
 
 
+let itemToString = (x) => {
+  if (_.isString(x)) return x;
+  if (_.isObject(x)) {
+    if (_.isEmpty(x)) {
+      x = '{}';
+    } else {
+      x = JSON.stringify(x);
+    }
+  }
+  return x;
+}
+
+
 
 
 let misc = {
@@ -176,6 +189,7 @@ let misc = {
   isNumericString,
   camelCaseToCapitalisedWords,
   removeFinalDecimalPointIfItExists,
+  itemToString,
 }
 
 
