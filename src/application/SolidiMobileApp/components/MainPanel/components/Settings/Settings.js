@@ -25,8 +25,6 @@ let Settings = () => {
 
   let appState = useContext(AppStateContext);
 
-  let d = appState.user.info.user; // 'd' == 'data'
-
   return (
     <View style={styles.panelContainer}>
     <View style={styles.panelSubContainer}>
