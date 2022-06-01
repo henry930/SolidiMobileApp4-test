@@ -1019,6 +1019,7 @@ ChooseHowToReceivePayment
 
     // This is called immediately after a successful Login or PIN entry.
     this.loadInitialStuffAboutUser = async () => {
+      await this.loadAssetsInfo(); // needed for loading deposit details & default account.
       await this.loadUserInfo();
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
