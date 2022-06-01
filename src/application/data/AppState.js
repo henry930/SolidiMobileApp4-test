@@ -84,9 +84,7 @@ class AppStateProvider extends Component {
     // nonHistoryPanels are not stored in the stateHistoryList.
     // Pressing the Back button will not lead to them.
     this.nonHistoryPanels = `
-PIN
-ChooseHowToPay MakePayment WaitingForPayment
-ChooseHowToReceivePayment
+Authenticate Login PIN
 `.replace(/\n/g, ' ').trim().replace(/ {2,}/g, ' ').split(' ');
 
     // Shortcut function for changing the mainPanelState.
@@ -120,6 +118,18 @@ ChooseHowToReceivePayment
       newState = {mainPanelState, pageName};
       this.cancelTimers();
       this.abortAllRequests();
+      let stateHistoryList = this.state.stateHistoryList;
+      /* Check the current state.
+      - If the current state has just ended a user journey, we want to erase the state history, and start over.
+      */
+      let currentState = stateHistoryList[stateHistoryList.length - 1];
+      let endJourneyList = `
+PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
+`.replace(/\n/g, ' ').trim().replace(/ {2,}/g, ' ').split(' ');
+      if (endJourneyList.includes(currentState.mainPanelState)) {
+        this.resetStateHistory();
+      }
+      stateHistoryList = this.state.stateHistoryList; // Reload variable.
       /*
       If this is a new state, add an entry to the state history,
       unless it's a state we don't care about: e.g. PIN.
@@ -128,7 +138,6 @@ ChooseHowToReceivePayment
       - pageName
       Don't store a reloaded stashed state in the history list.
       */
-      let stateHistoryList = this.state.stateHistoryList;
       let storeHistoryState = (! stashed && ! this.nonHistoryPanels.includes(mainPanelState));
       if (storeHistoryState) {
         let currentState = stateHistoryList[stateHistoryList.length - 1];
