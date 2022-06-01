@@ -30,6 +30,7 @@ let PurchaseSuccessful = () => {
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
+  let [isLoading, setIsLoading] = useState(true);
 
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
@@ -48,6 +49,7 @@ let PurchaseSuccessful = () => {
       await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
+      setIsLoading(false);
     } catch(err) {
       let msg = `PurchaseSuccessful.setup: Error = ${err}`;
       console.log(msg);
@@ -56,6 +58,7 @@ let PurchaseSuccessful = () => {
 
 
   let getBalanceString = () => {
+    if (isLoading) return '[loading]';
     let b = appState.getBalance(assetBA);
     let result = b;
     if (misc.isNumericString(b)) result += ' ' + assetBA;
