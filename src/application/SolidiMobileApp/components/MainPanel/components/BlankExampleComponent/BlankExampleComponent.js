@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Text, StyleSheet, View, ScrollView } from 'react-native';
 
 // Other imports
 import _ from 'lodash';
@@ -65,6 +65,8 @@ let BlankExampleComponent = () => {
         <Text style={styles.headingText}>BlankExampleComponent</Text>
       </View>
 
+      <ScrollView showsVerticalScrollIndicator={true} style={styles.mainScrollView}>
+
       <Text style={styles.bold}>{'\n'} {`\u2022  `} [some text]</Text>
 
       <View style={styles.infoSection}>
@@ -74,6 +76,8 @@ let BlankExampleComponent = () => {
         </View>
 
       </View>
+
+      </ScrollView>
 
     </View>
     </View>
@@ -105,6 +109,8 @@ let styles = StyleSheet.create({
   headingText: {
     fontSize: normaliseFont(20),
     fontWeight: 'bold',
+  },
+  mainScrollView: {
   },
   bold: {
     fontWeight: 'bold',
