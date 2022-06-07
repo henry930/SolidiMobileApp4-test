@@ -1219,10 +1219,13 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       - Price values do not include fees. Fee values are included separately.
       */
       let funcName = 'fetchPricesForASpecificVolume'
-      let {market, side, baseAssetVolume, baseOrQuoteAsset} = params;
+      let {market, side, baseAssetVolume, quoteAssetVolume, baseOrQuoteAsset} = params;
       if (_.isNil(market)) { console.error(`${funcName}: market required`); return; }
       if (_.isNil(side)) { console.error(`${funcName}: side required`); return; }
-      if (_.isNil(baseAssetVolume)) { console.error(`${funcName}: baseAssetVolume required`); return; }
+      if (_.isNil(baseAssetVolume) && _.isNil(quoteAssetVolume)) {
+        console.error(`${funcName}: One of [baseAssetVolume, quoteAssetVolume] is required`);
+        return;
+      }
       if (_.isNil(baseOrQuoteAsset)) { console.error(`${funcName}: baseOrQuoteAsset required`); return; }
       let data = await this.state.privateMethod({
         apiRoute: 'volume_price/' + market,
@@ -1267,7 +1270,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         params,
         functionName: funcName,
       });
-      lj(params);
+      //lj(params);
       if (data == 'DisplayedError') return 'DisplayedError';
       /* Example output:
       {"price":"24528.64"} (side='BUY', baseAssetVolume: '1', baseOrQuoteAsset: 'base')
@@ -1371,6 +1374,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         log(`BUY orderID: ${data.orderID}`);
         this.state.panels.buy.orderID = data.orderID;
       }
+      // Currently, in several different pages, we assume that the fee returned by the API during the buy process was the fee that was actually applied when the order went through the trade engine.
+      // Future: Get fees from data, calculate total, store fees & total in panels.buy.
       return data;
     }
 
@@ -1729,6 +1734,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
           symbolQA: '',
           volumeBA: '0',
           symbolBA: '',
+          feeQA: '',
+          totalQA: '0',
         },
         sell: {
           activeOrder: false,
