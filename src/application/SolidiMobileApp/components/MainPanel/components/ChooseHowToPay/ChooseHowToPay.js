@@ -44,14 +44,10 @@ let ChooseHowToPay = () => {
 
   // State
   let [paymentChoice, setPaymentChoice] = useState(pageName);
-
-  // PayWithBalance Button state
-  let [disablePayWithBalanceButton, setDisablePayWithBalanceButton] = useState(false);
-  let [stylePayWithBalanceButton, setStylePayWithBalanceButton] = useState(stylePWBButtonDefault);
-  let [stylePWBButtonAdditionalText, setStylePWBButtonAdditionalText] = useState(stylePWBButtonAdditionalTextDefault);
+  let [fees, setFees] = useState({});
 
   // Confirm Button state
-  let [disableConfirmButton, setDisableConfirmButton] = useState(false);
+  let [disableConfirmButton, setDisableConfirmButton] = useState(true);
 
   // Misc
   let refScrollView = useRef();
@@ -78,10 +74,13 @@ let ChooseHowToPay = () => {
 
   let setup = async () => {
     try {
+      setErrorMessage('Loading...');
       await appState.generalSetup();
       await appState.loadBalances();
+      setFees(await fetchFeesForEachPaymentChoice());
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      await checkBalance();
+      setErrorMessage('');
+      setDisableConfirmButton(false);
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `ChooseHowToPay.setup: Error = ${err}`;
@@ -90,38 +89,100 @@ let ChooseHowToPay = () => {
   }
 
 
-  let balanceQA = () => { return appState.getBalance(assetQA) };
-
-  let zeroVolumeQA = () => { return '0.' + '0'.repeat(appState.getAssetInfo(assetQA).decimalPlaces) }
-
-
-  // Disable the "Pay with balance" button if the balance is too small.
-  let checkBalance = async () => {
+  let getBalanceDescriptionLine = () => {
     let balanceQA = appState.getBalance(assetQA);
-    if(Big(volumeQA).gt(Big(balanceQA))) {
-      setDisablePayWithBalanceButton(true);
-      setStylePayWithBalanceButton(stylePWBButtonDisabled);
-      setStylePWBButtonAdditionalText(stylePWBButtonAdditionalTextDisabled);
-    } else { // enforce reset in case user goes back and changes the volumeQA.
-      setDisablePayWithBalanceButton(false);
-      setStylePayWithBalanceButton(stylePWBButtonDefault);
-      setStylePWBButtonAdditionalText(stylePWBButtonAdditionalTextDefault);
+    let result = 'Your balance: ' + balanceQA;
+    if (balanceQA != '[loading]') {
+      result += ' ' + assetQA;
+    }
+    return (
+      <Text style={styles.bold}>{`\u2022  `} {result}</Text>
+    )
+  }
+
+
+  let fetchFeesForEachPaymentChoice = async () => {
+    // Fees may differ depending on the volume and on the user (e.g. whether the user has crossed a fee inflection point).
+    // We therefore request the price and fee for each payment choice from the API, using the specific baseAssetVolume.
+    let market = assetBA + '/' + assetQA;
+    let side = 'BUY';
+    let baseOrQuoteAsset = 'base';
+    let params = {market, side, baseAssetVolume: volumeBA, baseOrQuoteAsset};
+    let output = await appState.fetchPricesForASpecificVolume(params);
+    //lj(output);
+    if (_.has(output, 'error')) {
+      logger.error(output.error);
+      return;
+    }
+    /* Example output:
+    [
+      {"baseAssetVolume":"0.00036922","baseOrQuoteAsset":"base","feeVolume":"0.00","market":"BTC/GBP","paymentMethod":"solidi","quoteAssetVolume":"9.06","side":"BUY"},
+      {"baseAssetVolume":"0.00036922","baseOrQuoteAsset":"base","feeVolume":"0.00","market":"BTC/GBP","paymentMethod":"balance","quoteAssetVolume":"9.06","side":"BUY"}
+    ]
+    */
+    // Now: Produce an object that maps paymentMethods to feeVolumes.
+    let result = _.reduce(output, (obj, x) => {
+      obj[x.paymentMethod] = x.feeVolume;
+      return obj;
+    }, {});
+    // Rename 'solidi' key to 'direct_payment'.
+    result['direct_payment'] = result['solidi'];
+    delete result['solidi'];
+    // tmp
+    result['direct_payment'] = '0.55'
+    return result;
+  }
+
+
+  let calculateFeeQA = () => {
+    if (_.isEmpty(fees)) return '';
+    let feeVolume = fees[paymentChoice];
+    feeVolume = appState.getFullDecimalValue({asset: assetQA, value: feeVolume, functionName: 'ChooseHowToPay'});
+    return feeVolume;
+  }
+
+
+  let calculateTotalQA = () => {
+    let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'});
+    let feeVolume = calculateFeeQA();
+    if (_.isEmpty(feeVolume)) return '';
+    let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
+    let total = Big(volumeQA2).plus(Big(feeVolume)).toFixed(quoteDP);
+    return total;
+  }
+
+
+  let balanceTooSmall = () => {
+    let balanceQA = appState.getBalance(assetQA);
+    if (! misc.isNumericString(balanceQA)) return;
+    let total = calculateTotalQA();
+    if (! misc.isNumericString(total)) return;
+    if(Big(total).gt(Big(balanceQA))) {
+      //log(`Order total (${total} ${assetQA}) is greater than the balance (${balanceQA} ${assetQA}).`);
+      return true;
     }
   }
+
 
   let readPaymentConditions = async () => {
     appState.changeState('ReadArticle', 'payment_conditions');
   }
 
+
   let confirmPaymentChoice = async () => {
     /*
     - If there's no active BUY order, display an error message.
-    - (The user can arrive to this page without an active order by pressing the Back button.)
+    - (The user can arrive at this page without an active order by pressing the Back button.)
     */
     log('confirmPaymentChoice button clicked.');
     setDisableConfirmButton(true);
     setSendOrderMessage('Sending order...');
     refScrollView.current.scrollToEnd();
+    // Save the fee and total in the appState.
+    let feeQA = calculateFeeQA();
+    let totalQA = calculateTotalQA();
+    _.assign(appState.panels.buy, {feeQA, totalQA});
+    // Select the correct payment function.
     if (paymentChoice === 'direct_payment') {
       // Choice: Pay directly from external fiat account.
       await payDirectly();
@@ -156,11 +217,11 @@ let ChooseHowToPay = () => {
     await appState.loadBalances();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     let balanceQA = appState.getBalance(assetQA);
-    let dp = appState.getAssetInfo(assetQA).decimalPlaces;
+    let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
     if (Big(balanceQA).lt(Big(volumeQA))) {
-      let diffString = Big(volumeQA).minus(Big(balanceQA)).toFixed(dp);
-      let balanceString = Big(balanceQA).toFixed(dp);
-      let volumeString = Big(volumeQA).toFixed(dp);
+      let diffString = Big(volumeQA).minus(Big(balanceQA)).toFixed(quoteDP);
+      let balanceString = Big(balanceQA).toFixed(quoteDP);
+      let volumeString = Big(volumeQA).toFixed(quoteDP);
       let msg = `User wants to pay with balance, but: ${assetQA} balance = ${balanceString} and specified volume is ${volumeString}. Difference = ${diffString} ${assetQA}.`;
       log(msg);
       // Next step
@@ -201,7 +262,6 @@ let ChooseHowToPay = () => {
     appState.panels.buy.volumeQA = newVolumeQA;
     volumeQA = appState.panels.buy.volumeQA;
     appState.panels.buy.activeOrder = true;
-    await checkBalance(); // User's balance may now be greater than volumeQA.
     setDisableConfirmButton(false);
     setSendOrderMessage('');
     let suffix = priceDown ? ' in your favour!' : '.';
@@ -245,16 +305,16 @@ let ChooseHowToPay = () => {
 
             <RadioButton.Item label="Pay with balance" value="balance"
               color={colors.standardButtonText}
-              disabled={disablePayWithBalanceButton}
-              style={stylePayWithBalanceButton}
+              disabled={balanceTooSmall()}
+              style={balanceTooSmall() ? styleBalanceButtonDisabled : styleBalanceButton}
               labelStyle={styles.buttonLabel}
             />
 
             <View style={styles.buttonDetail}>
-              <Text style={stylePWBButtonAdditionalText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
-              <Text style={stylePWBButtonAdditionalText}>{`\u2022  `} Processed instantly</Text>
-              <Text style={styles.bold}>{`\u2022  `} Your balance: {balanceQA()} {(balanceQA() != '[loading]') && assetQA}</Text>
-              {disablePayWithBalanceButton &&
+              <Text style={balanceTooSmall() ? styleBalanceButtonAdditionalTextDisabled : styleBalanceButtonAdditionalText}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
+              <Text style={balanceTooSmall() ? styleBalanceButtonAdditionalTextDisabled : styleBalanceButtonAdditionalText}>{`\u2022  `} Processed instantly</Text>
+              {getBalanceDescriptionLine()}
+              {balanceTooSmall() &&
                 <Text style={styles.balanceLowText}>{`\u2022  `} (Balance is too low for this option)</Text>
               }
             </View>
@@ -288,12 +348,12 @@ let ChooseHowToPay = () => {
 
           <View style={styles.orderDetailsLine}>
             <Text style={styles.bold}>Fee</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{zeroVolumeQA()} {assetQA}</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{calculateFeeQA()} {assetQA}</Text>
           </View>
 
           <View style={styles.orderDetailsLine}>
             <Text style={styles.bold}>Total</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'})} {assetQA}</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{calculateTotalQA()} {assetQA}</Text>
           </View>
 
         </View>
@@ -417,6 +477,7 @@ let styles = StyleSheet.create({
   priceChangeMessage: {
     //borderWidth: 1, //testing
     marginTop: scaledHeight(20),
+    paddingHorizontal: scaledWidth(30),
   },
   priceChangeMessageText: {
     fontSize: normaliseFont(16),
@@ -426,6 +487,7 @@ let styles = StyleSheet.create({
   errorMessage: {
     //borderWidth: 1, //testing
     marginTop: scaledHeight(20),
+    paddingHorizontal: scaledWidth(30),
   },
   errorMessageText: {
     color: 'red',
@@ -439,24 +501,24 @@ let styles = StyleSheet.create({
 });
 
 
-let stylePWBButtonDefault = StyleSheet.create({
+let styleBalanceButton = StyleSheet.create({
   borderWidth: 1,
   borderRadius: 18,
   backgroundColor: colors.standardButton,
 });
 
-let stylePWBButtonDisabled = StyleSheet.create({
+let styleBalanceButtonDisabled = StyleSheet.create({
   borderWidth: 1,
   borderRadius: 18,
   backgroundColor: colors.greyedOutIcon,
 });
 
 
-let stylePWBButtonAdditionalTextDefault = StyleSheet.create({
+let styleBalanceButtonAdditionalText = StyleSheet.create({
   fontWeight: 'bold',
 });
 
-let stylePWBButtonAdditionalTextDisabled = StyleSheet.create({
+let styleBalanceButtonAdditionalTextDisabled = StyleSheet.create({
   fontWeight: 'bold',
   color: colors.greyedOutIcon,
 });
