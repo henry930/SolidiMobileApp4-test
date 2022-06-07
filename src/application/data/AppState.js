@@ -857,7 +857,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return countries;
     }
 
-    this.loadPrices = async () => {
+    this.loadTicker = async () => {
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
         apiRoute: 'ticker',
@@ -913,19 +913,19 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
-    this.getPrices = () => {
+    this.getTicker = () => {
       return this.state.apiData.ticker;
     }
 
-    this.getPrice = (market) => {
-      // Get the price held in the appState.
+    this.getTickerForMarket = (market) => {
+      // Get the ticker price held in the appState.
       if (_.isUndefined(this.state.apiData.ticker[market])) return null;
       if (_.isUndefined(this.state.apiData.ticker[market].price)) return null;
       return this.state.apiData.ticker[market].price;
     }
 
-    this.getPrevPrice = (market) => {
-      // Get the previous price held in the appState.
+    this.getPreviousTickerForMarket = (market) => {
+      // Get the previous ticker price held in the appState.
       if (_.isUndefined(this.state.prevAPIData.ticker[market])) return null;
       if (_.isUndefined(this.state.prevAPIData.ticker[market].price)) return null;
       return this.state.prevAPIData.ticker[market].price;
@@ -1599,10 +1599,10 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       getCountries: this.getCountries,
       getBaseAssets: this.getBaseAssets,
       getQuoteAssets: this.getQuoteAssets,
-      loadPrices: this.loadPrices,
-      getPrices: this.getPrices,
-      getPrice: this.getPrice,
-      getPrevPrice: this.getPrevPrice,
+      loadTicker: this.loadTicker,
+      getTicker: this.getTicker,
+      getTickerForMarket: this.getTickerForMarket,
+      getPreviousTickerForMarket: this.getPreviousTickerForMarket,
       setPrice: this.setPrice,
       setPrevPrice: this.setPrevPrice,
       getZeroValue: this.getZeroValue,
