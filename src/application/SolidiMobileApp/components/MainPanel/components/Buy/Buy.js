@@ -24,7 +24,7 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
 We don't use a loading spinner here. Instead, we show '[loading]' for the baseAsset amount until we get price data back from the server.
 
-We focus on keeping the fiat quoteAsset volume (usually GBP at the moment) constant, because our target customer thinks in terms of GBP rather than in amounts of a crypto asset.
+We focus on keeping the fiat quoteAsset volume (at the moment, only GBP) constant, because our target customer thinks in terms of GBP rather than in amounts of a crypto asset.
 
 User changes a value:
 - Either baseAssetVolume or quoteAssetVolume can be changed.
@@ -126,19 +126,6 @@ let Buy = () => {
   let fetchBestPriceForQuoteAssetVolume = async () => {
     // We know the quoteAssetVolume. We want to find the best price in terms of baseAssetVolume.
     log(`START fetchBestPriceForQuoteAssetVolume: volumeQA = ${volumeQA}`);
-    let volumeQA2 = volumeQA; // We may have to edit volumeQA slightly.
-    let invalidVolumeQA = false;
-    if (['[loading]', '[not loaded]'].includes(volumeQA2)) invalidVolumeQA = true;
-    if (volumeQA2 === '') invalidVolumeQA = true;
-    if (volumeQA2.match(/^0+$/)) invalidVolumeQA = true; // only zeros.
-    if (volumeQA2.charAt(0) == '.') volumeQA2 = '0' + volumeQA2; // slight edit.
-    if (volumeQA2.match(/^0+\.0+$/)) invalidVolumeQA = true; // only zeros.
-    if (! misc.isNumericString(volumeQA2)) invalidVolumeQA = true;
-    if (invalidVolumeQA) {
-      log('- invalid volumeQA value');
-      setErrorMessage('');
-      return;
-    }
     if (lastUserInput == 'volumeBA') {
       /*
       - If the user changes volumeQA, this will cause best price (volumeBA) to be fetched.
@@ -147,12 +134,23 @@ let Buy = () => {
       log(`- lastUserInput = ${lastUserInput}. Stopping here.`);
       return;
     }
+    let invalidVolumeQA = false;
+    if (['[loading]', '[not loaded]'].includes(volumeQA)) invalidVolumeQA = true;
+    if (volumeQA === '') invalidVolumeQA = true;
+    if (volumeQA.match(/^0+$/)) invalidVolumeQA = true; // only zeros.
+    if (volumeQA.match(/^0+\.0+$/)) invalidVolumeQA = true; // only zeros.
+    if (! misc.isNumericString(volumeQA)) invalidVolumeQA = true;
+    if (invalidVolumeQA) {
+      log('- invalid volumeQA value');
+      setErrorMessage('');
+      return;
+    }
     setLoadingBestPrice(true);
     setVolumeBA('[loading]');
-    appState.abortAllRequests(); // Bit hacky but we'll do this for now to speed up the price updates (by ignoring any requests in the pipeline).
-    // This also avoids any problem with previous requests trying to update the state.
+    appState.abortAllRequests({tag: 'best_volume_price'}); // Bit hacky but we'll do this for now to speed up the price updates (by ignoring any best price requests in the pipeline).
+    // This also avoids any problem with previous best price requests trying to update the state.
     let market = assetBA + '/' + assetQA;
-    let params = {market, side: 'BUY', baseOrQuoteAsset: 'quote', quoteAssetVolume: volumeQA2};
+    let params = {market, side: 'BUY', baseOrQuoteAsset: 'quote', quoteAssetVolume: volumeQA};
     let output = await appState.fetchBestPriceForASpecificVolume(params);
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     if (_.isUndefined(output)) {
@@ -164,17 +162,17 @@ let Buy = () => {
       setVolumeBA('[not loaded]');
       let error = output.error;
       if (error == "ValidationError: INSUFFICIENT_ORDERBOOK_VOLUME") {
-        let msg = `Unfortunately, we don't currently have enough ${assetBA} in stock to match ${volumeQA2} ${assetQA}.`;
+        let msg = `Unfortunately, we don't currently have enough ${assetBA} in stock to match ${volumeQA} ${assetQA}.`;
         let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
         let minVolumeQA = '0.' + '0'.repeat(quoteDP - 1) + '1'; // e.g. "0.01"
-        if (! (Big(volumeQA2).eq(minVolumeQA))) {
+        if (! (Big(volumeQA).eq(minVolumeQA))) {
           msg += ` Please choose a lower ${assetQA} amount.`;
         } else {
           msg += ` The ${market} market is currently empty.`;
         }
         setErrorMessage(msg);
       } else if (error == "ValidationError: QUOTE_VOLUME_IS_TOO_SMALL") {
-        let msg = `Unfortunately, ${volumeQA2} ${assetQA} is too small an amount for us to process. Please choose a larger ${assetQA} amount.`;
+        let msg = `Unfortunately, ${volumeQA} ${assetQA} is too small an amount for us to process. Please choose a larger ${assetQA} amount.`;
         setErrorMessage(msg);
       } else {
         setErrorMessage(misc.itemToString(output.error));
@@ -212,19 +210,6 @@ let Buy = () => {
   let fetchBestPriceForBaseAssetVolume = async () => {
     // We know the baseAssetVolume. We want to find the best price in terms of quoteAssetVolume.
     log(`START fetchBestPriceForBaseAssetVolume: volumeBA = ${volumeBA}`);
-    let volumeBA2 = volumeBA; // We may have to edit volumeBA slightly.
-    let invalidVolumeBA = false;
-    if (['[loading]', '[not loaded]'].includes(volumeBA2)) invalidVolumeBA = true;
-    if (volumeBA2 === '') invalidVolumeBA = true;
-    if (volumeBA2.match(/^0+$/)) invalidVolumeBA = true; // only zeros.
-    if (volumeBA2.charAt(0) == '.') volumeBA2 = '0' + volumeBA2; // slight edit.
-    if (volumeBA2.match(/^0+\.0+$/)) invalidVolumeBA = true; // only zeros.
-    if (! misc.isNumericString(volumeBA2)) invalidVolumeBA = true;
-    if (invalidVolumeBA) {
-      log('- invalid volumeBA value');
-      setErrorMessage('');
-      return;
-    }
     if (lastUserInput == 'volumeQA') {
       /*
       - If the user changes volumeBA, this will cause best price (volumeQA) to be fetched.
@@ -233,34 +218,45 @@ let Buy = () => {
       log(`- lastUserInput = ${lastUserInput}. Stopping here.`);
       return;
     }
+    let invalidVolumeBA = false;
+    if (['[loading]', '[not loaded]'].includes(volumeBA)) invalidVolumeBA = true;
+    if (volumeBA === '') invalidVolumeBA = true;
+    if (volumeBA.match(/^0+$/)) invalidVolumeBA = true; // only zeros.
+    if (volumeBA.match(/^0+\.0+$/)) invalidVolumeBA = true; // only zeros.
+    if (! misc.isNumericString(volumeBA)) invalidVolumeBA = true;
+    if (invalidVolumeBA) {
+      log('- invalid volumeBA value');
+      setErrorMessage('');
+      return;
+    }
     setLoadingBestPrice(true);
     setVolumeQA('[loading]');
-    appState.abortAllRequests(); // Bit hacky but we'll do this for now to speed up the price updates (by ignoring any requests that currently in the request pipeline).
-    // This also avoids any problem with previous requests trying to update the state.
+    appState.abortAllRequests({tag: 'best_volume_price'}); // Bit hacky but we'll do this for now to speed up the price updates (by ignoring any best price requests in the pipeline).
+    // This also avoids any problem with previous best price requests trying to update the state.
     let market = assetBA + '/' + assetQA;
-    let params = {market, side: 'BUY', baseOrQuoteAsset: 'base', baseAssetVolume: volumeBA2};
+    let params = {market, side: 'BUY', baseOrQuoteAsset: 'base', baseAssetVolume: volumeBA};
     let output = await appState.fetchBestPriceForASpecificVolume(params);
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     if (_.isUndefined(output)) {
       // Happens if the request was aborted.
       return;
     }
-    lj(output);
+    //lj(output);
     if (_.has(output, 'error')) {
       setVolumeQA('[not loaded]');
       let error = output.error;
       if (error == "ValidationError: INSUFFICIENT_ORDERBOOK_VOLUME") {
-        let msg = `Unfortunately, we don't currently have enough ${assetQA} in stock to match ${volumeBA2} ${assetBA}.`;
+        let msg = `Unfortunately, we don't currently have enough ${assetQA} in stock to match ${volumeBA} ${assetBA}.`;
         let baseDP = appState.getAssetInfo(assetBA).decimalPlaces;
         let minVolumeBA = '0.' + '0'.repeat(baseDP - 1) + '1'; // e.g. "0.00000001"
-        if (! (Big(volumeBA2).eq(minVolumeBA))) {
+        if (! (Big(volumeBA).eq(minVolumeBA))) {
           msg += ` Please choose a lower ${assetBA} amount.`;
         } else {
           msg += ` The ${market} market is currently empty.`;
         }
         setErrorMessage(msg);
       } else if (error == "ValidationError: QUOTE_VOLUME_IS_TOO_SMALL") {
-        let msg = `Unfortunately, ${volumeBA2} ${assetBA} is too small an amount for us to process. Please choose a larger ${assetBA} amount.`;
+        let msg = `Unfortunately, ${volumeBA} ${assetBA} is too small an amount for us to process. Please choose a larger ${assetBA} amount.`;
         setErrorMessage(msg);
       } else {
         setErrorMessage(misc.itemToString(output.error));
@@ -310,15 +306,12 @@ let Buy = () => {
     // The second digit sequence can only be as long as the quoteAsset's decimalPlaces.
     let regexString = `^\\d+(\\.\\d{0,${quoteDP}})?$`;
     let regex = new RegExp(regexString);
-    // This matches a period + digit sequence. (Happens if a user deletes the initial digit sequence).
-    let regexString2 = `^\\.\\d{0,${quoteDP}}$`;
-    let regex2 = new RegExp(regexString2);
     if (! _.isString(newVolumeQA)) {
       // Not sure if this could actually happen.
     } else if (_.isEmpty(newVolumeQA)) {
       // We permit the user to completely empty the input box. It feels better.
       setVolumeQA(newVolumeQA);
-    } else if (! regex.test(newVolumeQA) && ! regex2.test(newVolumeQA)) {
+    } else if (! regex.test(newVolumeQA)) {
       // No need to do anything. The input simply won't accept any non decimal-string input,
       // such as symbols or alphabet characters.
     } else {

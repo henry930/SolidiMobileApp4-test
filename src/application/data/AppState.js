@@ -332,8 +332,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       // Prepare for cancelling requests if the user changes screen.
       // Note: Some API requests should not be aborted if we change screen, so we have an optional noAbort parameter.
       if (_.isNil(params)) params = {};
-      let {noAbort} = params;
+      let {tag, noAbort} = params;
       let controller = new AbortController();
+      controller.tag = tag;
       if (noAbort) return controller;
       // Get a random integer from 0 to 999999.
       do { var controllerID = Math.floor(Math.random() * 10**6);
@@ -342,15 +343,21 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return controller;
     }
 
-    this.abortAllRequests = () => {
+    this.abortAllRequests = (params) => {
+      if (_.isNil(params)) params = {};
+      let {tag} = params;
+      // If tag is supplied, only abort requests with this tag value.
       let controllers = this.state.abortControllers;
       //log({controllers})
-      // Remove aborted controllers.
+      // Remove any previously aborted controllers.
       let activeControllers = _.entries(controllers).filter(([key, value]) => value !== 'aborted');
       controllers = _.fromPairs(activeControllers);
       // Abort any active controllers.
       for (let [controllerID, controller] of _.entries(controllers)) {
-        if (controller !== 'aborted') controller.abort();
+        if (controller !== 'aborted') {
+          if (tag && controller.tag !== tag) continue;
+          controller.abort();
+        }
         controllers[controllerID] = 'aborted';
         log(`Aborted controller ${controllerID}`);
       }
@@ -370,10 +377,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       if (_.isNil(keyNames)) keyNames = [];
       if (_.isNil(noAbort)) noAbort = false;
       if (this.state.mainPanelState === 'RequestFailed') return;
-      let abortController = this.state.createAbortController({noAbort});
+      let tag = apiRoute.split('/')[0];
+      let abortController = this.state.createAbortController({tag, noAbort});
       let data = await this.state.apiClient.publicMethod({httpMethod, apiRoute, params, abortController});
-      // Tmp: Ticker isn't currently working.
-      if (apiRoute == 'ticker') delete data.error;
       // Examine errors.
       if (_.has(data, 'error')) {
         let error = data.error;
@@ -430,7 +436,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       if (_.isNil(keyNames)) keyNames = [];
       if (_.isNil(noAbort)) noAbort = false;
       if (this.state.mainPanelState === 'RequestFailed') return;
-      let abortController = this.state.createAbortController({noAbort});
+      let tag = apiRoute.split('/')[0];
+      let abortController = this.state.createAbortController({tag, noAbort});
       let data = await this.state.apiClient.privateMethod({httpMethod, apiRoute, params, abortController});
       if (_.has(data, 'error')) {
         let error = data.error;
