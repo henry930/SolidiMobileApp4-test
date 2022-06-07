@@ -37,7 +37,7 @@ let MakePayment = () => {
   }
 
   // Load order details.
-  ({volumeQA, volumeBA, assetQA, assetBA} = appState.panels.buy);
+  ({volumeQA, volumeBA, assetQA, assetBA, feeQA, totalQA} = appState.panels.buy);
 
   // Initial setup.
   useEffect( () => {
@@ -133,7 +133,7 @@ let MakePayment = () => {
 
       <View style={styles.instructionsSection}>
         <View style={styles.instructionItem}>
-          <Text style={styles.bold}>{`\u2022  `} You are buying {volumeBA} {appState.getAssetInfo(assetBA).displayString} for {appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'MakePayment'})} {appState.getAssetInfo(assetQA).displayString}.</Text>
+          <Text style={styles.bold}>{`\u2022  `} You are buying {volumeBA} {appState.getAssetInfo(assetBA).displayString} for {appState.getFullDecimalValue({asset: assetQA, value: totalQA, functionName: 'MakePayment'})} {appState.getAssetInfo(assetQA).displayString}.</Text>
         </View>
         <View style={styles.instructionItem}>
           <Text style={styles.bold}>{`\u2022  `} Send payment now using your online or telephone banking.</Text>
@@ -159,10 +159,10 @@ let MakePayment = () => {
         <View style={styles.paymentDetailsLine}>
           <Text style={styles.paymentDetailText}>Amount</Text>
           <View style={styles.paymentDetailValue}>
-            <Text style={styles.paymentDetailText}>{appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'MakePayment'})} {assetQA}</Text>
+            <Text style={styles.paymentDetailText}>{appState.getFullDecimalValue({asset: assetQA, value: totalQA, functionName: 'MakePayment'})} {assetQA}</Text>
             <ImageButton imageName='clone' imageType='icon'
               styles={styleCopyButton}
-              onPress={ () => { copyToClipboard(volumeQA) } }
+              onPress={ () => { copyToClipboard(totalQA) } }
             />
           </View>
         </View>
