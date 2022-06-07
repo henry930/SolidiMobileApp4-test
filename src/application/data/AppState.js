@@ -36,6 +36,8 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let jd = JSON.stringify;
 
 // Settings
+let initialMainPanelState = 'Buy';
+let initialPageName = 'default';
 let domains = {
   dev: 't3.solidi.co',
   stag: 't10.solidi.co',
@@ -48,7 +50,7 @@ let appName = 'SolidiMobileApp';
 let appAPIVersion = '1';
 let autoLoginOnDevAndStag = false;
 let autoLoginCredentials = {
-  email: 'johnqfish1@foo.com',
+  email: 'johnqfish@foo.com',
   password: 'bigFish6',
 }
 
@@ -73,8 +75,8 @@ class AppStateProvider extends Component {
     super(props);
 
     // Can set this initial state for testing.
-    this.initialMainPanelState = 'Buy';
-    this.initialPageName = 'default';
+    this.initialMainPanelState = initialMainPanelState;
+    this.initialPageName = initialPageName;
 
     // Misc
     this.numberOfFooterButtonsToDisplay = 3;
