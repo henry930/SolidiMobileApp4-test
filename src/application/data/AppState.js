@@ -678,7 +678,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let api_latest_version = this.state.apiData.api_latest_version;
       let check = api_latest_version !== appAPIVersion;
       let msg = `apiVersion in app: ${appAPIVersion}. Latest apiVersion from API data: ${api_latest_version}.`;
-      log(msg);
+      //log(msg);
       return check;
     }
 
