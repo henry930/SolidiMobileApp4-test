@@ -1219,14 +1219,14 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       - Price values do not include fees. Fee values are included separately.
       */
       let funcName = 'fetchPricesForASpecificVolume'
-      let {market, side, baseAssetVolume, quoteAssetVolume, baseOrQuoteAsset} = params;
+      let {market, side, baseOrQuoteAsset, baseAssetVolume, quoteAssetVolume} = params;
       if (_.isNil(market)) { console.error(`${funcName}: market required`); return; }
       if (_.isNil(side)) { console.error(`${funcName}: side required`); return; }
+      if (_.isNil(baseOrQuoteAsset)) { console.error(`${funcName}: baseOrQuoteAsset required`); return; }
       if (_.isNil(baseAssetVolume) && _.isNil(quoteAssetVolume)) {
         console.error(`${funcName}: One of [baseAssetVolume, quoteAssetVolume] is required`);
         return;
       }
-      if (_.isNil(baseOrQuoteAsset)) { console.error(`${funcName}: baseOrQuoteAsset required`); return; }
       let data = await this.state.privateMethod({
         apiRoute: 'volume_price/' + market,
         params,
