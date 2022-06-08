@@ -150,7 +150,8 @@ let Buy = () => {
     appState.abortAllRequests({tag: 'best_volume_price'}); // Bit hacky but we'll do this for now to speed up the price updates (by ignoring any best price requests in the pipeline).
     // This also avoids any problem with previous best price requests trying to update the state.
     let market = assetBA + '/' + assetQA;
-    let params = {market, side: 'BUY', baseOrQuoteAsset: 'quote', quoteAssetVolume: volumeQA};
+    let side = 'BUY';
+    let params = {market, side, baseOrQuoteAsset: 'quote', quoteAssetVolume: volumeQA};
     let output = await appState.fetchBestPriceForASpecificVolume(params);
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     if (_.isUndefined(output)) {
