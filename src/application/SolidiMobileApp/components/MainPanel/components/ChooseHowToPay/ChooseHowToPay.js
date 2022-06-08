@@ -235,21 +235,34 @@ let ChooseHowToPay = () => {
   }
 
 
-  let handlePriceChange = async (output) => {
+  let handlePriceChange = async (priceChange) => {
     /* If the price has changed, we'll:
     - Update the stored order values and re-render.
     - Tell the user what's happened and ask them if they'd like to go ahead.
-    - Note: We keep baseAssetVolume constant (i.e. the amount the user is buying), so we update quoteAssetVolume.
-    - Future: Keep quoteAssetVolume constant, and recalculate baseAssetVolume ?
+    - We don't want to change the amount the user is spending (because that's what they expect to spend), so we update baseAssetVolume.
     */
-    let newVolumeQA = output.quoteAssetVolume;
-    let priceDown = Big(volumeQA).gt(Big(newVolumeQA));
-    let dpQA = appState.getAssetInfo(assetQA).decimalPlaces;
-    let priceDiff = Big(volumeQA).minus(Big(newVolumeQA)).toFixed(dpQA);
-    log(`price change: volumeQA = ${volumeQA}, newVolumeQA = ${newVolumeQA}, priceDiff = ${priceDiff}`);
+    /* Example output: (where quoteAssetVolume was originally "10.00")
+      {
+        "baseAssetVolume": "0.00036922",
+        "market": "BTC/GBP",
+        "quoteAssetVolume": "11.00",
+        "result": "PRICE_CHANGE"
+      }
+    */
+    // We actually ignore the price change result, and re-query the API using the original quoteAssetVolume.
+    let market = assetBA + '/' + assetQA;
+    let params = {market, side: 'BUY', baseOrQuoteAsset: 'quote', quoteAssetVolume: volumeQA};
+    let output = await appState.fetchBestPriceForASpecificVolume(params);
+    //lj(output); // Example: {"price":"0.00040100"}
+    // Future: Check for errors here.
+    let newVolumeBA = output.price;
+    // priceDown = Did we, for the same quoteAssetVolume, get more baseAssetVolume ?
+    let priceDown = Big(newVolumeBA).gt(Big(volumeBA));
+    let baseDP = appState.getAssetInfo(assetBA).decimalPlaces;
+    let priceDiff = Big(newVolumeBA).minus(Big(volumeBA)).toFixed(baseDP);
+    log(`price change: volumeBA = ${volumeBA}, newVolumeBA = ${newVolumeBA}, priceDiff = ${priceDiff}`);
     // Rewrite the order and save it.
-    appState.panels.buy.volumeQA = newVolumeQA;
-    volumeQA = appState.panels.buy.volumeQA;
+    appState.panels.buy.volumeBA = newVolumeBA;
     appState.panels.buy.activeOrder = true;
     setDisableConfirmButton(false);
     setSendOrderMessage('');
