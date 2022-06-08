@@ -41,6 +41,7 @@ let ChooseHowToPay = () => {
   let permittedPageNames = 'default direct_payment balance'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToPay');
   if (pageName == 'default') pageName = 'direct_payment';
+  //if (pageName == 'default') pageName = 'balance'; //testing
 
   // State
   let [paymentChoice, setPaymentChoice] = useState(pageName);
@@ -89,25 +90,13 @@ let ChooseHowToPay = () => {
   }
 
 
-  let getBalanceDescriptionLine = () => {
-    let balanceQA = appState.getBalance(assetQA);
-    let result = 'Your balance: ' + balanceQA;
-    if (balanceQA != '[loading]') {
-      result += ' ' + assetQA;
-    }
-    return (
-      <Text style={styles.bold}>{`\u2022  `} {result}</Text>
-    )
-  }
-
-
   let fetchFeesForEachPaymentChoice = async () => {
     // Fees may differ depending on the volume and on the user (e.g. whether the user has crossed a fee inflection point).
     // We therefore request the price and fee for each payment choice from the API, using the specific baseAssetVolume.
     let market = assetBA + '/' + assetQA;
     let side = 'BUY';
     let baseOrQuoteAsset = 'base';
-    let params = {market, side, baseAssetVolume: volumeBA, baseOrQuoteAsset};
+    let params = {market, side, baseOrQuoteAsset, baseAssetVolume: volumeBA};
     let output = await appState.fetchPricesForASpecificVolume(params);
     //lj(output);
     if (_.has(output, 'error')) {
@@ -128,8 +117,8 @@ let ChooseHowToPay = () => {
     // Rename 'solidi' key to 'direct_payment'.
     result['direct_payment'] = result['solidi'];
     delete result['solidi'];
-    // tmp
-    result['direct_payment'] = '0.55'
+    // Testing
+    //result['direct_payment'] = '0.55';
     return result;
   }
 
@@ -171,7 +160,7 @@ let ChooseHowToPay = () => {
 
   let confirmPaymentChoice = async () => {
     /*
-    - If there's no active BUY order, display an error message.
+    - Future: If there's no active BUY order, display an error message.
     - (The user can arrive at this page without an active order by pressing the Back button.)
     */
     log('confirmPaymentChoice button clicked.');
@@ -269,6 +258,18 @@ let ChooseHowToPay = () => {
     setPriceChangeMessage(msg);
     refScrollView.current.scrollToEnd();
     triggerRender(renderCount+1);
+  }
+
+
+  let getBalanceDescriptionLine = () => {
+    let balanceQA = appState.getBalance(assetQA);
+    let result = 'Your balance: ' + balanceQA;
+    if (balanceQA != '[loading]') {
+      result += ' ' + assetQA;
+    }
+    return (
+      <Text style={styles.bold}>{`\u2022  `} {result}</Text>
+    )
   }
 
 
