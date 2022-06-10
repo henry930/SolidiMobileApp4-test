@@ -42,7 +42,7 @@ let ChooseHowToPay = () => {
   let permittedPageNames = 'default solidi balance'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ChooseHowToPay');
   if (pageName == 'default') pageName = 'solidi';
-  //if (pageName == 'default') pageName = 'balance'; //testing
+  //pageName = 'balance'; //testing
 
   // State
   let [isLoading, setIsLoading] = useState(true);
@@ -138,7 +138,7 @@ let ChooseHowToPay = () => {
      paymentChoiceDetails['solidi'].feeVolume = '0.32';
      paymentChoiceDetails['solidi'].baseAssetVolume = '0.00039000';
    }
-   lj({paymentChoiceDetails})
+   lj({paymentChoiceDetails});
    return paymentChoiceDetails;
   }
 
@@ -194,8 +194,8 @@ let ChooseHowToPay = () => {
     _.assign(appState.panels.buy, {feeQA, totalQA});
     // Save the selectedVolumeBA (selected via paymentChoice from paymentChoiceDetails) in the appState.
     appState.panels.buy.volumeBA = selectedVolumeBA;
-    log("appState.panels.buy.volumeBA: " + appState.panels.buy.volumeBA);
     volumeBA = selectedVolumeBA;
+    // Create the order object.
     let buyOrder = {volumeQA, volumeBA, assetQA, assetBA, paymentMethod: paymentChoice};
     // Select the correct payment function.
     if (paymentChoice === 'solidi') {
@@ -211,7 +211,7 @@ let ChooseHowToPay = () => {
   let payDirectly = async (buyOrder) => {
     let output = await appState.sendBuyOrder(buyOrder);
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    lj(output)
+    lj(output);
     if (_.has(output, 'error')) {
       setErrorMessage(misc.itemToString(output.error));
     } else if (_.has(output, 'result')) {
@@ -248,7 +248,7 @@ let ChooseHowToPay = () => {
     // Call to the server and instruct it to pay for the order with the user's balance.
     let output = await appState.sendBuyOrder(buyOrder);
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    lj(output)
+    lj(output);
     if (_.has(output, 'error')) {
       setErrorMessage(misc.itemToString(output.error));
     } else if (_.has(output, 'result')) {
