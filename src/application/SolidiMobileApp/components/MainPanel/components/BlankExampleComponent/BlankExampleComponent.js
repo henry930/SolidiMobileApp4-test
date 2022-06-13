@@ -65,7 +65,7 @@ let BlankExampleComponent = () => {
         <Text style={styles.headingText}>BlankExampleComponent</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={true} style={styles.mainScrollView}>
+      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
       <Text style={styles.bold}>{'\n'} {`\u2022  `} [some text]</Text>
 
@@ -109,8 +109,6 @@ let styles = StyleSheet.create({
   headingText: {
     fontSize: normaliseFont(20),
     fontWeight: 'bold',
-  },
-  mainScrollView: {
   },
   bold: {
     fontWeight: 'bold',
