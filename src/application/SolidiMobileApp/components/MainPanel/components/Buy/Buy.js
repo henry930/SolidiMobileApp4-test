@@ -487,6 +487,7 @@ let styles = StyleSheet.create({
     paddingHorizontal: scaledWidth(15),
     width: '100%',
     height: '100%',
+    //borderWidth: 1, // testing
   },
   panelSubContainer: {
     paddingTop: scaledHeight(10),
