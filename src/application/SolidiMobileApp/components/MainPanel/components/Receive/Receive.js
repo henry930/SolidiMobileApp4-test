@@ -372,7 +372,6 @@ let Receive = () => {
           }}
           maxHeight={scaledHeight(300)}
         />
-
       </View>
 
       <View style={styles.description1}>
