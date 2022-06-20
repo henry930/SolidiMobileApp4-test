@@ -125,6 +125,7 @@ let Buy = () => {
 
   let fetchBestPriceForQuoteAssetVolume = async () => {
     // We know the quoteAssetVolume. We want to find the best price in terms of baseAssetVolume.
+    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     log(`START fetchBestPriceForQuoteAssetVolume: volumeQA = ${volumeQA}`);
     if (lastUserInput == 'volumeBA') {
       /*
