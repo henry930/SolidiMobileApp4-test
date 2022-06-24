@@ -58,5 +58,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+  <key>NSCameraUsageDescription</key>
+  <string>Solidi requires access to your camera to take a photo of an identity verification document</string>
 </dict>
 </plist>
