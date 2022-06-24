@@ -255,6 +255,7 @@ let IdentityVerification = () => {
   let generateTakePhoto1Message = () => {
     let msg = '';
     if (! _.isNil(appState.panels.identityVerification.photo1)) {
+      log('Photo 1: ' + JSON.stringify(appState.panels.identityVerification.photo1))
       msg = 'Photo ready.';
     }
     return msg;
@@ -264,6 +265,7 @@ let IdentityVerification = () => {
   let generateTakePhoto2Message = () => {
     let msg = '';
     if (! _.isNil(appState.panels.identityVerification.photo2)) {
+      log('Photo 2: ' + JSON.stringify(appState.panels.identityVerification.photo2))
       msg = 'Photo ready.';
     }
     return msg;
@@ -322,7 +324,7 @@ let IdentityVerification = () => {
     }
     lj({photo})
     let fileExtension = ''; // An empty fileExtension will trigger an error on the server.
-    jpgTypes = 'image/jpg image/jpeg'.split(' ');
+    let jpgTypes = 'image/jpg image/jpeg'.split(' ');
     if (_.has(photo, 'type') && jpgTypes.includes(photo.type)) fileExtension = '.jpg';
     // Load the file data from the photo object's uri.
     let fileURI = photo.uri;
