@@ -62,7 +62,6 @@ const styles = StyleSheet.create({
   },
   header: {
     height: '10%',
-    width: '100%',
   },
   mainPanel: {
     height: '78%',

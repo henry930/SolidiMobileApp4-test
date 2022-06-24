@@ -97,7 +97,7 @@ let styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: '25%',
-    alignItems: 'center',
+    //alignItems: 'center', // Don't do this - for some reason it causes the clickable area around the back and settings buttons to collapse down to a small width around the icon.
     //borderWidth: 1, //testing
   },
 });
