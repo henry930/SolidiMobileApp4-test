@@ -172,6 +172,19 @@ let itemToString = (x) => {
 }
 
 
+let getCurrentDate = () => {
+  // Returns current date in yyyy-mm-dd format.
+  let today = new Date();
+  let year = today.getFullYear();
+  let month = String(today.getMonth() + 1);
+  if (month.length == 1) month = '0' + month;
+  let day = today.getDate();day
+  if (day.length == 1) day = '0' + day;
+  let date = year + '-' + month + '-' + day;
+  return date;
+}
+
+
 
 
 let misc = {
@@ -191,6 +204,7 @@ let misc = {
   camelCaseToCapitalisedWords,
   removeFinalDecimalPointIfItExists,
   itemToString,
+  getCurrentDate,
 }
 
 
