@@ -69,10 +69,14 @@ let pinStorageKey = `PIN_${appTier}_${appName}_${domain}`;
 let AppStateContext = React.createContext();
 
 
+
+
 class AppStateProvider extends Component {
+
 
   constructor(props) {
     super(props);
+
 
     // Can set this initial state for testing.
     this.initialMainPanelState = initialMainPanelState;
@@ -89,6 +93,7 @@ class AppStateProvider extends Component {
 Authenticate Login PIN
 `.replace(/\n/g, ' ').trim().replace(/ {2,}/g, ' ').split(' ');
 
+
     // Shortcut function for changing the mainPanelState.
     this.changeState = (stateName, pageName) => {
       if (! mainPanelStates.includes(stateName)) {
@@ -96,6 +101,7 @@ Authenticate Login PIN
       }
       this.state.setMainPanelState({mainPanelState: stateName, pageName});
     }
+
 
     // Function for changing the mainPanelState.
     this.setMainPanelState = (newState, stashed=false) => {
@@ -169,6 +175,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.stateChangeIDHasChanged = (stateChangeID, mainPanelState) => {
       let stateChangeID2 = this.state.stateChangeID;
       let location = mainPanelState ? mainPanelState + ': ' : '';
@@ -179,12 +186,14 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return false;
     }
 
+
     this.stashCurrentState = () => {
       this.state.stashState({
         mainPanelState: this.state.mainPanelState,
         pageName: this.state.pageName,
       });
     }
+
 
     this.stashState = (stateX) => {
       // A state consists of a mainPanelState and a pageName.
@@ -195,6 +204,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       this.state.stashedState = stateX;
     }
 
+
     this.loadStashedState = () => {
       // If there's no stashed state, don't do anything.
       if (_.isEmpty(this.state.stashedState)) return;
@@ -203,6 +213,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let stashed = true;
       this.state.setMainPanelState(this.state.stashedState, stashed);
     }
+
 
     this.resetStateHistory = () => {
       this.state.stateHistoryList = [];
@@ -215,6 +226,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let msg = `Reset state history to: ${jd(this.state.stateHistoryList)}`;
       log(msg);
     }
+
 
     this.decrementStateHistory = () => {
       let stateHistoryList = this.state.stateHistoryList;
@@ -258,6 +270,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.setFooterIndex = (newIndex) => {
       let minIndex = 0;
       let maxIndex = footerButtonList.length - 1;
@@ -267,6 +280,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         this.setState({footerIndex: newIndex});
       }
     }
+
 
     this.generalSetup = async () => {
       // Create public API client.
@@ -300,6 +314,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.login = async ({email, password}) => {
       if (this.state.user.isAuthenticated) return;
       // Create public API client.
@@ -329,6 +344,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       await this.state.loadInitialStuffAboutUser();
     }
 
+
     this.createAbortController = (params) => {
       // Prepare for cancelling requests if the user changes screen.
       // Note: Some API requests should not be aborted if we change screen, so we have an optional noAbort parameter.
@@ -343,6 +359,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       this.state.abortControllers[controllerID] = controller;
       return controller;
     }
+
 
     this.abortAllRequests = (params) => {
       if (_.isNil(params)) params = {};
@@ -365,6 +382,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       // Future problem: If the user switches back and forth between screens fast enough, it's perhaps possible that the reassignment here of the altered controllers object to the appState will not include some new requests.
       this.state.abortControllers = controllers;
     }
+
 
     // Note: publicMethod and privateMethod have to be kept in sync.
     // Future: Perhaps they could be refactored into a single function with two wrapper functions.
@@ -427,6 +445,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
       return data;
     }
+
 
     this.privateMethod = async (args) => {
       let {functionName, httpMethod, apiRoute, params, keyNames, noAbort} = args;
@@ -492,6 +511,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     // Useful during development.
     this.setAPIData = ({key, data}) => {
       let msg = `setAPIData: set state.apiData.${key} to hold: ${JSON.stringify(data, null, 2)}`;
@@ -501,6 +521,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       apiData[key] = data;
       this.setState({apiData});
     }
+
 
     this.authenticateUser = () => {
       // If login credentials (email and password) aren't stored in the Keychain, go to Authenticate (where the user can choose between Register and Login).
@@ -518,6 +539,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return this.state.changeState('Login');
     }
 
+
     this.deletePIN = async (deleteFromKeychain=false) => {
       // Delete the PIN in memory.
       this.state.user.pin = '';
@@ -528,6 +550,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
       log(msg);
     }
+
 
     this.choosePIN = async () => {
       // Deleting the PIN happens first, because it will affect the flow in subsequent pages.
@@ -546,6 +569,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       this.state.setMainPanelState({mainPanelState: 'PIN', pageName: 'choose'});
     }
 
+
     this.loadPIN = async () => {
       /*
       - We load the PIN from the keychain if it exists.
@@ -563,6 +587,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         log(`PIN loaded from Keychain: ${pin}`);
       }
     }
+
 
     this.checkForLoginCredentials = async () => {
       /*
@@ -584,6 +609,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       log(`No login credentials found in Keychain.`);
     }
 
+
     this.logout = async () => {
       // Note: We don't ever delete the PIN from app memory or from the keychain.
       // Delete user's email and password from memory and from keychain.
@@ -597,6 +623,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       this.state.resetStateHistory();
     }
 
+
     this.lockApp = () => {
       this.state.appLocked = true;
       this.cancelTimers();
@@ -604,6 +631,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       this.state.stashCurrentState();
       this.state.authenticateUser();
     }
+
 
     this.resetLockAppTimer = async () => {
       let currentTimerID = this.state.lockAppTimerID;
@@ -624,6 +652,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let timerID = setTimeout(callLockApp, waitTimeSeconds * 1000);
       this.state.lockAppTimerID = timerID;
     }
+
 
     this.cancelTimers = () => {
       // Reset the "lockApp" timer.
@@ -648,6 +677,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         log(`Cleared interval: requestTimeout (timerID=${timerID})`);
       }
     }
+
 
     this.switchToErrorState = ({message}) => {
       /* Future:
@@ -683,6 +713,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       log(`Latest API version: ${api_latest_version}`);
     }
 
+
     this.checkLatestAPIVersion = () => {
       let appAPIVersion = this.state.appAPIVersion;
       let api_latest_version = this.state.apiData.api_latest_version;
@@ -691,6 +722,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       //log(msg);
       return check;
     }
+
 
     this.loadAssetsInfo = async () => {
       let data = await this.state.publicMethod({
@@ -739,6 +771,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.getAssetInfo = (asset) => {
       if (_.isNil(asset)) { console.error('Asset required'); return; }
       // Hardcode some standard assets so that we always have something to display.
@@ -777,13 +810,16 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return this.state.apiData.asset_info[asset];
     }
 
+
     this.getAssetsInfo = () => {
       return this.state.apiData.asset_info;
     }
 
+
     this.getAssets = () => {
       return _.keys(this.state.apiData.asset_info).sort();
     }
+
 
     this.loadMarkets = async () => {
       let data = await this.state.publicMethod({
@@ -815,6 +851,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.getMarkets = () => {
       // Note: This defaultList also produces the default base and quote assets in various pages.
       let defaultList = ['BTC/GBP'];
@@ -822,6 +859,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       if (_.isEmpty(markets)) return defaultList;
       return markets;
     }
+
 
     this.getBaseAssets = () => {
       let markets = this.getMarkets();
@@ -834,6 +872,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let quoteAssets = markets.map(x => x.split('/')[1]);
       return _.uniq(quoteAssets);
     }
+
 
     this.loadCountries = async () => {
       let data = await this.state.publicMethod({
@@ -853,12 +892,14 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.getCountries = () => {
       let defaultList = [{code: 'GB', name: 'United Kingdom'}];
       let countries = this.state.apiData.country;
       if (_.isEmpty(countries)) return defaultList;
       return countries;
     }
+
 
     this.loadTicker = async () => {
       let data = await this.state.publicMethod({
@@ -916,9 +957,11 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.getTicker = () => {
       return this.state.apiData.ticker;
     }
+
 
     this.getTickerForMarket = (market) => {
       // Get the ticker price held in the appState.
@@ -928,6 +971,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return {price};
     }
 
+
     this.getPreviousTickerForMarket = (market) => {
       // Get the previous ticker price held in the appState.
       if (_.isUndefined(this.state.prevAPIData.ticker[market])) return null;
@@ -935,15 +979,18 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return this.state.prevAPIData.ticker[market].price;
     }
 
+
     this.setPrice = ({market, price}) => {
       // Useful during development.
       this.state.apiData.ticker[market].price = price;
     }
 
+
     this.setPrevPrice = ({market, price}) => {
       // Useful during development.
       this.state.prevAPIData.ticker[market].price = price;
     }
+
 
     this.getZeroValue = (asset) => {
       // Get a zero value with the right number of decimal places for the asset.
@@ -951,6 +998,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let value = Big(0).toFixed(dp);
       return value;
     }
+
 
     this.getFullDecimalValue = ({asset, value, functionName}) => {
       // Add zeros to the value to get the full number of decimal places for the asset.
@@ -997,12 +1045,14 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.getPersonalDetailOptions = (detailName) => {
       // Should contain a list of options for each detailName. (e.g. "title").
       let result = this.state.apiData.personal_detail_option;
       if (! _.has(result, detailName)) return ['[loading]'];
       return result[detailName];
     }
+
 
     this.loadAssetIcons = async () => {
       let data = await this.state.publicMethod({
@@ -1023,6 +1073,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.getAssetIcon = (asset) => {
       // This supplies a value that goes into the 'source' attribute of an <Image/> component.
       let assetIcon = null; // default - produces an blank space where the icon would normally be.
@@ -1040,7 +1091,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
 
 
+
     // BEGIN actual private methods (as opposed to hidden public methods).
+
 
     // This is called immediately after a successful Login or PIN entry.
     this.loadInitialStuffAboutUser = async () => {
@@ -1049,6 +1102,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
     }
+
 
     this.loadUserInfo = async () => {
       /* Expected fields: (may change in future)
@@ -1069,6 +1123,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.getUserInfo = (detail) => {
       let details = this.state.user.info.user;
       if (! _.has(details, detail)) {
@@ -1077,9 +1132,11 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return details[detail];
     }
 
+
     this.setUserInfo = ({detail, value}) => {
       this.state.user.info.user[detail] = value;
     }
+
 
     this.loadDepositDetailsForAsset = async (asset) => {
       // These are the internal Solidi addresses / accounts that we provide for each user.
@@ -1112,6 +1169,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.getDepositDetailsForAsset = (asset) => {
       let funcName = 'getDepositDetailsForAsset';
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
@@ -1122,6 +1180,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let addressProperties = this.state.user.info.depositDetails[asset];
       return addressProperties;
     }
+
 
     this.loadDefaultAccountForAsset = async (asset) => {
       // These are default accounts for withdrawals. They should be external addresses / accounts held by the user.
@@ -1150,6 +1209,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
     }
 
+
     this.getDefaultAccountForAsset = (asset) => {
       let funcName = 'getDefaultAccountForAsset';
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
@@ -1160,6 +1220,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let account = this.state.user.info.defaultAccount[asset];
       return account;
     }
+
 
     this.updateDefaultAccountForAsset = async (asset, params) => {
       let funcName = 'updateDefaultAccountForAsset';
@@ -1185,6 +1246,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.loadBalances = async () => {
       let data = await this.state.privateMethod({apiRoute: 'balance'});
       if (data == 'DisplayedError') return;
@@ -1199,6 +1261,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.getBalance = (asset) => {
       // Get the balance held in the appState.
       // Note: Currently, no ETH balance appearing in the data. Why not ?
@@ -1209,6 +1272,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let balanceString = Big(balance).toFixed(dp);
       return balanceString;
     }
+
 
     this.fetchPricesForASpecificVolume = async (params) => {
       /* Notes:
@@ -1259,6 +1323,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
      return data;
     }
 
+
     this.fetchBestPriceForASpecificVolume = async (params) => {
       let funcName = 'fetchBestPriceForASpecificVolume';
       let {market, side, baseOrQuoteAsset, baseAssetVolume, quoteAssetVolume} = params;
@@ -1297,6 +1362,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.fetchOrderStatus = async ({orderID}) => {
       // "fetch" means "load from API & get value".
       let data = await this.state.privateMethod({
@@ -1321,6 +1387,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
       return orderStatus;
     }
+
 
     this.sendBuyOrder = async (buyOrder) => {
       if (! this.state.panels.buy.activeOrder) {
@@ -1403,6 +1470,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.confirmPaymentOfBuyOrder = async (params) => {
       let {orderID} = params;
       let data = await this.state.privateMethod({apiRoute: `order/${orderID}/user_has_paid`});
@@ -1410,6 +1478,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 {"result":"success"}
       */
     }
+
 
     this.sendSellOrder = async (sellOrder) => {
       if (! this.state.panels.sell.activeOrder) {
@@ -1465,6 +1534,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.loadFees = async () => {
       // For now, we only load withdrawal fees.
       let data = await this.state.privateMethod({apiRoute:'fee'});
@@ -1502,6 +1572,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return withdrawFees;
     }
 
+
     this.getFee = ({feeType, asset, priority}) => {
       // Get a fee held in the appState.
       // feeType options: deposit, withdraw.
@@ -1524,6 +1595,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let feeString = Big(fee).toFixed(dp);
       return feeString;
     }
+
 
     this.sendWithdraw = async ({asset, volume, addressInfo, priority, functionName}) => {
       log(`Send withdraw to server: withdraw ${volume} ${asset} to ${JSON.stringify(addressInfo)}`);
@@ -1548,6 +1620,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.loadOrders = async () => {
       let data = await this.state.privateMethod({apiRoute: 'order'});
       if (data == 'DisplayedError') return;
@@ -1566,9 +1639,11 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.getOrders = () => {
       return this.state.apiData.order;
     }
+
 
     this.loadTransactions = async () => {
       let data = await this.state.privateMethod({apiRoute: 'transaction'});
@@ -1588,9 +1663,11 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return data;
     }
 
+
     this.getTransactions = () => {
       return this.state.apiData.transaction;
     }
+
 
     this.fetchIdentityVerificationDetails = async () => {
       // "fetch" means "load from API & get value".
@@ -1894,6 +1971,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
   }
 
+
   render() {
     return (
       <AppStateContext.Provider value={this.state}>
@@ -1904,6 +1982,10 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
 }
 
+
+
+
 export { AppStateContext, AppStateProvider };
+
 
 export default AppStateContext;
