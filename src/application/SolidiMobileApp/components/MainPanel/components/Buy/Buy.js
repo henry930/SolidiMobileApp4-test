@@ -154,6 +154,7 @@ let Buy = () => {
     let side = 'BUY';
     let params = {market, side, baseOrQuoteAsset: 'quote', quoteAssetVolume: volumeQA};
     let output = await appState.fetchBestPriceForASpecificVolume(params);
+    lj(output)
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     if (_.isUndefined(output)) {
       // Happens if the request was aborted.
