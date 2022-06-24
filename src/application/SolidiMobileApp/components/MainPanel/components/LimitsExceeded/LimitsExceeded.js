@@ -33,21 +33,32 @@ let LimitsExceeded = () => {
   let [renderCount, triggerRender] = useState(0);
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
+  let [isLoading, setIsLoading] = useState(true);
 
   let pageName = appState.pageName;
   let permittedPageNames = 'default buy sell'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'LimitsExceeded');
   if (pageName == 'default') pageName = 'buy';
+  //pageName = 'sell'; //testing
 
   // Testing
-  if (appState.panels.buy.volumeQA == '0') {
-    log("TESTING");
+  if (pageName == 'buy' && appState.panels.buy.volumeQA == '0') {
+    log("TESTING - Buy");
     // Create an order.
     _.assign(appState.panels.buy, {
       volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00062890', assetBA: 'BTC',
       output: { asset: 'GBP', periodDays: 1, result: 'EXCEEDS_LIMITS', volumeLimit: '30.00',volumeRemaining: '0.00'},
     });
     appState.panels.buy.activeOrder = true;
+  }
+  if (pageName == 'sell' && appState.panels.sell.volumeQA == '0') {
+    log("TESTING - Sell");
+    // Create an order.
+    _.assign(appState.panels.sell, {
+      volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00062890', assetBA: 'BTC',
+      output: { asset: 'GBP', periodDays: 1, result: 'EXCEEDS_LIMITS', volumeLimit: '30.00',volumeRemaining: '0.00'},
+    });
+    appState.panels.sell.activeOrder = true;
   }
 
   // Load order details.
@@ -63,8 +74,9 @@ let LimitsExceeded = () => {
 
   let setup = async () => {
     try {
-      //await appState.loadBalances();
+      await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setIsLoading(false);
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `LimitsExceeded.setup: Error = ${err}`;
@@ -74,23 +86,24 @@ let LimitsExceeded = () => {
 
 
   let generateOrderDescription = () => {
+    let s = 'Your order: ';
+    if (isLoading) return s;
     let assetBAString = appState.getAssetInfo(assetBA).displayString;
     let assetQAString = appState.getAssetInfo(assetQA).displayString;
-    let s = `${misc.capitalise(side)} ${volumeBA} ${assetBAString} for ${volumeQA} ${assetQAString}`;
-    s = 'Your order: ' + s;
+    s += `${misc.capitalise(side)} ${volumeBA} ${assetBAString} for ${volumeQA} ${assetQAString}`;
     return s;
   }
 
 
   let generateLimitDescription = () => {
-    let periodDays = orderOutput.periodDays;
     let volumeLimit = orderOutput.volumeLimit;
     let volumeRemaining = orderOutput.volumeRemaining;
-    let s = `Your transfer limit over a period of ${periodDays} days is ${volumeLimit} ${assetQA}`;
-    if (periodDays == 1) {
-      s = `Your daily transfer limit is ${volumeLimit} ${assetQA}.`;
-    }
+    let s = `Your 30-day transfer limit is ${volumeLimit} ${assetQA}.`;
     s += ` Your remaining amount is ${volumeRemaining} ${assetQA}.`;
+    if (isLoading) return s;
+    let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
+    let refreshAmount = Big(volumeLimit).div('30').toFixed(quoteDP);
+    s += ` Every day, the amount you can spend increases by ${refreshAmount} ${assetQA} (1/30 of your transfer limit).`;
     return s;
   }
 
