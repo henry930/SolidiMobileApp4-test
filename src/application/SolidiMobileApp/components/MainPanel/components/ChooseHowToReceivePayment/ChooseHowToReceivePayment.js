@@ -173,13 +173,17 @@ let ChooseHowToReceivePayment = () => {
   }
 
 
-  let calculateTotalQA = () => {
+  let calculateTotalQA = (params) => {
     // Importantly, note that we _subtract_ the fee from the volumeQA.
     // - Unlike the Buy process, here we charge the fee after the sell order has completed, and we take it from the result that leaves the trade engine.
     // - In the Buy process, we charge the fee before filling the order, and we add it to the amount that goes into the trade engine.
+    let feeVolume;
+    if (! _.isNil(params)) {
+      ({feeVolume} = params);
+    }
+    if (_.isNil(feeVolume)) feeVolume = calculateFeeQA();
+    if (_.isEmpty(feeVolume)) return ''; // We can't know the total without the fee.
     let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'});
-    let feeVolume = calculateFeeQA();
-    if (_.isEmpty(feeVolume)) return '';
     let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
     let total = Big(volumeQA2).minus(Big(feeVolume)).toFixed(quoteDP);
     return total;
@@ -236,6 +240,7 @@ let ChooseHowToReceivePayment = () => {
     let output = await appState.sendSellOrder(sellOrder);
     if (appState.stateChangeIDHasChanged(stateChangeID, 'ChooseHowToReceivePayment')) return;
     lj(output);
+    appState.panels.sell.output = output;
     if (_.has(output, 'error')) {
       setErrorMessage(misc.itemToString(output.error));
     } else if (_.has(output, 'result')) {
@@ -244,7 +249,15 @@ let ChooseHowToReceivePayment = () => {
         setSendOrderMessage('No active order.');
       } else if (result == 'PRICE_CHANGE') {
         await handlePriceChange(output);
-      } else {
+      } else if (result == 'EXCEEDS_LIMITS') {
+        appState.changeState('LimitsExceeded', 'sell');
+      } else { // 'FILLED'
+        // Retrieve feeVolume from order result, calculate totalVolume, and store the results in the app memory.
+        let feeVolume = output.fees;
+        let totalVolumeQA = calculateTotalQA({feeVolume});
+        lj({feeVolume, totalVolumeQA})
+        appState.panels.sell.feeQA = feeVolume;
+        appState.panels.sell.totalQA = totalVolumeQA;
         appState.changeState('SaleSuccessful', paymentChoice);
       }
     }
@@ -256,6 +269,7 @@ let ChooseHowToReceivePayment = () => {
     let output = await appState.sendSellOrder(sellOrder);
     if (appState.stateChangeIDHasChanged(stateChangeID, 'ChooseHowToReceivePayment')) return;
     lj(output);
+    appState.panels.sell.output = output;
     if (_.has(output, 'error')) {
       setErrorMessage(misc.itemToString(output.error));
     } else if (_.has(output, 'result')) {
@@ -264,8 +278,19 @@ let ChooseHowToReceivePayment = () => {
         setSendOrderMessage('No active order.');
       } else if (result == 'PRICE_CHANGE') {
         await handlePriceChange(output);
-      } else {
+      } else if (result == 'FILLED') {
+        // Retrieve feeVolume from order result, calculate totalVolume, and store the results in the app memory.
+        let feeVolume = output.fees;
+        let totalVolumeQA = calculateTotalQA({feeVolume});
+        lj({feeVolume, totalVolumeQA})
+        appState.panels.sell.feeQA = feeVolume;
+        appState.panels.sell.totalQA = totalVolumeQA;
         appState.changeState('SaleSuccessful', paymentChoice);
+      } else if (result == 'EXCEEDS_LIMITS') {
+        appState.changeState('LimitsExceeded', 'sell');
+      } else {
+        setErrorMessage(misc.itemToString(output));
+        setSendOrderMessage('');
       }
     }
   }
