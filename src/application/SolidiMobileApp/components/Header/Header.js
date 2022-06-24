@@ -87,6 +87,7 @@ let styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: 'center',
+    width: '100%',
   },
   logo: {
     flex: 1,
@@ -111,6 +112,9 @@ let styleBackButton = StyleSheet.create({
   text: {
     fontWeight: 'bold',
     fontSize: normaliseFont(18),
+  },
+  view: {
+    //borderWidth: 1, //testing
   }
 });
 
@@ -119,12 +123,20 @@ styleSettingsButton = StyleSheet.create({
   image: {
     iconColor: colors.greyedOutIcon,
   },
+  view: {
+    //borderWidth: 1, //testing
+  },
 });
 
 
 styleSettingsButtonSelected = StyleSheet.create({
   image: {
     iconColor: colors.selectedIcon,
+  },
+  view: {
+    height: '100%',
+    width: '100%',
+    //borderWidth: 1, //testing
   },
 });
 
