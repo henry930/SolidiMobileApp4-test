@@ -196,7 +196,12 @@ export default class SolidiRestAPIClientLibrary {
         signal: abortController.signal,
       }
       if (postData) options.body = postData;
-      let msg = `Calling ${uri}`;
+      let msg = `Calling ${httpMethod} ${uri}`;
+      if (postData) {
+        let postDataStr = JSON.stringify(postData);
+        let postDataStr2 = postDataStr.length < 400 ? postDataStr : postDataStr.substring(1, 400) + ' ... ';
+        msg += ` with parameters = ${postDataStr2}`;
+      }
       log(msg);
       let response = await fetch(uri, options);
       let responseData = await response.text();
