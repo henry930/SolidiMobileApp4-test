@@ -468,7 +468,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
           return data;
         } else {
           // For any other errors, switch to an error description page.
-          let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}, params=${misc.jd(params)}):`;
+          let paramsStr = misc.jd(params);
+          let paramsStr2 = paramsStr.length > 400 ? paramsStr : paramsStr.substring(1, 400) + ' ... ';
+          let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}, params=${paramsStr2}):`;
           if (! _.isString(error)) error = JSON.stringify(error);
           msg += ' Error = ' + String(error);
           this.state.switchToErrorState({message:msg});
@@ -1373,6 +1375,15 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
   "result": "PRICE_CHANGE"
 }
 
+      Example result if the order has exceeded the user's volume limits:
+{
+  "asset": "GBP",
+  "periodDays": 1,
+  "result": "EXCEEDS_LIMITS",
+  "volumeLimit": "30.00",
+  "volumeRemaining": "0.00"
+}
+
       Example result if the address check failed during registration:
 {
   "result": "error",
@@ -1380,11 +1391,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
   "tradeids": []
 }
 
-      Example error:
-
       */
-      // To do: Check for "limits exceeded" error.
-      // Need to change state to an error / explanation page.
       // Store the orderID.
       if (data.orderID) {
         log(`BUY orderID: ${data.orderID}`);
@@ -1430,6 +1437,25 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         functionName: 'sendSellOrder',
       });
       if (data == 'DisplayedError') return;
+      //log(data)
+      /*
+      Example result:
+{
+  "baseAssetVolume": "0.00059570",
+  "fees": "0.00",
+  "market": "BTC/GBP",
+  "orderID": 7151,
+  "quoteAssetVolume": "10.00000000",
+  "result": "FILLED",
+  "settlements": [
+    {
+      "settlementID": 8232,
+      "settlementReference": "CD2C2HF",
+      "status": "R"
+    }
+  ]
+}
+      */
       // Store the orderID.
       if (data.orderID) {
         log(`OrderID: ${data.orderID}`);
@@ -1565,6 +1591,57 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return this.state.apiData.transaction;
     }
 
+    this.fetchIdentityVerificationDetails = async () => {
+      // "fetch" means "load from API & get value".
+      let data = await this.state.privateMethod({
+        httpMethod: 'POST',
+        apiRoute: 'identity_verification_details',
+        params: {},
+        functionName: 'fetchIdentityVerificationDetails',
+      });
+      if (data == 'DisplayedError') return;
+      //log(data);
+      /* Example result:
+{
+  "addressDocument": null,
+  "addressDocumentType": null,
+  "identityDocument": null,
+  "identityDocumentType": null
+}
+      */
+      // Possible status values:
+      //let userStatus = data.status;
+
+      /*
+      let knownStatuses = 'FILLED, SETTLED, CANCELLED'.split(', ');
+      if (! misc.itemInArray('knownStatuses', knownStatuses, orderStatus, 'fetchOrderStatus')) {
+        // Future: go to error page?
+      }
+      */
+      return data;
+    }
+
+
+    this.uploadDocument = async (params) => {
+      let {documentType, documentCategory, fileData, fileExtension} = params;
+      let noAbort = true;
+      let data = await this.state.privateMethod({
+        apiRoute: `private_upload/document/${documentType}`,
+        params: {
+          documentCategory,
+          fileData,
+          fileExtension,
+        },
+        functionName: 'uploadDocument',
+        noAbort,
+      });
+      //lj(data);
+      /* Example response:
+{"result":"success"}
+      */
+      return data;
+    }
+
 
 
 
@@ -1659,6 +1736,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       getOrders: this.getOrders,
       loadTransactions: this.loadTransactions,
       getTransactions: this.getTransactions,
+      fetchIdentityVerificationDetails: this.fetchIdentityVerificationDetails,
+      uploadDocument: this.uploadDocument,
       /* END Private API methods */
       stateChangeID: 0,
       abortControllers: {},
@@ -1753,6 +1832,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
           symbolBA: '',
           feeQA: '',
           totalQA: '0',
+          output: null,
         },
         sell: {
           activeOrder: false,
@@ -1778,6 +1858,10 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
           volume: null,
           addressProperties: null,
           priority: null,
+        },
+        identityVerification: {
+          photo1: null,
+          photo2: null,
         },
       },
       fees: {
