@@ -168,9 +168,11 @@ let styles = StyleSheet.create({
     paddingHorizontal: scaledWidth(15),
     width: '100%',
     height: '100%',
+    //borderWidth: 1, //testing
   },
   container: {
-    backgroundColor: 'white'
+    backgroundColor: 'white',
+    //borderWidth: 1, //testing
   },
   stylePinCodeTextTitle: {
     fontWeight: '400',
@@ -189,14 +191,17 @@ let styles = StyleSheet.create({
   },
   resetButtonWrapper: {
     height: scaledHeight(60),
+    //borderWidth: 1, //testing
   },
 })
 
 
 let stylesResetButton = StyleSheet.create({
   view: {
-    marginTop: scaledHeight(30),
+    marginTop: scaledHeight(0),
+    height: '100%',
     alignSelf: 'flex-start',
+    //borderWidth: 1, //testing
   },
 });
 
