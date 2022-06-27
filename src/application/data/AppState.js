@@ -1713,7 +1713,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         functionName: 'uploadDocument',
         noAbort,
       });
-      //lj(data);
+      lj(data);
       /* Example response:
 {"result":"success"}
       */
