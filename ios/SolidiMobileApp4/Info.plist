@@ -36,9 +36,11 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Solidi requires access to your camera to take a photo of an identity verification document</string>
+	<string>Your camera is needed to take a photo of an identity verification document.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location is used as a double-check protection against identity theft.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>You may want to browse your photo library and upload an existing photo of an identity verification document.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>FontAwesome.ttf</string>
