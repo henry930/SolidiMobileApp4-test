@@ -1721,6 +1721,23 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     }
 
 
+    this.resetPassword = async (params) => {
+      let {email} = params;
+      let noAbort = true;
+      let data = await this.state.publicMethod({
+        httpMethod: 'GET',
+        apiRoute: `password_reset/${email}`,
+        functionName: 'resetPassword',
+        noAbort,
+      });
+      //lj(data);
+      /* Example response:
+{"result":"success"}
+      */
+      return data;
+    }
+
+
 
 
     /* END Private API methods */
@@ -1816,6 +1833,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       getTransactions: this.getTransactions,
       fetchIdentityVerificationDetails: this.fetchIdentityVerificationDetails,
       uploadDocument: this.uploadDocument,
+      resetPassword: this.resetPassword,
       /* END Private API methods */
       stateChangeID: 0,
       abortControllers: {},
