@@ -63,7 +63,7 @@ let Receive = () => {
       return assetItem;
     });
   }
-  let generateAssetItems = () => { return deriveAssetItems(appState.getAssets()) }
+  let generateAssetItems = () => { return deriveAssetItems(appState.getAssets({depositEnabled: true})) }
 
   // Initial state:
   let selectedAssetCA = 'BTC';

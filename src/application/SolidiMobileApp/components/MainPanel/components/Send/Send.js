@@ -105,7 +105,7 @@ let Send = () => {
       return assetItem;
     });
   }
-  let generateStoredAssetItems = () => { return deriveAssetItems(appState.getAssets()) }
+  let generateStoredAssetItems = () => { return deriveAssetItems(appState.getAssets({withdrawEnabled: true})) }
 
   // Initial state:
   let selectedAssetSA = 'BTC';

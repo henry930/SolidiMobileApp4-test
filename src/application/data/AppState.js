@@ -816,8 +816,19 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     }
 
 
-    this.getAssets = () => {
-      return _.keys(this.state.apiData.asset_info).sort();
+    this.getAssets = (params) => {
+      let depositEnabled, withdrawEnabled;
+      if (params) {
+        ({depositEnabled, withdrawEnabled} = params);
+      }
+      let assets = _.keys(this.state.apiData.asset_info).sort();
+      if (depositEnabled) {
+        assets = assets.filter( (x) => { return this.state.getAssetInfo(x).depositEnabled == 1 });
+      }
+      if (withdrawEnabled) {
+        assets = assets.filter( (x) => { return this.state.getAssetInfo(x).withdrawEnabled == 1 });
+      }
+      return assets;
     }
 
 
