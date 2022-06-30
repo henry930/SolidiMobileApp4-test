@@ -33,6 +33,7 @@ export const mainPanelStates = [
   'SupportTools',
   'LimitsExceeded',
   'IdentityVerification',
+  'ResetPassword',
 ];
 
 export default mainPanelStates;

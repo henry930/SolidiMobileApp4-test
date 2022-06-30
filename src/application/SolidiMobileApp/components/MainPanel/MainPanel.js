@@ -18,7 +18,8 @@ import { Test, Buy, Sell, Send, Receive, Assets, History,
   ReadArticle, ChooseHowToReceivePayment, RequestTimeout,
   SaleSuccessful, PersonalDetails, ContactUs, BankAccounts,
   Security, RequestFailed, Error, SendSuccessful, Authenticate,
-  Register, SupportTools, LimitsExceeded, IdentityVerification } from './components';
+  Register, SupportTools, LimitsExceeded, IdentityVerification,
+  ResetPassword } from './components';
 import AppStateContext from 'src/application/data';
 
 
@@ -104,6 +105,8 @@ let MainPanel = (props) => {
       return <LimitsExceeded />
     } else if (appState.mainPanelState === 'IdentityVerification') {
       return <IdentityVerification />
+    } else if (appState.mainPanelState === 'ResetPassword') {
+      return <ResetPassword />
     } else {
       return <Text>Error in MainPanel.js: Unknown mainPanelState: {appState.mainPanelState}</Text>
     }

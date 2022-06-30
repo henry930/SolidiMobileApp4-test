@@ -32,6 +32,7 @@ import Register from './Register/Register';
 import SupportTools from './SupportTools/SupportTools';
 import LimitsExceeded from './LimitsExceeded/LimitsExceeded';
 import IdentityVerification from './IdentityVerification/IdentityVerification';
+import ResetPassword from './ResetPassword/ResetPassword';
 
 
 export {
@@ -69,4 +70,5 @@ export {
   SupportTools,
   LimitsExceeded,
   IdentityVerification,
+  ResetPassword,
 };
