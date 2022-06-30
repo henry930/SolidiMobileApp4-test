@@ -1076,7 +1076,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       if (_.isNil(functionName)) functionName = '[Unspecified location]';
       if (! misc.isNumericString(value)) {
         if (value != '[loading]') {
-          log(`${functionName}.getFullDecimalValue: value '${value}' is not a numeric string.`);
+          //deb(`${functionName}.getFullDecimalValue: value '${value}' is not a numeric string.`);
         }
         return '';
       }
