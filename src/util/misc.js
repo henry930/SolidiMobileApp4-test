@@ -82,7 +82,7 @@ function confirmItemInArray(arrayName, arrayObj, item, functionName) {
 
 let capitalise = (s) => {
   if (typeof s !== 'string') {
-    let msg = `Expected s to be a string, but it's a ${typeof s}`;
+    let msg = `Expected s to be a string, but it's a '${typeof s}'.`;
     throw new Error(msg);
   }
   return s.charAt(0).toUpperCase() + s.slice(1);

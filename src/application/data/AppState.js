@@ -1651,6 +1651,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       if (! 'deposit withdraw'.split(' ').includes(feeType)) {
         console.error(`Unrecognised feeType: ${feeType}`);
       }
+      if (priority == 'none') return 'loading';
       if (! 'low medium high'.split(' ').includes(priority)) {
         console.error(`Unrecognised priority: ${priority}`);
       }

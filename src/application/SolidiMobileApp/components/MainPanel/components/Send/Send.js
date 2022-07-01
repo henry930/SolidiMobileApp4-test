@@ -131,33 +131,54 @@ let Send = () => {
   let [balanceSA, setBalanceSA] = useState(appState.getBalance(assetSA));
   let [errorMessage, setErrorMessage] = useState('');
 
-  // Function: Select fee based on asset and priority.
-  let selectFee = (priority) => { return appState.getFee({feeType: 'withdraw', asset: assetSA, priority }) }
+
+  // Function: Select fee based on priority and asset.
+  let selectFee = ({priority, asset}) => { return appState.getFee({feeType: 'withdraw', asset, priority}) }
+
+  // Different assets may have different available priorities.
+  let generatePriorityItemsForAsset = (asset) => {
+    let priorities = 'low medium high'.split(' ');
+    let priorityItems = [];
+    for (let priority of priorities) {
+      let fee = selectFee({priority, asset});
+      //let fee = appState.getFee({feeType: 'withdraw', asset, priority});
+      if (! misc.isNumericString(fee)) return []; // we're still loading data.
+      // A negative fee indicates that this priority is not supported for this asset.
+      if (Big(fee).lt(0)) continue;
+      let label = createPriorityLabel({priority, asset});
+      let value = priority;
+      let priorityItem = {label, value};
+      priorityItems.push(priorityItem);
+    }
+    return priorityItems;
+  }
+
+  let selectLowestAvailablePriority = (asset) => {
+    let available = generatePriorityItemsForAsset(asset);
+    if (_.isEmpty(available)) return 'none';
+    // Assume that the lowest priority is the first item in the list.
+    let lowest = available[0].value;
+    return lowest;
+  }
 
   // Derive dropdown properties from a priority list.
-  let createPriorityLabel = (priority) => {
+  let createPriorityLabel = ({priority, asset}) => {
     let label = misc.capitalise(priority) + ' Priority';
-    let fee = selectFee(priority);
+    let fee = selectFee({priority, asset});
     if (misc.isNumericString(fee)) {
       let feeIsZero = ( Big(fee).eq(Big(0)) );
-      let feeLabelSection = feeIsZero ? 'FREE' : `${fee} ${assetSA}`;
+      let feeLabelSection = feeIsZero ? 'FREE' : `${fee} ${asset}`;
       label += ` (Fee = ${feeLabelSection})`;
     }
     return label;
   }
-  let generatePriorityItems = () => {
-    let priorities = 'low medium high'.split(' ');
-    return priorities.map(priority => {
-      return {label: createPriorityLabel(priority), value: priority};
-    });
-  }
 
   // Dropdown state: Select priority
-  let [priority, setPriority] = useState('low');
+  let [priority, setPriority] = useState(selectLowestAvailablePriority(assetSA));
+  //let [priority, setPriority] = useState('none');
   let [openPriority, setOpenPriority] = useState(false);
-  let [itemsPriority, setItemsPriority] = useState(generatePriorityItems());
-
-  let [transferFee, setTransferFee] = useState(selectFee('low'));
+  let [itemsPriority, setItemsPriority] = useState(generatePriorityItemsForAsset(assetSA));
+  let [transferFee, setTransferFee] = useState(selectFee({priority: 'low', asset: assetSA}));
 
 
   // Initial setup.
@@ -174,8 +195,9 @@ let Send = () => {
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setBalanceSA(appState.getBalance(assetSA));
       setItemsSA(generateStoredAssetItems());
-      setItemsPriority(generatePriorityItems())
-      setTransferFee(selectFee(priority));
+      setItemsPriority(generatePriorityItemsForAsset(assetSA));
+      setPriority(selectLowestAvailablePriority(assetSA));
+      setTransferFee(selectFee({priority, asset: assetSA}));
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Send.setup: ${err}`;
@@ -201,8 +223,9 @@ let Send = () => {
         setVolumeSA(zeroValue);
       }
       setBalanceSA(appState.getBalance(assetSA));
-      setItemsPriority(generatePriorityItems());
-      setTransferFee(selectFee(priority));
+      setItemsPriority(generatePriorityItemsForAsset(assetSA));
+      setPriority(selectLowestAvailablePriority(assetSA));
+      setTransferFee(selectFee({priority, asset: assetSA}));
       let assetType = appState.getAssetInfo(assetSA).type;
       let destinationText = (assetType == 'crypto') ? ' this address' : ' this account';
       setDestinationText(destinationText);
@@ -214,7 +237,7 @@ let Send = () => {
   // If the user changes the priority, then we need to re-set the fee.
   useEffect(() => {
     if (! firstRender) {
-      let fee = selectFee(priority);
+      let fee = selectFee({priority, asset: assetSA});
       log(`Set priority to: ${priority} (Fee = ${fee} ${assetSA})`);
       setTransferFee(fee);
     }
@@ -402,6 +425,11 @@ let Send = () => {
 
   let renderPrioritySection = () => {
     let assetType = appState.getAssetInfo(assetSA).type;
+    if (assetType == '[loading]') {
+      return (
+        <View style={styles.priorityWrapper}></View>
+      )
+    }
     let choosePriority = (assetType == 'crypto');
     if (! choosePriority) {
       return (
@@ -416,7 +444,7 @@ let Send = () => {
       <View style={styles.priorityWrapper}>
         <DropDownPicker
           listMode="SCROLLVIEW"
-          placeholder={createPriorityLabel('low')}
+          placeholder={createPriorityLabel({priority, asset: assetSA})}
           style={styles.priorityDropdown}
           containerStyle={styles.priorityDropdownContainer}
           open={openPriority}
