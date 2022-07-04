@@ -72,7 +72,7 @@ let ImageButton = ({
       disabled={disabled}
       style={styles.touchable}
       activeOpacity={0.8}
-      underlayColor="#DDDDDD"
+      underlayColor="#111111"
       {...rest}
     >
       <View>
