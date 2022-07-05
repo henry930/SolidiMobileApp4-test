@@ -1193,7 +1193,11 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
     // This is called immediately after a successful Login or PIN entry.
     this.loadInitialStuffAboutUser = async () => {
-      await this.loadAssetsInfo(); // needed for loading deposit details & default account.
+      if (! this.state.assetsInfoLoaded) {
+        // needed for loading deposit details & default account.
+        await this.state.loadAssetsInfo();
+        this.state.assetsInfoLoaded = true;
+      }
       await this.loadUserInfo();
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
