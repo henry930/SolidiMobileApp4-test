@@ -42,6 +42,8 @@ let Security = () => {
   let [pinVisible, setPINVisible] = useState(false);
 
 
+
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -50,6 +52,7 @@ let Security = () => {
 
   let setup = async () => {
     try {
+      await appState.generalSetup();
       await appState.loadInitialStuffAboutUser();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);

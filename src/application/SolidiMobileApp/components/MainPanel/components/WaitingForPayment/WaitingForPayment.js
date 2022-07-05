@@ -114,6 +114,27 @@ let WaitingForPayment = () => {
   useEffect(() => {}, [timeElapsedMarker]);
 
 
+
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    try {
+      await appState.generalSetup();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    } catch(err) {
+      let msg = `WaitingForPayment.setup: Error = ${err}`;
+      console.log(msg);
+    }
+  }
+
+
+
+
   return (
     <View style={styles.panelContainer}>
     <View style={styles.panelSubContainer}>

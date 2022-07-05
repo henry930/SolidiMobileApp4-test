@@ -37,6 +37,26 @@ let ReadArticle = () => {
   // These are articles that contain conditions that we invite the user to accept.
   let acceptArticles = 'payment_conditions terms_and_conditions'.split(' ');
 
+
+
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    try {
+      await appState.generalSetup();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    } catch(err) {
+      let msg = `ReadArticle.setup: Error = ${err}`;
+      console.log(msg);
+    }
+  }
+
+
   let acceptButtonSection = () => {
     return (
       <View style={styles.acceptButtonWrapper}>

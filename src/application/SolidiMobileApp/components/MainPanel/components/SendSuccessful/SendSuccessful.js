@@ -49,6 +49,8 @@ let SendSuccessful = () => {
   ({asset, volume, addressProperties, priority} = appState.panels.send);
 
 
+
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -57,6 +59,7 @@ let SendSuccessful = () => {
 
   let setup = async () => {
     try {
+      await appState.generalSetup();
       await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);

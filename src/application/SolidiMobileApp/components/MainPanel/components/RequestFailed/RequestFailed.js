@@ -32,6 +32,9 @@ let RequestFailed = () => {
   let appState = useContext(AppStateContext);
   let stateChangeID = appState.stateChangeID;
 
+
+
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -40,9 +43,7 @@ let RequestFailed = () => {
 
   let setup = async () => {
     try {
-      /* Example:
       await appState.generalSetup();
-      */
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     } catch(err) {
       let msg = `RequestFailed.setup: Error = ${err}`;

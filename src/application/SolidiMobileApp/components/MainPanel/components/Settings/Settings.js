@@ -33,6 +33,8 @@ let Settings = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Settings');
 
 
+
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -41,7 +43,7 @@ let Settings = () => {
 
   let setup = async () => {
     try {
-      //await appState.loadBalances();
+      await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {

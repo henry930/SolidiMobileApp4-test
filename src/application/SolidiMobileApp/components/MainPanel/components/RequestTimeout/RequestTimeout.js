@@ -54,6 +54,8 @@ let RequestTimeout = () => {
   }
 
 
+
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -62,7 +64,7 @@ let RequestTimeout = () => {
 
   let setup = async () => {
     try {
-      //await appState.generalSetup();
+      await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     } catch(err) {
       let msg = `RequestTimeout.setup: Error = ${err}`;

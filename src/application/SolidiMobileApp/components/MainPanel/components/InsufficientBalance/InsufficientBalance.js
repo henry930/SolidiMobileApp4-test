@@ -71,6 +71,26 @@ let InsufficientBalance = () => {
     diffString = Big(volumeBA).minus(Big(balanceBA)).toFixed(baseDP) + ' ' + assetBA;
   }
 
+
+
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    try {
+      await appState.generalSetup();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    } catch(err) {
+      let msg = `InsufficientBalance.setup: Error = ${err}`;
+      console.log(msg);
+    }
+  }
+
+
   let payDirectly = () => {
     appState.changeState('ChooseHowToPay', 'solidi');
   }

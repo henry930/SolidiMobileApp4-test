@@ -1,5 +1,5 @@
 // React imports
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
 import * as Keychain from 'react-native-keychain';
 
@@ -32,6 +32,27 @@ let Login = () => {
   let [email, setEmail] = useState('');
   let [password, setPassword] = useState('');
   let [disableLoginButton, setDisableLoginButton] = useState(false);
+
+
+
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    try {
+      await appState.generalSetup();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    } catch(err) {
+      let msg = `Login.setup: Error = ${err}`;
+      console.log(msg);
+    }
+  }
+
+
 
 
   let submitLoginRequest = async () => {

@@ -53,6 +53,8 @@ let Register = () => {
   uriSolidiWebsiteRegister = `https://${basicAuth}${appState.domain}/register`;
 
 
+
+
   // Initial setup.
   useEffect( () => {
     //setup();
@@ -61,7 +63,7 @@ let Register = () => {
 
   let setup = async () => {
     try {
-      //await appState.loadBalances();
+      await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {

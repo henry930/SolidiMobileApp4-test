@@ -1,5 +1,5 @@
 // React imports
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -45,6 +45,26 @@ let PIN = () => {
     pinStatus = 'choose';
   }
   //log({pinStatus});
+
+
+
+
+  // Initial setup.
+  useEffect( () => {
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+
+  let setup = async () => {
+    try {
+      await appState.generalSetup();
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+    } catch(err) {
+      let msg = `PIN.setup: Error = ${err}`;
+      console.log(msg);
+    }
+  }
+
 
   let _finishProcess = async () => {
     let pinStored = await hasUserSetPinCode(appState.pinStorageKey);

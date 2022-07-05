@@ -33,6 +33,8 @@ let PurchaseSuccessful = () => {
   let trustpilotURL = 'https://www.trustpilot.com/evaluate/solidi.co?stars=5';
 
 
+
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -41,6 +43,7 @@ let PurchaseSuccessful = () => {
 
   let setup = async () => {
     try {
+      await appState.generalSetup();
       await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
