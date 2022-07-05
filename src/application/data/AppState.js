@@ -36,15 +36,16 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let jd = JSON.stringify;
 
 // Settings: Critical (check before making a new release)
-let autoLoginOnDevAndStag = false;
-import appTier from 'src/application/appTier';
+let autoLoginOnDevAndStag = false; // Only used during development (i.e. on 'dev' tier).
+import appTier from 'src/application/appTier'; // dev / stag / prod.
 
 // Settings: Initial page
 let initialMainPanelState = 'Buy';
 let initialPageName = 'default';
 
 // Settings: Various
-let appName = 'SolidiMobileApp';
+//let appName = 'SolidiMobileApp';
+let appName = 'SolidiMobileAppTest'; // Test version
 let appAPIVersion = '1';
 let domains = {
   dev: 't3.solidi.co',
