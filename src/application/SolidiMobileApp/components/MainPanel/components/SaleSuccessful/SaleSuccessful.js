@@ -26,6 +26,7 @@ let SaleSuccessful = () => {
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
+  let [isLoading, setIsLoading] = useState(true);
 
   // Note: Never add "default" to the list of pageNames. One of the two options must be chosen explicitly.
   let pageName = appState.pageName;
@@ -48,6 +49,7 @@ let SaleSuccessful = () => {
     try {
       await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setIsLoading(false);
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `SaleSuccessful.setup: Error = ${err}`;
@@ -57,6 +59,7 @@ let SaleSuccessful = () => {
 
 
   let getBalanceString = () => {
+    if (isLoading) return '[loading]';
     let b = appState.getBalance(assetBA);
     let result = b;
     if (misc.isNumericString(b)) result += ' ' + assetBA;
