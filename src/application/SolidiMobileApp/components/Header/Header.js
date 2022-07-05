@@ -41,12 +41,18 @@ let Header = (props) => {
     }
   }
 
-  // Check whether to include notification button.
+  // Check whether to include notification button. (this is not currently used).
   let includeNotificationButton = ! pinMode;
 
 
   let isSettingsButtonSelected = 'Settings' === appState.mainPanelState;
   let _styleSettingsButton = isSettingsButtonSelected ? styleSettingsButtonSelected : styleSettingsButton;
+
+
+  // If we're connected to the test server (with no cryptocurrency), then display this fact visibly in a way that is easily seen on every page.
+  // In prod, don't show a title.
+  // In dev, don't show any difference from prod.
+  let titleSettingsButton = appState.appTier == 'stag' ? 'Test Server' : '';
 
 
   let changeState = (mainPanelState) => {
@@ -75,6 +81,7 @@ let Header = (props) => {
         <ImageButton imageName='user' imageType='icon'
           styles={_styleSettingsButton}
           onPress={ () => { changeState('Settings') } }
+          title={titleSettingsButton}
         />
       </View>
     </View>
@@ -126,6 +133,10 @@ styleSettingsButton = StyleSheet.create({
   view: {
     //borderWidth: 1, //testing
   },
+  text: {
+    fontWeight: 'bold',
+    color: 'black',
+  }
 });
 
 
