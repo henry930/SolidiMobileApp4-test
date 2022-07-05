@@ -25,7 +25,6 @@ import { mainPanelStates, footerButtonList } from 'src/constants';
 import SolidiRestAPIClientLibrary from 'src/api/SolidiRestAPIClientLibrary';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
-import appTier from 'src/application/appTier';
 import ImageLookup from 'src/images';
 
 // Logger
@@ -36,9 +35,15 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 // Shortcuts
 let jd = JSON.stringify;
 
-// Settings
+// Settings: Critical (check before making a new release)
+let autoLoginOnDevAndStag = false;
+import appTier from 'src/application/appTier';
 let initialMainPanelState = 'Buy';
 let initialPageName = 'default';
+
+// Settings: General
+let appName = 'SolidiMobileApp';
+let appAPIVersion = '1';
 let domains = {
   dev: 't3.solidi.co',
   stag: 't10.solidi.co',
@@ -46,10 +51,7 @@ let domains = {
 }
 if (! _.has(domains, appTier)) throw new Error(`Unrecognised app tier: ${appTier}`);
 let domain = domains[appTier];
-log(`domain: ${domain}`);
-let appName = 'SolidiMobileApp';
-let appAPIVersion = '1';
-let autoLoginOnDevAndStag = false;
+log(`${appTier} domain: ${domain}`);
 let autoLoginCredentials = {
   email: 'johnqfish@foo.com',
   password: 'bigFish6',
@@ -63,6 +65,8 @@ let devBasicAuth = (basicAuthTiers.includes(appTier)) ? require('src/access/valu
 // - We use multiple aspects of the app in the key so that there's no risk of a test version of the app interacting with the storage of the production version.
 let loginCredentialsStorageKey = `LOGIN_${appTier}_${appName}_${domain}`;
 let pinStorageKey = `PIN_${appTier}_${appName}_${domain}`;
+log(`- Keychain: loginCredentialsStorageKey = ${loginCredentialsStorageKey}`);
+log(`- Keychain: pinStorageKey = ${pinStorageKey}`);
 
 
 
