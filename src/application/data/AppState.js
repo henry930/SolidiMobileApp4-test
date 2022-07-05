@@ -38,10 +38,12 @@ let jd = JSON.stringify;
 // Settings: Critical (check before making a new release)
 let autoLoginOnDevAndStag = false;
 import appTier from 'src/application/appTier';
+
+// Settings: Initial page
 let initialMainPanelState = 'Buy';
 let initialPageName = 'default';
 
-// Settings: General
+// Settings: Various
 let appName = 'SolidiMobileApp';
 let appAPIVersion = '1';
 let domains = {
