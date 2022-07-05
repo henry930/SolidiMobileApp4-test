@@ -42,7 +42,7 @@ let LimitsExceeded = () => {
   //pageName = 'sell'; //testing
 
   // Testing
-  if (pageName == 'buy' && appState.panels.buy.volumeQA == '0') {
+  if (appState.appTier == 'dev' && pageName == 'buy' && appState.panels.buy.volumeQA == '0') {
     log("TESTING - Buy");
     // Create an order.
     _.assign(appState.panels.buy, {
@@ -51,7 +51,7 @@ let LimitsExceeded = () => {
     });
     appState.panels.buy.activeOrder = true;
   }
-  if (pageName == 'sell' && appState.panels.sell.volumeQA == '0') {
+  if (appState.appTier == 'dev' && pageName == 'sell' && appState.panels.sell.volumeQA == '0') {
     log("TESTING - Sell");
     // Create an order.
     _.assign(appState.panels.sell, {

@@ -87,13 +87,12 @@ let PersonalDetails = () => {
   let [openCountry, setOpenCountry] = useState(false);
 
 
+
+
   // Initial setup.
   useEffect( () => {
     setup();
   }, []); // Pass empty array so that this only runs once on mount.
-
-
-
 
 
   let setup = async () => {

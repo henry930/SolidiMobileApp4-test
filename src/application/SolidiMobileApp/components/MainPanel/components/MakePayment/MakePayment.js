@@ -29,7 +29,7 @@ let MakePayment = () => {
   let [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   // Testing
-  if (appState.panels.buy.volumeQA == '0') {
+  if (appState.appTier == 'dev' && appState.panels.buy.volumeQA == '0') {
     // Create an order.
     _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC'});
     appState.panels.buy.activeOrder = true;

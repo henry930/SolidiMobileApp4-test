@@ -47,7 +47,7 @@ let PaymentNotMade = () => {
   }
 
   // Testing (for if we load this page directly).
-  if (appState.panels.buy.volumeQA == '0') {
+  if (appState.appTier == 'dev' && appState.panels.buy.volumeQA == '0') {
     // Create an order.
     _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC', feeQA: '0.50', totalQA: '10.50'});
     appState.panels.buy.activeOrder = true;

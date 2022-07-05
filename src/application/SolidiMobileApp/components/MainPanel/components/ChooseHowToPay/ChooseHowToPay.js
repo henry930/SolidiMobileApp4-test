@@ -59,7 +59,7 @@ let ChooseHowToPay = () => {
   let [sendOrderMessage, setSendOrderMessage] = useState('');
 
   // Testing
-  if (appState.panels.buy.volumeQA == '0') {
+  if (appState.appTier == 'dev' && appState.panels.buy.volumeQA == '0') {
     log("TESTING");
     // Create an order.
     _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC'});

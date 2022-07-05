@@ -63,7 +63,7 @@ let ChooseHowToReceivePayment = () => {
   let [sendOrderMessage, setSendOrderMessage] = useState('');
 
   // Testing
-  if (appState.panels.sell.volumeQA == '0') {
+  if (appState.appTier == 'dev' && appState.panels.sell.volumeQA == '0') {
     log("TESTING");
     // Create an order.
     _.assign(appState.panels.sell, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00040251', assetBA: 'BTC'});
