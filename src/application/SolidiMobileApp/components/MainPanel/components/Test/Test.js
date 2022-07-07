@@ -8,6 +8,7 @@ import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import ImageLookup from 'src/images';
+import misc from 'src/util/misc';
 
 // Logger
 import logger from 'src/util/logger';
@@ -56,7 +57,7 @@ let Test = () => {
       <Image source={appState.getAssetIcon('EUR')} style={{
           width: scaledWidth(27),
           height: scaledHeight(27),
-          resizeMode: 'cover',
+          resizeMode: misc.getFlatListIconResizeMode(),
           borderWidth: 1,
         }}/>
 

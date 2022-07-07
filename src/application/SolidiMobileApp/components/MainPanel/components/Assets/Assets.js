@@ -108,7 +108,7 @@ let Assets = () => {
           <Image source={appState.getAssetIcon(asset)} style={{
               width: scaledWidth(27),
               height: scaledHeight(27),
-              resizeMode: 'center',
+              resizeMode: misc.getFlatListIconResizeMode(),
               //borderWidth: 1, //testing
               marginLeft: scaledWidth(15),
             }}

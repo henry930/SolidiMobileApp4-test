@@ -82,7 +82,7 @@ let Sell = () => {
         icon: () => <Image source={assetIcon} style={{
             width: scaledWidth(27),
             height: scaledHeight(27),
-            resizeMode: 'center',
+            resizeMode: misc.getFlatListIconResizeMode(),
           }}
         />,
       }
