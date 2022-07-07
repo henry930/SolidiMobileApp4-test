@@ -33,13 +33,13 @@ let Test = () => {
   let setup = async () => {
     try {
       await appState.generalSetup();
-      let price = await appState.fetchBestPriceForASpecificVolume({
+      let output = await appState.fetchBestPriceForASpecificVolume({
         market: 'BTC/GBP',
         side: 'SELL',
         baseAssetVolume: '1',
         baseOrQuoteAsset: 'base',
       });
-      lj({price})
+      lj({output})
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {
