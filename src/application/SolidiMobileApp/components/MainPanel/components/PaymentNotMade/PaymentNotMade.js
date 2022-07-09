@@ -97,15 +97,15 @@ let PaymentNotMade = () => {
       <View style={styles.infoSection}>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} {timePeriod} have passed.</Text>
+          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} {timePeriod} have passed.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your order has been cancelled.</Text>
+          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your order has been cancelled.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Order details: Buy {volumeBA} {appState.getAssetInfo(assetBA).displayString} for {totalQA} {appState.getAssetInfo(assetQA).displayString}.</Text>
+          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Order details: Buy {volumeBA} {appState.getAssetInfo(assetBA).displayString} for {totalQA} {appState.getAssetInfo(assetQA).displayString}.</Text>
         </View>
 
       </View>
@@ -113,19 +113,19 @@ let PaymentNotMade = () => {
       <View style={styles.infoSection}>
 
       <View style={styles.infoItem}>
-          <Text>Please note:</Text>
+          <Text style={styles.basicText}>Please note:</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text>{`\u2022  `} If you made a payment, but used an incorrect reference or sent a different amount or waited too long to make it, the payment will be processed as a normal deposit.</Text>
+          <Text style={styles.basicText}>{`\u2022  `} If you made a payment, but used an incorrect reference or sent a different amount or waited too long to make it, the payment will be processed as a normal deposit.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text>{`\u2022  `} The funds will be added to your {appState.getAssetInfo(assetQA).displayString} account.</Text>
+          <Text style={styles.basicText}>{`\u2022  `} The funds will be added to your {appState.getAssetInfo(assetQA).displayString} account.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text>{`\u2022  `} In this case, you can now make a purchase of {appState.getAssetInfo(assetBA).displayString} directly, using the funds in your account.</Text>
+          <Text style={styles.basicText}>{`\u2022  `} In this case, you can now make a purchase of {appState.getAssetInfo(assetBA).displayString} directly, using the funds in your account.</Text>
         </View>
 
       </View>
@@ -176,6 +176,9 @@ let styles = StyleSheet.create({
   },
   infoItem: {
     marginBottom: scaledHeight(5),
+  },
+  basicText: {
+    fontSize: normaliseFont(14),
   },
   bold: {
     fontWeight: 'bold',
