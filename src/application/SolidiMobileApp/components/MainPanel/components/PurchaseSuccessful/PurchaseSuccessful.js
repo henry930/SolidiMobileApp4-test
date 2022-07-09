@@ -88,15 +88,15 @@ let PurchaseSuccessful = () => {
       <View style={styles.infoSection}>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your payment of {totalQA} {appState.getAssetInfo(assetQA).displayString} has been processed.</Text>
+          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your payment of {totalQA} {appState.getAssetInfo(assetQA).displayString} has been processed.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your Solidi account has been credited with {volumeBA} {appState.getAssetInfo(assetBA).displayString}.</Text>
+          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your Solidi account has been credited with {volumeBA} {appState.getAssetInfo(assetBA).displayString}.</Text>
         </View>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} Your new balance is: {getBalanceString()}</Text>
+          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your new balance is: {getBalanceString()}</Text>
         </View>
 
       </View>
@@ -116,7 +116,7 @@ let PurchaseSuccessful = () => {
       <View style={styles.infoSection2}>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>Every review helps build trust with our new customers. Tap the Trustpilot logo below to review us. Thanks!</Text>
+          <Text style={[styles.basicText, styles.bold]}>Every review helps build trust with our new customers. Tap the Trustpilot logo below to review us. Thanks!</Text>
         </View>
 
       </View>
@@ -173,6 +173,9 @@ let styles = StyleSheet.create({
   },
   infoItem: {
     marginBottom: scaledHeight(5),
+  },
+  basicText: {
+    fontSize: normaliseFont(14),
   },
   bold: {
     fontWeight: 'bold',
