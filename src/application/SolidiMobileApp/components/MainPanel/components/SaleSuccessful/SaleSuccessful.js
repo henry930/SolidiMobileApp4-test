@@ -30,8 +30,17 @@ let SaleSuccessful = () => {
 
   // Note: Never add "default" to the list of pageNames. One of the two options must be chosen explicitly.
   let pageName = appState.pageName;
+  //if (pageName == 'default') pageName = 'balance'; //testing
   let permittedPageNames = 'solidi balance'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'SaleSuccessful');
+
+  // Testing (for if we load this page directly).
+  if (appState.appTier == 'dev' && appState.panels.sell.volumeQA == '0') {
+    // Create an order.
+    _.assign(appState.panels.sell, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC', feeQA: '0.50', totalQA: '10.50'});
+    appState.panels.sell.activeOrder = true;
+    appState.panels.sell.orderID = 7200;
+  }
 
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA, totalQA} = appState.panels.sell);
