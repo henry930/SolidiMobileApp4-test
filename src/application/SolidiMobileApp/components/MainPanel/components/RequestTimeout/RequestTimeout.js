@@ -87,13 +87,13 @@ let RequestTimeout = () => {
 
       <View style={styles.infoSection}>
         <View style={styles.infoItem}>
-          <Text>Sorry! The server didn't respond in time. We weren't able to load the {appState.stashedState.mainPanelState} page.</Text>
+          <Text style={styles.basicText}>Sorry! The server didn't respond in time. We weren't able to load the {appState.stashedState.mainPanelState} page.</Text>
         </View>
       </View>
 
       <View style={styles.infoSection}>
         <View style={styles.infoItem}>
-          <Text>We'll try loading it again in {remainingTimeSeconds} seconds.</Text>
+          <Text style={styles.basicText}>We'll try loading it again in {remainingTimeSeconds} seconds.</Text>
         </View>
       </View>
 
@@ -104,7 +104,7 @@ let RequestTimeout = () => {
       </View>
 
       <View style={styles.infoSection}>
-          <Text>If you've tried to reload several times, and it still hasn't worked, then please:{'\n'}</Text>
+          <Text style={styles.basicText}>If you've tried to reload several times, and it still hasn't worked, then please:{'\n'}</Text>
           <Button title="Contact Us"
             onPress={ () => { appState.changeState('ContactUs') } }
             styles={styleContactUsButton}
@@ -145,6 +145,9 @@ let styles = StyleSheet.create({
   },
   spacer1: {
     marginBottom: scaledHeight(20),
+  },
+  basicText: {
+    fontSize: normaliseFont(14),
   },
   bold: {
     fontWeight: 'bold',
