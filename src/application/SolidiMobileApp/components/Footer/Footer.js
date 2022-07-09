@@ -156,7 +156,7 @@ let styleEmptyFooter = StyleSheet.create({
 
 let styleLeftButton = StyleSheet.create({
   image: {
-    iconSize: 22,
+    iconSize: scaledWidth(22),
     iconColor: colors.greyedOutIcon,
   },
   text: {
@@ -170,7 +170,7 @@ let styleLeftButton = StyleSheet.create({
 
 let styleRightButton = StyleSheet.create({
   image: {
-    iconSize: 22,
+    iconSize: scaledWidth(22),
     iconColor: colors.greyedOutIcon,
   },
   text: {
@@ -184,6 +184,7 @@ let styleRightButton = StyleSheet.create({
 
 let stylePanelButton = StyleSheet.create({
   image: {
+    iconSize: scaledWidth(22),
     iconColor: colors.greyedOutIcon,
   },
   text: {
@@ -197,6 +198,7 @@ let stylePanelButton = StyleSheet.create({
 
 let stylePanelButtonSelected = StyleSheet.create({
   image: {
+    iconSize: scaledWidth(22),
     iconColor: colors.selectedIcon,
   },
   text: {
