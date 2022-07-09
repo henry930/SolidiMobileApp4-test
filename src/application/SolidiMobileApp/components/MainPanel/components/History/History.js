@@ -245,7 +245,7 @@ let styles = StyleSheet.create({
     fontSize: normaliseFont(20),
     fontWeight: 'bold',
   },
-  basicText: {
+  basicText: { // Note: basicText size is normally 16.
     fontSize: normaliseFont(10),
   },
   historySection: {
