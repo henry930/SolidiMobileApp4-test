@@ -155,6 +155,9 @@ let styles = StyleSheet.create({
     fontSize: normaliseFont(20),
     fontWeight: 'bold',
   },
+  basicText: {
+    fontSize: normaliseFont(14),
+  },
   bold: {
     fontWeight: 'bold',
   },
@@ -166,9 +169,11 @@ let styles = StyleSheet.create({
     marginBottom: scaledHeight(30),
   },
   errorText: {
+    fontSize: normaliseFont(14),
     color: 'red',
   },
   errorTextBold: {
+    fontSize: normaliseFont(14),
     fontWeight: 'bold',
   },
   wideTextInputWrapper: {
@@ -180,6 +185,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
   },
   wideTextInput: {
+    fontSize: normaliseFont(14),
     height: scaledHeight(40),
     width: scaledWidth(360),
     borderWidth: 1,
@@ -191,6 +197,7 @@ let styles = StyleSheet.create({
     marginTop: scaledHeight(20),
   },
   resultText: {
+    fontSize: normaliseFont(14),
     color: 'red',
   },
 });
