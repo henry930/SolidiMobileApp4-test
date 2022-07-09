@@ -504,7 +504,7 @@ let styles = StyleSheet.create({
     maxWidth: '80%',
   },
   detailText: {
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(14),
   },
 });
 
