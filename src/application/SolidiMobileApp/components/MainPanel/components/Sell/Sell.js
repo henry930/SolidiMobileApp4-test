@@ -468,6 +468,9 @@ let Sell = () => {
             maxLength: 15
           }}
           maxHeight={scaledHeight(300)}
+          textStyle={{
+            fontSize: normaliseFont(10),
+          }}
         />
       </View>
 
@@ -498,6 +501,9 @@ let Sell = () => {
             maxLength: 15
           }}
           maxHeight={scaledHeight(300)}
+          textStyle={{
+            fontSize: normaliseFont(10),
+          }}
         />
       </View>
 
@@ -563,6 +569,7 @@ let styles = StyleSheet.create({
     zIndex: 2,
   },
   volumeQA: {
+    fontSize: scaledHeight(16),
     height: scaledHeight(40),
     width: scaledWidth(125),
     borderWidth: 1,
@@ -586,6 +593,7 @@ let styles = StyleSheet.create({
     zIndex: 1,
   },
   volumeBA: {
+    fontSize: scaledHeight(16),
     height: scaledHeight(40),
     width: scaledWidth(125),
     borderWidth: 1,
