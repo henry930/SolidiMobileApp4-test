@@ -455,6 +455,9 @@ let Send = () => {
           setOpen={setOpenPriority}
           setValue={setPriority}
           setItems={setItemsPriority}
+          textStyle={{
+            fontSize: normaliseFont(10),
+          }}
         />
       </View>
     )
@@ -631,6 +634,9 @@ let Send = () => {
             maxLength: 15
           }}
           maxHeight={scaledHeight(300)}
+          textStyle={{
+            fontSize: normaliseFont(10),
+          }}
         />
       </View>
 
@@ -741,6 +747,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
   },
   volumeSA: {
+    fontSize: scaledHeight(16),
     height: scaledHeight(40),
     width: scaledWidth(120),
     borderWidth: 1,
@@ -781,6 +788,7 @@ let styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   monospaceText: {
+    fontSize: normaliseFont(14),
     // For Android, a second solution may be needed.
     fontVariant: ['tabular-nums'],
   },
@@ -799,9 +807,10 @@ let styles = StyleSheet.create({
 
   },
   fullWidthTextInput: {
+    fontSize: normaliseFont(16),
     marginTop: scaledHeight(10),
     height: scaledHeight(40),
-    width: '100%',
+    width: '99%',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: scaledWidth(10),
@@ -810,7 +819,7 @@ let styles = StyleSheet.create({
   fullWidthLabelledInputWrapper: {
     //borderWidth: 1, // testing
     marginTop: scaledHeight(10),
-    width: '100%',
+    width: '99%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
     //justifyContent: 'space-between',
@@ -829,6 +838,7 @@ let styles = StyleSheet.create({
     width: '50%',
   },
   halfWidthTextInput: {
+    fontSize: normaliseFont(16),
     height: scaledHeight(40),
     width: '100%',
     borderWidth: 1,
@@ -843,6 +853,7 @@ let styles = StyleSheet.create({
     justifyContent: 'center',
   },
   importantMessageText: {
+    fontSize: normaliseFont(16),
     textDecorationLine: 'underline'
   },
   sendButtonWrapper: {
@@ -862,6 +873,7 @@ let styles = StyleSheet.create({
 
 let styleMaxButton = StyleSheet.create({
   text: {
+    fontSize: normaliseFont(10),
     paddingVertical: 0,
     marginVertical: 0,
   },
