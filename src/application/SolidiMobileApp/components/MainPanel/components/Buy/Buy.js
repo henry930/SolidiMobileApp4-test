@@ -293,6 +293,9 @@ let Buy = () => {
     } else if (_.isEmpty(newVolumeBA)) {
       // We permit the user to completely empty the input box. It feels better.
       setVolumeBA(newVolumeBA);
+    } else if (volumeBA == '[not loaded]') {
+      // Allow user to wipe the value '[not loaded]'.
+      setVolumeBA('');
     } else if (! regex.test(newVolumeBA)) {
       // No need to do anything. The input simply won't accept any non decimal-string input,
       // such as symbols or alphabet characters.
@@ -314,6 +317,9 @@ let Buy = () => {
     } else if (_.isEmpty(newVolumeQA)) {
       // We permit the user to completely empty the input box. It feels better.
       setVolumeQA(newVolumeQA);
+    } else if (volumeQA == '[not loaded]') {
+      // Allow user to wipe the value '[not loaded]'.
+      setVolumeQA('');
     } else if (! regex.test(newVolumeQA)) {
       // No need to do anything. The input simply won't accept any non decimal-string input,
       // such as symbols or alphabet characters.
