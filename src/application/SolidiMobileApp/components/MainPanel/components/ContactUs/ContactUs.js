@@ -62,7 +62,7 @@ let ContactUs = () => {
 
       <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
-      <Text style={styles.bold}>Please tap the button below to visit the Contact Us page on our website.</Text>
+      <Text style={[styles.basicText, styles.bold]}>Please tap the button below to visit the Contact Us page on our website.</Text>
 
       <View style={styles.buttonSection}>
         <StandardButton title="Contact Us"
@@ -71,7 +71,7 @@ let ContactUs = () => {
         />
       </View>
 
-      <Text style={styles.bold}>
+      <Text style={[styles.basicText, styles.bold]}>
       If you would like to contact us via another device, here are the details:{'\n'}
       {`\u2022  `}Website: {domain}{'\n'}
       {`\u2022  `}Contact Us: {contactURL}
@@ -112,6 +112,9 @@ let styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
+  },
+  basicText: {
+    fontSize: normaliseFont(14),
   },
   buttonSection: {
     marginVertical: scaledHeight(80),
