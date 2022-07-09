@@ -75,9 +75,12 @@ let Assets = () => {
             setOpen={setOpen}
             setValue={setCategory}
             setItems={setCategoryItems}
+            textStyle={{
+              fontSize: normaliseFont(10),
+            }}
           />
         </View>
-        <Button title='Reload' onPress={ setup } />
+        <Button title='Reload' styles={styles.reloadButton} onPress={ setup } />
       </View>
     )
   }
@@ -189,6 +192,14 @@ let styles = StyleSheet.create({
   },
   assetCategoryWrapper: {
     width: '50%',
+  },
+  assetCategory: {
+    height: scaledHeight(40),
+  },
+  reloadButton: {
+    text: {
+      fontSize: normaliseFont(10),
+    },
   },
   flatListWrapper: {
     height: '80%',
