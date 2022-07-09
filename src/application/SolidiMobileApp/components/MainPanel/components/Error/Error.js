@@ -67,19 +67,19 @@ let Error = () => {
 
       <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
-      <Text style={styles.bold}>{'\n'}Unfortunately, an error has occurred.</Text>
+      <Text style={[styles.bold, styles.basicText]}>{'\n'}Unfortunately, an error has occurred.</Text>
 
       <View style={styles.infoSection}>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>Error message:</Text>
-          <Text>{'\n'}{appState.error.message}</Text>
+          <Text style={[styles.bold, styles.basicText]}>Error message:</Text>
+          <Text style={styles.basicText}>{'\n'}{appState.error.message}</Text>
         </View>
 
       </View>
 
       <View style={styles.infoSection}>
-          <Text>Please take a screenshot of this page in order to record the error message, and then:{'\n'}</Text>
+          <Text style={styles.basicText}>Please take a screenshot of this page in order to record the error message, and then:{'\n'}</Text>
           <Button title="Contact Us"
             onPress={ () => { appState.changeState('ContactUs') } }
             styles={styleContactUsButton}
@@ -120,6 +120,9 @@ let styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
+  },
+  basicText: {
+    fontSize: normaliseFont(14),
   },
   infoSection: {
     paddingTop: scaledHeight(20),
