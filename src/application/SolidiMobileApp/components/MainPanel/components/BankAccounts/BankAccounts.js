@@ -237,7 +237,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, //testing
   },
   initialMessageText: {
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(14),
     color: 'red',
   },
   bankAccount: {
@@ -258,7 +258,7 @@ let styles = StyleSheet.create({
     minWidth: '45%', // Expands with length of detail name.
   },
   detailNameText: {
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(14),
     fontWeight: 'bold',
   },
   detailValue: {
@@ -269,13 +269,13 @@ let styles = StyleSheet.create({
   },
   detailValueText: {
     //borderWidth: 1, // testing
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(14),
   },
   editableTextInput: {
     borderWidth: 1,
     borderRadius: 16,
     borderColor: colors.greyedOutIcon,
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(14),
   },
   buttonWrapper: {
     marginTop: scaledHeight(20),
@@ -287,7 +287,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, //testing
   },
   updateMessageText: {
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(14),
     color: 'red',
   },
   errorMessage: {
@@ -296,7 +296,7 @@ let styles = StyleSheet.create({
     paddingVertical: scaledHeight(15),
   },
   errorMessageText: {
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(14),
     color: 'red',
   }
 });
