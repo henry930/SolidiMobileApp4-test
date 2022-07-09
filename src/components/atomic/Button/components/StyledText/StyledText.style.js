@@ -8,6 +8,7 @@ import _ from 'lodash';
 
 // Internal imports
 import { colors } from 'src/constants';
+import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 
 // Logger
 import logger from 'src/util/logger';
@@ -22,12 +23,14 @@ let { style } = StyleSheet.create({
     textAlign: 'center',
     margin: 4,
     padding: 4,
+    //borderWidth: 1, //testing
     color: colors.buttonText,
     ...Platform.select({
       ios: {
-        fontSize: 16,
+        fontSize: normaliseFont(14),
       },
       android: {
+        //fontSize: normaliseFont(14), // maybe need this in future
         fontWeight: '500',
       },
     }),
