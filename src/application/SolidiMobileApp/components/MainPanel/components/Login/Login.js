@@ -208,6 +208,7 @@ let styles = StyleSheet.create({
     marginBottom: scaledHeight(30),
   },
   errorText: {
+    fontSize: normaliseFont(14),
     color: 'red',
   },
   errorTextBold: {
@@ -225,8 +226,9 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
   },
   wideTextInput: {
+    fontSize: normaliseFont(14),
     height: scaledHeight(40),
-    width: scaledWidth(360),
+    width: scaledWidth(359), // 1 pixel left off so that right-hand border is not cut off.
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: scaledWidth(10),
@@ -249,6 +251,7 @@ let styles = StyleSheet.create({
     paddingRight: scaledWidth(10),
   },
   uploadMessageText: {
+    fontSize: normaliseFont(14),
     color: 'red',
   },
 })
