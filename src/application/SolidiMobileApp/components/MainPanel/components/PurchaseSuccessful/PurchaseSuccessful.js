@@ -27,6 +27,14 @@ let PurchaseSuccessful = () => {
   let stateChangeID = appState.stateChangeID;
   let [isLoading, setIsLoading] = useState(true);
 
+  // Testing
+  if (appState.appTier == 'dev' && appState.panels.buy.volumeQA == '0') {
+    // Create an order.
+    _.assign(appState.panels.buy, {volumeQA: '10.00', assetQA: 'GBP', volumeBA: '0.00036922', assetBA: 'BTC'});
+    appState.panels.buy.activeOrder = true;
+    appState.panels.buy.orderID = 7200;
+  }
+
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA, feeQA, totalQA} = appState.panels.buy);
 
