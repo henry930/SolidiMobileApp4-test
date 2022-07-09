@@ -237,6 +237,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, //testing
   },
   initialMessageText: {
+    fontSize: normaliseFont(16),
     color: 'red',
   },
   bankAccount: {
@@ -264,7 +265,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
     paddingLeft: scaledWidth(10),
     paddingVertical: scaledHeight(10),
-    minWidth: '55%',
+    minWidth: '54%', // slightly reduced width so that right-hand border is not cut off.
   },
   detailValueText: {
     //borderWidth: 1, // testing
@@ -286,6 +287,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, //testing
   },
   updateMessageText: {
+    fontSize: normaliseFont(16),
     color: 'red',
   },
   errorMessage: {
