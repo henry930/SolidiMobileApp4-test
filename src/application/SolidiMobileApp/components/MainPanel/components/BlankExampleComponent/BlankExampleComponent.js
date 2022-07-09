@@ -67,12 +67,12 @@ let BlankExampleComponent = () => {
 
       <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
-      <Text style={styles.bold}>{'\n'} {`\u2022  `} [some text]</Text>
+      <Text style={[styles.basicText, styles.bold]}>{'\n'} {`\u2022  `} [some text]</Text>
 
       <View style={styles.infoSection}>
 
         <View style={styles.infoItem}>
-          <Text style={styles.bold}>{`\u2022  `} [some details]</Text>
+          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} [some details]</Text>
         </View>
 
       </View>
@@ -109,6 +109,12 @@ let styles = StyleSheet.create({
   headingText: {
     fontSize: normaliseFont(20),
     fontWeight: 'bold',
+  },
+  basicText: {
+    fontSize: normaliseFont(14),
+  },
+  mediumText: {
+    fontSize: normaliseFont(16),
   },
   bold: {
     fontWeight: 'bold',
