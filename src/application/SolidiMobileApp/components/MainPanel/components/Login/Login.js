@@ -226,11 +226,11 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
   },
   wideTextInput: {
-    fontSize: normaliseFont(14),
+    fontSize: normaliseFont(16),
     height: scaledHeight(40),
     width: scaledWidth(359), // 1 pixel left off so that right-hand border is not cut off.
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: scaledWidth(8),
     paddingHorizontal: scaledWidth(10),
     marginRight: scaledWidth(20),
   },

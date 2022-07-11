@@ -27,10 +27,10 @@ let { style } = StyleSheet.create({
     color: colors.buttonText,
     ...Platform.select({
       ios: {
-        fontSize: normaliseFont(12),
+        fontSize: normaliseFont(16),
       },
       android: {
-        //fontSize: normaliseFont(14), // maybe need this in future
+        fontSize: normaliseFont(16),
         fontWeight: '500',
       },
     }),

@@ -371,9 +371,7 @@ let Receive = () => {
             maxLength: 15
           }}
           maxHeight={scaledHeight(300)}
-          textStyle={{
-            fontSize: normaliseFont(10),
-          }}
+          textStyle={styles.dropdownText}
         />
       </View>
 
@@ -417,6 +415,12 @@ let styles = StyleSheet.create({
   headingText: {
     fontSize: normaliseFont(20),
     fontWeight: 'bold',
+  },
+  basicText: {
+    fontSize: normaliseFont(14),
+  },
+  dropdownText: {
+    fontSize: normaliseFont(14),
   },
   bold: {
     fontWeight: 'bold',
@@ -504,7 +508,7 @@ let styles = StyleSheet.create({
     maxWidth: '80%',
   },
   detailText: {
-    fontSize: normaliseFont(14),
+    fontSize: normaliseFont(16),
   },
 });
 
@@ -513,7 +517,6 @@ let styleContactUsButton = StyleSheet.create({
   text: {
     margin: 0,
     padding: 0,
-    fontSize: normaliseFont(14),
   },
 });
 

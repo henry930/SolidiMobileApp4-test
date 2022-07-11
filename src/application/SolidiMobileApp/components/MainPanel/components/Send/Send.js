@@ -455,9 +455,7 @@ let Send = () => {
           setOpen={setOpenPriority}
           setValue={setPriority}
           setItems={setItemsPriority}
-          textStyle={{
-            fontSize: normaliseFont(10),
-          }}
+          textStyle={styles.dropdownText}
         />
       </View>
     )
@@ -634,9 +632,7 @@ let Send = () => {
             maxLength: 15
           }}
           maxHeight={scaledHeight(300)}
-          textStyle={{
-            fontSize: normaliseFont(10),
-          }}
+          textStyle={styles.dropdownText}
         />
       </View>
 
@@ -724,6 +720,9 @@ let styles = StyleSheet.create({
   basicText: {
     fontSize: normaliseFont(14),
   },
+  dropdownText: {
+    fontSize: normaliseFont(14),
+  },
   bold: {
     fontWeight: 'bold',
   },
@@ -750,7 +749,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
   },
   volumeSA: {
-    fontSize: scaledHeight(16),
+    fontSize: normaliseFont(16),
     height: scaledHeight(40),
     width: scaledWidth(120),
     borderWidth: 1,

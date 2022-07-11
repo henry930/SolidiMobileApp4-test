@@ -185,7 +185,7 @@ let styles = StyleSheet.create({
     //borderWidth: 1, // testing
   },
   wideTextInput: {
-    fontSize: normaliseFont(14),
+    fontSize: normaliseFont(16),
     height: scaledHeight(40),
     width: scaledWidth(360),
     borderWidth: 1,
