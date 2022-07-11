@@ -29,11 +29,10 @@ let InsufficientBalance = () => {
   /* We can arrive at this component due to:
   - trying to submit an buy order and pay with our balance, and we don't have enough.
   - trying to submit a sell order for an amount that we don't have.
-  - trying to make a withdrawal that is too large.
   */
   let pageName = appState.pageName;
   //if (pageName == 'default') pageName = 'buy'; // For testing.
-  let permittedPageNames = 'buy sell withdraw'.split(' ');
+  let permittedPageNames = 'buy sell'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'InsufficientBalance');
 
   // Testing
