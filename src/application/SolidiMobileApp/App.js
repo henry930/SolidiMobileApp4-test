@@ -25,9 +25,12 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let App = () => {
 
 
-  const helloWorld = async () => {
+  log('========== start: helloWorld ==========');
+
+
+  const initialFunction = () => {
     try {
-      log('========== start: helloWorld')
+      //log('Start: App.initialFunction')
       return;
     } catch (error) {
       console.error(error);
@@ -38,7 +41,7 @@ let App = () => {
 
 
   useEffect(() => {
-    helloWorld();
+    initialFunction();
     setTimeout(SplashScreen.hide, 500);
   }, []);
 
