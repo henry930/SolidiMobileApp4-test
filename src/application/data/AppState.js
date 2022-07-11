@@ -584,6 +584,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
 
     this.choosePIN = async () => {
+      log("Start: choosePIN");
       // Deleting the PIN happens first, because it will affect the flow in subsequent pages.
       await this.state.deletePIN(deleteFromKeychain=true);
       // If the app is locked, and the user has chosen to reset the PIN, then we need to log them out.
@@ -642,6 +643,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
 
     this.logout = async () => {
+      log("Start: logout");
       // Note: We don't ever delete the PIN from app memory or from the keychain.
       // Delete user's email and password from memory and from keychain.
       this.state.user.email = '';
@@ -656,6 +658,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
 
     this.lockApp = () => {
+      log("Start: lockApp");
       this.state.appLocked = true;
       this.cancelTimers();
       this.abortAllRequests();
@@ -673,6 +676,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let waitTimeMinutes = 120; // Future: Set to 30 mins.
       let waitTimeSeconds = waitTimeMinutes * 60;
       let callLockApp = () => {
+        // Don't lock app if we're currently on the PIN page.
         if (this.state.mainPanelState !== 'PIN') {
           let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
           log(msg);
