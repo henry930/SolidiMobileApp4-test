@@ -743,7 +743,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       });
       if (data == 'DisplayedError') return;
       // if (! .has(data, 'api_latest_version')) this.state.changeState('Error');
-      let api_latest_version = data.api_latest_version;
+      let api_latest_version = _.has(data, 'api_latest_version') ? data.api_latest_version : null;
       this.state.apiData.api_latest_version = api_latest_version;
       log(`Latest API version: ${api_latest_version}`);
     }
@@ -752,9 +752,10 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     this.checkLatestAPIVersion = () => {
       let appAPIVersion = this.state.appAPIVersion;
       let api_latest_version = this.state.apiData.api_latest_version;
+      if (! misc.isNumericString(api_latest_version)) return false;
       let check = api_latest_version !== appAPIVersion;
       let msg = `apiVersion in app: ${appAPIVersion}. Latest apiVersion from API data: ${api_latest_version}.`;
-      //log(msg);
+      log(msg);
       return check;
     }
 
