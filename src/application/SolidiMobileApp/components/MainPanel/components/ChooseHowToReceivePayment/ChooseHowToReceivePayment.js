@@ -35,6 +35,7 @@ Future: People may want to be paid directly with crypto, not just fiat.
 
 
 
+
 let ChooseHowToReceivePayment = () => {
 
   let appState = useContext(AppStateContext);
@@ -83,10 +84,12 @@ let ChooseHowToReceivePayment = () => {
 
   let setup = async () => {
     try {
+      setSendOrderMessage('Loading...');
       await appState.generalSetup();
       await appState.loadBalances();
       let details = await fetchPaymentChoiceDetails();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      setSendOrderMessage('');
       setPaymentChoiceDetails(details);
       setErrorMessage('');
       setDisableConfirmButton(false);
@@ -125,10 +128,11 @@ let ChooseHowToReceivePayment = () => {
   let fetchPaymentChoiceDetails = async () => {
     // Fees may differ depending on the volume and on the user (e.g. whether the user has crossed a fee inflection point).
     // We therefore request the details for each payment choice from the API, using the specific quoteAssetVolume.
+    // We want to keep the quoteAssetVolume (chosen on the Sell page) constant if possible, because the user expects to receive a certain volume in the quoteAsset.
     let market = assetBA + '/' + assetQA;
     let side = 'SELL';
     let baseOrQuoteAsset = 'quote';
-    let params = {market, side, baseOrQuoteAsset, quoteAssetVolume: volumeQA};
+    let params = {market, side, baseOrQuoteAsset, quoteAssetVolume: calculateVolumeQA()};
     let output = await appState.fetchPricesForASpecificVolume(params);
     //lj(output);
     if (_.has(output, 'error')) {
@@ -141,7 +145,37 @@ let ChooseHowToReceivePayment = () => {
       "solidi":{"baseAssetVolume":"0.00042782","baseOrQuoteAsset":"quote","feeVolume":"0.00","market":"BTC/GBP","paymentMethod":"solidi","quoteAssetVolume":"10.00","side":"SELL"}
     }
     */
+    // Save results.
     paymentChoiceDetails = output;
+    /*
+    - Problem: The baseAssetVolume might be greater than the baseAsset balance, which is the maximum volume that we can sell.
+    - In this case, we need to recalculate with the balance volume.
+    */
+    paymentChoiceDetails.sellingEntireBaseAssetBalance = false;
+    let output2;
+    let balanceBA = appState.getBalance(assetBA);
+    let balanceExceeded = false;
+    if (Big(output.balance.baseAssetVolume).gt(Big(balanceBA))) {
+      balanceExceeded = true;
+      log(`For paymentChoice='balance', required baseAssetVolume = ${output.balance.baseAssetVolume}, which is greater than the available balance: ${balanceBA} ${assetBA}`);
+    }
+    if (Big(output.solidi.baseAssetVolume).gt(Big(balanceBA))) {
+      balanceExceeded = true;
+      log(`For paymentChoice='solidi', required baseAssetVolume = ${output.solidi.baseAssetVolume}, which is greater than the available balance: ${balanceBA} ${assetBA}`);
+    }
+    if (balanceExceeded) {
+      log(`paymentChoiceDetails: Fetch price in quoteAssetVolume for selling the available balance.`);
+      let params2 = {market, side, baseOrQuoteAsset: 'base', baseAssetVolume: balanceBA};
+      output2 = await appState.fetchPricesForASpecificVolume(params2);
+      lj({output2});
+      if (_.has(output2, 'error')) {
+        logger.error(output2.error);
+        return;
+      }
+      // Save results.
+      paymentChoiceDetails = output2;
+      paymentChoiceDetails.sellingEntireBaseAssetBalance = true;
+    }
     // Testing
     testTweaks = false;
     if (testTweaks) {
@@ -160,6 +194,24 @@ let ChooseHowToReceivePayment = () => {
     baseAssetVolume = appState.getFullDecimalValue({asset: assetBA, value: baseAssetVolume, functionName: 'ChooseHowToPay'});
     //log(`Payment method = ${paymentChoice}: baseAssetVolume = ${baseAssetVolume} ${assetBA}`);
     return baseAssetVolume;
+  }
+
+
+  let calculateVolumeQA = () => {
+    // In the event that we're selling the entire balance, we can't use the quoteAssetVolume value that was originally chosen on the Sell page.
+    // Also, the final volumeQA may differ depending on the payment choice.
+    //lj({paymentChoiceDetails})
+    //lj({paymentChoice})
+    if (
+      _.has(paymentChoiceDetails, 'sellingEntireBaseAssetBalance') &&
+      paymentChoiceDetails.sellingEntireBaseAssetBalance === true &&
+      _.has(paymentChoiceDetails, paymentChoice) &&
+      _.has(paymentChoiceDetails[paymentChoice], 'quoteAssetVolume')
+    ) {
+      return paymentChoiceDetails[paymentChoice].quoteAssetVolume;
+    }
+    // By default, return the original volume.
+    return volumeQA;
   }
 
 
@@ -183,7 +235,7 @@ let ChooseHowToReceivePayment = () => {
     }
     if (_.isNil(feeVolume)) feeVolume = calculateFeeQA();
     if (_.isEmpty(feeVolume)) return ''; // We can't know the total without the fee.
-    let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'});
+    let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: calculateVolumeQA(), functionName: 'ChooseHowToPay'});
     let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
     let total = Big(volumeQA2).minus(Big(feeVolume)).toFixed(quoteDP);
     return total;
@@ -211,7 +263,7 @@ let ChooseHowToReceivePayment = () => {
     // Save volumeBA in the appState.
     appState.panels.sell.volumeBA = volumeBA;
     // Create the order object.
-    let sellOrder = {volumeQA, volumeBA, assetQA, assetBA, paymentMethod: paymentChoice};
+    let sellOrder = {volumeQA: calculateVolumeQA(), volumeBA, assetQA, assetBA, paymentMethod: paymentChoice};
     // Choose the receive-payment function.
     // Note: These functions are currently identical, but may diverge in future. Keep them separate.
     if (paymentChoice === 'solidi') {
@@ -255,7 +307,7 @@ let ChooseHowToReceivePayment = () => {
         // Retrieve feeVolume from order result, calculate totalVolume, and store the results in the app memory.
         let feeVolume = output.fees;
         let totalVolumeQA = calculateTotalQA({feeVolume});
-        lj({feeVolume, totalVolumeQA})
+        lj({feeVolume, totalVolumeQA});
         appState.panels.sell.feeQA = feeVolume;
         appState.panels.sell.totalQA = totalVolumeQA;
         appState.changeState('SaleSuccessful', paymentChoice);
@@ -314,7 +366,7 @@ let ChooseHowToReceivePayment = () => {
     // We re-query the API using the original quoteAssetVolume.
     let details = await fetchPaymentChoiceDetails();
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    // Future: Check for errors here.
+    // Future: Check in 'details' for errors.
     setPaymentChoiceDetails(details);
     // priceDown = Did the quoteAssetVolume (that the user would receive) go down ?
     let priceDown = Big(newVolumeQA).lt(Big(volumeQA));
@@ -360,12 +412,6 @@ let ChooseHowToReceivePayment = () => {
       <View style={[styles.horizontalRule, styles.horizontalRule1]}/>
 
       <ScrollView ref={refScrollView} showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
-
-        { isLoading &&
-          <View style={styles.loadingMessage}>
-            <Text style={styles.loadingMessageText}>Loading...</Text>
-          </View>
-        }
 
         <View style={styles.selectPaymentMethodSection}>
 
@@ -429,7 +475,7 @@ let ChooseHowToReceivePayment = () => {
 
           <View style={styles.orderDetailsLine}>
             <Text style={[styles.basicText, styles.bold]}style={[styles.basicText, styles.bold]}>You get</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToReceivePayment'})} {assetQA}</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: calculateVolumeQA(), functionName: 'ChooseHowToReceivePayment'})} {assetQA}</Text>
           </View>
 
           <View style={styles.orderDetailsLine}>
@@ -563,15 +609,6 @@ let styles = StyleSheet.create({
     fontSize: normaliseFont(14),
     // For Android, a second solution may be needed.
     fontVariant: ['tabular-nums'],
-  },
-  loadingMessage: {
-    //borderWidth: 1, //testing
-    marginTop: scaledHeight(20),
-    paddingHorizontal: scaledWidth(30),
-  },
-  loadingMessageText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
   },
   priceChangeMessage: {
     //borderWidth: 1, //testing
