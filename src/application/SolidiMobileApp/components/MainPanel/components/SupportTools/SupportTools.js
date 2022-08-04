@@ -92,7 +92,6 @@ let SupportTools = () => {
             await appState.deletePIN(deleteFromKeychain=true);
             // Log out: This will delete everything else.
             await appState.logout();
-            appState.changeState('Login');
           } }
         />
       </View>

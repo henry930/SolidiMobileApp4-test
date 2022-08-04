@@ -65,7 +65,7 @@ let Test = () => {
 
       <Text style={styles.basicText}>Status: </Text>
       <StandardButton title='Log out' style={styleButton}
-        onPress={ () => { appState.logout(); } }
+        onPress={ async () => { await appState.logout(); } }
       />
       <StandardButton title='Change PIN' style={styleButton}
         onPress={ () => { appState.choosePIN(); } }
