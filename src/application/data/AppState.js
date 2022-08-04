@@ -367,6 +367,10 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       await Keychain.setInternetCredentials(this.state.loginCredentialsStorageKey, email, password);
       let msg = `loginCredentials (email=${email}, password=${password}) stored in keychain with key = '${this.state.loginCredentialsStorageKey}')`;
       log(msg);
+      // Save the fact that the email & password have been stored.
+      this.state.user.loginCredentialsFound = true;
+      let msg2 = `Set this.state.user.loginCredentialsFound = true`;
+      log(msg2);
       // Load user stuff.
       await this.state.loadInitialStuffAboutUser();
     }
