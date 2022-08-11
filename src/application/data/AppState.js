@@ -50,7 +50,7 @@ let appAPIVersion = '1';
 let domains = {
   dev: 't3.solidi.co',
   stag: 't10.solidi.co',
-  prod: 'solidi.co',
+  prod: 'www.solidi.co',
 }
 if (! _.has(domains, appTier)) throw new Error(`Unrecognised app tier: ${appTier}`);
 let domain = domains[appTier];
@@ -371,6 +371,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       this.state.user.loginCredentialsFound = true;
       let msg2 = `Set this.state.user.loginCredentialsFound = true`;
       log(msg2);
+      log(`apiKey: ${apiKey}`);
+      log(`apiSecret: ${apiSecret}`);
       // Load user stuff.
       await this.state.loadInitialStuffAboutUser();
     }
@@ -1224,9 +1226,12 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         await this.state.loadAssetsInfo();
         this.state.assetsInfoLoaded = true;
       }
-      await this.loadUserInfo();
-      await this.loadDepositDetailsForAsset('GBP');
-      await this.loadDefaultAccountForAsset('GBP');
+      let result = await this.loadUserInfo();
+      if (! result) return false;
+      let result2 = await this.loadDepositDetailsForAsset('GBP');
+      if (! result2) return false;
+      let result3 = await this.loadDefaultAccountForAsset('GBP');
+      if (! result3) return false;
     }
 
 
@@ -1238,7 +1243,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         functionName: 'loadUserInfo',
         apiRoute: 'user',
       });
-      if (data == 'DisplayedError') return;
+      if (data == 'DisplayedError') return false;
       // If the data differs from existing data, save it.
       let msg = "User info (basic) loaded from server.";
       if (jd(data) === jd(this.state.user.info.user)) {
@@ -1247,6 +1252,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         log(msg + " New data saved to appState. " + jd(data));
         this.state.user.info.user = data;
       }
+      return true;
     }
 
 
@@ -1581,7 +1587,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       Example result if the address check failed during registration:
 {
   "result": "error",
-  "details": "ID required",
+  "details": "ID_REQUIRED",
   "tradeids": []
 }
 

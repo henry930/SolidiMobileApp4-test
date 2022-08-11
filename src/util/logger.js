@@ -36,6 +36,7 @@ let extensionColors = {
 // Build logger.
 
 let debugTiers = 'dev stag'.split(' ');
+//debugTiers.push('prod'); // testing
 
 let severityLevel = (debugTiers.includes(appTier)) ? 'debug' : 'error';
 

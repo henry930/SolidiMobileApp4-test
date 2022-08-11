@@ -216,6 +216,11 @@ let ChooseHowToPay = () => {
     appState.panels.buy.output = output;
     if (_.has(output, 'error')) {
       setErrorMessage(misc.itemToString(output.error));
+      /* Future: If output is this:
+      {"error":"ValidationError: Unfortunately, 0.00010146 BTC is too small an amount for us to process. Please choose a larger amount."}
+      then after 3 seconds, redirect to the buy page.
+      Need to provide an error code with the output.
+      */
     } else if (_.has(output, 'result')) {
       let result = output.result;
       if (result == 'NO_ACTIVE_ORDER') {
