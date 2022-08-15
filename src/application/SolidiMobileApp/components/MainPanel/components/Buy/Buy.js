@@ -381,6 +381,20 @@ let Buy = () => {
   }
 
 
+  let getDomain = () => {
+    // Remove the "www." prefix, if it exists.
+    // Note: It doesn't exist during dev testing or staging.
+    let domain = appState.domain;
+    log(`getDomain: domain = ${domain}`);
+    return domain; //tmp
+    let domain2 = domain.substring(0, 4);
+    if (domain2 == 'www.') {
+      domain = domain.substring(4, domain.length);
+    }
+    return domain;
+  }
+
+
   let upgradeRequired = () => {
     return (
       <View style={styles.upgradeRequired}>
@@ -467,6 +481,10 @@ let Buy = () => {
 
       <View style={styles.priceWrapper}>
         <Text style={styles.priceText}>Current price: {generatePriceDescription()}</Text>
+      </View>
+
+      <View style={styles.websiteWrapper}>
+        <Text style={styles.priceText}>Website: {getDomain()}</Text>
       </View>
 
       <View style={styles.buttonWrapper}>
@@ -585,6 +603,9 @@ let styles = StyleSheet.create({
   priceText: {
     fontSize: normaliseFont(16),
     fontWeight: 'bold',
+  },
+  websiteWrapper: {
+    marginVertical: scaledHeight(10),
   },
   buttonWrapper: {
     marginTop: scaledHeight(20),
