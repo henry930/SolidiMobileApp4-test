@@ -4,3 +4,6 @@
 - Inside the 'empty' directory, we store an empty version of the file, that exports an object with the same format.
 - In AppState.js, we conditionally import one of these files, depending on whether the appTier is 'dev' or not.
 
+Setup:
+- Copy the file devBasicAuth.js from 'empty' to 'values' directory.
+- Open it and insert the basic authentication username & password.
