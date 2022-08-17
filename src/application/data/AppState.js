@@ -1222,16 +1222,14 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     // This is called immediately after a successful Login or PIN entry.
     this.loadInitialStuffAboutUser = async () => {
       if (! this.state.assetsInfoLoaded) {
-        // needed for loading deposit details & default account.
+        // This is needed for loading the deposit details & the default account.
         await this.state.loadAssetsInfo();
         this.state.assetsInfoLoaded = true;
       }
-      let result = await this.loadUserInfo();
-      if (! result) return false;
-      let result2 = await this.loadDepositDetailsForAsset('GBP');
-      if (! result2) return false;
-      let result3 = await this.loadDefaultAccountForAsset('GBP');
-      if (! result3) return false;
+      // The following information can be changed by the user while the app is in use, so we reload it every time this function is called.
+      await this.loadUserInfo();
+      await this.loadDepositDetailsForAsset('GBP');
+      await this.loadDefaultAccountForAsset('GBP');
     }
 
 
