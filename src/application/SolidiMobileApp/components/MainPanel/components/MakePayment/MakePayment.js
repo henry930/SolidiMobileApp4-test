@@ -39,6 +39,13 @@ let MakePayment = () => {
   // Load order details.
   ({volumeQA, volumeBA, assetQA, assetBA, feeQA, totalQA} = appState.panels.buy);
 
+  // Load deposit account details.
+  let detailsGBP = appState.user.info.depositDetails.GBP;
+  let solidiAccountName = detailsGBP.accountName;
+  let solidiSortCode = detailsGBP.sortCode;
+  let solidiAccountNumber = detailsGBP.accountNumber;
+  let paymentReference = detailsGBP.reference;
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -48,6 +55,7 @@ let MakePayment = () => {
   let setup = async () => {
     try {
       await appState.generalSetup();
+      checkDepositDetails();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     } catch(err) {
       let msg = `MakePayment.setup: Error = ${err}`;
@@ -55,12 +63,26 @@ let MakePayment = () => {
     }
   }
 
-  // Load deposit account details.
-  let detailsGBP = appState.user.info.depositDetails.GBP;
-  let solidiAccountName = detailsGBP.accountName;
-  let solidiSortCode = detailsGBP.sortCode;
-  let solidiAccountNumber = detailsGBP.accountNumber;
-  let paymentReference = detailsGBP.reference;
+
+  let checkDepositDetails = () => {
+    // If deposit details are incomplete, something has gone wrong on the server.
+    // i.e. The server has not been able to generate or to send a set of unique GBP deposit details for this user.
+    let depositDetailsProblem = _.isEmpty(solidiAccountName) && _.isEmpty(solidiSortCode)
+      && _.isEmpty(solidiAccountNumber) && _.isEmpty(paymentReference);
+    if (depositDetailsProblem) {
+      let errorMsg = `
+
+Incomplete deposit details for ${appState.getAssetInfo('GBP').displayString}
+
+- solidiAccountName: ${solidiAccountName}
+- solidiSortCode: ${solidiSortCode}
+- solidiAccountNumber: ${solidiAccountNumber}
+- paymentReference: ${paymentReference}
+
+`;
+      appState.switchToErrorState({message:errorMsg});
+    }
+  }
 
 
   // Set up progress bar.
@@ -101,6 +123,7 @@ let MakePayment = () => {
   // Update the display whenever timeElapsedMarker is reset.
   useEffect(() => {}, [timeElapsedMarker]);
 
+
   let copyToClipboard = async (x) => {
     Clipboard.setString(x);
     let testing = false;
@@ -109,6 +132,7 @@ let MakePayment = () => {
       log(`Copy text to clipboard: ${text}`);
     }
   }
+
 
   let confirmPayment = async () => {
     log("confirmPayment button has been clicked.");
@@ -120,6 +144,7 @@ let MakePayment = () => {
     clearInterval(appState.panels.makePayment.timerID);
     appState.changeState('WaitingForPayment');
   }
+
 
   return (
     <View style={styles.panelContainer}>
@@ -229,6 +254,8 @@ let MakePayment = () => {
   )
 
 }
+
+
 
 
 let styles = StyleSheet.create({
