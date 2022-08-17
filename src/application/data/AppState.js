@@ -328,9 +328,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         await this.state.loadMarkets();
         this.state.marketsLoaded = true;
       }
-      if (! this.state.assetIconsLoaded) {
-        await this.state.loadAssetIcons();
-        this.state.assetIconsLoaded = true;
+      if (! this.state.assetsIconsLoaded) {
+        await this.state.loadAssetsIcons();
+        this.state.assetsIconsLoaded = true;
       }
       // Login to a specific user if we're developing.
       if (basicAuthTiers.includes(this.state.appTier) && autoLoginOnDevAndStag) {
@@ -1178,17 +1178,17 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     }
 
 
-    this.loadAssetIcons = async () => {
+    this.loadAssetsIcons = async () => {
       let data = await this.state.publicMethod({
-        functionName: 'loadAssetIcons',
+        functionName: 'loadAssetsIcons',
         apiRoute: 'asset_icon',
         httpMethod: 'GET',
       });
       if (data == 'DisplayedError') return;
       // The data is in base64. It turns out that an <Image/> can accept a base64 source, so need to convert it back to a bitmap.
-      let loadedAssetIcons = _.keys(data);
+      let loadedAssetsIcons = _.keys(data);
       // If the data differs from existing data, save it.
-      let msg = `Asset icons loaded from server: ${loadedAssetIcons.join(', ')}.`;
+      let msg = `Asset icons loaded from server: ${loadedAssetsIcons.join(', ')}.`;
       if (jd(data) === jd(this.state.apiData.asset_icon )) {
         log(msg + " No change.");
       } else {
@@ -1966,7 +1966,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       /* Private API methods */
       loadPersonalDetailOptions: this.loadPersonalDetailOptions,
       getPersonalDetailOptions: this.getPersonalDetailOptions,
-      loadAssetIcons: this.loadAssetIcons,
+      loadAssetsIcons: this.loadAssetsIcons,
       getAssetIcon: this.getAssetIcon,
       loadInitialStuffAboutUser: this.loadInitialStuffAboutUser,
       loadUserInfo: this.loadUserInfo,
