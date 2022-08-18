@@ -39,6 +39,8 @@ let PIN = () => {
   let pinStatus = 'enter';
   if (appState.pageName === 'choose') {
     pinStatus = 'choose';
+  } else {
+    pinStatus = 'enter'; // e.g. if we're testing this page, and pageName == 'default'.
   }
   log(`pinStatus = '${pinStatus}'`);
 
