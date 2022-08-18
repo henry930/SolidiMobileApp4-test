@@ -33,8 +33,6 @@ let RequestFailed = () => {
   let stateChangeID = appState.stateChangeID;
 
 
-
-
   // Initial setup.
   useEffect( () => {
     setup();
