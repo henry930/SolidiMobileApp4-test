@@ -42,6 +42,7 @@ let App = () => {
 
   useEffect(() => {
     initialFunction();
+    // Wait 0.5 seconds to hide the splash screen, so that we avoid any blank page issues just between the splash screen disappearing and the app screen loading.
     setTimeout(SplashScreen.hide, 500);
   }, []);
 
