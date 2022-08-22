@@ -38,7 +38,6 @@ let Security = () => {
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Security');
 
-  let [passwordVisible, setPasswordVisible] = useState(false);
   let [pinVisible, setPINVisible] = useState(false);
 
 
