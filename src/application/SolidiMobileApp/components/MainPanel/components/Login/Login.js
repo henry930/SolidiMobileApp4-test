@@ -115,8 +115,6 @@ let Login = () => {
         <Text style={styles.headingText}>Login</Text>
       </View>
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
-
       {! _.isEmpty(errorMessage) &&
         <View style={styles.errorWrapper}>
           <Text style={styles.errorText}>
@@ -125,6 +123,8 @@ let Login = () => {
           </Text>
         </View>
       }
+
+      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
       <View style={styles.emailLineWrapper}>
         <Text style={styles.descriptionText}>Email address:</Text>

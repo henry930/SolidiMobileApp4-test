@@ -73,8 +73,6 @@ let ResetPassword = () => {
         <Text style={styles.headingText}>Reset Password</Text>
       </View>
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
-
       {! _.isEmpty(errorMessage) &&
         <View style={styles.errorWrapper}>
           <Text style={styles.errorText}>
@@ -83,6 +81,8 @@ let ResetPassword = () => {
           </Text>
         </View>
       }
+
+      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
       <Text style={styles.descriptionText}>Your email address:</Text>
 

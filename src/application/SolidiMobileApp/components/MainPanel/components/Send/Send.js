@@ -592,6 +592,15 @@ let Send = () => {
         <Text style={styles.headingText}>Send</Text>
       </View>
 
+      {(! _.isEmpty(errorMessage)) &&
+        <View style={styles.errorMessageWrapper}>
+          <View style={styles.errorMessage}>
+            <Text style={styles.errorMessageText}>{errorMessage}</Text>
+          </View>
+          <Button title="Clear Error" onPress={ () => { setErrorMessage('') } }/>
+        </View>
+      }
+
       <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
       <View style={styles.description1}>
@@ -681,12 +690,6 @@ let Send = () => {
           onPress={ startSendRequest }
           disabled={disableSendButton}
         />
-        {(! _.isEmpty(errorMessage)) &&
-          <View style={styles.errorMessage}>
-            <Text style={styles.errorMessageText}>{errorMessage}</Text>
-            <Button title="Clear Error" onPress={ () => { setErrorMessage('') } }/>
-          </View>
-        }
       </View>
 
       </KeyboardAwareScrollView>
@@ -868,9 +871,16 @@ let styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  errorMessageWrapper: {
+    borderWidth: 1, // testing
+    marginBottom: scaledHeight(20),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignContent: 'top',
+    width: '100%',
+  },
   errorMessage: {
-    //borderWidth: 1, // testing
-    width: '50%',
+    width: '60%',
   },
   errorMessageText: {
     fontSize: normaliseFont(14),

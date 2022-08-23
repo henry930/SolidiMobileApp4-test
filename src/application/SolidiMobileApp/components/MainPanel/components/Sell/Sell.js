@@ -443,6 +443,12 @@ let Sell = () => {
         <Text style={styles.headingText}>Sell</Text>
       </View>
 
+      {!! errorMessage &&
+        <View style={styles.errorWrapper}>
+          <Text style={styles.errorMessageText}>{errorMessage}</Text>
+        </View>
+      }
+
       <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
       <Text style={styles.descriptionText}>I want to get:</Text>
@@ -515,12 +521,6 @@ let Sell = () => {
       <View style={styles.buttonWrapper}>
         <StandardButton title="Sell now" onPress={ startSellRequest } />
       </View>
-
-      {!! errorMessage &&
-        <View style={styles.errorWrapper}>
-          <Text style={styles.errorMessageText}>{errorMessage}</Text>
-        </View>
-      }
 
       </KeyboardAwareScrollView>
 
@@ -627,7 +627,7 @@ let styles = StyleSheet.create({
     marginTop: scaledHeight(20),
   },
   errorWrapper: {
-    marginTop: scaledHeight(20),
+    //marginTop: scaledHeight(20),
     marginBottom: scaledHeight(20),
   },
   errorMessageText: {

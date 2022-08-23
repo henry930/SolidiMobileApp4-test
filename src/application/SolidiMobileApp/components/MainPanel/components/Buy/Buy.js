@@ -419,6 +419,12 @@ let Buy = () => {
         <Text style={styles.headingText}>Buy</Text>
       </View>
 
+      {!! errorMessage &&
+        <View style={styles.errorWrapper}>
+          <Text style={styles.errorMessageText}>{errorMessage}</Text>
+        </View>
+      }
+
       <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
       <Text style={styles.descriptionText}>I want to spend:</Text>
@@ -493,12 +499,6 @@ let Buy = () => {
       <View style={styles.buttonWrapper}>
         <StandardButton title="Buy now" onPress={ startBuyRequest } />
       </View>
-
-      {!! errorMessage &&
-        <View style={styles.errorWrapper}>
-          <Text style={styles.errorMessageText}>{errorMessage}</Text>
-        </View>
-      }
 
       {newAPIVersion && upgradeRequired()}
 
@@ -614,7 +614,7 @@ let styles = StyleSheet.create({
     marginTop: scaledHeight(20),
   },
   errorWrapper: {
-    marginTop: scaledHeight(20),
+    //marginTop: scaledHeight(20),
     marginBottom: scaledHeight(20),
   },
   errorMessageText: {
