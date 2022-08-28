@@ -94,14 +94,14 @@ let BankAccounts = () => {
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setUpdateMessage('Update successful');
       setErrorMessage('');
-      await misc.sleep(0.1);
+      await misc.sleep(0.2);
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       // tmp
       if (_.isEmpty(accountName) || _.isEmpty(sortCode) || _.isEmpty(accountNumber)) {
         return;
       }
-      // If there's a stashed state (e.g. the Sell page), return to it.
-      if (! _.isEmpty(appState.stashedState)) {
+      // If the Sell journey page is stashed, return to it.
+      if (! _.isEmpty(appState.stashedState) && appState.stashedState.mainPanelState == 'ChooseHowToReceivePayment') {
         return appState.loadStashedState();
       }
     }
