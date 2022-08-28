@@ -206,8 +206,8 @@ export default class SolidiRestAPIClientLibrary {
       let response = await fetch(uri, options);
       let responseData = await response.text();
       let responseDataStr = responseData;
-      if (responseDataStr.length > 200) {
-        responseDataStr = responseDataStr.substring(0, 200) + ' ... ';
+      if (responseDataStr.length > 300) {
+        responseDataStr = responseDataStr.substring(0, 300) + ' ... ';
       }
       log("Response: " + responseDataStr);
       // Catch and handle timeouts:
@@ -283,7 +283,7 @@ export default class SolidiRestAPIClientLibrary {
     let dataToSign = this.domain + path;
     if (postData) dataToSign += postData;
     //this.deb({dataToSign});
-    let secretBase64 = new Buffer(this.apiSecret).toString('base64');
+    let secretBase64 = Buffer.from(this.apiSecret).toString('base64');
     let signature = CryptoJS.HmacSHA256(dataToSign, secretBase64);
     let signatureBase64 = signature.toString(CryptoJS.enc.Base64);
     //this.deb(signatureBase64)
