@@ -59,7 +59,6 @@ let SaleSuccessful = () => {
   let setup = async () => {
     try {
       await appState.generalSetup();
-      await appState.loadBalances();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setIsLoading(false);
       triggerRender(renderCount+1);
@@ -67,15 +66,6 @@ let SaleSuccessful = () => {
       let msg = `SaleSuccessful.setup: Error = ${err}`;
       console.log(msg);
     }
-  }
-
-
-  let getBalanceString = () => {
-    if (isLoading) return '[loading]';
-    let b = appState.getBalance(assetBA);
-    let result = b;
-    if (misc.isNumericString(b)) result += ' ' + assetBA;
-    return result;
   }
 
 
@@ -113,16 +103,8 @@ let SaleSuccessful = () => {
 
         { (pageName == 'balance') &&
 
-          <View>
-
           <View style={styles.infoItem}>
             <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your Solidi account has been credited with {totalQA} {appState.getAssetInfo(assetQA).displayString}.</Text>
-          </View>
-
-          <View style={styles.infoItem}>
-            <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your new balance is: {getBalanceString()}</Text>
-          </View>
-
           </View>
 
         }
