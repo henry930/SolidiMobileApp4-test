@@ -104,6 +104,7 @@ let WaitingForPayment = () => {
     if (orderStatus == 'settled') {
       setPaymentReceived(true);
       clearInterval(appState.panels.waitingForPayment.timerID);
+      appState.changeStateParameters.orderID = appState.user.panels.buy.orderID;
       appState.changeState('PurchaseSuccessful');
     }
   }

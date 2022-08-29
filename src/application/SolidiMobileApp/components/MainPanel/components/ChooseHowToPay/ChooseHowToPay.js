@@ -278,9 +278,10 @@ let ChooseHowToPay = () => {
         // Retrieve feeVolume from order result, calculate totalVolume, and store the results in the app memory.
         let feeVolume = output.fees;
         let totalVolumeQA = calculateTotalQA({feeVolume});
-        //lj({feeVolume, totalVolumeQA})
+        //lj({feeVolume, totalVolumeQA});
         appState.panels.buy.feeQA = feeVolume;
         appState.panels.buy.totalQA = totalVolumeQA;
+        appState.changeStateParameters.orderID = appState.user.panels.buy.orderID;
         appState.changeState('PurchaseSuccessful');
       } else if (result == 'EXCEEDS_LIMITS') {
         appState.changeState('LimitsExceeded', 'buy');

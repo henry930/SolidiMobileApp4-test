@@ -105,9 +105,10 @@ Incomplete deposit details for ${appState.getAssetInfo('GBP').displayString}
       // Call the server to find out if the user made the payment but did not click "I have paid" button.
       // If the payment has arrived, the order will have settled on the server.
       let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
-      //log({orderStatus})
+      //log({orderStatus});
       // Change to next state.
       if (orderStatus == 'SETTLED') {
+        appState.pageParameters.orderID = appState.user.panels.buy.orderID;
         appState.changeState('PurchaseSuccessful');
       } else {
         appState.changeState('PaymentNotMade');
