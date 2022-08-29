@@ -310,6 +310,7 @@ let ChooseHowToReceivePayment = () => {
         lj({feeVolume, totalVolumeQA});
         appState.panels.sell.feeQA = feeVolume;
         appState.panels.sell.totalQA = totalVolumeQA;
+        appState.changeStateParameters.orderID = appState.panels.sell.orderID;
         appState.changeState('SaleSuccessful', paymentChoice);
       }
     }
@@ -337,6 +338,7 @@ let ChooseHowToReceivePayment = () => {
         lj({feeVolume, totalVolumeQA})
         appState.panels.sell.feeQA = feeVolume;
         appState.panels.sell.totalQA = totalVolumeQA;
+        appState.changeStateParameters.orderID = appState.panels.sell.orderID;
         appState.changeState('SaleSuccessful', paymentChoice);
       } else if (result == 'EXCEEDS_LIMITS') {
         appState.changeState('LimitsExceeded', 'sell');
