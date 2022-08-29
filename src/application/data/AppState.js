@@ -1795,6 +1795,18 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     }
 
 
+    this.getOrder = ({orderID}) => {
+      // Future: Might need to make this faster by writing loadOrder/${orderID} which loads a specific order, and then getting its output here.
+      // Example Buy IOC order:
+      // {"age":"75122","baseVolume":"0.00057120","date":"28 Aug 2022","id":7179,"market":"BTC/GBP","quoteVolume":"10.00000000","settlement1Id":8289,"settlement1Status":"R","settlement2Id":8290,"settlement2Status":"R","side":"Buy","status":"SETTLED","time":"13:43:23","type":"IOC"}
+      // Example Sell IOC Order:
+      // {"age":"86820","baseVolume":"0.00060457","date":"28 Aug 2022","id":7177,"market":"BTC/GBP","quoteVolume":"10.00000000","settlement1Id":8285,"settlement1Status":"N","settlement2Id":8286,"settlement2Status":"R","side":"Sell","status":"SETTLED","time":"11:57:26","type":"IOC"}
+      let orders = this.getOrders();
+      let order = orders.filter((o) => o.id == orderID)[0];
+      return order;
+    }
+
+
     this.loadTransactions = async () => {
       let data = await this.state.privateMethod({apiRoute: 'transaction'});
       if (data == 'DisplayedError') return;
@@ -2007,6 +2019,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       sendWithdraw: this.sendWithdraw,
       loadOrders: this.loadOrders,
       getOrders: this.getOrders,
+      getOrder: this.getOrder,
       loadTransactions: this.loadTransactions,
       getTransactions: this.getTransactions,
       fetchIdentityVerificationDetails: this.fetchIdentityVerificationDetails,
@@ -2051,6 +2064,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       assetsInfoLoaded: false,
       marketsLoaded: false,
       assetsIconsLoaded: false,
+      changeStateParameters: {
+        orderID: null,
+      },
       user: {
         isAuthenticated: false,
         email: '',
