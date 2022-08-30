@@ -200,6 +200,13 @@ let Login = () => {
         </View>
       </View>
 
+      { challenges.includes('tfa') &&
+        <StandardButton title="Start again"
+          onPress={ () => { setChallenges('email password'.split(' ')) } }
+          styles={styleStartAgainButton}
+        />
+      }
+
       <View style={styles.buttonWrapper}>
         <Button title="Forgot password?"
           onPress={ () => { appState.changeState('ResetPassword') } }
@@ -317,6 +324,15 @@ let styles = StyleSheet.create({
     color: 'red',
   },
 })
+
+
+let styleStartAgainButton = StyleSheet.create({
+  view: {
+    marginTop: scaledHeight(30),
+    marginBottom: scaledHeight(10),
+    backgroundColor: 'purple',
+  },
+});
 
 
 export default Login;
