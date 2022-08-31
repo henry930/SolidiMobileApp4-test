@@ -160,7 +160,7 @@ let BankAccounts = () => {
                 style={[styles.detailValue, styles.editableTextInput]}
                 onChangeText={setSortCode}
                 autoCompleteType='off'
-                placeholder='XX-XX-XX'
+                placeholder='01-02-03'
                 keyboardType='numbers-and-punctuation'
               />
             </View>
