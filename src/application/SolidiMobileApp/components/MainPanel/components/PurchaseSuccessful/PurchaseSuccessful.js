@@ -33,8 +33,8 @@ let PurchaseSuccessful = () => {
 
   // Testing
   if (appState.appTier == 'dev' && appState.panels.buy.volumeQA == '0') {
-    appState.panels.buy.orderID = 7179; // Need to adjust this to be the orderID of an actual order in the database.
-    appState.changeStateParameters.orderID = appState.panels.buy.orderID;
+    // Note: Need to adjust the orderID value to be the orderID of an actual order in the database.
+    appState.changeStateParameters.orderID = 7179;
   }
 
   let trustpilotURL = 'https://www.trustpilot.com/evaluate/solidi.co?stars=5';
@@ -52,7 +52,9 @@ let PurchaseSuccessful = () => {
     try {
       await appState.generalSetup();
       await appState.loadOrders();
-      let order = appState.getOrder({orderID: appState.changeStateParameters.orderID});
+      let orderID = appState.changeStateParameters.orderID;
+      log(`Stored orderID: ${orderID}`);
+      let order = appState.getOrder({orderID});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setOrder(order);
       setIsLoading(false);

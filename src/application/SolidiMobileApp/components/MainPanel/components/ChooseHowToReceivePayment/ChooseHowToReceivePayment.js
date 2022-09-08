@@ -335,7 +335,7 @@ let ChooseHowToReceivePayment = () => {
         // Retrieve feeVolume from order result, calculate totalVolume, and store the results in the app memory.
         let feeVolume = output.fees;
         let totalVolumeQA = calculateTotalQA({feeVolume});
-        lj({feeVolume, totalVolumeQA})
+        lj({feeVolume, totalVolumeQA});
         appState.panels.sell.feeQA = feeVolume;
         appState.panels.sell.totalQA = totalVolumeQA;
         appState.changeStateParameters.orderID = appState.panels.sell.orderID;

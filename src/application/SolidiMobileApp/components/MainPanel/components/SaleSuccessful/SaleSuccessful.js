@@ -57,7 +57,9 @@ let SaleSuccessful = () => {
     try {
       await appState.generalSetup();
       await appState.loadOrders();
-      let order = appState.getOrder({orderID: appState.changeStateParameters.orderID});
+      let orderID = appState.changeStateParameters.orderID;
+      log(`Stored orderID: ${orderID}`);
+      let order = appState.getOrder({orderID});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setOrder(order);
       setIsLoading(false);

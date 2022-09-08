@@ -1621,7 +1621,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       */
       // Store the orderID.
       if (data.orderID) {
-        log(`BUY orderID: ${data.orderID}`);
+        log(`sendBuyOrder orderID: ${data.orderID}`);
         this.state.panels.buy.orderID = data.orderID;
       }
       // Currently, in several different pages, we assume that the fee returned by the API during the buy process was the fee that was actually applied when the order went through the trade engine.
@@ -1687,8 +1687,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       */
       // Store the orderID.
       if (data.orderID) {
-        log(`OrderID: ${data.orderID}`);
-        this.state.panels.sell.orderID = data.id;
+        log(`sendSellOrder OrderID: ${data.orderID}`);
+        this.state.panels.sell.orderID = data.orderID;
       }
       return data;
     }
@@ -1793,7 +1793,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       if (jd(data) === jd(this.state.apiData.order)) {
         log(msg + " No change.");
       } else {
-        log(msg + " New data saved to appState.");
+        msg += " New data saved to appState.";
+        //msg += '\n' + jd(data);
+        log(msg);
         this.state.apiData.order = data;
       }
       return data;
@@ -1812,7 +1814,9 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       // Example Sell IOC Order:
       // {"age":"86820","baseVolume":"0.00060457","date":"28 Aug 2022","id":7177,"market":"BTC/GBP","quoteVolume":"10.00000000","settlement1Id":8285,"settlement1Status":"N","settlement2Id":8286,"settlement2Status":"R","side":"Sell","status":"SETTLED","time":"11:57:26","type":"IOC"}
       let orders = this.getOrders();
-      let order = orders.filter((o) => o.id == orderID)[0];
+      orders = orders.filter((o) => o.id == orderID);
+      if (orders.length == 0) return {};
+      order = orders[0];
       return order;
     }
 
