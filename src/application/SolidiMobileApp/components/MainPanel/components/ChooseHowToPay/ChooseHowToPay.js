@@ -375,7 +375,7 @@ let ChooseHowToPay = () => {
             setPaymentChoice(x);
           }} value={paymentChoice}>
 
-            <RadioButton.Item label="Pay directly to Solidi" value="solidi"
+            <RadioButton.Item label="Bank transfer" value="solidi"
               color={colors.standardButtonText}
               style={styles.button}
               labelStyle={styles.buttonLabel}
