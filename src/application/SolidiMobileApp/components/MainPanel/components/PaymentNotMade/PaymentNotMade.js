@@ -36,7 +36,7 @@ let PaymentNotMade = () => {
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
-  let permittedPageNames = 'default paymentNotReceived'.split(' ');
+  let permittedPageNames = 'default paymentNotReceived openBankingPaymentNotReceived'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'PaymentNotMade');
 
   // Change some values, depending on the pageName.
@@ -45,6 +45,10 @@ let PaymentNotMade = () => {
   if (pageName == 'paymentNotReceived') {
     headingText = 'Payment not received';
     timePeriod = '2 hours';
+  }
+  if (pageName == 'openBankingPaymentNotReceived') {
+    headingText = 'Payment not received';
+    timePeriod = '30 minutes';
   }
 
   // Testing (for if we load this page directly).
