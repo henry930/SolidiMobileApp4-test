@@ -33,6 +33,7 @@ let PurchaseSuccessful = () => {
 
   // Testing
   if (appState.appTier == 'dev' && appState.panels.buy.volumeQA == '0') {
+    log("TESTING");
     // Note: Need to adjust the orderID value to be the orderID of an actual order in the database.
     appState.changeStateParameters.orderID = 7179;
   }
