@@ -492,9 +492,11 @@ let Buy = () => {
         <Text style={styles.priceText}>Current price: {generatePriceDescription()}</Text>
       </View>
 
-      <View style={styles.websiteWrapper}>
-        <Text style={styles.priceText}>Website: {getDomain()}</Text>
-      </View>
+      {appState.getUserStatus('supportLevel2') === true &&
+        <View style={styles.websiteWrapper}>
+          <Text style={styles.priceText}>Domain: {getDomain()}</Text>
+        </View>
+      }
 
       <View style={styles.buttonWrapper}>
         <StandardButton title="Buy now" onPress={ startBuyRequest } />

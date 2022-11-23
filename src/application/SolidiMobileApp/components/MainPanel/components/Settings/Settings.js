@@ -91,11 +91,13 @@ let Settings = () => {
         />
       </View>
 
-      <View style={styles.buttonWrapper}>
-        <StandardButton title='Support Tools'
-          onPress={ () => { appState.changeState('SupportTools'); } }
-        />
-      </View>
+      {appState.getUserStatus('supportLevel2') === true &&
+        <View style={styles.buttonWrapper}>
+          <StandardButton title='Support Tools'
+            onPress={ () => { appState.changeState('SupportTools'); } }
+          />
+        </View>
+      }
 
       <View style={styles.buttonWrapper}>
         <StandardButton title='Log Out'
