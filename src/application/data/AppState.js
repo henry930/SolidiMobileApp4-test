@@ -359,6 +359,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       // Create public API client.
       let {userAgent, domain} = this.state;
       let apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
+      this.state.apiClient = apiClient;
       // Use the email and password to load the API Key and Secret from the server.
       let apiRoute = 'login_mobile' + `/${email}`;
       let params = {password, tfa};
@@ -380,11 +381,20 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         throw Error('Invalid username or password.');
       }
       let {apiKey, apiSecret} = data;
-      // Store these access values in the global state.
-      _.assign(apiClient, {apiKey, apiSecret});
-      this.state.apiClient = apiClient;
-      this.state.user.isAuthenticated = true;
       _.assign(this.state.user, {email, password});
+      await this.state.loginWithAPIKeyAndSecret({apiKey, apiSecret});
+      return "SUCCESS";
+    }
+
+
+    this.loginWithAPIKeyAndSecret = async ({apiKey, apiSecret}) => {
+      // This isn't really a "log in" function, it's more of a data-storage-and-gathering function.
+      // Nonetheless, it installs the particular user's data at the "base" of the application data storage.
+      // If we've arrived at this function, we've authenticated elsewhere.
+      this.state.user.isAuthenticated = true;
+      apiClient = this.state.apiClient;
+      // Store the API Key and Secret in the apiClient.
+      _.assign(apiClient, {apiKey, apiSecret});
       // Store the API Key and Secret in the secure keychain storage.
       await Keychain.setInternetCredentials(this.state.apiCredentialsStorageKey, apiKey, apiSecret);
       let msg = `apiCredentials (apiKey=${apiKey}, apiSecret=${apiSecret}) stored in keychain with key = '${this.state.apiCredentialsStorageKey}')`;
