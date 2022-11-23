@@ -1329,13 +1329,18 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       }
       // The following information can be changed by the user while the app is in use, so we reload it every time this function is called.
       await this.loadUserInfo();
+      await this.loadUserStatus();
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
     }
 
 
     this.loadUserInfo = async () => {
-      /* Expected fields: (may change in future)
+      /* Sample output:
+      {"error":null,"data":{"address1":"1830 Somwhere Rd","address2":"Over, The Rainbow","address3":"Cambridgeshire","address4":null,"bankLimit":"30.00","btcLimit":"30.00000000","citizenship":"GB","country":"GB","cryptoLimit":"30.00","dateOfBirth":"04/04/1990","email":"johnqfish@foo.com","firstName":"John ...
+ LOG  5:54:17 PM |  AppState  | INFO : User info (basic) loaded from server. New data saved to appState. {"address1":"1830 Somwhere Rd","address2":"Over, The Rainbow","address3":"Cambridgeshire","address4":null,"bankLimit":"30.00","btcLimit":"30.00000000","citizenship":"GB","country":"GB","cryptoLimit":"30.00","dateOfBirth":"04/04/1990","email":"johnqfish@foo.com","firstName":"John","freeWithdraw":0,"gender":"Male","landline":null,"lastName":"Fish","middleNames":"Q","mobile":null,"monthBankLimit":"30.00","monthBtcLimit":"30.00000000","monthCryptoLimit":"30.00000000","postcode":"ZZ11BB","title":null,"uuid":"72ca4f54-3447-4345-848d-1765d825f28d","yearBankLimit":"200.00","yearBtcLimit":"200.00000000","yearCryptoLimit":"200.00000000"}
+
+      field names:
       uuid email firstname lastname gender dob btc_limit bank_limit crypto_limit freewithdraw address_1 address_2 address_3 address_4 postcode country citizenship mon_btc_limit mon_bank_limit mon_crypto_limit year_btc_limit year_bank_limit year_crypto_limit title mobile landline
       */
       let data = await this.state.privateMethod({
@@ -1366,6 +1371,36 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
     this.setUserInfo = ({detail, value}) => {
       this.state.user.info.user[detail] = value;
+    }
+
+
+    this.loadUserStatus = async () => {
+      /* Sample output:
+      {"active":true,"addressConfirmed":true,"addressVerificationRequested":false,"addressVerificationSent":false,"bankAccountConfirmed":false,"cryptoWithdrawDisabled":false,"deactivated":false,"feature1":false,"feature2":false,"feature3":false,"feature4":false,"identityChecked":true,"new":false,"newBank":false,"phoneConfirmed":false,"seller":false,"sellerAutomated":false,"sellerManual":false,"superuser":false,"supportLevel1":false,"supportLevel2":false,"withdrawDisabled":false}
+      */
+      let data = await this.state.privateMethod({
+        functionName: 'loadUserStatus',
+        apiRoute: 'user_status',
+      });
+      if (data == 'DisplayedError') return false;
+      // If the data differs from existing data, save it.
+      let msg = "User status data loaded from server.";
+      if (jd(data) === jd(this.state.user.info.user_status)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState. " + jd(data));
+        this.state.user.info.user_status = data;
+      }
+      return true;
+    }
+
+
+    this.getUserStatus = (detail) => {
+      let details = this.state.user.info.user_status;
+      if (! _.has(details, detail)) {
+        return '[loading]';
+      }
+      return details[detail];
     }
 
 
@@ -2139,6 +2174,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       loadUserInfo: this.loadUserInfo,
       getUserInfo: this.getUserInfo,
       setUserInfo: this.setUserInfo,
+      loadUserStatus: this.loadUserStatus,
+      getUserStatus: this.getUserStatus,
       loadDepositDetailsForAsset: this.loadDepositDetailsForAsset,
       getDepositDetailsForAsset: this.getDepositDetailsForAsset,
       loadDefaultAccountForAsset: this.loadDefaultAccountForAsset,
@@ -2219,6 +2256,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
           // In info, we store a lot of user-specific data retrieved from the API.
           // It is often restructured into a new form, but remains partitioned by API route.
           user: {},
+          user_status: {},
           depositDetails: {
             GBP: {
               accountName: null,
