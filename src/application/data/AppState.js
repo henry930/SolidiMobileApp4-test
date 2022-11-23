@@ -37,7 +37,7 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let jd = JSON.stringify;
 
 // Settings: Critical (check before making a new release)
-let autoLoginOnDevAndStag = false; // Only used during development (i.e. on 'dev' tier).
+let autoLoginOnDevAndStag = false; // Only used during development (i.e. on 'dev' tier) to automatically login using a dev user.
 import appTier from 'src/application/appTier'; // dev / stag / prod.
 
 // Settings: Initial page
