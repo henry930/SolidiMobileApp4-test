@@ -142,6 +142,12 @@ let ChooseHowToPay = () => {
   }
 
 
+  let calculateVolumeQA = () => {
+    let quoteAssetVolume = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'});
+    return quoteAssetVolume;
+  }
+
+
   let calculateFeeQA = () => {
     if (_.isEmpty(paymentChoiceDetails)) return '';
     if (! _.has(paymentChoiceDetails, paymentChoice)) return '';
@@ -455,7 +461,7 @@ let ChooseHowToPay = () => {
 
           <View style={styles.orderDetailsLine}>
             <Text style={[styles.basicText, styles.bold]}>You spend</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'})} {assetQA}</Text>
+            <Text style={[styles.monospaceText, styles.bold]}>{calculateVolumeQA()} {assetQA}</Text>
           </View>
 
           <View style={styles.orderDetailsLine}>
