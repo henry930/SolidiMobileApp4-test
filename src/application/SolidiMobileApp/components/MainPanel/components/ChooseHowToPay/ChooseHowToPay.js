@@ -186,10 +186,11 @@ let ChooseHowToPay = () => {
 
   let paymentOptionDisabled = (option) => {
     if (! _.has(paymentChoiceDetails, option)) {
-      return false;
+      return false; // hacky
     }
     let optionDetails = paymentChoiceDetails[option];
     if (_.has(optionDetails, 'error')) return true;
+    if (option === 'balance' && balanceTooSmall()) return true;
     return false;
   }
 
@@ -366,9 +367,7 @@ let ChooseHowToPay = () => {
     if (balanceQA != '[loading]') {
       result += ' ' + assetQA;
     }
-    return (
-      <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} {result}</Text>
-    )
+    return result;
   }
 
 
@@ -398,12 +397,16 @@ let ChooseHowToPay = () => {
             <RadioButton.Item label="Bank transfer" value="solidi"
               color={colors.standardButtonText}
               style={styles.button}
+              style={paymentOptionDisabled('solidi') ? stylePaymentOptionButtonDisabled : stylePaymentOptionButton}
               labelStyle={styles.buttonLabel}
             />
 
             <View style={styles.buttonDetail}>
-              <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Fast & Easy - No fee!</Text>
-              <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Usually processed in under a minute</Text>
+              <Text style={[styles.basicText, paymentOptionDisabled('solidi') ? stylePaymentOptionButtonAdditionalTextDisabled : stylePaymentOptionButtonAdditionalText]}>{`\u2022  `} Fast & Easy - No fee!</Text>
+              <Text style={[styles.basicText, paymentOptionDisabled('solidi') ? stylePaymentOptionButtonAdditionalTextDisabled : stylePaymentOptionButtonAdditionalText]}>{`\u2022  `} Usually processed in under a minute</Text>
+              {paymentOptionDisabled('solidi') &&
+                <Text style={styles.paymentOptionDisabledText}>{`\u2022  `} This payment option is inactive</Text>
+              }
             </View>
 
             <RadioButton.Item label="Mobile bank app" value="openbank"
@@ -423,17 +426,20 @@ let ChooseHowToPay = () => {
 
             <RadioButton.Item label="Solidi balance" value="balance"
               color={colors.standardButtonText}
-              disabled={balanceTooSmall()}
-              style={balanceTooSmall() ? stylePaymentOptionButtonDisabled : stylePaymentOptionButton}
+              disabled={paymentOptionDisabled('balance')}
+              style={paymentOptionDisabled('balance') ? stylePaymentOptionButtonDisabled : stylePaymentOptionButton}
               labelStyle={styles.buttonLabel}
             />
 
             <View style={styles.buttonDetail}>
-              <Text style={[styles.basicText, balanceTooSmall() ? stylePaymentOptionButtonAdditionalTextDisabled : stylePaymentOptionButtonAdditionalText]}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
-              <Text style={[styles.basicText, balanceTooSmall() ? stylePaymentOptionButtonAdditionalTextDisabled : stylePaymentOptionButtonAdditionalText]}>{`\u2022  `} Processed instantly</Text>
-              {getBalanceDescriptionLine()}
+              <Text style={[styles.basicText, paymentOptionDisabled('balance') ? stylePaymentOptionButtonAdditionalTextDisabled : stylePaymentOptionButtonAdditionalText]}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
+              <Text style={[styles.basicText, paymentOptionDisabled('balance') ? stylePaymentOptionButtonAdditionalTextDisabled : stylePaymentOptionButtonAdditionalText]}>{`\u2022  `} Processed instantly</Text>
+              <Text style={[styles.basicText, paymentOptionDisabled('balance') ? stylePaymentOptionButtonAdditionalTextDisabled : stylePaymentOptionButtonAdditionalText]}>{`\u2022  `} {getBalanceDescriptionLine()}</Text>
               {balanceTooSmall() &&
                 <Text style={styles.paymentOptionDisabledText}>{`\u2022  `} Balance is too low for this option</Text>
+              }
+              {paymentOptionDisabled('balance') &&
+                <Text style={styles.paymentOptionDisabledText}>{`\u2022  `} This payment option is inactive</Text>
               }
             </View>
 
