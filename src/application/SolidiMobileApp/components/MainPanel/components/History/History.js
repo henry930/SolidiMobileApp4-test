@@ -24,6 +24,7 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 let Touchable = Platform.select({
   ios: TouchableOpacity,
   android: TouchableNativeFeedback,
+  // Note: TouchableNativeFeedback expects exactly 1 child element e.g. <View/>
 });
 
 
@@ -196,7 +197,7 @@ let History = () => {
     if (orderStatus == 'LIVE') _styleOrder = styles.liveOrderStatus;
     if (orderStatus == 'CANCELLED') _styleOrder = styles.cancelledOrderStatus;
     return (
-      <Touchable style={styles.flatListItem} onPress = {() => {
+      <Touchable onPress = {() => {
         if (orderStatus != 'SETTLED') return;
         // Move to order-specific page.
         let side = orderSide.toLowerCase();
@@ -207,12 +208,14 @@ let History = () => {
           appState.changeState('SaleSuccessful');
         }
       }}>
-        <View style={styles.orderTopWrapper}>
-          <Text style={styles.mediumText}>{item['date']} {item['time']}</Text>
-          <Text style={[styles.mediumText, _styleOrder]}>{orderStatus}</Text>
+        <View style={styles.flatListItem}>
+          <View style={styles.orderTopWrapper}>
+            <Text style={styles.mediumText}>{item['date']} {item['time']}</Text>
+            <Text style={[styles.mediumText, _styleOrder]}>{orderStatus}</Text>
+          </View>
+          <Text style={[styles.mediumText, styles.typeField]}>{orderSide}</Text>
+          <Text style={styles.mediumText}>Spent {quoteVolume} {quoteAsset} to get {baseVolume} {baseAsset}.</Text>
         </View>
-        <Text style={[styles.mediumText, styles.typeField]}>{orderSide}</Text>
-        <Text style={styles.mediumText}>Spent {quoteVolume} {quoteAsset} to get {baseVolume} {baseAsset}.</Text>
       </Touchable>
     );
   }
