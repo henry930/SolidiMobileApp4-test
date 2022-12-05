@@ -307,6 +307,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     this.generalSetup = async () => {
       // Note: This method needs to be called in every page, so that the Android back button always works.
       // (Obviously the back button handler could be called separately, but that's less convenient overall.)
+      log(`Start: generalSetup()`);
       this.state.logEntireStateHistory();
       // Create a new event listener for the Android Back Button.
       // This needs to occur on every page.
@@ -1247,6 +1248,12 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     this.getFullDecimalValue = ({asset, value, functionName}) => {
       // Add zeros to the value to get the full number of decimal places for the asset.
       if (_.isNil(functionName)) functionName = '[Unspecified location]';
+      if (_.isNil(asset) || asset === '') {
+        if (value != '[loading]') {
+          deb(`${functionName}.getFullDecimalValue: asset '${asset}' is null or undefined or empty.`);
+        }
+        return '';
+      }
       if (! misc.isNumericString(value)) {
         if (value != '[loading]') {
           //deb(`${functionName}.getFullDecimalValue: value '${value}' is not a numeric string.`);
