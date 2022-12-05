@@ -53,6 +53,19 @@ let Settings = () => {
   }
 
 
+  let generateWelcomeMessage = () => {
+    let firstName = appState.getUserInfo('firstName');
+    let loading = firstName === '[loading]';
+    let welcomeMessage = "Hello";
+    if (loading) {
+      welcomeMessage += '!';
+    } else {
+      welcomeMessage += `, ${firstName}!`;
+    }
+    return welcomeMessage;
+  }
+
+
   return (
     <View style={styles.panelContainer}>
     <View style={styles.panelSubContainer}>
@@ -62,6 +75,10 @@ let Settings = () => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+
+      <View style={styles.welcomeMessage}>
+        <Text style={styles.welcomeMessageText}>{generateWelcomeMessage()}</Text>
+      </View>
 
       <View style={styles.buttonWrapper}>
         <StandardButton title='Lock App' onPress={ () => { appState.lockApp(); } } />
@@ -142,6 +159,13 @@ let styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
+  },
+  welcomeMessage: {
+    marginBottom: scaledHeight(20),
+    //borderWidth: 1, // testing
+  },
+  welcomeMessageText: {
+    fontSize: normaliseFont(16),
   },
   buttonWrapper: {
     marginVertical: scaledHeight(10),
