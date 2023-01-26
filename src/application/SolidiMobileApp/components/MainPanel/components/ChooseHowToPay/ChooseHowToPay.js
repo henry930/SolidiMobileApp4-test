@@ -399,7 +399,6 @@ let ChooseHowToPay = () => {
 
             <RadioButton.Item label="Bank transfer" value="solidi"
               color={colors.standardButtonText}
-              style={styles.button}
               style={paymentOptionDisabled('solidi') ? stylePaymentOptionButtonDisabled : stylePaymentOptionButton}
               labelStyle={styles.buttonLabel}
             />
