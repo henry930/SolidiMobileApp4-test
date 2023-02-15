@@ -874,6 +874,7 @@ let styles = StyleSheet.create({
   errorMessageWrapper: {
     borderWidth: 1, // testing
     marginBottom: scaledHeight(20),
+    paddingLeft: scaledWidth(5),
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
