@@ -77,7 +77,7 @@ let ContactUs = () => {
       </View>
 
       <Text style={[styles.basicText, styles.bold]}>
-      If you would like to contact us via another device, here are the details:{'\n'}
+      If you would like to contact us via another device, here are the details:{'\n'}{'\n'}
       {`\u2022  `}Website: {domain}{'\n'}
       {`\u2022  `}Contact Us: {contactURL}{'\n'}
       {`\u2022  `}App Version: {appVersion}
