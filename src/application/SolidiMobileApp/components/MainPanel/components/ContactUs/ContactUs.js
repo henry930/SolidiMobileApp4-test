@@ -31,7 +31,12 @@ let ContactUs = () => {
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ContactUs');
 
-  let domain = 'solidi.co';
+  let domain = appState.domain;
+  let tier = appState.appTier;
+  if(tier=="prod") {
+    tier = "";
+  }
+  let appVersion = appState.appVersion+"-"+tier;
   let contactURL = 'https://solidi.co/contactus';
 
 
@@ -74,7 +79,8 @@ let ContactUs = () => {
       <Text style={[styles.basicText, styles.bold]}>
       If you would like to contact us via another device, here are the details:{'\n'}
       {`\u2022  `}Website: {domain}{'\n'}
-      {`\u2022  `}Contact Us: {contactURL}
+      {`\u2022  `}Contact Us: {contactURL}{'\n'}
+      {`\u2022  `}App Version: {appVersion}
       </Text>
 
       </ScrollView>
