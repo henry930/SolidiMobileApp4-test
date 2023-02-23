@@ -5,7 +5,9 @@
 - The MainPanel state
 - The history stack of previous MainPanel states
 */
-
+//var pkg = require('../../../package.json');
+import { version } from "../../../package.json"
+let pkgversion = version;
 
 // React imports
 import React, { Component, useContext } from 'react';
@@ -316,6 +318,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
         this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       }
       // Load public info that rarely changes.
+      this.state.appVersion = pkgversion;
       if (! this.state.apiVersionLoaded) {
         await this.state.loadLatestAPIVersion();
         this.state.apiVersionLoaded = true;
@@ -2273,6 +2276,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       appName,
       appTier,
       appAPIVersion,
+      appVersion: "1.0.0",
       basicAuthTiers,
       devBasicAuth,
       apiCredentialsStorageKey,

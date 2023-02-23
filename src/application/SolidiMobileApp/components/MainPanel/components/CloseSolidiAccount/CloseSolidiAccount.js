@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Image, Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
+import { Linking, Image, Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -11,8 +11,8 @@ import Big from 'big.js';
 // Internal imports
 import AppStateContext from 'src/application/data';
 import { mainPanelStates, colors } from 'src/constants';
-import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
+import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions'; 
+import { Button, StandardButton, FixedWidthButton,  ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -60,14 +60,15 @@ let CloseSolidiAccount = () => {
       console.log(msg);
     }
   }
-
+  let supportURL = "https://www.solidi.co/contactus";
+  let blogURL = "https://blog.solidi.co/2021/02/20/closing-your-account/";
 
   return (
     <View style={styles.panelContainer}>
     <View style={styles.panelSubContainer}>
 
       <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Close Solidi Account</Text>
+        <Text style={styles.headingText}>Delete Solidi Account</Text>
       </View>
 
       {!! errorMessage &&
@@ -79,11 +80,37 @@ let CloseSolidiAccount = () => {
       <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
       <View style={styles.question}>
-      <Text style={[styles.basicText, styles.bold]}>Are you sure that you want to close your account?</Text>
+      <Text style={[styles.basicText, styles.bold]}>We're sorry you wish to delete your account. If there is a problem, please contact the support team.</Text>
+      <Text style={[styles.basicText, styles.bold]}></Text>
+     <View style={styles.buttonWrapper}>
+        <FixedWidthButton title="Contact Support"
+          onPress={ () => { Linking.openURL(supportURL) } }
+          styles={styleNormalButton}
+        />
+      </View>
+      <Text style={[styles.basicText, styles.bold]}></Text>
+      <Text style={[styles.basicText, styles.bold]}>Please note:</Text>
+      <Text style={[styles.basicText, styles.bold]}>{'  \u2022' + " "}We cannot restore deleted accounts.</Text>
+      <Text style={[styles.basicText, styles.bold]}>{'  \u2022' + " "}You cannot create a new account for 30 days.</Text>
+      <Text style={[styles.basicText, styles.bold]}>{'  \u2022' + " "}Regulations may prevent us deleting your data.</Text>
+      <Text style={[styles.basicText, styles.bold]}></Text>
+      <Text style={[styles.basicText, styles.bold]}>To find out more about account deletion, please read our blog post - </Text>
+      <Text style={[styles.basicText, styles.bold]}></Text>
+     <View style={styles.buttonWrapper}>
+        <FixedWidthButton title="Read the blog post"
+          onPress={ () => { Linking.openURL(blogURL) } }
+          styles={styleNormalButton}
+        />
+      </View>
+      <Text style={[styles.basicText, styles.bold]}></Text>
+      <Text style={[styles.basicText, styles.bold]}>If you still wish to delete your account, please click on the button below.</Text>
+      <Text style={[styles.basicText, styles.bold]}></Text>
+      
       </View>
 
+
       <View style={styles.buttonWrapper}>
-        <StandardButton title='Close my Solidi account'
+        <FixedWidthButton title='Delete my Solidi account'
           onPress={ () => { appState.closeSolidiAccount() } }
           styles={styleCloseAccountButton}
         />
@@ -104,6 +131,8 @@ let styles = StyleSheet.create({
     paddingVertical: scaledHeight(5),
     width: '100%',
     height: '100%',
+    textAlign: 'center',
+
   },
   panelSubContainer: {
     paddingTop: scaledHeight(10),
@@ -142,12 +171,26 @@ let styles = StyleSheet.create({
     fontSize: normaliseFont(14),
     color: 'red',
   },
-});
+  buttonWrapper: {
+    width: '100%',
+    alignItems: 'center',
+   },
+  
+  });
 
+
+let styleNormalButton = StyleSheet.create({
+  view: {
+    width: '70%',
+
+  },
+});
 
 let styleCloseAccountButton = StyleSheet.create({
   view: {
     backgroundColor: 'red',
+    width: '70%',
+
   },
 });
 

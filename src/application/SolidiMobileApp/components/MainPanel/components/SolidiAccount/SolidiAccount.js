@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
+import { Text, TextInput, StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Other imports
@@ -11,7 +11,7 @@ import Big from 'big.js';
 import AppStateContext from 'src/application/data';
 import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
+import { Button, StandardButton, FixedWidthButton, ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -59,31 +59,21 @@ let SolidiAccount = () => {
     }
   }
 
-
   return (
     <View style={styles.panelContainer}>
     <View style={styles.panelSubContainer}>
-
       <View style={[styles.heading, styles.heading1]}>
         <Text style={styles.headingText}>Solidi Account</Text>
       </View>
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
-
-
-      <View style={styles.buttonWrapper}>
-        <StandardButton title='Close Account'
+      <View style={styles.parent}>
+        <FixedWidthButton styles={styles} title='Delete Account'
           onPress={ () => { appState.changeState('CloseSolidiAccount') } }
         />
       </View>
-
-
-      </KeyboardAwareScrollView>
-
     </View>
     </View>
   )
-
 }
 
 
@@ -124,12 +114,18 @@ let styles = StyleSheet.create({
     marginTop: scaledWidth(20),
     marginHorizontal: scaledWidth(20),
   },
-  buttonWrapper: {
-    marginTop: scaledHeight(20),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    parent: {
+        width: '100%',
+        height: 500,
+        margin: 10,
     alignItems: 'center',
-  },
+
+    },
+   view: {
+    width: '70%',
+    maginLeft: '15%',
+
+  }, 
 });
 
 

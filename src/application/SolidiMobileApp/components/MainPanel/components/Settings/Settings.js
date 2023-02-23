@@ -10,7 +10,7 @@ import Big from 'big.js';
 import AppStateContext from 'src/application/data';
 import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton } from 'src/components/atomic';
+import { Button, StandardButton, FixedWidthButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -80,50 +80,51 @@ let Settings = () => {
         <Text style={styles.welcomeMessageText}>{generateWelcomeMessage()}</Text>
       </View>
 
+ 
       <View style={styles.buttonWrapper}>
-        <StandardButton title='Lock App' onPress={ () => { appState.lockApp(); } } />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <StandardButton title='Personal Details'
+        <FixedWidthButton styles={styleButton} title='Personal Details'
           onPress={ () => { appState.changeState('PersonalDetails'); } }
         />
       </View>
 
       <View style={styles.buttonWrapper}>
-        <StandardButton title='Bank Account'
+        <FixedWidthButton styles={styleButton} title='Bank Account'
           onPress={ () => { appState.changeState('BankAccounts'); } }
         />
       </View>
 
       <View style={styles.buttonWrapper}>
-        <StandardButton title='Solidi Account'
+        <FixedWidthButton styles={styleButton} title='Solidi Account'
           onPress={ () => { appState.changeState('SolidiAccount'); } }
         />
       </View>
 
       <View style={styles.buttonWrapper}>
-        <StandardButton title='Security'
+        <FixedWidthButton styles={styleButton} title='Security'
           onPress={ () => { appState.changeState('Security'); } }
         />
       </View>
 
       <View style={styles.buttonWrapper}>
-        <StandardButton title='Contact Us'
+        <FixedWidthButton styles={styleButton} title='Contact Us'
           onPress={ () => { appState.changeState('ContactUs'); } }
         />
       </View>
 
       {appState.getUserStatus('supportLevel2') === true &&
         <View style={styles.buttonWrapper}>
-          <StandardButton title='Support Tools'
+          <FixedWidthButton styles={styleButton} title='Support Tools'
             onPress={ () => { appState.changeState('SupportTools'); } }
           />
         </View>
       }
 
       <View style={styles.buttonWrapper}>
-        <StandardButton title='Log Out'
+        <FixedWidthButton styles={styleButton} title='Lock App' onPress={ () => { appState.lockApp() } } />
+      </View>
+
+      <View style={styles.buttonWrapper}>
+        <FixedWidthButton styles={styleButton} title='Log Out'
           onPress={ async () => {
             await appState.logout();
           } }
@@ -176,8 +177,16 @@ let styles = StyleSheet.create({
   buttonWrapper: {
     marginVertical: scaledHeight(10),
     width: '100%',
+    alignItems: 'center',
+
   },
 });
 
+let styleButton = StyleSheet.create({
+  view: {
+    width: '70%',
+
+  },
+});
 
 export default Settings;
