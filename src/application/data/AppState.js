@@ -1120,6 +1120,32 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
     }
 
 
+    this.loadPersonalDetailOptions = async () => {
+      let data = await this.state.publicMethod({
+        functionName: 'loadPersonalDetailOptions',
+        httpMethod: 'GET',
+        apiRoute: 'personal_detail_option',
+      });
+      if (data == 'DisplayedError') return;
+      // If the data differs from existing data, save it.
+      let msg = "Personal detail options loaded from server.";
+      if (jd(data) === jd(this.state.apiData.personal_detail_option )) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState. " + jd(data));
+        this.state.apiData.personal_detail_option = data;
+      }
+    }
+
+
+    this.getPersonalDetailOptions = (detailName) => {
+      // Should contain a list of options for each detailName. (e.g. "title").
+      let result = this.state.apiData.personal_detail_option;
+      if (! _.has(result, detailName)) return ['[loading]'];
+      return result[detailName];
+    }
+
+
     this.loadCountries = async () => {
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
@@ -1275,35 +1301,6 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
 
     /* Private API methods */
-
-
-
-
-    // At the top here, we store a few methods that provide public information that can cause political problems (e.g. over which options are / are not supported), so we keep them private (so that they're not publically enumerable).
-
-    this.loadPersonalDetailOptions = async () => {
-      let data = await this.state.privateMethod({
-        functionName: 'loadPersonalDetailOptions',
-        apiRoute: 'personal_detail_option',
-      });
-      if (data == 'DisplayedError') return;
-      // If the data differs from existing data, save it.
-      let msg = "Personal detail options loaded from server.";
-      if (jd(data) === jd(this.state.apiData.personal_detail_option )) {
-        log(msg + " No change.");
-      } else {
-        log(msg + " New data saved to appState. " + jd(data));
-        this.state.apiData.personal_detail_option = data;
-      }
-    }
-
-
-    this.getPersonalDetailOptions = (detailName) => {
-      // Should contain a list of options for each detailName. (e.g. "title").
-      let result = this.state.apiData.personal_detail_option;
-      if (! _.has(result, detailName)) return ['[loading]'];
-      return result[detailName];
-    }
 
 
     this.loadAssetsIcons = async () => {
@@ -2195,6 +2192,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       getAssets: this.getAssets,
       loadMarkets: this.loadMarkets,
       getMarkets: this.getMarkets,
+      loadPersonalDetailOptions: this.loadPersonalDetailOptions,
+      getPersonalDetailOptions: this.getPersonalDetailOptions,
       loadCountries: this.loadCountries,
       getCountries: this.getCountries,
       getBaseAssets: this.getBaseAssets,
@@ -2209,8 +2208,6 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       getFullDecimalValue: this.getFullDecimalValue,
       /* END Public API methods */
       /* Private API methods */
-      loadPersonalDetailOptions: this.loadPersonalDetailOptions,
-      getPersonalDetailOptions: this.getPersonalDetailOptions,
       loadAssetsIcons: this.loadAssetsIcons,
       getAssetIcon: this.getAssetIcon,
       loadInitialStuffAboutUser: this.loadInitialStuffAboutUser,
