@@ -1113,6 +1113,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       return _.uniq(baseAssets);
     }
 
+
     this.getQuoteAssets = () => {
       let markets = this.getMarkets();
       let quoteAssets = markets.map(x => x.split('/')[1]);
