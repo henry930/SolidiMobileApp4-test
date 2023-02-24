@@ -117,13 +117,11 @@ let styles = StyleSheet.create({
   parent: {
     width: '100%',
     height: 500,
-    margin: 10,
     alignItems: 'center',
   },
   view: {
     width: '70%',
-    marginLeft: '15%',
-  }, 
+  },
 });
 
 
