@@ -153,6 +153,15 @@ let camelCaseToCapitalisedWords = (s) => {
 }
 
 
+let snakeCaseToCapitalisedWords = (s) => {
+  s = s.replaceAll('_', ' ');
+  let words = s.split(' ');
+  words = words.map(capitalise);
+  let s2 = words.join(' ');
+  return s2;
+}
+
+
 let removeFinalDecimalPointIfItExists = (v) => {
   if (! _.isString(v)) return v;
   if (v.slice(-1) == '.') v = v.slice(0, -1);
@@ -211,6 +220,7 @@ let misc = {
   useFirstRender,
   isNumericString,
   camelCaseToCapitalisedWords,
+  snakeCaseToCapitalisedWords,
   removeFinalDecimalPointIfItExists,
   itemToString,
   getCurrentDate,
