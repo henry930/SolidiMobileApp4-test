@@ -12,13 +12,16 @@ import Big from 'big.js';
 import AppStateContext from 'src/application/data';
 import { mainPanelStates, colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
+import { Button, StandardButton, FixedWidthButton, ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('BlankExampleComponent');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+
+// Shortcuts
+let jd = JSON.stringify;
 
 
 /* Notes
@@ -40,8 +43,9 @@ let BlankExampleComponent = () => {
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'BlankExampleComponent');
 
-  // More state
+  // Basic
   let [errorMessage, setErrorMessage] = useState('');
+  let [uploadMessage, setUploadMessage] = useState('');
 
 
   // Initial setup.
