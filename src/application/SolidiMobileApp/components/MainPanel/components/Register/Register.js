@@ -173,7 +173,7 @@ emailPreferences
       _.assign(appState, userData);
       // Move to next page.
       appState.changeStateParameters.
-      appState.changeState('UpdateAccount', 'confirm_email');
+      appState.changeState('RegisterConfirm', 'confirm_email');
     }
     setUploadMessage('');
     setDisableRegisterButton(false);
