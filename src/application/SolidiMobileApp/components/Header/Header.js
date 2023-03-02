@@ -20,7 +20,18 @@ let Header = (props) => {
 
   let logoImageName = 'solidi_logo_landscape_black_1924x493';
 
+  let statesWhereBackButtonIsHidden = [
+    'PIN',
+    'AccountUpdate',
+  ]
+  let hideBackButton = statesWhereBackButtonIsHidden.includes(appState.mainPanelState);
+
   let pinMode = appState.mainPanelState === 'PIN';
+
+  let statesWhereSettingsButtonIsHidden = [
+    'AccountUpdate',
+  ]
+  let hideSettingsButton = statesWhereSettingsButtonIsHidden.includes(appState.mainPanelState);
 
   // Prepare back button.
   // It will set mainPanelState to the previous state in the history,
@@ -36,13 +47,13 @@ let Header = (props) => {
   // Check whether to include back button.
   let includeBackButton = false;
   if (appState.stateHistoryList.length > 1) {
-    if (! pinMode) {
+    if (! hideBackButton) {
       includeBackButton = true;
     }
   }
 
   // Check whether to include notification button. (this is not currently used).
-  let includeNotificationButton = ! pinMode;
+  let includeNotificationButton = ! hideBackButton;
 
 
   let isSettingsButtonSelected = 'Settings' === appState.mainPanelState;
@@ -78,11 +89,13 @@ let Header = (props) => {
         */}
       </View>
       <View style={styles.buttonWrapper}>
-        <ImageButton imageName='user' imageType='icon'
-          styles={_styleSettingsButton}
-          onPress={ () => { changeState('Settings') } }
-          title={titleSettingsButton}
-        />
+        {! hideSettingsButton &&
+          <ImageButton imageName='user' imageType='icon'
+            styles={_styleSettingsButton}
+            onPress={ () => { changeState('Settings') } }
+            title={titleSettingsButton}
+          />
+        }
       </View>
     </View>
   );
