@@ -100,6 +100,7 @@ class AppStateProvider extends Component {
     // Pressing the Back button will not lead to them.
     this.nonHistoryPanels = `
 Authenticate Login PIN
+Register AccountUpdate
 `.replace(/\n/g, ' ').trim().replace(/ {2,}/g, ' ').split(' ');
 
 
@@ -2416,7 +2417,8 @@ mobileNumberCode
       error: {
         code: 0,
         message: '',
-      }
+      },
+      supportURL: "https://www.solidi.co/contactus",
     }
 
     // Call initial setup functions.
