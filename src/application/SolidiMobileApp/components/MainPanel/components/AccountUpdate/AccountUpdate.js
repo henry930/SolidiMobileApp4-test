@@ -17,7 +17,7 @@ import misc from 'src/util/misc';
 
 // Logger
 import logger from 'src/util/logger';
-let logger2 = logger.extend('RegisterConfirm');
+let logger2 = logger.extend('AccountUpdate');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
 // Shortcuts
@@ -32,7 +32,7 @@ let jd = JSON.stringify;
 
 
 
-let RegisterConfirm = () => {
+let AccountUpdate = () => {
 
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
@@ -40,8 +40,8 @@ let RegisterConfirm = () => {
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
-  let permittedPageNames = 'confirm_email confirm_mobile_phone'.split(' ');
-  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'RegisterConfirm');
+  let permittedPageNames = 'address extra_information'.split(' ');
+  misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'AccountUpdate');
 
   let pageTitle = misc.snakeCaseToCapitalisedWords(pageName);
 
@@ -50,13 +50,26 @@ let RegisterConfirm = () => {
   let [uploadMessage, setUploadMessage] = useState('');
 
   // Input state
-  let [emailCode, setEmailCode] = useState();
-  let [disableConfirmEmailButton, setDisableConfirmEmailButton] = useState(false);
-  let [mobileCode, setMobileCode] = useState();
-  let [disableConfirmMobileButton, setDisableConfirmMobileButton] = useState(false);
+  let [postcode, setPostcode] = useState('');
+  let [address, setAddress] = useState({
+    address_1: '',
+    address_2: '',
+    address_3: '',
+    address_4: '',
+  });
+  let [disableSearchPostcodeButton, setDisableSearchPostcodeButton] = useState(false);
+  let [disableConfirmAddressButton, setDisableConfirmAddressButton] = useState(false);
 
-  // Action state
-  let [mobileCodeRequested, setMobileCodeRequested] = useState(false);
+  // foundAddress dropdown
+  let [foundAddresses, setFoundAddresses] = useState([]);
+  let initialFoundAddress = '[none]';
+  let [foundAddress, setFoundAddress] = useState(initialFoundAddress);
+  let generateFoundAddressList = () => {
+    let foundAddressList2 = foundAddresses.map(x => ({label: x, value: x}) );
+    return foundAddressList2;
+  }
+  let [foundAddressList, setFoundAddressList] = useState(generateFoundAddressList());
+  let [openFoundAddress, setOpenFoundAddress] = useState(false);
 
 
 
@@ -78,126 +91,20 @@ let RegisterConfirm = () => {
       setMobileCodeRequested(true);
       triggerRender(renderCount+1);
     } catch(err) {
-      let msg = `RegisterConfirm.setup: Error = ${err}`;
+      let msg = `AccountUpdate.setup: Error = ${err}`;
       console.log(msg);
     }
   }
 
 
-  let confirmEmail = async () => {
-    /*
-    - If unsuccessful, we update the error display on this particular page, rather than moving to an error page.
-    */
-    setDisableConfirmEmailButton(true);
-    setErrorMessage();
-    if (_.isEmpty(emailCode)) {
-      errorMessage = 'Email code is empty.';
-      setErrorMessage(errorMessage);
-      setDisableConfirmEmailButton(false);
-      return;
-    }
-    let result;
+  let searchPostcode = async () => {
     let email = appState.userData.email;
-    email = 'johnqfish@foo.com'; // dev
-    let apiRoute = 'confirm_email';
-    apiRoute += `/${email}/${emailCode}`;
-    try {
-      log(`API request: Confirm user email: emailCode = ${emailCode}.`);
-      //setUploadMessage('Confirming...');
-      // Send the request.
-      let functionName = 'confirmEmail';
-      let params = {};
-      result = await appState.publicMethod({httpMethod: 'PUT', functionName, apiRoute, params});
-      if (appState.stateChangeIDHasChanged(stateChangeID)) return; // needed ?
-    } catch(err) {
-      logger.error(err);
-    }
-    lj({result})
-    if (_.has(result, 'error')) {
-      let error = result.error;
-      log(`Error returned from API request ${apiRoute}: ${jd(error)}`);
-      if (_.isObject(error)) {
-        if (_.isEmpty(error)) {
-          error = 'Received an empty error object ({}) from the server.'
-        } else {
-          error = jd(error);
-        }
-      }
-      let detailName = 'emailCode';
-      let selector = `ValidationError: [${detailName}]: `;
-      errorMessage = error;
-      if (error.startsWith(selector)) {
-        errorMessage = error.replace(selector, '');
-      }
-      setErrorMessage(errorMessage);
-    } else {
-      appState.changeState('RegisterConfirm', 'confirm_mobile_phone');
-    }
-    //setUploadMessage('');
-    setDisableConfirmEmailButton(false);
-  }
-
-
-  let confirmMobile = async () => {
-    setDisableConfirmMobileButton(true);
-    setErrorMessage();
-    if (_.isEmpty(mobileCode)) {
-      errorMessage = 'Mobile code is empty.';
-      setErrorMessage(errorMessage);
-      setDisableConfirmMobileButton(false);
-      return;
-    }
-    let result;
-    let email = appState.userData.email;
-    email = 'johnqfish@foo.com'; // dev
-    let apiRoute = 'confirm_mobile';
-    apiRoute += `/${email}/${mobileCode}`;
-    try {
-      log(`API request: Confirm user mobile: mobileCode = ${mobileCode}.`);
-      //setUploadMessage('Confirming...');
-      // Send the request.
-      let functionName = 'confirmMobile';
-      let params = {};
-      result = await appState.publicMethod({httpMethod: 'PUT', functionName, apiRoute, params});
-      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    } catch(err) {
-      logger.error(err);
-    }
-    lj({result})
-    if (_.has(result, 'error')) {
-      let error = result.error;
-      log(`Error returned from API request ${apiRoute}: ${jd(error)}`);
-      if (_.isObject(error)) {
-        if (_.isEmpty(error)) {
-          error = 'Received an empty error object ({}) from the server.'
-        } else {
-          error = jd(error);
-        }
-      }
-      let detailName = 'mobileCode';
-      let selector = `ValidationError: [${detailName}]: `;
-      errorMessage = error;
-      if (error.startsWith(selector)) {
-        errorMessage = error.replace(selector, '');
-      }
-      setErrorMessage(errorMessage);
-    } else {
-      appState.changeState('AccountUpdate', 'address');
-    }
-    //setUploadMessage('');
-    setDisableConfirmMobileButton(false);
-  }
-
-
-  let requestMobileCode = async () => {
-    let email = appState.userData.email;
-    email = 'johnqfish@foo.com'; // dev
-    let apiRoute = 'request_mobile_code';
-    apiRoute += `/${email}`;
+    let apiRoute = 'search_postcode';
+    apiRoute += `/postcode/${postcode}`;
     try {
       log(`API request: Request new mobile code to be sent to user via text.`);
       // Send the request.
-      let functionName = 'requestMobileCode';
+      let functionName = 'searchPostcode';
       let params = {};
       result = await appState.publicMethod({httpMethod: 'GET', functionName, apiRoute, params});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
@@ -211,6 +118,11 @@ let RegisterConfirm = () => {
       log(`Error returned from API request ${apiRoute}: ${errorMessage}`);
       setErrorMessage(errorMessage);
     }
+  }
+
+
+  let confirmAddress = async () => {
+
   }
 
 
@@ -232,72 +144,135 @@ let RegisterConfirm = () => {
       <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
 
-        { pageName === 'confirm_email' &&
+      { pageName === 'address' &&
         
+        <View>
+
+          <Text style={styles.basicText}>Please confirm your address.{'\n'}</Text>
+
           <View>
 
-            <Text style={styles.basicText}>We have sent an email to your address.</Text>
-            <Text style={styles.basicText}>{'\n'}Please enter the 4-digit code contained in this email to verify your email address.</Text>
-
-            <View style={styles.emailCodeBox}>
-              <TextInput defaultValue={''}
-                style={[styles.detailValueFullWidth, styles.editableTextInput]}
+            <View style={styles.addressLine}>
+              <TextInput
+                style={[styles.detailValue, styles.editableTextInput]}
                 onChangeText = {value => {
-                  log(`Email code: ${value}`);
-                  setEmailCode(value);
+                  log(`Postcode: ${value}`);
+                  setPostcode(value);
                 }}
+                autoComplete={'off'}
                 autoCompleteType='off'
-                autoCapitalize='none'
-                keyboardType='number-pad'
-                placeholder='1234'
-                placeholderTextColor='grey'
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                placeholder={'Postcode'}
               />
             </View>
 
-            <View style={styles.confirmEmailButtonWrapper}>
-              <FixedWidthButton title="Confirm email"
-                onPress={ confirmEmail }
-                disabled={disableConfirmEmailButton}
+            <View style={styles.searchPostcodeButtonWrapper}>
+              <StandardButton title="Search Postcode"
+                onPress={ searchPostcode }
+                disabled={disableSearchPostcodeButton}
+              />
+            </View>
+
+            <View style={[
+              styles.detailValueFullWidth,
+              {zIndex:2},
+              {paddingTop: 5, paddingBottom: 10, paddingLeft: 0}
+            ]}>
+              <DropDownPicker
+                listMode="SCROLLVIEW"
+                scrollViewProps={{nestedScrollEnabled: true}}
+                placeholder={foundAddress}
+                open={openFoundAddress}
+                value={foundAddress}
+                items={foundAddressList}
+                setOpen={setOpenFoundAddress}
+                setValue={setFoundAddress}
+                style={[styles.detailDropdown]}
+                textStyle = {styles.detailDropdownText}
+                onChangeValue = { (foundAddress) => {
+                  // fill out the address fields with the selected foundAddress.
+                  /*
+                  setAddress({
+                    address_1: ,
+                  })
+                  */
+                }}
+              />
+            </View>
+
+            <View style={styles.addressLine}>
+              <TextInput
+                style={[styles.detailValueFullWidth, styles.editableTextInput]}
+                onChangeText = {value => {
+                  log(`Address line 1: ${value}`);
+                  setAddress({...address, address_1: value});
+                }}
+                autoComplete={'off'}
+                autoCompleteType='off'
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                placeholder={'Address line 1'}
+              />
+            </View>
+
+            <View style={styles.addressLine}>
+              <TextInput
+                style={[styles.detailValueFullWidth, styles.editableTextInput]}
+                onChangeText = {value => {
+                  log(`Address line 2: ${value}`);
+                  setAddress({...address, address_2: value});
+                }}
+                autoComplete={'off'}
+                autoCompleteType='off'
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                placeholder={'Address line 2'}
+              />
+            </View>
+
+            <View style={styles.addressLine}>
+              <TextInput
+                style={[styles.detailValueFullWidth, styles.editableTextInput]}
+                onChangeText = {value => {
+                  log(`Address line 3: ${value}`);
+                  setAddress({...address, address_3: value});
+                }}
+                autoComplete={'off'}
+                autoCompleteType='off'
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                placeholder={'Address line 3'}
+              />
+            </View>
+
+            <View style={styles.addressLine}>
+              <TextInput
+                style={[styles.detailValueFullWidth, styles.editableTextInput]}
+                onChangeText = {value => {
+                  log(`Address line 4: ${value}`);
+                  setAddress({...address, address_3: value});
+                }}
+                autoComplete={'off'}
+                autoCompleteType='off'
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                placeholder={'Address line 4'}
               />
             </View>
 
           </View>
 
-        }
-
-
-        { pageName === 'confirm_mobile_phone' &&
-        
-          <View>
-
-            <Text style={styles.basicText}>We have sent a text to your mobile phone.</Text>
-            <Text style={styles.basicText}>{'\n'}Please enter the 4-digit code contained in this text to verify your mobile phone number.</Text>
-
-            <View style={styles.emailCodeBox}>
-              <TextInput defaultValue={''}
-                style={[styles.detailValueFullWidth, styles.editableTextInput]}
-                onChangeText = {value => {
-                  log(`Mobile code: ${value}`);
-                  setMobileCode(value);
-                }}
-                autoCompleteType='off'
-                autoCapitalize='none'
-                keyboardType='number-pad'
-                placeholder='1234'
-                placeholderTextColor='grey'
-              />
-            </View>
-
-            <View style={styles.confirmEmailButtonWrapper}>
-              <FixedWidthButton title="Confirm mobile phone"
-                onPress={ confirmMobile }
-                disabled={disableConfirmMobileButton}
-              />
-            </View>
-
+          <View style={styles.confirmButtonWrapper}>
+            <FixedWidthButton title="Confirm address"
+              onPress={ confirmAddress }
+              disabled={disableConfirmAddressButton}
+            />
           </View>
 
-        }
+        </View>
+
+      }
 
 
         <View style={styles.uploadMessage}>
@@ -386,14 +361,25 @@ let styles = StyleSheet.create({
     borderColor: colors.greyedOutIcon,
     fontSize: normaliseFont(14),
   },
-  emailCodeBox: {
-    marginTop: scaledHeight(30),
-  },
-  confirmEmailButtonWrapper: {
-    marginVertical: scaledHeight(20),
-  },
   buttonWrapper: {
     marginVertical: scaledHeight(20),
+  },
+  addressLine: {
+    marginVertical: scaledHeight(5),
+  },
+  searchPostcodeButtonWrapper: {
+    marginVertical: scaledHeight(10),
+  },
+  detailDropdown: {
+    borderWidth: 1,
+    maxWidth: '100%',
+    height: scaledHeight(40),
+  },
+  detailDropdownText: {
+    fontSize: normaliseFont(14),
+  },
+  confirmButtonWrapper: {
+    marginTop: scaledHeight(10),
   },
 });
 
@@ -405,4 +391,4 @@ let styleContactButton = StyleSheet.create({
 });
 
 
-export default RegisterConfirm;
+export default AccountUpdate;
