@@ -55,9 +55,6 @@ let RegisterConfirm = () => {
   let [mobileCode, setMobileCode] = useState();
   let [disableConfirmMobileButton, setDisableConfirmMobileButton] = useState(false);
 
-  // Action state
-  let [mobileCodeRequested, setMobileCodeRequested] = useState(false);
-
 
 
 
@@ -70,12 +67,7 @@ let RegisterConfirm = () => {
   let setup = async () => {
     try {
       await appState.generalSetup();
-      // When this page is loaded, we request a mobile code to be sent via text, but only the first time (not on subsequent renders).
-      if (pageName === 'confirm_mobile_phone' && ! mobileCodeRequested) {
-        await requestMobileCode();
-      }
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setMobileCodeRequested(true);
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `RegisterConfirm.setup: Error = ${err}`;
@@ -186,31 +178,6 @@ let RegisterConfirm = () => {
     }
     //setUploadMessage('');
     setDisableConfirmMobileButton(false);
-  }
-
-
-  let requestMobileCode = async () => {
-    let email = appState.userData.email;
-    email = 'johnqfish@foo.com'; // dev
-    let apiRoute = 'request_mobile_code';
-    apiRoute += `/${email}`;
-    try {
-      log(`API request: Request new mobile code to be sent to user via text.`);
-      // Send the request.
-      let functionName = 'requestMobileCode';
-      let params = {};
-      result = await appState.publicMethod({httpMethod: 'GET', functionName, apiRoute, params});
-      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    } catch(err) {
-      logger.error(err);
-    }
-    //lj({result})
-    if (_.has(result, 'error')) {
-      let error = result.error;
-      let errorMessage = jd(error);
-      log(`Error returned from API request ${apiRoute}: ${errorMessage}`);
-      setErrorMessage(errorMessage);
-    }
   }
 
 
