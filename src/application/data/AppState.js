@@ -100,7 +100,7 @@ class AppStateProvider extends Component {
     // Pressing the Back button will not lead to them.
     this.nonHistoryPanels = `
 Authenticate Login PIN
-Register AccountUpdate
+Register RegisterConfirm AccountUpdate
 `.replace(/\n/g, ' ').trim().replace(/ {2,}/g, ' ').split(' ');
 
 
@@ -365,7 +365,8 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       this.state.apiClient = apiClient;
       // Use the email and password to load the API Key and Secret from the server.
       let apiRoute = 'login_mobile' + `/${email}`;
-      let params = {password, tfa};
+      let optionalParams = {};
+      let params = {password, tfa, optionalParams};
       let abortController = this.state.createAbortController();
       let data = await apiClient.publicMethod({httpMethod: 'POST', apiRoute, params, abortController});
       //lj(data);
@@ -400,14 +401,16 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       _.assign(apiClient, {apiKey, apiSecret});
       // Store the API Key and Secret in the secure keychain storage.
       await Keychain.setInternetCredentials(this.state.apiCredentialsStorageKey, apiKey, apiSecret);
-      let msg = `apiCredentials (apiKey=${apiKey}, apiSecret=${apiSecret}) stored in keychain with key = '${this.state.apiCredentialsStorageKey}')`;
+      let msg = `apiCredentials stored in keychain with key = '${this.state.apiCredentialsStorageKey}')`;
       log(msg);
       // Save the fact that the API Key and Secret have been stored.
       this.state.user.apiCredentialsFound = true;
       let msg2 = `Set this.state.user.apiCredentialsFound = true`;
       log(msg2);
       log(`apiKey: ${apiKey}`);
-      log(`apiSecret: ${apiSecret}`);
+      if (tier === 'dev') {
+        log(`apiSecret: ${apiSecret}`);
+      }
       // Load user stuff.
       await this.state.loadInitialStuffAboutUser();
       return "SUCCESS";
@@ -2357,6 +2360,7 @@ mobileNumberCode
         'Settings',
         'WaitingForPayment',
         'SolidiAccount',
+        'AccountUpdate',
       ],
       apiClient: null,
       lockAppTimerID: null,
