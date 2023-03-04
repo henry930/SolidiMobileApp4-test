@@ -536,6 +536,10 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
           // For any other errors, switch to an error description page.
           let msg = `Error in ${functionName}: publicMethod (apiRoute=${apiRoute}, params=${misc.jd(params)}):`;
           if (! _.isString(error)) error = JSON.stringify(error);
+          // For some common errors, add extra information / suggestions.
+          if (error === 'API-Key is missing') {
+            error += '\nProbable cause = using "appState.publicMethod" instead of "appState.privateMethod".';
+          }
           msg += "\nError = " + String(error);
           this.state.switchToErrorState({message:msg});
           return 'DisplayedError';
