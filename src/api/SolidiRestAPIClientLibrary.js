@@ -158,6 +158,11 @@ export default class SolidiRestAPIClientLibrary {
       params2.nonce = nonce;
       //log(`API request: apiRoute=${apiRoute}: nonce=${nonce}: params=${jd(params)}`);
       postData = JSON.stringify(params2);
+    } else {
+      if (privateAPICall) {
+        var msg = `To make a private API call, need to use POST HTTP method. This means that we can include POST body data, for example the nonce.`;
+        throw Error(msg);
+      }
     }
     let headers = {
       'Accept': 'application/json',
