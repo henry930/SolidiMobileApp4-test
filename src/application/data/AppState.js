@@ -100,7 +100,7 @@ class AppStateProvider extends Component {
     // Pressing the Back button will not lead to them.
     this.nonHistoryPanels = `
 Authenticate Login PIN
-Register RegisterConfirm AccountUpdate
+Register RegisterConfirm RegisterConfirm2 AccountUpdate
 `.replace(/\n/g, ' ').trim().replace(/ {2,}/g, ' ').split(' ');
 
 
