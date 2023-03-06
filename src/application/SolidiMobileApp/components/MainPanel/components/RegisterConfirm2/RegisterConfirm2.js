@@ -52,10 +52,10 @@ let RegisterConfirm2 = () => {
   // Input state
   let [postcode, setPostcode] = useState('');
   let [address, setAddress] = useState({
-    address_1: '',
-    address_2: '',
-    address_3: '',
-    address_4: '',
+    address_1: null,
+    address_2: null,
+    address_3: null,
+    address_4: null,
   });
   let [disableSearchPostcodeButton, setDisableSearchPostcodeButton] = useState(false);
   let [disableConfirmAddressButton, setDisableConfirmAddressButton] = useState(false);
@@ -89,7 +89,7 @@ let RegisterConfirm2 = () => {
   let setup = async () => {
     try {
       await appState.generalSetup();
-      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      //if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `RegisterConfirm2.setup: Error = ${err}`;
@@ -180,9 +180,13 @@ let RegisterConfirm2 = () => {
     setErrorMessage();
     let result;
     let apiRoute = 'provide_address';
+    let address2 = _.clone(address);
+    address2.postcode = postcode;
+    //lj({address2})
     try {
       let functionName = 'confirmAddress';
-      result = await appState.privateMethod({functionName, apiRoute});
+      let params = {address: address2};
+      result = await appState.privateMethod({functionName, apiRoute, params});
     } catch(err) {
       logger.error(err);
     }
@@ -199,10 +203,9 @@ let RegisterConfirm2 = () => {
       }
       setErrorMessage(errorMessage);
       setDisableConfirmAddressButton(false);
+    } else {
       // Change state.
       appState.changeState('AccountUpdate');
-    } else {
-      setDisableConfirmAddressButton(false);
     }
   }
 
@@ -285,10 +288,10 @@ let RegisterConfirm2 = () => {
                   let addressLines = foundAddress.solidiFormat;
                   //lj({addressLines})
                   setAddress({
-                    address_1: addressLines[0],
-                    address_2: addressLines[1],
-                    address_3: addressLines[2],
-                    address_4: addressLines[3],
+                    address_1: _.isUndefined(addressLines[0]) ? null : addressLines[0],
+                    address_2: _.isUndefined(addressLines[1]) ? null : addressLines[1],
+                    address_3: _.isUndefined(addressLines[2]) ? null : addressLines[2],
+                    address_4: _.isUndefined(addressLines[3]) ? null : addressLines[3],
                   })
                 }}
               />
