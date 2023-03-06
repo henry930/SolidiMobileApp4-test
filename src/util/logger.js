@@ -77,7 +77,7 @@ logger1.getShortcuts = (loggerX) => {
     deb: loggerX.debug,
     dj: (x) => { loggerX.debug(JSON.stringify(x)) } ,
     log: loggerX.info,
-    lj: (x) => { loggerX.info(JSON.stringify(x)) } ,
+    lj: (x) => { loggerX.info(JSON.stringify(x, null, 2)) } ,
   }
 }
 
