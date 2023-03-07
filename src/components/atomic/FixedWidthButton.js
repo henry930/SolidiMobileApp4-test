@@ -46,8 +46,7 @@ let defaultStyle = StyleSheet.create({
     paddingHorizontal: scaledWidth(20),
     borderRadius: scaledWidth(8),
     backgroundColor: colors.standardButton,
-    alignItems: 'center',
-    justifyContent: 'center',
+    minWidth: '100%',
   },
   text: {
     color: colors.standardButtonText,
