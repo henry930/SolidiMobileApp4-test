@@ -74,7 +74,7 @@ let Settings = () => {
         <Text style={styles.headingText}>Settings</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1, margin: scaledWidth(10) }} >
 
       <View style={styles.welcomeMessage}>
         <Text style={styles.welcomeMessageText}>{generateWelcomeMessage()}</Text>
@@ -146,6 +146,7 @@ let styles = StyleSheet.create({
     paddingVertical: scaledHeight(5),
     width: '100%',
     height: '100%',
+    //borderWidth: 1, // testing
   },
   panelSubContainer: {
     //paddingTop: scaledHeight(10),
@@ -183,7 +184,7 @@ let styles = StyleSheet.create({
 
 let styleButton = StyleSheet.create({
   view: {
-    width: '70%',
+    //width: '100%',
   },
 });
 
