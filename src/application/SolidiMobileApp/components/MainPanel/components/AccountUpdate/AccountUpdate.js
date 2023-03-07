@@ -73,7 +73,7 @@ let AccountUpdate = () => {
     try {
       await appState.generalSetup();
       await checkIfExtraInformationRequired();
-      //if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setIsLoading(false);
       triggerRender(renderCount+1);
     } catch(err) {
