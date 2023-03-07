@@ -125,7 +125,10 @@ let Register = () => {
       setUploadMessage('Registering your details...');
       // Send the request.
       let functionName = 'submitRegisterRequest';
-      let params = {userData};
+      // Restructure emailPreferences into a list for transmission.
+      let userData2 = {...userData};
+      userData2.emailPreferences = _.keys(_.pick(userData2.emailPreferences, _.identity));
+      let params = {userData: userData2};
       result = await appState.publicMethod({functionName, apiRoute, params});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     } catch(err) {
@@ -145,15 +148,15 @@ let Register = () => {
       let detailNameError = 'unknown';
       let errorMessage = error;
       let detailNames = `
+unknown
 firstName
 lastName
 email
 password
-mobile
 dateOfBirth
+mobileNumber
 gender
 citizenship
-mobileNumber
 emailPreferences
       `
       detailNames = misc.splitStringIntoArray(detailNames);
@@ -167,14 +170,14 @@ emailPreferences
       }
       // If error is a string, display the error message above the specific setting.
       setErrorDisplay({...errorDisplay, [detailNameError]: errorMessage});
+      setUploadMessage('');
+      setDisableRegisterButton(false);
     } else { // No errors.
       // Save the data that we sent to the server.
       appState.userData = userData;
       // Move to next page.
       appState.changeState('RegisterConfirm', 'confirm_email');
     }
-    setUploadMessage('');
-    setDisableRegisterButton(false);
   }
 
 
@@ -314,7 +317,7 @@ emailPreferences
                 style={[styles.detailValueFullWidth, styles.editableTextInput]}
                 onChangeText = {value => {
                   log(`Password set to: ${value}`);
-                  setUserData({...userData, mobile: value});
+                  setUserData({...userData, password: value});
                 }}
                 autoComplete={'off'}
                 autoCompleteType='off'
@@ -335,11 +338,11 @@ emailPreferences
             </View>
             <View>
               <TextInput
-                value={userData.mobile}
+                value={userData.mobileNumber}
                 style={[styles.detailValueFullWidth, styles.editableTextInput]}
                 onChangeText = {value => {
                   log(`Mobile set to: ${value}`);
-                  setUserData({...userData, mobile: value});
+                  setUserData({...userData, mobileNumber: value});
                 }}
                 autoCompleteType='off'
                 autoCapitalize='none'
@@ -445,13 +448,13 @@ emailPreferences
             </View>
             <View style={styles.checkboxWrapper}>
               <Checkbox.Item label="News & Updates"
-                status={ _.has(userData, 'emailPreferences') && userData.emailPreferences.newsAndUpdates ? "checked" : "unchecked" }
+                status={ _.has(userData, 'emailPreferences') && userData.emailPreferences.newsAndFeatureUpdates ? "checked" : "unchecked" }
                 style={styleCheckbox}
                 onPress={() => {
-                  let currentValue = userData.emailPreferences.newsAndUpdates;
+                  let currentValue = userData.emailPreferences.newsAndFeatureUpdates;
                   let newValue = ! currentValue;
-                  log(`Changing userData.emailPreferences.newsAndUpdates from ${currentValue} to ${newValue}`);
-                  setUserData({...userData, emailPreferences: {...userData.emailPreferences, newsAndUpdates: newValue}});
+                  log(`Changing userData.emailPreferences.newsAndFeatureUpdates from ${currentValue} to ${newValue}`);
+                  setUserData({...userData, emailPreferences: {...userData.emailPreferences, newsAndFeatureUpdates: newValue}});
                 }}
               />
             </View>
