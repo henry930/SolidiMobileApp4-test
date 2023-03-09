@@ -38,7 +38,6 @@ let Terms = () => {
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'SolidiAccount');
   let terms = appState.apiData.terms['general'];
-  console.log(terms);
 
   // Initial setup.
   useEffect( () => {
