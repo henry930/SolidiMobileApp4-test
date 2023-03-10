@@ -20,7 +20,7 @@ let PaymentConditions = () => {
   }
 
   return (
-    <View>
+    <View style={[styles.expandToParent]}>
       <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} You are using your REAL name.</Text>
       <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} You are paying from/to your own bank account.</Text>
       <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} You are 18 or over.</Text>
@@ -31,6 +31,7 @@ let PaymentConditions = () => {
           styles={styleConditionButton}/>
         <Text style={[styles.basicText, styles.bold]}>.</Text>
       </View>
+      <Text style={[styles.basicText, styles.bold, styles.disclaimerText]}>CryptoAssets are highly risky investments. Cryptoassets are not subject to protection under the Financial Services Compensation Scheme or within scope of the Financial Ombudsman Service.  Solidi Ltd is registered with the UK Financial Conduct Authority under the Money Laundering, Terrorist Financing and Transfer of Funds Regulations 2017 as a cryptoasset business</Text>
     </View>
   )
 
@@ -48,6 +49,16 @@ let styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-start',
+  },
+  disclaimerText: {
+      fontWeight: 'normal',
+      fontSize: normaliseFont(12),
+      position: 'absolute',
+      bottom: 10,
+  },
+  expandToParent: {
+    height: '100%',
+    width: '100%',
   },
 });
 
