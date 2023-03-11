@@ -60,19 +60,6 @@ let Maintenance = () => {
   }
 
   let logoImageName = 'maintenance';
-//  let logoImageName = 'BTC';
-  const staticImage = require("src/images/dreamstime_xl_30079286-50percent.png");
-  console.log("Image data = "+scaledWidth(baseScreenWidth));
-  const {width, height} = Image.resolveAssetSource(ImageLookup[logoImageName]);
-  let nheight = baseScreenWidth * (height/width);
-console.log("image width = "+ width);
-console.log("image height = "+ height);
-console.log("image width = "+ baseScreenWidth);
-console.log("image height = "+ nheight);
-console.log("width = "+ Dimensions.get('window').width);
-console.log("height = "+ Dimensions.get('window').height);
-console.log("width = "+ Dimensions.get('screen').width);
-console.log("height = "+ Dimensions.get('screen').height);
 
   let blogposts = [
     {"title":"Solidi receives FCA CryptoAssets license",
@@ -84,10 +71,6 @@ console.log("height = "+ Dimensions.get('screen').height);
 
      
   ];
-  blogposts.map((prop, key) => {
-    console.log(key);
-    console.log(prop);
-  });
 
   return (
     <View style={styles.panelContainer}>
@@ -97,17 +80,14 @@ console.log("height = "+ Dimensions.get('screen').height);
         <Text style={styles.headingText}>We've upgrading Solidi!</Text>
       </View>
 
-
       <Text style={[styles.bold, styles.basicText]}>{'\n'}Sometimes, upgrades require a little downtime!</Text>
       <Text style={[             styles.basicText]}>{'\n'}Rest assured out engineers are working hard to get new features to you.</Text>
       <Text style={[             styles.basicText]}>{'\n'}Site upgrades should take less than an hour.</Text>
-
-
  
       <View style={styles.infoSection}>
           <Text style={styles.basicText}>While you are waiting, why not check out some of our amazing blog posts to learn more about the exciting wolrd of crypto investing.{'\n'}</Text>
 
-{blogposts.map((prop, key) => {
+        {blogposts.map((prop, key) => {
           return (<View style={styles.bloglink}><Button title={prop['title']}
             onPress={ () => { Linking.openURL(prop['url']) } }
             styles={styleContactUsButton}
@@ -121,7 +101,8 @@ console.log("height = "+ Dimensions.get('screen').height);
       <Text></Text>
       <Text></Text>
       <Text style={[styles.bold, styles.basicText]}>Click below to retry Solidi</Text>
-      <View style={styles.buttonWrapper}>
+      <Text></Text>
+       <View style={styles.buttonWrapper}>
         <FixedWidthButton styles={styleButton} title='Retry'
           onPress={ async () => { 
             log(`MM=${appState.maintenanceMode}`);
@@ -133,21 +114,17 @@ console.log("height = "+ Dimensions.get('screen').height);
         />
       </View>   
 
-       <Image source={ImageLookup[logoImageName]} resizeMode='contain' style={styleTrustpilotButton.image} />
+       <Image source={ImageLookup[logoImageName]} resizeMode='contain' style={craneImage.image} />
 
         <View style={styles.footerlink}>
           <Text style={[styles.basicText, styles.bold]}>{appState.domain}</Text>
         </View>
-
-
-
 
     </View>
     </View>
   )
 
 }
-//         <Image source={ImageLookup[logoImageName]} resizeMode='contain' style={styleTrustpilotButton.image} />
 
 
 let styles = StyleSheet.create({
@@ -218,35 +195,24 @@ let styleButton = StyleSheet.create({
 
   },
 });
-//    width: scaledWidth(baseScreenWidth),
-//    height: scaledHeight(baseScreenWidth),
 
- const {width, height} = Image.resolveAssetSource(ImageLookup['maintenance']);
- let nheight = baseScreenWidth * (height/width);
+const {width, height} = Image.resolveAssetSource(ImageLookup['maintenance']);
+let nheight = baseScreenWidth * (height/width);
 
-let styleTrustpilotButton2 = StyleSheet.create({
+let craneImage = StyleSheet.create({
   image: {
-        position: 'absolute',
-width: 400,
-height: 300,
-bottom: 0,
-left: 0,
+    position: 'absolute',
+    width: baseScreenWidth*1.2,
+    height: nheight*1.2,
+    bottom: -40,
+    left: 30,
 
-  }
-});
-let styleTrustpilotButton = StyleSheet.create({
-  image: {
-        position: 'absolute',
-width: baseScreenWidth*1.2,
-height: nheight*1.2,
-bottom: -40,
-left: 30,
-  zIndex: -3, // works on ios
-  elevation: -3, // works on android
+    // Move image behind button
+    zIndex: -3, // works on ios
+    elevation: -3, // works on android
 
   }
 
 });
-//    width: baseScreenWidth,
 
 export default Maintenance;
