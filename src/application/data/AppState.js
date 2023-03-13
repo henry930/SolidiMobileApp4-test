@@ -133,7 +133,7 @@ Authenticate Login PIN
       log(msg);
       //this.state.logEntireStateHistory();
       let {mainPanelState, pageName} = newState;
-      if (_.isNil(mainPanelState)) {
+      if (_.isNil(mainPanelState) || ! mainPanelStates.includes(mainPanelState)) {
         var msg = `${fName}: Unknown mainPanelState: ${mainPanelState}`;
         log(msg);
         throw Error(msg);
@@ -144,7 +144,7 @@ Authenticate Login PIN
       this.abortAllRequests();
       let stateHistoryList = this.state.stateHistoryList;
       /* Check the current state.
-      - If the current state has just ended a user journey, we want to erase the state history, and start over.
+      - If the current state has just ended a user journey, we want to reset the state history.
       */
       let currentState = stateHistoryList[stateHistoryList.length - 1];
       var msg = `${fName}: Current state: ${jd(currentState)}}`;
@@ -154,7 +154,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 RegisterConfirm2 AccountUpdate
 `;
       endJourneyList = misc.splitStringIntoArray({s: endJourneyList});
-      var msg = `${fName}: endJourneyList: ${jd(endJourneyList)} - Includes current state ? ${endJourneyList.includes(currentState.mainPanelState)}}`;
+      var msg = `${fName}: endJourneyList: ${jd(endJourneyList)} - Includes current state ? ${endJourneyList.includes(currentState?.mainPanelState)}}`;
       log(msg);
       if (! _.isEmpty(currentState)) {
         // currentState can be empty if we're testing and start on the Login page, which is not saved into the stateHistoryList.
@@ -526,7 +526,7 @@ RegisterConfirm2 AccountUpdate
       if (_.has(data, 'error')) {
         let error = data.error;
         if (error == 'cannot_parse_data') {
-          this.state.switchToErrorState({message:JSON.stringify(data)});
+          this.state.switchToErrorState({message: jd(data)});
           return 'DisplayedError';
         } else if (error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
@@ -555,7 +555,7 @@ RegisterConfirm2 AccountUpdate
             error += '\nProbable cause = using "appState.publicMethod" instead of "appState.privateMethod".';
           }
           msg += "\nError = " + String(error);
-          this.state.switchToErrorState({message:msg});
+          this.state.switchToErrorState({message: msg});
           return 'DisplayedError';
         }
         return;
@@ -567,7 +567,7 @@ RegisterConfirm2 AccountUpdate
       } catch(err) {
         let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}):`;
         msg += ' ' + String(err);
-        this.state.switchToErrorState({message:msg});
+        this.state.switchToErrorState({message: msg});
         return 'DisplayedError';
       }
       return data;
@@ -589,7 +589,7 @@ RegisterConfirm2 AccountUpdate
       if (_.has(data, 'error')) {
         let error = data.error;
         if (error == 'cannot_parse_data') {
-          this.state.switchToErrorState({message:JSON.stringify(data)});
+          this.state.switchToErrorState({message: jd(data)});
           return 'DisplayedError';
         } else if (error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
@@ -620,7 +620,7 @@ RegisterConfirm2 AccountUpdate
           let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}, params=${paramsStr2}):`;
           if (! _.isString(error)) error = JSON.stringify(error);
           msg += ' Error = ' + String(error);
-          this.state.switchToErrorState({message:msg});
+          this.state.switchToErrorState({message: msg});
           return 'DisplayedError';
         }
         return;
@@ -632,7 +632,7 @@ RegisterConfirm2 AccountUpdate
       } catch(err) {
         let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}):`;
         msg += ' ' + String(err);
-        this.state.switchToErrorState({message:msg});
+        this.state.switchToErrorState({message: msg});
         return 'DisplayedError';
       }
       return data;
