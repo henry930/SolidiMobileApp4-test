@@ -102,7 +102,7 @@ class AppStateProvider extends Component {
 Authenticate Login PIN
 RegisterConfirm RegisterConfirm2 AccountUpdate
 `.replace(/\n/g, ' ').trim().replace(/ {2,}/g, ' ').split(' ');
-    // We store Register, because it has a link to ReadArticle, which uses the History stack.
+    // We store Register, because it has a link to ReadArticle, which uses the History stack to return to the previous page.
 
 
     // Shortcut function for changing the mainPanelState.
@@ -2306,13 +2306,13 @@ RegisterConfirm2 AccountUpdate
         lastName: '',
         email: '',
         password: '',
-        mobile: '',
+        mobileNumber: '',
         dateOfBirth: '',
         gender: '',
         citizenship: '',
         emailPreferences: {
           systemAnnouncements: true,
-          newsAndUpdates: true,
+          newsAndFeatureUpdates: true,
           promotionsAndSpecialOffers: true,
         },
       },
