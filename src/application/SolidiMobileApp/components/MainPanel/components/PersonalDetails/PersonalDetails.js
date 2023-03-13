@@ -144,7 +144,7 @@ dateOfBirth gender citizenship
 email mobile
 address_1 address_2 address_3 address_4 postcode country
 `;
-    userDataDetails = misc.splitStringIntoArray(userDataDetails);
+    userDataDetails = misc.splitStringIntoArray({s: userDataDetails});
     if (! userDataDetails.includes(detail)) {
       console.error(`updateUserData: Unrecognised detail: ${detail}`);
       return;

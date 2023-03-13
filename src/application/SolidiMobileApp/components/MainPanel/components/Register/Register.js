@@ -178,7 +178,7 @@ gender
 citizenship
 emailPreferences
       `
-      detailNames = misc.splitStringIntoArray(detailNames);
+      detailNames = misc.splitStringIntoArray({s: detailNames});
       for (let detailName of detailNames) {
         let selector = `ValidationError: [${detailName}]: `;
         //log(error.startsWith(selector))

@@ -97,8 +97,16 @@ let sleep = async (timeSeconds) => {
 }
 
 
-let splitStringIntoArray = (s) => {
-  return s.replace(/\n/g, ' ').replace(/,/g, '').split(' ').filter(x => x);
+let splitStringIntoArray = ({s}) => {
+  // Splits a string into an array of words. The string can be multiline.
+  // The words are separated by spaces. Commas are ignored.
+  // Multiple spaces are collapsed into single spaces prior to splitting.
+  if (! _.isString(s)) {
+    var msg = `Expected s to be a string, but it's a '${typeof s}'.`;
+    throw Error(msg);
+  }
+  let items = s.replace(/\n/g, ' ').trim().replace(/,/g, '').replace(/  +/g, ' ').split(' ');
+  return items;
 }
 
 
