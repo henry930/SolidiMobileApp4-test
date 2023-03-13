@@ -78,6 +78,9 @@ let Register = () => {
   let [citizenshipOptionsList, setCitizenshipOptionsList] = useState(generateCitizenshipOptionsList());
   let [openCitizenship, setOpenCitizenship] = useState(false);
 
+  // More
+  let scrollRefTop = useRef();
+
   // Initial setup.
   useEffect( () => {
     setup();
@@ -89,7 +92,7 @@ let Register = () => {
       await appState.generalSetup();
       await appState.loadPersonalDetailOptions();
       await appState.loadCountries();
-      //if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setGenderOptionsList(generateGenderOptionsList());
       setCitizenshipOptionsList(generateCitizenshipOptionsList());
       setIsLoading(false);
@@ -112,11 +115,27 @@ let Register = () => {
     // Reset any existing error messages.
     setErrorDisplay({});
     let result;
-    // testing:
+    // test data:
+    /*
     userData = {
-      email: 'jabba@huttcorp.com@foo',
-      firstName: 'Jabba the Hutt',
+      email: 'johnqfish@foo.com',
+      password: 'bigFish6',
+      firstName: 'John',
+      lastName: 'Fish',
+      gender: 'Male',
+      dateOfBirth: '01/12/1990',
+      citizenship: 'GB',
+      mobileNumber: '+34698934194',
+      emailPreferences: {
+        'newsAndFeatureUpdates': true,
+        'promotionsAndSpecialOffers': true
+      },
     };
+    setUserData(userData);
+    setGender('Male')
+    setCitizenship('GB');
+    */
+
     let email = userData.email;
     let apiRoute = 'register_new_user';
     apiRoute += '/' + email;
@@ -172,6 +191,8 @@ emailPreferences
       setErrorDisplay({...errorDisplay, [detailNameError]: errorMessage});
       setUploadMessage('');
       setDisableRegisterButton(false);
+      // Scroll to top.
+     scrollRefTop.current.scrollToPosition(0);
     } else { // No errors.
       // Save the data that we sent to the server.
       appState.userData = userData;
@@ -214,7 +235,7 @@ emailPreferences
       </View>
 
 
-      <KeyboardAwareScrollView style={styles.scrollView} contentContainerStyle={{ flexGrow: 1, margin: 20 }} >
+      <KeyboardAwareScrollView style={styles.scrollView} contentContainerStyle={{ flexGrow: 1, margin: 20 }} ref={scrollRefTop} >
 
         { isLoading && <Spinner/> }
 
