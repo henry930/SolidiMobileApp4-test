@@ -41,7 +41,7 @@ let RequestFailed = () => {
 
   let setup = async () => {
     try {
-      await appState.generalSetup();
+      await appState.generalSetup({caller: 'RequestFailed'});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     } catch(err) {
       let msg = `RequestFailed.setup: Error = ${err}`;

@@ -43,7 +43,7 @@ let Settings = () => {
 
   let setup = async () => {
     try {
-      await appState.generalSetup();
+      await appState.generalSetup({caller: 'Settings'});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {

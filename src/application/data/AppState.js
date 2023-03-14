@@ -154,7 +154,7 @@ RegisterConfirm2 AccountUpdate
 `;
       endJourneyList = misc.splitStringIntoArray({s: endJourneyList});
       var msg = `${fName}: endJourneyList: ${jd(endJourneyList)} - Includes current state ? ${endJourneyList.includes(currentState?.mainPanelState)}}`;
-      log(msg);
+      //log(msg);
       if (! _.isEmpty(currentState)) {
         // currentState can be empty if we're testing and start on the Login page, which is not saved into the stateHistoryList.
         if (endJourneyList.includes(currentState.mainPanelState)) {
@@ -931,7 +931,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.resetLockAppTimer = async () => {
       log(`Begin: resetLockAppTimer()`);
       let currentTimerID = this.state.lockAppTimerID;
-      log(`- currentTimerID = ${currentTimerID}`);
+      //log(`- currentTimerID = ${currentTimerID}`);
       // If there's an active timer, stop it.
       if (! _.isNil(currentTimerID)) {
         clearTimeout(currentTimerID);
@@ -939,7 +939,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let waitTimeMinutes = 30;
       let waitTimeSeconds = waitTimeMinutes * 60;
       let lockAppTimer = () => {
-        log(`Begin: lockAppTimer()`);
+        log(`Begin: lockAppTimer() - (${waitTimeMinutes} minutes)`);
         let msg = `lockAppTimer (${waitTimeMinutes} minutes) has finished.`;
         // Don't lock app if user has logged out already.
         if (this.state.user.isAuthenticated === false) {
@@ -960,7 +960,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Start new timer.
       let timerID = setTimeout(lockAppTimer, waitTimeSeconds * 1000);
       this.state.lockAppTimerID = timerID;
-      log(`- newTimerID = ${timerID}`);
+      //log(`- newTimerID = ${timerID}`);
     }
 
 

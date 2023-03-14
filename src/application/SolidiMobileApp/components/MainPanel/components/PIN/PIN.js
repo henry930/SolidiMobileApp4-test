@@ -55,7 +55,7 @@ let PIN = () => {
 
   let setup = async () => {
     try {
-      await appState.generalSetup();
+      await appState.generalSetup({caller: "PIN"});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     } catch(err) {
       let msg = `PIN.setup: Error = ${err}`;

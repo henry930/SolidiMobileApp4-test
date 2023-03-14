@@ -156,6 +156,7 @@ address_1 address_2 address_3 address_4 postcode country
     let result = await appState.privateMethod({ functionName, apiRoute, params });
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     // Future: The error should be an object with 'code' and 'message' properties.
+    if (data === 'DisplayedError') return;
     if (_.has(result, 'error')) {
       let error = result.error;
       log(`Error returned from API request (Update user: Change ${detail} from '${prevValue}' to '${value}'): ${JSON.stringify(error)}`);
