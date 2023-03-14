@@ -153,6 +153,8 @@ let Register = () => {
     } catch(err) {
       logger.error(err);
     }
+    //lj({result});
+    if (result === 'DisplayedError') return;
     // Future: The error should be an object with 'code' and 'message' properties.
     if (_.has(result, 'error')) {
       let error = result.error;

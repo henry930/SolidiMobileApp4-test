@@ -118,6 +118,7 @@ let RegisterConfirm2 = () => {
       logger.error(err);
     }
     //lj({result})
+    if (result === 'DisplayedError') return;
     if (_.has(result, 'error')) {
       let error = result.error;
       let errorMessage = jd(error);
@@ -130,6 +131,7 @@ let RegisterConfirm2 = () => {
       }
       setErrorMessage(errorMessage);
       setDisableSearchPostcodeButton(false);
+      return;
     } else {
       setDisableSearchPostcodeButton(false);
     }
@@ -191,6 +193,7 @@ let RegisterConfirm2 = () => {
       logger.error(err);
     }
     //lj({result})
+    if (result === 'DisplayedError') return;
     if (_.has(result, 'error')) {
       let error = result.error;
       let errorMessage = jd(error);

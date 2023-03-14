@@ -102,6 +102,7 @@ let RegisterConfirm = () => {
       logger.error(err);
     }
     lj({result})
+    if (result === 'DisplayedError') return;
     if (_.has(result, 'error')) {
       let error = result.error;
       log(`Error returned from API request ${apiRoute}: ${jd(error)}`);
@@ -150,6 +151,7 @@ let RegisterConfirm = () => {
       logger.error(err);
     }
     lj({result})
+    if (result === 'DisplayedError') return;
     if (_.has(result, 'error')) {
       let error = result.error;
       log(`Error returned from API request ${apiRoute}: ${jd(error)}`);

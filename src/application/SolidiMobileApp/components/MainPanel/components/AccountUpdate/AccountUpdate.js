@@ -101,6 +101,7 @@ let AccountUpdate = () => {
       logger.error(err);
     }
     //lj({result})
+    if (result === 'DisplayedError') return;
     let n = result.length;
     if (n === 0) {
       let msg = `No extra information required.`;
@@ -138,6 +139,7 @@ let AccountUpdate = () => {
       logger.error(err);
     }
     //lj({result})
+    if (result === 'DisplayedError') return;
     if (_.has(result, 'error')) {
       let error = result.error;
       let errorMessage = jd(error);
