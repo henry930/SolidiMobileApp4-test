@@ -11,7 +11,7 @@ let appVersion = version;
 
 // React imports
 import React, { Component, useContext } from 'react';
-import {BackHandler} from 'react-native';
+import { Platform, BackHandler } from 'react-native';
 import * as Keychain from 'react-native-keychain';
 import {deleteUserPinCode} from '@haskkor/react-native-pincode';
 import { getIpAddressesForHostname } from 'react-native-dns-lookup';
@@ -19,6 +19,7 @@ import { getIpAddressesForHostname } from 'react-native-dns-lookup';
 // Other imports
 import _ from 'lodash';
 import Big from 'big.js';
+import semver from 'semver';
 
 // Internal imports
 import { mainPanelStates, footerButtonList } from 'src/constants';
@@ -425,6 +426,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.generalSetup = async (optionalParams) => {
+      // 2023-03-16: We now check for "upgrade required" here.
       // Note: This method needs to be called in every page, so that the Android back button always works.
       // (Obviously the back button handler could be called separately, but that's less convenient overall.)
       let {caller} = { ...optionalParams };
@@ -441,6 +443,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         let {userAgent, domain} = this.state;
         this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       }
+      // We check for "upgrade required" on every screen load.
+      await this.state.checkIfAppUpgradeRequired();
       // Load public info that rarely changes.
       if (! this.state.apiVersionLoaded) {
         await this.state.loadLatestAPIVersion();
@@ -1007,6 +1011,45 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
 
+    this.checkIfAppUpgradeRequired = async () => {
+      let fName = 'checkIfAppUpgradeRequired';
+      let data = await this.state.publicMethod({
+        functionName: fName,
+        apiRoute: 'app_latest_version',
+        httpMethod: 'GET',
+      });
+      if (data == 'DisplayedError') return;
+      let expectedKeys = 'version minimumVersionRequired'.split(' ');
+      let foundKeys = _.keys(data);
+      if (! _.isEqual(_.intersection(expectedKeys, foundKeys), expectedKeys)) {
+        var msg = `${fName}: Missing expected key(s) in response data from API endpoint '/app_latest_version'. Expected: ${jd(expectedKeys)}; Found: ${jd(foundKeys)}`;
+        return appState.switchToErrorState({message: msg});
+      }
+      let latestAppVersion = data.version;
+      var msg = `Internal app version: ${appVersion}. Latest app version: ${latestAppVersion}`;
+      log(msg);
+      let os = Platform.OS;
+      let minimumVersionRequiredIos = data.minimumVersionRequired.ios.version;
+      let minimumVersionRequiredAndroid = data.minimumVersionRequired.android.version;
+      var msg = `Minimum version required for iOS: ${minimumVersionRequiredIos}. Minimum version required for Android: ${minimumVersionRequiredAndroid}.`;
+      log(msg);
+      let minimumVersionRequired = 'Error';
+      if (os == 'ios') {
+        minimumVersionRequired = minimumVersionRequiredIos;
+      } else if (os == 'android') {
+        minimumVersionRequired = minimumVersionRequiredAndroid;
+      }
+      var msg = `Platform OS: ${os}. Minimum version required = ${minimumVersionRequired}.`;
+      log(msg);
+      let upgradeRequired = semver.gt(minimumVersionRequired, appVersion);
+      log(`Upgrade required: ${upgradeRequired}`);
+      if (upgradeRequired) {
+        //this.state.changeState('UpgradeRequired');
+      }
+    }
+
+
+
     this.loadLatestAPIVersion = async () => {
       let data = await this.state.publicMethod({
         functionName: 'loadAPIVersion',
@@ -1014,7 +1057,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         httpMethod: 'GET',
       });
       if (data == 'DisplayedError') return;
-      // if (! .has(data, 'api_latest_version')) this.state.changeState('Error');
       let api_latest_version = _.has(data, 'api_latest_version') ? data.api_latest_version : null;
       this.state.apiData.api_latest_version = api_latest_version;
       log(`Latest API version: ${api_latest_version}`);
@@ -2362,6 +2404,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       cancelTimers: this.cancelTimers,
       switchToErrorState: this.switchToErrorState,
       /* Public API methods */
+      checkIfAppUpgradeRequired: this.checkIfAppUpgradeRequired,
       loadLatestAPIVersion: this.loadLatestAPIVersion,
       checkLatestAPIVersion: this.checkLatestAPIVersion,
       loadAssetsInfo: this.loadAssetsInfo,
