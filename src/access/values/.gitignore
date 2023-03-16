@@ -1,5 +1,0 @@
-# Note: The presence of this file allows this directory to be committed.
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore

@@ -61,10 +61,6 @@ let autoLoginCredentials = {
   password: 'bigFish6',
 }
 
-// Load access information for dev tier.
-let basicAuthTiers = 'dev stag'.split(' ');
-let devBasicAuth = (basicAuthTiers.includes(appTier)) ? require('src/access/values/devBasicAuth').default : require('src/access/empty/devBasicAuth').default;
-
 // Keychain storage keys.
 // - We use multiple aspects of the app in the key so that there's no risk of a test version of the app interacting with the storage of the production version.
 let apiCredentialsStorageKey = `API_${appTier}_${appName}_${domain}`;
@@ -475,7 +471,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
       }
       // Login to a specific user if we're developing.
-      if (basicAuthTiers.includes(this.state.appTier) && autoLoginOnDevAndStag) {
+      if ('dev stag'.split(' ').includes(appTier) && autoLoginOnDevAndStag) {
         await this.state.login({
           email: autoLoginCredentials['email'],
           password: autoLoginCredentials['password']
@@ -2459,8 +2455,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       appTier,
       appAPIVersion,
       appVersion: "1.0.0",
-      basicAuthTiers,
-      devBasicAuth,
       apiCredentialsStorageKey,
       pinStorageKey,
       userAgent: "Solidi Mobile App 4",
