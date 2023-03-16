@@ -7,7 +7,7 @@
 */
 //var pkg = require('../../../package.json');
 import { version } from "../../../package.json"
-let pkgversion = version;
+let appVersion = version;
 
 // React imports
 import React, { Component, useContext } from 'react';
@@ -47,7 +47,7 @@ let initialPageName = 'default';
 // Settings: Various
 let appName = 'SolidiMobileApp';
 if (appTier == 'stag') appName = 'SolidiMobileAppTest'; // necessary ?
-let appAPIVersion = '1';
+let storedAPIVersion = '1';
 let domains = {
   dev: 't3.solidi.co',
   stag: 't10.solidi.co',
@@ -442,7 +442,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       }
       // Load public info that rarely changes.
-      this.state.appVersion = pkgversion;
       if (! this.state.apiVersionLoaded) {
         await this.state.loadLatestAPIVersion();
         this.state.apiVersionLoaded = true;
@@ -1023,11 +1022,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.checkLatestAPIVersion = () => {
-      let appAPIVersion = this.state.appAPIVersion;
+      let storedAPIVersion = this.state.storedAPIVersion;
       let api_latest_version = this.state.apiData.api_latest_version;
       if (! misc.isNumericString(api_latest_version)) return false;
-      let check = api_latest_version !== appAPIVersion;
-      let msg = `apiVersion in app: ${appAPIVersion}. Latest apiVersion from API data: ${api_latest_version}.`;
+      let check = api_latest_version !== storedAPIVersion;
+      let msg = `apiVersion stored in app: ${storedAPIVersion}. Latest apiVersion from API data: ${api_latest_version}.`;
       log(msg);
       return check;
     }
@@ -2452,9 +2451,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       priceLoadCount: 0,
       domain,
       appName,
+      appVersion,
       appTier,
-      appAPIVersion,
-      appVersion: "1.0.0",
+      storedAPIVersion,
       apiCredentialsStorageKey,
       pinStorageKey,
       userAgent: "Solidi Mobile App 4",
