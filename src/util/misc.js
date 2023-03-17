@@ -162,7 +162,8 @@ let camelCaseToCapitalisedWords = (s) => {
 
 
 let snakeCaseToCapitalisedWords = (s) => {
-  s = s.replaceAll('_', ' ');
+  //s = s.replaceAll('_', ' '); // Not supported on Android.
+  s = s.replace(/_/g, ' ');
   let words = s.split(' ');
   words = words.map(capitalise);
   let s2 = words.join(' ');
