@@ -62,11 +62,14 @@ let Maintenance = () => {
   let logoImageName = 'maintenance';
 
   let blogposts = [
-    {"title":"Solidi receives FCA CryptoAssets license",
+    {"id":1,
+     "title":"Solidi receives FCA CryptoAssets license",
      "url":"https://blog.solidi.co/2021/08/11/solidi-gains-full-fca-cryptoassets-registration/"},
-    {"title":"Securely storing your crypto",
+    {"id":2,
+     "title":"Securely storing your crypto",
      "url":"https://blog.solidi.co/2020/07/14/securely-storing-your-crypto/"},
-   {"title":"How we keep your funds safe",
+    {"id":3,
+     "title":"How we keep your funds safe",
      "url":"https://blog.solidi.co/2022/10/13/how-we-keep-your-funds-safe/"},
 
      
@@ -77,7 +80,7 @@ let Maintenance = () => {
     <View style={styles.panelSubContainer}>
 
       <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>We've upgrading Solidi!</Text>
+        <Text style={styles.headingText}>We're upgrading Solidi!</Text>
       </View>
 
       <Text style={[styles.bold, styles.basicText]}>{'\n'}Sometimes, upgrades require a little downtime!</Text>
