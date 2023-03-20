@@ -38,6 +38,7 @@ import MakePaymentOpenBanking from './MakePaymentOpenBanking/MakePaymentOpenBank
 import SolidiAccount from './SolidiAccount/SolidiAccount';
 import Terms from './Terms/Terms';
 import CloseSolidiAccount from './CloseSolidiAccount/CloseSolidiAccount';
+import UpdateApp from './UpdateApp/UpdateApp';
 
 
 export {
@@ -81,4 +82,5 @@ export {
   SolidiAccount,
   Terms,
   CloseSolidiAccount,
+  UpdateApp,
 };

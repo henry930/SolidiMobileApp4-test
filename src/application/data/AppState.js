@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Header, MainPanel, Footer } from 'src/application/SolidiMobileApp/components';
 import { Maintenance } from 'src/application/SolidiMobileApp/components/MainPanel/components';
+import { UpdateApp } from 'src/application/SolidiMobileApp/components/MainPanel/components';
 
 // React imports
 import React, { Component, useContext } from 'react';
@@ -902,6 +903,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
     /* Public API methods */
     this.setMaintenanceMode = (inMaintenanceMode) => {
+      log(`Setting maintenance mode to ${inMaintenanceMode}`);
       this.setState({maintenanceMode: inMaintenanceMode});
     }
 
@@ -944,7 +946,10 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       let api_latest_version = this.state.apiData.api_latest_version;
       if (! misc.isNumericString(api_latest_version)) return false;
       let check = api_latest_version !== appAPIVersion;
-      let msg = `apiVersion in app: ${appAPIVersion}. Latest apiVersion from API data: ${api_latest_version}.`;
+      if(check) {
+        this.setState({appUpdateRequired: true});
+      }
+      let msg = `apiVersion in app: ${appAPIVersion}. Latest apiVersion from API data: ${api_latest_version}. Update=${check}`;
       log(msg);
       return check;
     }
@@ -2334,6 +2339,7 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
       appName,
       appTier,
       appAPIVersion,
+      appUpdateRequired: false,
       appVersion: "1.0.0",
       basicAuthTiers,
       devBasicAuth,
@@ -2480,19 +2486,18 @@ PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 
   }
 
-
+  
   render() {
-
     return (
       <AppStateContext.Provider value={this.state}>
 
      <SafeAreaView style={styles.container}>
-        {!this.state.maintenanceMode ?  <Header style={styles.header} />   : null }
-        {!this.state.maintenanceMode ?  <MainPanel style={styles.mainPanel} /> : null }
-        {!this.state.maintenanceMode ?  <Footer style={styles.footer} /> : null }
-       
+        {!this.state.maintenanceMode && !this.state.appUpdateRequired ?  <Header style={styles.header} />   : null }
+        {!this.state.maintenanceMode && !this.state.appUpdateRequired ?  <MainPanel style={styles.mainPanel} /> : null }
+        {!this.state.maintenanceMode && !this.state.appUpdateRequired ?  <Footer style={styles.footer} /> : null }
 
-        {this.state.maintenanceMode ? <Maintenance /> : null }
+        { this.state.maintenanceMode                                 ? <Maintenance /> : null }
+        { this.state.appUpdateRequired                               ? <UpdateApp /> : null }
 
       </SafeAreaView>
       
