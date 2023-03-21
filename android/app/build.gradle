@@ -242,7 +242,10 @@ apply from: file("../../node_modules/@react-native-community/cli-platform-androi
 // FontAwesome icons
 // Source:
 // https://github.com/oblador/react-native-vector-icons#android
+/*
+// To limit the number of font libraries copied to the app, you can specify a list:
 project.ext.vectoricons = [
     iconFontNames: [ 'FontAwesome.ttf' ] // Name of the font files you want to copy
 ]
+*/
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
