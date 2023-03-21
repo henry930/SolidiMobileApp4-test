@@ -32,11 +32,11 @@ let ContactUs = () => {
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'ContactUs');
 
   let domain = appState.domain;
-  let tier = appState.appTier;
-  if(tier=="prod") {
+  let tier = "-"+appState.appTier;
+  if(tier=="-prod") {
     tier = "";
   }
-  let appVersion = appState.appVersion+"-"+tier;
+  let appVersion = appState.appVersion+tier;
   let contactURL = 'https://solidi.co/contactus';
 
 
