@@ -137,7 +137,7 @@ let Buy = () => {
       return;
     }
     let invalidVolumeQA = false;
-    if (['[loading]', '[not loaded]'].includes(volumeQA)) invalidVolumeQA = true;
+    if (! misc.isNumericString(volumeQA)) invalidVolumeQA = true;
     if (volumeQA === '') invalidVolumeQA = true;
     if (volumeQA.match(/^0+$/)) invalidVolumeQA = true; // only zeros.
     if (volumeQA.match(/^0+\.0+$/)) invalidVolumeQA = true; // only zeros.
@@ -202,7 +202,7 @@ let Buy = () => {
   // - Exception: If volumeQA isn't a valid numeric string.
   useEffect(() => {
     if (! firstRender) {
-      if (['[loading]', '[not loaded]'].includes(volumeQA)) {
+      if (! misc.isNumericString(volumeQA)) {
         fetchBestPriceForBaseAssetVolume();
       } else {
         fetchBestPriceForQuoteAssetVolume();
@@ -223,7 +223,7 @@ let Buy = () => {
       return;
     }
     let invalidVolumeBA = false;
-    if (['[loading]', '[not loaded]'].includes(volumeBA)) invalidVolumeBA = true;
+    if (! misc.isNumericString(volumeBA)) invalidVolumeBA = true;
     if (volumeBA === '') invalidVolumeBA = true;
     if (volumeBA.match(/^0+$/)) invalidVolumeBA = true; // only zeros.
     if (volumeBA.match(/^0+\.0+$/)) invalidVolumeBA = true; // only zeros.
@@ -359,6 +359,11 @@ let Buy = () => {
 
     if (volumeBA == '[loading]') {
       return setErrorMessage(`Please wait a moment. Price data hasn't been loaded yet.`);
+    }
+
+    if (! misc.isNumericString(volumeBA) || ! misc.isNumericString(volumeQA)) {
+      var msg = `Error: Price data has not been loaded.`;
+      return setErrorMessage(msg);
     }
 
     // Save the order details in the global state.
