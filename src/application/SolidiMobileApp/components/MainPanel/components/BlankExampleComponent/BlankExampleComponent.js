@@ -80,7 +80,11 @@ let BlankExampleComponent = () => {
         </View>
       }
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ flexGrow: 1, margin: 20 }}
+        keyboardShouldPersistTaps='handled'
+      >
 
       <Text style={[styles.basicText, styles.bold]}>{'\n'} {`\u2022  `} [some text]</Text>
 
