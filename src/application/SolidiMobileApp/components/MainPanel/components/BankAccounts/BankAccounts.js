@@ -116,7 +116,11 @@ let BankAccounts = () => {
         <Text style={styles.headingText}>Bank Account</Text>
       </View>
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ flexGrow: 1, margin: 20 }}
+        keyboardShouldPersistTaps='handled'
+      >
 
       { isLoading && <Spinner/> }
 

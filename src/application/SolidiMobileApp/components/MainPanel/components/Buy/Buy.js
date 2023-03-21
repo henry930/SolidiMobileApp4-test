@@ -418,7 +418,11 @@ let Buy = () => {
         </View>
       }
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ flexGrow: 1, margin: 0 }}
+        keyboardShouldPersistTaps='handled'
+      >
 
       <Text style={styles.descriptionText}>I want to spend:</Text>
 

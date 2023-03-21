@@ -82,7 +82,11 @@ let ResetPassword = () => {
         </View>
       }
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ flexGrow: 1, margin: 20 }}
+        keyboardShouldPersistTaps='handled'
+      >
 
       <Text style={styles.descriptionText}>Your email address:</Text>
 

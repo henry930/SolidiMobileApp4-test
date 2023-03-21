@@ -1,6 +1,7 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Text, StyleSheet, View, ScrollView } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Other imports
 import _ from 'lodash';
@@ -58,7 +59,11 @@ let RequestFailed = () => {
         <Text style={styles.headingText}>Request failed</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ flexGrow: 1, margin: 20 }}
+        keyboardShouldPersistTaps='handled'
+      >
 
       <View style={styles.spacer1}></View>
 
@@ -76,7 +81,7 @@ let RequestFailed = () => {
         />
       </View>
 
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
     </View>
     </View>
