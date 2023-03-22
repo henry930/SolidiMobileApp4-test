@@ -44,6 +44,7 @@ import appTier from 'src/application/appTier'; // dev / stag / prod.
 let initialMainPanelState = 'Buy';
 //initialMainPanelState = 'CloseSolidiAccount'; // Dev work
 let initialPageName = 'default';
+//initialPageName = 'balance'; // Dev work
 
 // Settings: Various
 let appName = 'SolidiMobileApp';
