@@ -115,8 +115,10 @@ Authenticate Login PIN
 
     // Shortcut function for changing the mainPanelState.
     this.changeState = (stateName, pageName) => {
+      let fName = 'changeState';
       if (! mainPanelStates.includes(stateName)) {
-        throw Error(`Unrecognised stateName: ${JSON.stringify(stateName)}`);
+        var msg = `${fName}: Unrecognised stateName: ${JSON.stringify(stateName)}`
+        throw Error(msg);
       }
       this.state.setMainPanelState({mainPanelState: stateName, pageName});
     }
@@ -455,13 +457,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       }
       // We check for "upgrade required" on every screen load.
-      await this.state.checkIfAppUpgradeRequired();
+      await this.state.checkIfAppUpdateRequired();
       // Load public info that rarely changes.
       if (! this.state.apiVersionLoaded) {
         await this.state.loadLatestAPIVersion();
         this.state.apiVersionLoaded = true;
       }
       // Arguably we should double-check the API version here and not continue if it doesn't match.
+      //let UpdateRequired = this.state.checkLatestAPIVersion();
+      //lj({UpdateRequired});
       await this.state.loadTerms();
       if (! this.state.assetsInfoLoaded) {
         await this.state.loadAssetsInfo();
@@ -1080,8 +1084,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.checkIfAppUpgradeRequired = async () => {
-      let fName = 'checkIfAppUpgradeRequired';
+    this.checkIfAppUpdateRequired = async () => {
+      let fName = 'checkIfAppUpdateRequired';
       let data = await this.state.publicMethod({
         functionName: fName,
         apiRoute: 'app_latest_version',
@@ -1095,7 +1099,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         return this.state.switchToErrorState({message: msg});
       }
       let latestAppVersion = data.version;
-      var msg = `Internal app version: ${appVersion}. Latest app version: ${latestAppVersion}`;
+      var msg = `Internal app version: ${appVersion}. Latest app version specified on Solidi API (${appTier}): ${latestAppVersion}`;
       deb(msg);
       let os = Platform.OS;
       let minimumVersionRequiredIos = data.minimumVersionRequired.ios.version;
@@ -1110,11 +1114,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
       var msg = `Platform OS: ${os}. Minimum version required = ${minimumVersionRequired}.`;
       deb(msg);
-      let upgradeRequired = semver.gt(minimumVersionRequired, appVersion);
-      log(`Upgrade required: ${upgradeRequired}`);
-      if (upgradeRequired) {
-        //this.state.changeState('UpgradeRequired');
+      let updateRequired = semver.gt(minimumVersionRequired, appVersion);
+      updateRequired = true; // dev
+      log(`Upgrade required: ${updateRequired}`);
+      if (updateRequired) {
+        this.setState({appUpdateRequired: true});
       }
+      this.state.changeState('UpdateApp');
     }
 
 
@@ -1133,13 +1139,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.checkLatestAPIVersion = () => {
       let storedAPIVersion = this.state.storedAPIVersion;
-      let api_latest_version = this.state.apiData.api_latest_version;
-      if (! misc.isNumericString(api_latest_version)) return false;
-      let check = api_latest_version !== appAPIVersion;
-      if(check) {
+      let latestAPIVersion = this.state.apiData.api_latest_version;
+      if (! misc.isNumericString(latestAPIVersion)) return false;
+      let check = latestAPIVersion !== storedAPIVersion;
+      if (check) {
         this.setState({appUpdateRequired: true});
       }
-      let msg = `apiVersion in app: ${appAPIVersion}. Latest apiVersion from API data: ${api_latest_version}. Update=${check}`;
+      let msg = `apiVersion in app: ${storedAPIVersion}. Latest apiVersion from API data: ${latestAPIVersion}. Update required = ${check}`;
       log(msg);
       return check;
     }
@@ -2480,7 +2486,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       /* Misc network methods */
       loadTerms: this.loadTerms,
       /* Public API methods */
-      checkIfAppUpgradeRequired: this.checkIfAppUpgradeRequired,
+      checkIfAppUpdateRequired: this.checkIfAppUpdateRequired,
       loadLatestAPIVersion: this.loadLatestAPIVersion,
       checkLatestAPIVersion: this.checkLatestAPIVersion,
       loadAssetsInfo: this.loadAssetsInfo,

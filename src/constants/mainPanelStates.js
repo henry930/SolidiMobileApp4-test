@@ -42,6 +42,7 @@ export const mainPanelStates = [
   'RegisterConfirm',
   'RegisterConfirm2',
   'AccountUpdate',
+  'UpdateApp',
 ];
 
 export default mainPanelStates;
