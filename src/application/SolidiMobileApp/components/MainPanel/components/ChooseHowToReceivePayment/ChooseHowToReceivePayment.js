@@ -471,22 +471,22 @@ let ChooseHowToReceivePayment = () => {
         <View style={styles.orderDetailsSection}>
 
           <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}style={[styles.basicText, styles.bold]}>You sell</Text>
+            <Text style={[styles.basicText, styles.bold]}>You sell</Text>
             <Text style={[styles.monospaceText, styles.bold]}>{calculateVolumeBA()} {assetBA}</Text>
           </View>
 
           <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}style={[styles.basicText, styles.bold]}>You get</Text>
+            <Text style={[styles.basicText, styles.bold]}>You get</Text>
             <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: calculateVolumeQA(), functionName: 'ChooseHowToReceivePayment'})} {assetQA}</Text>
           </View>
 
           <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}style={[styles.basicText, styles.bold]}>Fee</Text>
+            <Text style={[styles.basicText, styles.bold]}>Fee</Text>
             <Text style={[styles.monospaceText, styles.bold]}>{calculateFeeQA()} {assetQA}</Text>
           </View>
 
           <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}style={[styles.basicText, styles.bold]}>Total</Text>
+            <Text style={[styles.basicText, styles.bold]}>Total</Text>
             <Text style={[styles.monospaceText, styles.bold]}>{calculateTotalQA()} {assetQA}</Text>
           </View>
 
