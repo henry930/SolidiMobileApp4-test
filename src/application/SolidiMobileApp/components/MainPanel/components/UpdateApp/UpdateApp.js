@@ -78,7 +78,7 @@ let UpdateApp = () => {
       <View style={[styles.heading, styles.heading1]}>
         <Image source={ImageLookup[logoImageName]} resizeMode='contain' style={updateImage.image} />
 
-        <Text style={styles.headingText}>Its time to update!</Text>
+        <Text style={styles.headingText}>{'\n'}It's time to update!</Text>
         <Text></Text>
         <Text style={styles.basicText}>We've got some great new features for you in the latest version of the app.</Text>
         <Text></Text>
