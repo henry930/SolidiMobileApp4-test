@@ -155,6 +155,7 @@ let PIN = () => {
         onClickButtonLockedPage = { () => {} }
         pinCodeVisible = {true}
         colorPassword = 'black'
+        textPasswordVisibleFamily = "Courier"
         textPasswordVisibleSize = {normaliseFont(28)}
         stylePinCodeColorTitle = 'black'
         stylePinCodeColorSubtitle = 'black'
