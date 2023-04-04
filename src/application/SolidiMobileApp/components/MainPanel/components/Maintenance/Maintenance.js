@@ -13,7 +13,7 @@ import { scaledWidth, scaledHeight, baseScreenWidth, baseScreenHeight, normalise
 import { Button, StandardButton, FixedWidthButton, ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
 import ImageLookup from 'src/images';
-import { Dimensions, Platform, PixelRatio } from 'react-native';
+import { Dimensions, PixelRatio } from 'react-native';
 
 
 // Logger
@@ -71,8 +71,6 @@ let Maintenance = () => {
     {"id":3,
      "title":"How we keep your funds safe",
      "url":"https://blog.solidi.co/2022/10/13/how-we-keep-your-funds-safe/"},
-
-
   ];
 
   return (
@@ -84,14 +82,14 @@ let Maintenance = () => {
       </View>
 
       <Text style={[styles.bold, styles.basicText]}>{'\n'}Sometimes, upgrades require a little downtime!</Text>
-      <Text style={[             styles.basicText]}>{'\n'}Rest assured out engineers are working hard to get new features to you.</Text>
+      <Text style={[             styles.basicText]}>{'\n'}Rest assured our engineers are working hard to get new features to you.</Text>
       <Text style={[             styles.basicText]}>{'\n'}Site upgrades should take less than an hour.</Text>
 
       <View style={styles.infoSection}>
-          <Text style={styles.basicText}>While you are waiting, why not check out some of our amazing blog posts to learn more about the exciting wolrd of crypto investing.{'\n'}</Text>
+          <Text style={styles.basicText}>While you're waiting, why not check out some of our amazing blog posts to learn more about the exciting world of crypto investing?{'\n'}</Text>
 
         {blogposts.map((prop, key) => {
-          return (<View style={styles.bloglink}><Button title={prop['title']}
+          return (<View key={key} style={styles.bloglink}><Button title={prop['title']}
             onPress={ () => { Linking.openURL(prop['url']) } }
             styles={styleContactUsButton}
           /></View> )
@@ -110,18 +108,18 @@ let Maintenance = () => {
           onPress={ async () => {
             log(`MM=${appState.maintenanceMode}`);
             let res = await appState.checkMaintenanceMode();
-            if(res) {
+            if (res) {
               log('still updating');
             }
           } }
         />
       </View>
 
-       <Image source={ImageLookup[logoImageName]} resizeMode='contain' style={craneImage.image} />
+      <Image source={ImageLookup[logoImageName]} resizeMode='contain' style={craneImage.image} />
 
-        <View style={styles.footerlink}>
-          <Text style={[styles.basicText, styles.bold]}>{appState.domain}</Text>
-        </View>
+      <View style={styles.footerlink}>
+        <Text style={[styles.basicText, styles.bold]}>{appState.domain}</Text>
+      </View>
 
     </View>
     </View>
@@ -176,10 +174,9 @@ let styles = StyleSheet.create({
   },
   bloglink: {
     marginTop: 20.
-  }
-  ,
+  },
   footerlink: {
-        position: 'absolute',
+    position: 'absolute',
     bottom: 0.
   }
 });
@@ -195,7 +192,6 @@ let styleContactUsButton = StyleSheet.create({
 let styleButton = StyleSheet.create({
   view: {
     width: '70%',
-
   },
 });
 
@@ -209,13 +205,8 @@ let craneImage = StyleSheet.create({
     height: nheight*1.2,
     bottom: -40,
     left: 30,
-
-    // Move image behind button
-    zIndex: -3, // works on ios
-    elevation: -3, // works on android
-
+    zIndex: -3, // Move image behind button
   }
-
 });
 
 export default Maintenance;
