@@ -46,7 +46,7 @@ let UpdateApp = () => {
   let iosLink = "itms-apps://apps.apple.com/us/app/solidi/id1616714706";
 
   let updateLink = androidLink;
-  if(Platform.OS==='ios') {
+  if (Platform.OS === 'ios') {
     updateLink = iosLink;
   }
 
@@ -58,7 +58,7 @@ let UpdateApp = () => {
 
   let setup = async () => {
     try {
-      await appState.generalSetup();
+      await appState.generalSetup({caller: 'UpdateApp'});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       triggerRender(renderCount+1);
     } catch(err) {
