@@ -82,6 +82,13 @@ let Settings = () => {
 
 
       <View style={styles.buttonWrapper}>
+        <FixedWidthButton styles={styleButton} title='Verify Identity'
+          onPress={ () => { appState.changeState('IdentityVerification'); } }
+        />
+      </View>
+
+
+      <View style={styles.buttonWrapper}>
         <FixedWidthButton styles={styleButton} title='Personal Details'
           onPress={ () => { appState.changeState('PersonalDetails'); } }
         />
