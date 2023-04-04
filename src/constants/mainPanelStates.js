@@ -39,10 +39,10 @@ export const mainPanelStates = [
   'SolidiAccount',
   'Terms',
   'CloseSolidiAccount',
+  'UpdateApp',
   'RegisterConfirm',
   'RegisterConfirm2',
   'AccountUpdate',
-  'UpdateApp',
 ];
 
 export default mainPanelStates;
