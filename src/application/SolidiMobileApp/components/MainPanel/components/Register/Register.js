@@ -115,6 +115,8 @@ let Register = () => {
     // Reset any existing error messages.
     setErrorDisplay({});
     let result;
+
+
     // test data:
     /*
     userData = {
@@ -125,7 +127,8 @@ let Register = () => {
       gender: 'Male',
       dateOfBirth: '01/12/1990',
       citizenship: 'GB',
-      mobileNumber: '+34698934194',
+      //mobileNumber: '+34698934194',
+      mobileNumber: '07834123123',
       emailPreferences: {
         'newsAndFeatureUpdates': true,
         'promotionsAndSpecialOffers': true
@@ -135,6 +138,7 @@ let Register = () => {
     setGender('Male')
     setCitizenship('GB');
     */
+
 
     let email = userData.email;
     let apiRoute = 'register_new_user';
