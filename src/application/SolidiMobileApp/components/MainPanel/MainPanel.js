@@ -53,10 +53,12 @@ let MainPanel = (props) => {
     if (mainPanelState === 'PIN') {
       if (pageName == 'default') {
         if (! appState.user.pin) {
-          return <Login />
+          let selectedComponent = allPanels['Login'];
+          return React.createElement(selectedComponent);
         }
       }
-      return <PIN />
+      let selectedComponent = allPanels['PIN'];
+      return React.createElement(selectedComponent);
     }
 
     /*
