@@ -367,7 +367,10 @@ emailPreferences
 
           <View style={styles.detail}>
             <View style={styles.detailName}>
-              <Text style={styles.detailNameText}>{`\u2022  `}Mobile</Text>
+              <Text>
+                <Text style={styles.detailNameText}>{`\u2022  `}Mobile </Text>
+                <Text style={styles.red}>(UK mobile numbers only)</Text>
+              </Text>
             </View>
             <View>
               <TextInput
@@ -380,7 +383,7 @@ emailPreferences
                 autoCompleteType='off'
                 autoCapitalize='none'
                 keyboardType='phone-pad' // May have plus sign and hyphen in it, not just digits.
-                placeholder='Mobile phone number'
+                placeholder='Ex. 07710123123'
                 placeholderTextColor='grey'
               />
             </View>
@@ -590,6 +593,9 @@ let styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
+  },
+  red: {
+    color: 'red',
   },
   sectionHeading: {
     marginTop: scaledHeight(20),
