@@ -608,7 +608,7 @@ console.log("Setup - Done Loading data");
         <FixedWidthButton styles={periodStyle('2H')} title='2H'
           onPress={ async () => {
             setPeriod("2H");
-            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:period});
+            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:"2H"});
           } }
         />
       </View>   
@@ -617,7 +617,7 @@ console.log("Setup - Done Loading data");
         <FixedWidthButton styles={periodStyle('8H')} title='8H'
           onPress={ async () => {
             setPeriod("8H");
-            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:period});
+            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:"8H"});
           } }
         />
       </View>  
@@ -625,7 +625,7 @@ console.log("Setup - Done Loading data");
         <FixedWidthButton styles={periodStyle('1D')} title='1D'
           onPress={ async () => { 
             setPeriod("1D");
-            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:period});
+            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:"1D"});
           } }
         />
       </View>  
@@ -633,7 +633,7 @@ console.log("Setup - Done Loading data");
         <FixedWidthButton styles={periodStyle('1W')} title='1W'
           onPress={ async () => { 
             setPeriod("1W");
-            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:period});
+            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:"1W"});
           } }
         />
       </View>  
@@ -641,7 +641,7 @@ console.log("Setup - Done Loading data");
         <FixedWidthButton styles={periodStyle('1M')} title='1M'
           onPress={ async () => { 
             setPeriod("1M");
-            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:period});
+            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:"1M"});
           } }
         />
       </View>  
@@ -649,7 +649,7 @@ console.log("Setup - Done Loading data");
         <FixedWidthButton styles={periodStyle('6M')} title='6M'
           onPress={ async () => { 
             setPeriod("6M");
-            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:period});
+            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:"6M"});
           } }
         />
       </View>  
@@ -657,7 +657,7 @@ console.log("Setup - Done Loading data");
         <FixedWidthButton styles={periodStyle('1Y')} title='1Y'
           onPress={ async () => { 
             setPeriod("1Y");
-            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:period});
+            await appState.loadHistoricPrices({market:assetBA+ '/' + assetQA, period:"1Y"});
           } }
         />
       </View>  
