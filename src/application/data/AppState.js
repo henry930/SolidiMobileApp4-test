@@ -6,8 +6,9 @@
 - The history stack of previous MainPanel states
 */
 //var pkg = require('../../../package.json');
-import { version } from "../../../package.json"
+import { version, buildNumber } from "../../../package.json"
 let appVersion = version;
+let appBuildNumber = buildNumber;
 
 import {
   SafeAreaView,
@@ -513,6 +514,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           clientType: 'mobile',
           os: Platform.OS,
           appVersion,
+          appBuildNumber,
           appTier,
         }
       };
@@ -1105,7 +1107,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         return this.state.switchToErrorState({message: msg});
       }
       let latestAppVersion = data.version;
-      var msg = `Internal app version: ${appVersion}. Latest app version specified on Solidi API (${appTier}): ${latestAppVersion}`;
+      var msg = `Internal app version: ${appVersion} (build number ${appBuildNumber}). Latest app version specified on Solidi API (${appTier}): ${latestAppVersion}`;
       deb(msg);
       let os = Platform.OS;
       let minimumVersionRequiredIos = data.minimumVersionRequired.ios.version;
@@ -2590,6 +2592,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       domain,
       appName,
       appVersion,
+      appBuildNumber,
       appTier,
       storedAPIVersion,
       appUpdateRequired: false,
