@@ -86,7 +86,13 @@ let Receive = () => {
       await appState.generalSetup({caller: 'Receive'});
       await appState.loadDepositDetailsForAsset(assetCA);
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setItemsCA(generateAssetItems());
+      let assetItems = generateAssetItems();
+      setItemsCA(assetItems);
+      if (assetItems.length === 0) {
+        let msg = 'Receive.setup: No assets with deposit enabled.';
+        logger.error(msg);
+        setAssetCA('[None]');
+      }
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Receive.setup: Error = ${err}`;
