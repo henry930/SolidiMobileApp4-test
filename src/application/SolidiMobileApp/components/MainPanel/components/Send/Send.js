@@ -723,7 +723,7 @@ let styles = StyleSheet.create({
   },
   heading1: {
     marginTop: scaledHeight(10),
-    marginBottom: scaledHeight(40),
+    marginBottom: scaledHeight(20),
   },
   headingText: {
     fontSize: normaliseFont(20),
@@ -754,20 +754,19 @@ let styles = StyleSheet.create({
   storedAssetWrapper: {
     paddingVertical: scaledHeight(20),
     width: '100%',
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    alignItems: 'center',
     zIndex: 2,
     //borderWidth: 1, // testing
   },
   volumeSA: {
+    //borderWidth: 1, // testing
+    //backgroundColor: 'blue',
     fontSize: normaliseFont(16),
     height: scaledHeight(40),
-    width: scaledWidth(120),
+    width: scaledWidth(140),
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(20),
+    marginBottom: scaledWidth(20),
   },
   storedAssetDropdown: {
     height: scaledHeight(40),
