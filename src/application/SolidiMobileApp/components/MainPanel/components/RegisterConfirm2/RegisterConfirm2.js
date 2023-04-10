@@ -107,9 +107,10 @@ let RegisterConfirm2 = () => {
       setDisableSearchPostcodeButton(false);
       return;
     }
+    let postcodeClean = postcode.replaceAll(' ','');
     let result;
     let apiRoute = 'search_postcode';
-    apiRoute += `/${postcode}`;
+    apiRoute += `/${postcodeClean}`;
     try {
       // Send the request.
       let functionName = 'searchPostcode';
