@@ -458,8 +458,10 @@ emailPreferences
             </View>
             <View style={[styles.detailValueFullWidth, {paddingVertical:0, paddingLeft: 0}]}>
               <DropDownPicker
-                listMode="SCROLLVIEW"
-                scrollViewProps={{nestedScrollEnabled: true}}
+                //listMode="SCROLLVIEW"
+                //scrollViewProps={{nestedScrollEnabled: true}}
+                listMode="MODAL"
+                searchable = {true}
                 placeholder='Select country'
                 placeholderStyle={{color: 'grey'}}
                 open={openCitizenship}
@@ -472,7 +474,6 @@ emailPreferences
                 onChangeValue = { (citizenship) => {
                   setUserData({...userData, citizenship});
                 }}
-                searchable = {true}
                 maxHeight={scaledHeight(300)}
                 dropDownDirection="BOTTOM"
               />

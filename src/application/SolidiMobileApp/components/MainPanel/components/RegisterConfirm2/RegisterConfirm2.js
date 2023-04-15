@@ -273,8 +273,10 @@ let RegisterConfirm2 = () => {
               {paddingTop: 5, paddingBottom: 10, paddingLeft: 0}
             ]}>
               <DropDownPicker
-                listMode="SCROLLVIEW"
-                scrollViewProps={{nestedScrollEnabled: true}}
+                //listMode="SCROLLVIEW"
+                //scrollViewProps={{nestedScrollEnabled: true}}
+                listMode="MODAL"
+                modalTitle="Select an address"
                 placeholder={selectedAddress}
                 open={openSelectAddress}
                 value={selectedAddress}

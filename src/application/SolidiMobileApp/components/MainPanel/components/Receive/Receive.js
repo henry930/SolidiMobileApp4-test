@@ -363,6 +363,7 @@ let Receive = () => {
       <View style={styles.chosenAssetWrapper}>
         <DropDownPicker
           listMode="MODAL"
+          searchable={true}
           placeholder={appState.getAssetInfo(assetCA).displayString}
           style={styles.chosenAssetDropdown}
           containerStyle={styles.chosenAssetDropdownContainer}
@@ -372,7 +373,6 @@ let Receive = () => {
           setOpen={setOpenCA}
           setValue={setAssetCA}
           setItems={setItemsCA}
-          searchable={true}
           searchTextInputProps={{
             maxLength: 15
           }}
