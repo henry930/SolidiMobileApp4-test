@@ -374,6 +374,7 @@ country
         showsVerticalScrollIndicator={true}
         contentContainerStyle={{ flexGrow: 1, margin: 20 }}
         keyboardShouldPersistTaps='handled'
+        enableResetScrollToCoords={false}
       >
 
         <View style={styles.sectionHeading}>
