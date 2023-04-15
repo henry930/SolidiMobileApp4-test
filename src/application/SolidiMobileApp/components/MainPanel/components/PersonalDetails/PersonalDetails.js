@@ -387,8 +387,10 @@ country
           </View>
           <View style={[styles.detailValue, {paddingVertical:0, paddingLeft: 0}]}>
             <DropDownPicker
-              listMode="SCROLLVIEW"
-              scrollViewProps={{nestedScrollEnabled: true}}
+              //listMode="SCROLLVIEW"
+              //scrollViewProps={{nestedScrollEnabled: true}}
+              listMode="MODAL"
+              modalTitle="Select a title"
               placeholder={title}
               open={openTitle}
               value={title}
@@ -515,8 +517,9 @@ country
           </View>
           <View style={[styles.detailValue, {paddingVertical:0, paddingLeft: 0}]}>
             <DropDownPicker
-              listMode="SCROLLVIEW"
-              scrollViewProps={{nestedScrollEnabled: true}}
+              //listMode="SCROLLVIEW"
+              //scrollViewProps={{nestedScrollEnabled: true}}
+              listMode="MODAL"
               placeholder={citizenship}
               open={openCitizenship}
               value={citizenship}
@@ -626,8 +629,10 @@ country
           },
         ]}>
           <DropDownPicker
-            listMode="SCROLLVIEW"
-            scrollViewProps={{nestedScrollEnabled: true}}
+            //listMode="SCROLLVIEW"
+            //scrollViewProps={{nestedScrollEnabled: true}}
+            listMode="MODAL"
+            modalTitle="Select an address"
             placeholder={selectedAddress}
             open={openSelectAddress}
             value={selectedAddress}
@@ -764,8 +769,9 @@ country
           </View>
           <View style={[styles.detailValue, {paddingVertical:0, paddingLeft: 0}]}>
             <DropDownPicker
-              listMode="SCROLLVIEW"
-              scrollViewProps={{nestedScrollEnabled: true}}
+              //listMode="SCROLLVIEW"
+              //scrollViewProps={{nestedScrollEnabled: true}}
+              listMode="MODAL"
               placeholder={country}
               open={openCountry}
               value={country}
