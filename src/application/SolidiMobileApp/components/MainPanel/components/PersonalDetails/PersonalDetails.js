@@ -520,6 +520,7 @@ country
               //listMode="SCROLLVIEW"
               //scrollViewProps={{nestedScrollEnabled: true}}
               listMode="MODAL"
+              searchable = {true}
               placeholder={citizenship}
               open={openCitizenship}
               value={citizenship}
@@ -531,7 +532,6 @@ country
               onChangeValue = { (citizenship) => {
                 updateUserData({detail: 'citizenship', value: citizenship});
               }}
-              searchable = {true}
               maxHeight={scaledHeight(300)}
             />
           </View>
@@ -772,6 +772,7 @@ country
               //listMode="SCROLLVIEW"
               //scrollViewProps={{nestedScrollEnabled: true}}
               listMode="MODAL"
+              searchable = {true}
               placeholder={country}
               open={openCountry}
               value={country}
@@ -783,7 +784,6 @@ country
               onChangeValue = { (country) => {
                 updateUserData({detail: 'country', value: country});
               }}
-              searchable = {true}
               maxHeight={scaledHeight(300)}
             />
           </View>
