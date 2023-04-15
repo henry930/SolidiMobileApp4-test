@@ -248,7 +248,7 @@ country
       return;
     }
     // URL can't have spaces. Easiest to remove them rather than encode them.
-    let postcodeClean = postcode.replaceAll(' ', '');
+    let postcodeClean = postcode.replace(/ /g, '');
     let result;
     let apiRoute = 'search_postcode';
     apiRoute += `/${postcodeClean}`;
