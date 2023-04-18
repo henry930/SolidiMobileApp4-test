@@ -106,6 +106,7 @@ let Buy = () => {
   let [itemsBA, setItemsBA] = useState(generateBaseAssetItems());
   let [period, setPeriod] = useState(selectedPeriod);
   //let [loadingPrices, setLoadingPrices] = useState(true);
+  let [graphPrices, setGraphPrices] = useState(graphPrices);
 
   // Dropdown state: Quote asset
   let [openQA, setOpenQA] = useState(false);
@@ -116,6 +117,8 @@ let Buy = () => {
   let [newAPIVersionDetected, setNewAPIVersionDetected] = useState(false);
   let [errorMessage, setErrorMessage] = useState('');
   let [loadingBestPrice, setLoadingBestPrice] = useState(true);
+  let market = assetBA + '/' + assetQA;
+  let [graphMarket, setGraphMarket] = useState(market);
 
 
   // Initial setup.
@@ -235,6 +238,15 @@ console.log("Setup - Done Loading data");
       } else {
         fetchBestPriceForQuoteAssetVolume();
       }
+
+      // Check if we need to fetch data for the graph.
+      let market = assetBA + '/' + assetQA;
+      if(market!=graphMarket) {
+        console.log("Market changed from "+graphMarket+" to "+market+", updating graph");
+        appState.loadHistoricPrices({market:market, period:period});
+        setGraphMarket(market);
+      }
+      //let [graphMarket, setGraphMarket] = useState(market);
     }
   }, [assetBA, assetQA]);
  
@@ -438,7 +450,7 @@ console.log("Setup - Done Loading data");
     appState.apiData.historic_prices['current'] = [];
   }
 
-  function  getlinedata({assetBA, assetQA, peiod}) {
+  function  getlinedata({assetBA, assetQA, peiod, graphPrices}) {
     let market = assetBA+ '/' + assetQA;
  //   console.log(JSON.stringify(appState.apiData.historic_prices));
     console.log('getlinedataZZZ '+market+' '+assetBA+' '+assetQA+' '+period);
@@ -479,6 +491,10 @@ console.log("Setup - Done Loading data");
       return styleButton;
 
     }
+  }
+
+  function setAssetBAXX(value) {
+    console.log('Set value = '+value);
   }
 
   function getPriceDP({assetBA, assetQA, period}) {
@@ -539,6 +555,7 @@ console.log("Setup - Done Loading data");
     </View>
 }
   <LineChart
+//    data={getlinedata({assetBA, assetQA, period, graphPrices})}
     data={getlinedata({assetBA, assetQA, period})}
 //    width={Dimensions.get('window').width} // from react-native
     width={363} // from react-native
