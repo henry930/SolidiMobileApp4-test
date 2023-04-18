@@ -547,7 +547,6 @@ console.log("Setup - Done Loading data");
         <Text style={styles.headingText}>Buy Bitcoin</Text>
       </View>
 
-      <KeyboardAwareScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
 
 { appState.loadingPrices &&
     <View style={styles.loading}>
@@ -936,11 +935,14 @@ let styleButton = StyleSheet.create({
 //    width: '15%',
 //    height: '50%',
     paddingHorizontal: scaledWidth(15),
+    minWidth:'12%',
   },
   text: {
     color: colors.standardButtonText,
     fontWeight: 'bold',
     fontSize: normaliseFont(10),
+    padding:'0%',
+    margin: '0%',
   },
   wrapper: {
     marginTop: scaledHeight(0),
@@ -957,11 +959,14 @@ let styleButtonSelected = StyleSheet.create({
 //    width: '15%',
 //    height: '50%',
     paddingHorizontal: scaledWidth(15),
+    minWidth:'12%',
   },
   text: {
     color: colors.standardButtonText,
     fontWeight: 'bold',
     fontSize: normaliseFont(10),
+    padding:'0%',
+    margin: '0%',
   },
   wrapper: {
     marginTop: scaledHeight(0),
