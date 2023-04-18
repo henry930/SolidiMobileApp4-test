@@ -135,8 +135,8 @@ let Buy = () => {
       setItemsQA(generateQuoteAssetItems());
       setNewAPIVersionDetected(appState.checkLatestAPIVersion());
       setLoadingBestPrice(false);
-      let market = assetBA + '/' + assetQA;
 
+      let market = assetBA + '/' + assetQA;
       let period = "2H";
       await appState.loadHistoricPrices({market, period});
     } catch(err) {
@@ -478,16 +478,12 @@ let Buy = () => {
     }
   }
 
-  function setAssetBAXX(value) {
-    console.log('Set value = '+value);
-  }
-
   function getPriceDP({assetBA, assetQA, period}) {
-    log(`getPriceDP ${assetBA} ${assetQA} ${period}`);
+//    log(`getPriceDP ${assetBA} ${assetQA} ${period}`);
     //appState.apiData.historic_prices["BTC/GBP"]["1D"]
     let market = assetBA+'/'+assetQA;
-    log("X = "+market);
-    log("X = "+JSON.stringify(appState.apiData.historic_prices[market]));
+//    log("X = "+market);
+//    log("X = "+JSON.stringify(appState.apiData.historic_prices[market]));
     // If we've got no prices currently then fallback to a guestimate based on the market.
     if(appState.apiData.historic_prices[market]==undefined ||
       appState.apiData.historic_prices[market][period]==undefined) {
@@ -536,9 +532,8 @@ let Buy = () => {
 }
   <LineChart
     data={getlinedata({assetBA, assetQA, period})}
-//    width={Dimensions.get('window').width} // from react-native
-    width={363} // from react-native
-//    width={350} // from react-native
+    width={Dimensions.get('window').width * 0.9}
+    //width={100 * horizontalScale} // from react-native
     height={220}
     yAxisLabel={'£'}
 //    yLabelsOffset={-50}
@@ -548,10 +543,7 @@ let Buy = () => {
     withHorizontalLabels={true}
     withVerticalLabels={false}
     chartConfig={{
-//      backgroundColor: '#e26a00',
       backgroundColor: '#ff0000',
-//      backgroundGradientFrom: '#fb8c00',
-//      backgroundGradientTo: '#ffa726',
       fillShadowGradientFrom: '#000000',
       fillShadowGradientFromOpacity: '0.3',
       fillShadowGradientTo:   '#FFFFFF',
@@ -559,18 +551,11 @@ let Buy = () => {
       fillShadowGradientToOpacity: '0',
       backgroundGradientFrom: '#ffffff',
       backgroundGradientTo:   '#ffffff',
-//      backgroundGradientFrom: '#000000',
-//      backgroundGradientTo:   '#000000',
-      decimalPlaces:getPriceDP({assetBA, assetQA, period}), // optional, defaults to 2dp
-//      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+      decimalPlaces:getPriceDP({assetBA, assetQA, period}),
       color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
 
       yLabelsOffset: "50",
-//      propsForLabels:{
-//        fontFamily:"Courier"
-//      },
         propsForHorizontalLabels: {
-//            fontSize: 20,
             dx: 60 
         },      
       propsForBackgroundLines: {
@@ -579,7 +564,6 @@ let Buy = () => {
       propsForDots: {
         r: "0",
         strokeWidth: "1",
-//        stroke: "#ffa726",
         stroke: "#000000"
       },
       style: {
