@@ -1583,6 +1583,7 @@ console.log("Setting up3 "+this.state.apiData.historic_prices["BTC/GBP"]["1D"]);
         log("Saving "+market+" "+period);
         console.log("Saving "+market+" "+period);
         this.setHistoricPrices({market, period, prices:floatPrices});
+        this.setState({graphPrices: floatPrices});
         log("Saving done");
         console.log("Saving done");
 //        this.state.apiData.historic_prices[market] = prices;
@@ -1591,9 +1592,7 @@ console.log("Setting up3 "+this.state.apiData.historic_prices["BTC/GBP"]["1D"]);
       } else {
         // DIsplay warning
       }
-//      this.state.apiData.loadingPrices = false; 
       this.setState({loadingPrices: false});
-//            this.setState({maintenanceMode: inMaintenanceMode});
 
 
     }
@@ -2582,6 +2581,7 @@ console.log('P == '+period);
       footerIndex: 0,
       setFooterIndex: this.setFooterIndex,
       loadingPrices: true,
+      graphPrices: [],
       maintenanceMode: false,
       setMaintenanceMode: this.setMaintenanceMode,
       checkMaintenanceMode: this.checkMaintenanceMode,
