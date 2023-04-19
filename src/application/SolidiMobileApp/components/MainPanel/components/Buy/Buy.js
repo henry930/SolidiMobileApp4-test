@@ -231,14 +231,13 @@ let Buy = () => {
         fetchBestPriceForQuoteAssetVolume();
       }
 
-      // Check if we need to fetch data for the graph.
+      // Check if we need to fetch data for the graph (triggered when we change currency in the dropdown).
       let market = assetBA + '/' + assetQA;
       if(market!=graphMarket) {
         log("Market changed from "+graphMarket+" to "+market+", updating graph");
         appState.loadHistoricPrices({market:market, period:period});
         setGraphMarket(market);
       }
-      //let [graphMarket, setGraphMarket] = useState(market);
     }
   }, [assetBA, assetQA]);
  
@@ -469,7 +468,6 @@ let Buy = () => {
   }
 
   function periodStyle(buttonPeriod) {
-    console.log('Period = '+buttonPeriod+' '+period);
     if(period==buttonPeriod) {
       return styleButtonSelected;
     } else {
