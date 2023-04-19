@@ -13,7 +13,7 @@ import Big from 'big.js';
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
+import { Button, StandardButton, ImageButton, Spinner, FixedWidthButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -73,7 +73,7 @@ let Receive = () => {
   let [openCA, setOpenCA] = useState(false);
   let [assetCA, setAssetCA] = useState(selectedAssetCA);
   let [itemsCA, setItemsCA] = useState(generateAssetItems());
-
+  let [cryptoTxnsEnabled, setCryptoTxnsEnabled] = useState(false);
 
   // Initial setup.
   useEffect( () => {
@@ -93,6 +93,9 @@ let Receive = () => {
         logger.error(msg);
         setAssetCA('[None]');
       }
+
+      setCryptoTxnsEnabled((appState.getUserStatus('bankAccountConfirmed') || appState.getUserStatus('identityChecked')));
+
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Receive.setup: Error = ${err}`;
@@ -345,6 +348,15 @@ let Receive = () => {
 
   }
 
+  let assetType = appState.getAssetInfo(assetCA).type;
+
+  function changeToGBP() {
+    setAssetCA('GBP');
+  }
+
+  function goToIDCheck() {
+    return appState.changeState('IdentityVerification');
+  }
 
   return (
     <View style={styles.panelContainer}>
@@ -381,13 +393,32 @@ let Receive = () => {
         />
       </View>
 
+{ (cryptoTxnsEnabled || (assetType != 'crypto')) && 
       <View style={styles.description1}>
         <Text style={styles.descriptionText}>{getDescriptionString()}</Text>
-      </View>
+      </View> }
 
+{ (cryptoTxnsEnabled || (assetType != 'crypto')) && 
       <View style={styles.depositDetailsSection}>
         {getDepositDetails()}
-      </View>
+      </View> }
+
+{ (!cryptoTxnsEnabled && (assetType == 'crypto')) && 
+      <View>
+      <Text style={styles.headingText}>Upgrade your account:</Text>
+      <Text></Text>
+      <Text style={styles.descriptionText}>To enable crypto deposits you need to either deposit from your bank account or get ID verified.</Text>
+      <Text></Text>
+
+        <View style={styles.buttonWrapper}>
+          <FixedWidthButton title="Verify ID" onPress={goToIDCheck}/>
+        </View>
+
+        <View style={styles.buttonWrapper}>
+          <FixedWidthButton title="Deposit GBP" onPress={changeToGBP} />
+        </View>
+
+      </View> }
 
       </ScrollView>
 
@@ -515,6 +546,11 @@ let styles = StyleSheet.create({
   },
   detailText: {
     fontSize: normaliseFont(16),
+  },
+  buttonWrapper: {
+    marginTop: scaledHeight(20),
+    marginLeft: '25%',
+    width: '50%',
   },
 });
 
