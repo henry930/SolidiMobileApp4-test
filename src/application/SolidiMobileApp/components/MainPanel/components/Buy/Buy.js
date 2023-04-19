@@ -104,8 +104,6 @@ let Buy = () => {
   let [openBA, setOpenBA] = useState(false);
   let [assetBA, setAssetBA] = useState(selectedAssetBA);
   let [itemsBA, setItemsBA] = useState(generateBaseAssetItems());
-  let [period, setPeriod] = useState(selectedPeriod);
-  let [graphPrices, setGraphPrices] = useState(graphPrices);
 
   // Dropdown state: Quote asset
   let [openQA, setOpenQA] = useState(false);
@@ -116,7 +114,11 @@ let Buy = () => {
   let [newAPIVersionDetected, setNewAPIVersionDetected] = useState(false);
   let [errorMessage, setErrorMessage] = useState('');
   let [loadingBestPrice, setLoadingBestPrice] = useState(true);
+
+  // Graph state
   let market = assetBA + '/' + assetQA;
+  let [period, setPeriod] = useState(selectedPeriod);
+  let [graphPrices, setGraphPrices] = useState(graphPrices);
   let [graphMarket, setGraphMarket] = useState(market);
 
 
