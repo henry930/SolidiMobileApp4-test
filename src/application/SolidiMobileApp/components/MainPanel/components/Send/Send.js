@@ -587,7 +587,6 @@ let Send = () => {
   let assetType = appState.getAssetInfo(assetSA).type;
 
   function changeToGBP() {
-    //setAssetCA('GBP');
     return appState.changeState('Receive','GBP');
   }
 
