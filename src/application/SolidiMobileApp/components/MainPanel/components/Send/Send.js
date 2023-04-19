@@ -12,7 +12,7 @@ import Big from 'big.js';
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
+import { Button, StandardButton, ImageButton, Spinner, FixedWidthButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -132,6 +132,7 @@ let Send = () => {
   let [destinationText, setDestinationText] = useState(' this address');
   let [balanceSA, setBalanceSA] = useState(appState.getBalance(assetSA));
   let [errorMessage, setErrorMessage] = useState('');
+  let [cryptoTxnsEnabled, setCryptoTxnsEnabled] = useState(false);
 
 
   // Function: Select fee based on priority and asset.
@@ -583,6 +584,16 @@ let Send = () => {
     appState.changeState('SendSuccessful');
   }
 
+  let assetType = appState.getAssetInfo(assetSA).type;
+
+  function changeToGBP() {
+    //setAssetCA('GBP');
+    return appState.changeState('Receive','GBP');
+  }
+
+  function goToIDCheck() {
+    return appState.changeState('IdentityVerification');
+  }
 
   return (
     <View style={styles.panelContainer}>
@@ -654,8 +665,9 @@ let Send = () => {
         />
       </View>
 
-      {renderPrioritySection()}
+      { (cryptoTxnsEnabled || assetType!='crypto') && renderPrioritySection()}
 
+      { (cryptoTxnsEnabled || assetType!='crypto') &&  
       <View style={styles.transferDetailsSection}>
         <View style={styles.transferDetail}>
           <Text style={[_styleBalanceText, styles.detailText]}>Current balance:</Text>
@@ -677,25 +689,44 @@ let Send = () => {
           <Text style={[_styleFinalBalanceText, styles.detailText]}>Final balance:</Text>
           <Text style={[_styleFinalBalanceText, styles.monospaceText]}>{calculateFinalBalance()} {assetSA}</Text>
         </View>
-      </View>
+      </View> }
 
+      { (cryptoTxnsEnabled || assetType!='crypto') &&  
       <View style={styles.description2}>
         <Text style={styles.descriptionText}>To{destinationText}:</Text>
-      </View>
+      </View>}
 
+      { (cryptoTxnsEnabled || assetType!='crypto') &&  
       <View style={styles.addressPropertiesWrapper}>
 
         {renderAddressProperties()}
 
-      </View>
+      </View>}
 
+      { (cryptoTxnsEnabled || assetType!='crypto') &&  
       <View style={styles.sendButtonWrapper}>
         <StandardButton title="Send now"
           onPress={ startSendRequest }
           disabled={disableSendButton}
         />
-      </View>
+      </View>}
 
+{ (!cryptoTxnsEnabled && (assetType == 'crypto')) && 
+      <View>
+      <Text style={styles.headingText}>Upgrade your account:</Text>
+      <Text></Text>
+      <Text style={styles.descriptionText}>To enable sending crypto you need to either withdraw/deposit to/from your bank account or get ID verified.</Text>
+      <Text></Text>
+
+        <View style={styles.buttonWrapper}>
+          <FixedWidthButton title="Verify ID" onPress={goToIDCheck}/>
+        </View>
+
+        <View style={styles.buttonWrapper}>
+          <FixedWidthButton title="Deposit GBP" onPress={changeToGBP} />
+        </View>
+
+      </View> }
       </KeyboardAwareScrollView>
 
     </View>
@@ -888,6 +919,11 @@ let styles = StyleSheet.create({
   errorMessageText: {
     fontSize: normaliseFont(14),
     color: 'red',
+  },
+  buttonWrapper: {
+    marginTop: scaledHeight(20),
+    marginLeft: '25%',
+    width: '50%',
   },
 });
 
