@@ -1,14 +1,12 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
 import { Image, Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
-
 import DropDownPicker from 'react-native-dropdown-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Other imports
 import _ from 'lodash';
 import Big from 'big.js';
-import { LineChart } from 'react-native-chart-kit'
 
 // Internal imports
 import AppStateContext from 'src/application/data';
@@ -21,9 +19,6 @@ import misc from 'src/util/misc';
 import logger from 'src/util/logger';
 let logger2 = logger.extend('Buy');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
-
-
-
 
 
 /* Notes
@@ -131,7 +126,6 @@ let Buy = () => {
       console.log(msg);
     }
   }
-
 
 
   let fetchBestPriceForQuoteAssetVolume = async () => {
@@ -417,7 +411,6 @@ let Buy = () => {
     )
   }
 
- 
 
   return (
 
@@ -667,7 +660,6 @@ let styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
 });
-
 
 
 let styleContactUsButton = StyleSheet.create({
