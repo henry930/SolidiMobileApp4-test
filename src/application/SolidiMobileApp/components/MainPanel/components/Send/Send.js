@@ -717,7 +717,7 @@ let Send = () => {
       <View>
       <Text style={styles.headingText}>Upgrade your account:</Text>
       <Text></Text>
-      <Text style={styles.descriptionText}>To enable sending crypto you need to either withdraw/deposit to/from your bank account or get ID verified.</Text>
+      <Text style={styles.descriptionText}>To enable sending crypto you need to either deposit and make your first crypto purchase or get ID verified.</Text>
       <Text></Text>
 
         <View style={styles.buttonWrapper}>
