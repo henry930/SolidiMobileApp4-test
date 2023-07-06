@@ -99,15 +99,16 @@ let WaitingForPayment = () => {
       appState.changeState('PaymentNotMade', 'paymentNotReceived');
     }
     // Call the server to check if the payment has arrived (if it has, the order will have settled).
+
     // If we're testing (we've loaded this page directly during development), stop here without checking.
     if (appState.appTier == 'dev' && appState.panels.buy.orderID == null) {
       return;
     }
     let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
-    if (orderStatus == 'settled') {
+    if (orderStatus.toUpperCase() == 'SETTLED') {
       setPaymentReceived(true);
       clearInterval(appState.panels.waitingForPayment.timerID);
-      appState.changeStateParameters.orderID = appState.user.panels.buy.orderID;
+      appState.changeStateParameters.orderID = appState.panels.buy.orderID;
       appState.changeState('PurchaseSuccessful');
     }
   }
