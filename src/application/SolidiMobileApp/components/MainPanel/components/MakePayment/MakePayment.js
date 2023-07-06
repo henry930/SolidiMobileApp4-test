@@ -110,8 +110,8 @@ Incomplete deposit details for ${appState.getAssetInfo('GBP').displayString}
       let orderStatus = await appState.fetchOrderStatus({orderID: appState.panels.buy.orderID});
       //log({orderStatus});
       // Change to next state.
-      if (orderStatus == 'SETTLED') {
-        appState.pageParameters.orderID = appState.user.panels.buy.orderID;
+      if (orderStatus.toUpperCase() == 'SETTLED') {
+        appState.changeStateParameters.orderID = appState.panels.buy.orderID;
         appState.changeState('PurchaseSuccessful');
       } else {
         appState.changeState('PaymentNotMade');
