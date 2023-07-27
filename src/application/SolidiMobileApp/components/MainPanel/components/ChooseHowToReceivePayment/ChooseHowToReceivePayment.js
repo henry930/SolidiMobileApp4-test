@@ -303,6 +303,9 @@ let ChooseHowToReceivePayment = () => {
         await handlePriceChange(output);
       } else if (result == 'EXCEEDS_LIMITS') {
         appState.changeState('LimitsExceeded', 'sell');
+      } else if (result == 'WITHDRAW_DISABLED') {
+        appState.panels.sell.output = output;
+        appState.changeState('AccountRestricted', 'sell');
       } else { // 'FILLED'
         // Retrieve feeVolume from order result, calculate totalVolume, and store the results in the app memory.
         let feeVolume = output.fees;
@@ -342,6 +345,9 @@ let ChooseHowToReceivePayment = () => {
         appState.changeState('SaleSuccessful', paymentChoice);
       } else if (result == 'EXCEEDS_LIMITS') {
         appState.changeState('LimitsExceeded', 'sell');
+      } else if (result == 'WITHDRAW_DISABLED') {
+        appState.panels.sell.output = output;
+        appState.changeState('AccountRestricted', 'sell');
       } else {
         setErrorMessage(misc.itemToString(output));
         setSendOrderMessage('');

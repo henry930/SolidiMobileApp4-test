@@ -256,6 +256,9 @@ let ChooseHowToPay = () => {
       } else if (result == 'EXCEEDS_LIMITS') {
         appState.panels.buy.output = output;
         appState.changeState('LimitsExceeded', 'buy');
+      } else if (result == 'WITHDRAW_DISABLED') {
+        appState.panels.buy.output = output;
+        appState.changeState('AccountRestricted', 'buy');
       } else { // 'FILLED'
         // Retrieve feeVolume from order result, calculate totalVolume, and store the results in the app memory.
         let feeVolume = output.fees;
@@ -317,6 +320,9 @@ let ChooseHowToPay = () => {
         appState.changeState('PurchaseSuccessful');
       } else if (result == 'EXCEEDS_LIMITS') {
         appState.changeState('LimitsExceeded', 'buy');
+      } else if (result == 'WITHDRAW_DISABLED') {
+        appState.panels.buy.output = output;
+        appState.changeState('AccountRestricted', 'buy');
       } else {
         setErrorMessage(misc.itemToString(output));
         setSendOrderMessage('');

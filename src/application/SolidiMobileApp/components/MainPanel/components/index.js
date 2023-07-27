@@ -42,3 +42,4 @@ export {default as UpdateApp} from './UpdateApp/UpdateApp';
 export {default as RegisterConfirm} from './RegisterConfirm/RegisterConfirm';
 export {default as RegisterConfirm2} from './RegisterConfirm2/RegisterConfirm2';
 export {default as AccountUpdate} from './AccountUpdate/AccountUpdate';
+export {default as AccountRestricted} from './AccountRestricted/AccountRestricted';
