@@ -1,7 +1,7 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import PINCode, { hasUserSetPinCode } from '@haskkor/react-native-pincode';
+import PINCode, { hasUserSetPinCode } from 'react-native-pincode';
 import * as Keychain from 'react-native-keychain';
 
 // Other imports

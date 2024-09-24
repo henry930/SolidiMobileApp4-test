@@ -11,10 +11,14 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@haskkor/react-native-pincode": "github:SolidiFX/react-native-pincode#a335e3064a69da4d09fbc509d7378803c7dbc440",
+    "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-native-clipboard/clipboard": "1.14.0",
+    "@react-native/metro-config": "^0.75.3",
     "big.js": "6.2.1",
     "buffer": "6.0.3",
     "crypto-js": "4.2.0",
+    "metro-config": "^0.80.12",
     "react": "18.2.0",
     "react-native": "^0.73.0",
     "react-native-chart-kit": "^6.12.0",
@@ -26,11 +30,12 @@
     "react-native-keychain": "8.2.0",
     "react-native-logs": "5.1.0",
     "react-native-paper": "5.12.3",
-    "react-native-pincode": "git@github.com:SolidiFX/react-native-pincode.git",
+    "react-native-pincode": "git@github.com:SolidiFX/react-native-pincode.git#async-storage-migrate",
     "react-native-progress": "5.0.1",
     "react-native-qrcode-svg": "6.3.0",
     "react-native-splash-screen": "3.3.0",
     "react-native-svg": "^15.1.0",
+    "react-native-svg-transformer": "^1.5.0",
     "react-native-vector-icons": "10.0.3",
     "react-native-webview": "13.8.6",
     "semver": "7.6.0"

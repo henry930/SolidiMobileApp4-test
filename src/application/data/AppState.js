@@ -24,7 +24,7 @@ import { UpdateApp } from 'src/application/SolidiMobileApp/components/MainPanel/
 import React, { Component, useContext } from 'react';
 import { Platform, BackHandler } from 'react-native';
 import * as Keychain from 'react-native-keychain';
-import {deleteUserPinCode} from '@haskkor/react-native-pincode';
+import {deleteUserPinCode} from 'react-native-pincode';
 import { getIpAddressesForHostname } from 'react-native-dns-lookup';
 
 // Other imports
