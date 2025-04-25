@@ -119,6 +119,7 @@ let History = () => {
 
   let renderTransactions = () => {
     let data = appState.getTransactions();
+    data = data['txns'];
     return (
       <View style={styles.flatListWrapper}>
         <FlatList
@@ -145,7 +146,9 @@ let History = () => {
     let reference = item['reference'];
     try {
       reference = JSON.parse(reference);
-    } catch(err) {}
+    } catch(err) {
+      log(`Failed to parse txn. Error=${err.stack}`)
+    }
     // Example reference:
     // {"ref":"CKF2NM7","paymeth":8,"txntype":"standard"}
     if (_.has(reference, 'ref')) {
