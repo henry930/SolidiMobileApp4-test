@@ -64,8 +64,8 @@ let appName = 'SolidiMobileApp';
 if (appTier == 'stag') appName = 'SolidiMobileAppTest'; // necessary ?
 let storedAPIVersion = '1.0.2';
 let domains = {
-  dev: 't3.solidi.co',
-  stag: 't10.solidi.co',
+  dev: 'hcp1.solidi.co',
+  stag: 'hcp2.solidi.co',
   prod: 'www.solidi.co',
 }
 if (! _.has(domains, appTier)) throw new Error(`Unrecognised app tier: ${appTier}`);

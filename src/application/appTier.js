@@ -6,6 +6,6 @@
 // The 'stag' (staging) version connects to the test server, which doesn't have access to actual cryptocurrency.
 // The 'prod' (production) version connects to the production server, which _does_ have access to actual cryptocurrency.
 
-export const appTier = 'stag';
+export const appTier = 'dev';
 
 export default appTier;
