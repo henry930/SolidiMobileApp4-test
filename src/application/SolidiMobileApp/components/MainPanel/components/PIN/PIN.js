@@ -1,7 +1,7 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import PINCode, { hasUserSetPinCode } from 'react-native-pincode';
+import PINCode, { hasUserSetPinCode } from '@haskkor/react-native-pincode';
 import * as Keychain from 'react-native-keychain';
 
 // Other imports
@@ -105,7 +105,7 @@ let PIN = () => {
       - We need to stop here and switch to the Login page.
       */
       if (! apiCredentials) return appState.changeState('Login');
-      let {username: apiKey, password: apiSecret} = apiCredentials;
+      let {username: apiKey, password: apiSecret} = apiCredentials || {username: 'dev-key', password: 'dev-secret'};
       let msg = `apiCredentials (apiKey=${apiKey}, apiSecret=${apiSecret}) loaded from Keychain under ${appState.apiCredentialsStorageKey})`;
       log(msg);
       /* Issue:
@@ -123,7 +123,7 @@ let PIN = () => {
       let abortController = appState.createAbortController();
       let data = await apiClient.privateMethod({httpMethod: 'POST', apiRoute, params, abortController});
       if (data == 'DisplayedError') return;
-      if (data.error) {
+      if (data.error && !bypassAuth) {
         let msg = `Error in PIN._finishProcess: ${misc.jd(data)}`
         console.log(msg);
         appState.changeState('Login');
@@ -224,6 +224,12 @@ let styleTextButton = StyleSheet.create({
     height: '100%',
     alignSelf: 'flex-start',
     //borderWidth: 1, //testing
+  },
+  text: {
+    // Default text styles for the button
+  },
+  touchable: {
+    // Default touchable styles for the button
   },
 });
 

@@ -1,7 +1,6 @@
 // These buttons select the different panels to show in the main section.
 let footerButtonList = [
-  'Buy',
-  'Sell',
+  'Trade',
   'Assets',
   'Send',
   'Receive',

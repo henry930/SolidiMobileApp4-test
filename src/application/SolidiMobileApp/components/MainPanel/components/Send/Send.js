@@ -1,8 +1,20 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Image, Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+// Material Design imports
+import {
+  Button,
+  Card,
+  Text,
+  TextInput,
+  useTheme,
+  HelperText,
+  Avatar,
+  Surface,
+} from 'react-native-paper';
 
 // Other imports
 import _ from 'lodash';
@@ -10,9 +22,9 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { colors } from 'src/constants';
+import { colors, sharedStyles, sharedColors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton, Spinner, FixedWidthButton } from 'src/components/atomic';
+import { Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -281,17 +293,17 @@ let Send = () => {
 
 
   let renderAddressInput = () => {
-    //log('Render address input.')
     return (
-      <View>
+      <View style={styles.inputWrapper}>
         <TextInput
-          style={styles.fullWidthTextInput}
+          mode="outlined"
+          label={`${appState.getAssetInfo(assetSA).displayString} Address`}
+          style={styles.materialTextInput}
           onChangeText={setAddress}
           value={address}
-          placeholder={appState.getAssetInfo(assetSA).displayString + ' address goes here'}
-          placeholderTextColor={colors.placeHolderTextColor}
+          placeholder={`Enter ${appState.getAssetInfo(assetSA).displayString} address`}
           autoCorrect={false}
-          autoCapitalize={'none'}
+          autoCapitalize="none"
         />
       </View>
     )
@@ -300,21 +312,17 @@ let Send = () => {
 
   let renderDestinationTagInput = () => {
     return (
-      <View style={styles.fullWidthLabelledInputWrapper}>
-        <View style={styles.inputLabel}>
-          <Text style={styles.inputLabelText}>Destination Tag:</Text>
-        </View>
-        <View style={styles.halfWidthTextInputWrapper}>
-          <TextInput
-            style={styles.halfWidthTextInput}
-            onChangeText={setDestinationTag}
-            value={destinationTag}
-            //placeholder={'52'}
-            //placeholderTextColor={colors.placeHolderTextColor}
-            autoCorrect={false}
-            keyboardType='number-pad'
-          />
-        </View>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          mode="outlined"
+          label="Destination Tag"
+          style={styles.materialTextInput}
+          onChangeText={setDestinationTag}
+          value={destinationTag}
+          placeholder="52"
+          autoCorrect={false}
+          keyboardType="number-pad"
+        />
       </View>
     )
   }
@@ -322,18 +330,16 @@ let Send = () => {
 
   let renderAccountNameInput = () => {
     return (
-      <View>
-        {/* <Text style={styles.inputLabelText}>Account Name:</Text> */}
-        <View>
-          <TextInput
-            style={styles.fullWidthTextInput}
-            onChangeText={setAccountName}
-            value={accountName}
-            placeholder={appState.getAssetInfo(assetSA).displayString + ' account name goes here'}
-            placeholderTextColor={colors.placeHolderTextColor}
-            autoCorrect={false}
-          />
-        </View>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          mode="outlined"
+          label="Account Name"
+          style={styles.materialTextInput}
+          onChangeText={setAccountName}
+          value={accountName}
+          placeholder={`Enter ${appState.getAssetInfo(assetSA).displayString} account name`}
+          autoCorrect={false}
+        />
       </View>
     )
   }
@@ -341,21 +347,17 @@ let Send = () => {
 
   let renderSortCodeInput = () => {
     return (
-      <View style={styles.fullWidthLabelledInputWrapper}>
-        <View style={styles.inputLabel}>
-          <Text style={styles.inputLabelText}>Sort Code:</Text>
-        </View>
-        <View style={styles.halfWidthTextInputWrapper}>
-          <TextInput
-            style={styles.halfWidthTextInput}
-            onChangeText={setSortCode}
-            value={sortCode}
-            placeholder={'12-34-56'}
-            placeholderTextColor={colors.placeHolderTextColor}
-            autoCorrect={false}
-            keyboardType='numbers-and-punctuation'
-          />
-        </View>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          mode="outlined"
+          label="Sort Code"
+          style={styles.materialTextInput}
+          onChangeText={setSortCode}
+          value={sortCode}
+          placeholder="12-34-56"
+          autoCorrect={false}
+          keyboardType="numbers-and-punctuation"
+        />
       </View>
     )
   }
@@ -363,21 +365,17 @@ let Send = () => {
 
   let renderAccountNumberInput = () => {
     return (
-      <View style={styles.fullWidthLabelledInputWrapper}>
-        <View style={styles.inputLabel}>
-          <Text style={styles.inputLabelText}>Account Number:</Text>
-        </View>
-        <View style={styles.halfWidthTextInputWrapper}>
-          <TextInput
-            style={styles.halfWidthTextInput}
-            onChangeText={setAccountNumber}
-            value={accountNumber}
-            placeholder={'123456789'}
-            placeholderTextColor={colors.placeHolderTextColor}
-            autoCorrect={false}
-            keyboardType='number-pad'
-          />
-        </View>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          mode="outlined"
+          label="Account Number"
+          style={styles.materialTextInput}
+          onChangeText={setAccountNumber}
+          value={accountNumber}
+          placeholder="123456789"
+          autoCorrect={false}
+          keyboardType="number-pad"
+        />
       </View>
     )
   }
@@ -385,20 +383,16 @@ let Send = () => {
 
   let renderBICInput = () => {
     return (
-      <View style={styles.fullWidthLabelledInputWrapper}>
-        <View style={styles.inputLabel}>
-          <Text style={styles.inputLabelText}>BIC:</Text>
-        </View>
-        <View style={styles.halfWidthTextInputWrapper}>
-          <TextInput
-            style={styles.halfWidthTextInput}
-            onChangeText={setBIC}
-            value={BIC}
-            placeholder={'INGDESMM'}
-            placeholderTextColor={colors.placeHolderTextColor}
-            autoCorrect={false}
-          />
-        </View>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          mode="outlined"
+          label="BIC"
+          style={styles.materialTextInput}
+          onChangeText={setBIC}
+          value={BIC}
+          placeholder="INGDESMM"
+          autoCorrect={false}
+        />
       </View>
     )
   }
@@ -406,20 +400,16 @@ let Send = () => {
 
   let renderIBANInput = () => {
     return (
-      <View>
-        <View style={styles.inputLabel}>
-            <Text style={styles.inputLabelText}>IBAN:</Text>
-        </View>
-        <View>
-          <TextInput
-            style={styles.fullWidthTextInput}
-            onChangeText={setIBAN}
-            value={BIC}
-            placeholder={'ES91 2100 0418 4502 0005 1332'}
-            placeholderTextColor={colors.placeHolderTextColor}
-            autoCorrect={false}
-          />
-        </View>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          mode="outlined"
+          label="IBAN"
+          style={styles.materialTextInput}
+          onChangeText={setIBAN}
+          value={IBAN}
+          placeholder="ES91 2100 0418 4502 0005 1332"
+          autoCorrect={false}
+        />
       </View>
     )
   }
@@ -445,35 +435,48 @@ let Send = () => {
     let assetType = appState.getAssetInfo(assetSA).type;
     if (assetType == '[loading]') {
       return (
-        <View style={styles.priorityWrapper}></View>
+        <Card style={styles.priorityCard}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle}>Transaction Priority</Text>
+            <Spinner />
+          </Card.Content>
+        </Card>
       )
     }
     let choosePriority = (assetType == 'crypto');
     if (! choosePriority) {
       return (
-        <View style={styles.priorityWrapper}>
-          <View style={styles.importantMessage}>
-            <Text style={styles.importantMessageText}>All {assetSA} withdrawals are sent within 8 hours.</Text>
-          </View>
-        </View>
+        <Card style={styles.priorityCard}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle}>Transaction Priority</Text>
+            <Text variant="bodyMedium" style={styles.priorityMessage}>
+              All {assetSA} withdrawals are sent within 8 hours.
+            </Text>
+          </Card.Content>
+        </Card>
       )
     }
     return (
-      <View style={styles.priorityWrapper}>
-        <DropDownPicker
-          listMode="SCROLLVIEW"
-          placeholder={createPriorityLabel({priority, asset: assetSA})}
-          style={styles.priorityDropdown}
-          containerStyle={styles.priorityDropdownContainer}
-          open={openPriority}
-          value={priority}
-          items={itemsPriority}
-          setOpen={setOpenPriority}
-          setValue={setPriority}
-          setItems={setItemsPriority}
-          textStyle={styles.dropdownText}
-        />
-      </View>
+      <Card style={styles.priorityCard}>
+        <Card.Content>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Transaction Priority</Text>
+          <View style={styles.priorityDropdownWrapper}>
+            <DropDownPicker
+              listMode="SCROLLVIEW"
+              placeholder={createPriorityLabel({priority, asset: assetSA})}
+              style={styles.priorityDropdown}
+              containerStyle={styles.priorityDropdownContainer}
+              open={openPriority}
+              value={priority}
+              items={itemsPriority}
+              setOpen={setOpenPriority}
+              setValue={setPriority}
+              setItems={setItemsPriority}
+              textStyle={styles.dropdownText}
+            />
+          </View>
+        </Card.Content>
+      </Card>
     )
   }
 
@@ -606,140 +609,180 @@ let Send = () => {
   }
 
   return (
-    <View style={styles.panelContainer}>
-    <View style={styles.panelSubContainer}>
-
-      <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Send</Text>
+    <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+      
+      {/* Header Section - Full width design */}
+      <View style={styles.headerSection}>
+        {/* Header content with padding */}
+        <View style={styles.headerContent}>
+          {/* Page Title */}
+          <View style={[sharedStyles.row, { marginBottom: 12 }]}>
+            <Text variant="headlineSmall" style={[sharedStyles.headerTitle, { flex: 1 }]}>
+              Send Crypto
+            </Text>
+            <View style={styles.secureBadge}>
+              <Text style={styles.secureText}>
+                SECURE
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
 
-      {(! _.isEmpty(errorMessage)) &&
-        <View style={styles.errorMessageWrapper}>
-          <View style={styles.errorMessage}>
-            <Text style={styles.errorMessageText}>{errorMessage}</Text>
-          </View>
-          <Button title="Clear Error" onPress={ () => { setErrorMessage('') } }/>
-        </View>
-      }
+      {/* Content Section */}
+      <View style={styles.panelSubContainer}>
+
+        {(! _.isEmpty(errorMessage)) &&
+          <Card style={styles.errorCard}>
+            <Card.Content>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+              <Button mode="outlined" onPress={() => setErrorMessage('')} style={styles.clearErrorButton}>
+                Clear Error
+              </Button>
+            </Card.Content>
+          </Card>
+        }
 
       <KeyboardAwareScrollView
         showsVerticalScrollIndicator={true}
-        contentContainerStyle={{ flexGrow: 1, margin: 20 }}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps='handled'
       >
 
-      <View style={styles.description1}>
-        <View>
-          <Text style={styles.descriptionText}>I want to send:</Text>
-        </View>
-        <View>
-          <Button title='[max]' onPress={ () => {
-              // We calculate the maximum amount by subtracting the fee from the user's balance.
-              if (! (misc.isNumericString(balanceSA) && misc.isNumericString(transferFee)) ) {
-               return;
-              }
-              let result = Big(balanceSA).minus(Big(transferFee)).toFixed();
-              let result2 = appState.getFullDecimalValue({asset:assetSA, value:result, functionName:'Send'});
-              validateAndSetVolumeSA(result2);
-            }}
-            styles={styleMaxButton}
-          />
-        </View>
-      </View>
-
-      <View style={styles.storedAssetWrapper}>
-        <TextInput
-          placeholder={'0.1532'}
-          style={styles.volumeSA}
-          onChangeText={validateAndSetVolumeSA}
-          value={volumeSA}
-          keyboardType='decimal-pad'
-        />
-        <DropDownPicker
-          listMode="MODAL"
-          placeholder={appState.getAssetInfo(assetSA).displayString}
-          style={styles.storedAssetDropdown}
-          containerStyle={styles.storedAssetDropdownContainer}
-          open={openSA}
-          value={assetSA}
-          items={itemsSA}
-          setOpen={setOpenSA}
-          setValue={setAssetSA}
-          setItems={setItemsSA}
-          searchable={true}
-          searchTextInputProps={{
-            maxLength: 15
-          }}
-          maxHeight={scaledHeight(300)}
-          textStyle={styles.dropdownText}
-        />
-      </View>
+      <Card style={styles.inputCard}>
+        <Card.Content>
+          <View style={styles.amountSection}>
+            <Text variant="titleMedium" style={styles.sectionTitle}>Amount to Send</Text>
+            <View style={styles.amountInputRow}>
+              <TextInput
+                mode="outlined"
+                label="Amount"
+                placeholder="0.1532"
+                style={styles.amountInput}
+                onChangeText={validateAndSetVolumeSA}
+                value={volumeSA}
+                keyboardType="decimal-pad"
+              />
+              <Button 
+                mode="contained-tonal" 
+                onPress={() => {
+                  // We calculate the maximum amount by subtracting the fee from the user's balance.
+                  if (!(misc.isNumericString(balanceSA) && misc.isNumericString(transferFee))) {
+                    return;
+                  }
+                  let result = Big(balanceSA).minus(Big(transferFee)).toFixed();
+                  let result2 = appState.getFullDecimalValue({asset:assetSA, value:result, functionName:'Send'});
+                  validateAndSetVolumeSA(result2);
+                }}
+                style={styles.maxButton}
+              >
+                MAX
+              </Button>
+            </View>
+            <View style={styles.dropdownContainer}>
+              <DropDownPicker
+                listMode="MODAL"
+                placeholder={appState.getAssetInfo(assetSA).displayString}
+                style={styles.assetDropdown}
+                containerStyle={styles.assetDropdownContainer}
+                open={openSA}
+                value={assetSA}
+                items={itemsSA}
+                setOpen={setOpenSA}
+                setValue={setAssetSA}
+                setItems={setItemsSA}
+                searchable={true}
+                searchTextInputProps={{
+                  maxLength: 15
+                }}
+                maxHeight={scaledHeight(300)}
+                textStyle={styles.dropdownText}
+              />
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
 
       { (cryptoTxnsEnabled || assetType!='crypto') && renderPrioritySection()}
 
       { (cryptoTxnsEnabled || assetType!='crypto') &&  
-      <View style={styles.transferDetailsSection}>
-        <View style={styles.transferDetail}>
-          <Text style={[_styleBalanceText, styles.detailText]}>Current balance:</Text>
-          <Text style={[_styleBalanceText, styles.monospaceText]}>{balanceSA} {assetSA}</Text>
-        </View>
-        <View style={styles.transferDetail}>
-          <Text style={styles.detailText}>Amount to send:</Text>
-          <Text style={styles.monospaceText}>{calculateAmountToSend()} {assetSA}</Text>
-        </View>
-        <View style={styles.transferDetail}>
-          <Text style={styles.detailText}>Network fee:</Text>
-          <Text style={styles.monospaceText}>{appState.getFullDecimalValue({asset:assetSA, value:transferFee, functionName:'Send'})} {assetSA}</Text>
-        </View>
-        <View style={styles.transferDetail}>
-          <Text style={styles.detailText}>Total to spend: </Text>
-          <Text style={styles.monospaceText}>{calculateTotal()} {assetSA}</Text>
-        </View>
-        <View style={styles.transferDetail}>
-          <Text style={[_styleFinalBalanceText, styles.detailText]}>Final balance:</Text>
-          <Text style={[_styleFinalBalanceText, styles.monospaceText]}>{calculateFinalBalance()} {assetSA}</Text>
-        </View>
-      </View> }
+      <Card style={styles.detailsCard}>
+        <Card.Content>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Transaction Details</Text>
+          <View style={styles.detailRow}>
+            <Text style={[_styleBalanceText, styles.detailLabel]}>Current balance:</Text>
+            <Text style={[_styleBalanceText, styles.detailValue]}>{balanceSA} {assetSA}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Amount to send:</Text>
+            <Text style={styles.detailValue}>{calculateAmountToSend()} {assetSA}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Network fee:</Text>
+            <Text style={styles.detailValue}>{appState.getFullDecimalValue({asset:assetSA, value:transferFee, functionName:'Send'})} {assetSA}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Total to spend:</Text>
+            <Text style={styles.detailValue}>{calculateTotal()} {assetSA}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={[_styleFinalBalanceText, styles.detailLabel]}>Final balance:</Text>
+            <Text style={[_styleFinalBalanceText, styles.detailValue]}>{calculateFinalBalance()} {assetSA}</Text>
+          </View>
+        </Card.Content>
+      </Card> }
 
       { (cryptoTxnsEnabled || assetType!='crypto') &&  
-      <View style={styles.description2}>
-        <Text style={styles.descriptionText}>To{destinationText}:</Text>
-      </View>}
+      <Card style={styles.addressCard}>
+        <Card.Content>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Send To{destinationText}</Text>
+          {renderAddressProperties()}
+        </Card.Content>
+      </Card>}
 
       { (cryptoTxnsEnabled || assetType!='crypto') &&  
-      <View style={styles.addressPropertiesWrapper}>
-
-        {renderAddressProperties()}
-
-      </View>}
-
-      { (cryptoTxnsEnabled || assetType!='crypto') &&  
-      <View style={styles.sendButtonWrapper}>
-        <StandardButton title="Send now"
-          onPress={ startSendRequest }
-          disabled={disableSendButton}
-        />
-      </View>}
+      <Card style={styles.actionCard}>
+        <Card.Content>
+          <Button 
+            mode="contained" 
+            onPress={startSendRequest}
+            disabled={disableSendButton}
+            style={styles.sendButton}
+            contentStyle={styles.sendButtonContent}
+          >
+            Send Now
+          </Button>
+        </Card.Content>
+      </Card>}
 
 { (!cryptoTxnsEnabled && (assetType == 'crypto')) && 
-      <View>
-      <Text style={styles.headingText}>Upgrade your account:</Text>
-      <Text></Text>
-      <Text style={styles.descriptionText}>To enable sending crypto you need to either deposit and make your first crypto purchase or get ID verified.</Text>
-      <Text></Text>
+      <Card style={styles.upgradeCard}>
+        <Card.Content>
+          <Text variant="titleMedium" style={styles.upgradeTitle}>Upgrade your account</Text>
+          <Text variant="bodyMedium" style={styles.upgradeDescription}>
+            To enable sending crypto you need to either deposit and make your first crypto purchase or get ID verified.
+          </Text>
+          <View style={styles.upgradeActions}>
+            <Button 
+              mode="contained" 
+              onPress={goToIDCheck}
+              style={styles.upgradeButton}
+            >
+              Verify ID
+            </Button>
+            <Button 
+              mode="outlined" 
+              onPress={changeToGBP}
+              style={styles.upgradeButton}
+            >
+              Deposit GBP
+            </Button>
+          </View>
+        </Card.Content>
+      </Card> }
+        </KeyboardAwareScrollView>
 
-        <View style={styles.buttonWrapper}>
-          <FixedWidthButton title="Verify ID" onPress={goToIDCheck}/>
-        </View>
-
-        <View style={styles.buttonWrapper}>
-          <FixedWidthButton title="Deposit GBP" onPress={changeToGBP} />
-        </View>
-
-      </View> }
-      </KeyboardAwareScrollView>
-
-    </View>
+      </View>
     </View>
   )
 
@@ -747,201 +790,196 @@ let Send = () => {
 
 
 let styles = StyleSheet.create({
-  panelContainer: {
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(5),
-    width: '100%',
-    height: '100%',
+  // Header styles
+  headerSection: {
+    backgroundColor: sharedColors.primary,
+    paddingHorizontal: 0,
+    paddingTop: 12,
+    paddingBottom: 20,
+    elevation: 2,
   },
+  headerContent: {
+    paddingHorizontal: 16,
+  },
+  secureBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  secureText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  
+  // Content styles
   panelSubContainer: {
-    paddingTop: scaledHeight(10),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
+    flex: 1,
+    paddingTop: 12,
   },
-  heading: {
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  
+  // Error styles - extend shared styles
+  errorCard: {
+    ...sharedStyles.errorCard,
+    margin: 16,
+    marginVertical: 8,
+  },
+  errorText: {
+    ...sharedStyles.errorText,
+    marginBottom: 8,
+  },
+  clearErrorButton: {
+    alignSelf: 'flex-start',
+  },
+  
+  // Input card styles
+  inputCard: {
+    ...sharedStyles.card,
+    margin: 16,
+    marginVertical: 8,
+  },
+  amountSection: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    ...sharedStyles.sectionTitle,
+    marginBottom: 16,
+  },
+  amountInputRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  heading1: {
-    marginTop: scaledHeight(10),
-    marginBottom: scaledHeight(20),
+  amountInput: {
+    flex: 1,
+    marginRight: 8,
+    backgroundColor: sharedColors.surface,
   },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
+  maxButton: {
+    minWidth: 80,
   },
-  basicText: {
-    fontSize: normaliseFont(14),
+  
+  // Dropdown styles
+  dropdownContainer: {
+    zIndex: 2,
+  },
+  assetDropdown: {
+    height: scaledHeight(40),
+    ...sharedStyles.dropdown,
+  },
+  assetDropdownContainer: {
+    ...sharedStyles.dropdownContainer,
   },
   dropdownText: {
     fontSize: normaliseFont(14),
   },
-  bold: {
-    fontWeight: 'bold',
+  
+  // Details card
+  detailsCard: {
+    ...sharedStyles.card,
+    margin: 16,
+    marginVertical: 8,
   },
-  description1: {
-    //borderWidth: 1, // testing
-    width: '100%',
+  detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
   },
-  description2: {
-    marginTop: scaledHeight(20),
+  detailLabel: {
+    ...sharedStyles.label,
+    fontSize: normaliseFont(14),
+    flex: 1,
   },
-  descriptionText: {
+  detailValue: {
+    ...sharedStyles.valueBold,
+    fontSize: normaliseFont(14),
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+  
+  // Address and action cards
+  addressCard: {
+    ...sharedStyles.card,
+    margin: 16,
+    marginVertical: 8,
+  },
+  actionCard: {
+    ...sharedStyles.card,
+    margin: 16,
+    marginVertical: 8,
+  },
+  sendButton: {
+    paddingVertical: 4,
+  },
+  sendButtonContent: {
+    paddingVertical: 8,
+  },
+  
+  // Upgrade card
+  upgradeCard: {
+    ...sharedStyles.card,
+    margin: 16,
+    marginVertical: 8,
+    backgroundColor: '#fff3e0',
+  },
+  upgradeTitle: {
+    marginBottom: 8,
     fontWeight: 'bold',
-    fontSize: normaliseFont(18),
   },
-  storedAssetWrapper: {
-    paddingVertical: scaledHeight(20),
-    width: '100%',
-    zIndex: 2,
-    //borderWidth: 1, // testing
+  upgradeDescription: {
+    marginBottom: 16,
+    lineHeight: 20,
   },
-  volumeSA: {
-    //borderWidth: 1, // testing
-    //backgroundColor: 'blue',
-    fontSize: normaliseFont(16),
-    height: scaledHeight(40),
-    width: scaledWidth(140),
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    marginBottom: scaledWidth(20),
+  upgradeActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
-  storedAssetDropdown: {
-    height: scaledHeight(40),
-    width: scaledWidth(220),
+  upgradeButton: {
+    flex: 1,
+    marginHorizontal: 4,
   },
-  storedAssetDropdownContainer: {
-    width: scaledWidth(220),
-    //borderWidth: 1, // testing
+  
+  // Input wrapper
+  inputWrapper: {
+    marginVertical: 8,
   },
-  priorityWrapper: {
-    //borderWidth: 1, // testing
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    marginBottom: scaledHeight(20),
+  materialTextInput: {
+    backgroundColor: sharedColors.surface,
+  },
+  
+  // Priority card
+  priorityCard: {
+    ...sharedStyles.card,
+    margin: 16,
+    marginVertical: 8,
+  },
+  priorityMessage: {
+    textAlign: 'center',
+    fontStyle: 'italic',
+    color: sharedColors.textSecondary,
+  },
+  priorityDropdownWrapper: {
     zIndex: 1,
   },
   priorityDropdown: {
     height: scaledHeight(40),
     width: '100%',
+    ...sharedStyles.dropdown,
   },
   priorityDropdownContainer: {
-    //borderWidth: 1, // testing
     width: '100%',
+    ...sharedStyles.dropdownContainer,
   },
-  transferDetailsSection: {
-    //marginVertical: scaledHeight(20),
-    paddingHorizontal: scaledWidth(30),
-  },
-  transferDetail: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  monospaceText: {
-    fontSize: normaliseFont(14),
-    // For Android, a second solution may be needed.
-    fontVariant: ['tabular-nums'],
-  },
-  detailText: {
-    fontSize: normaliseFont(14),
-  },
+  
+  // Highlighted text
   highlightedBalanceText: {
-    color: 'red',
-  },
-  addressPropertiesWrapper: {
-    //borderWidth: 1, // testing
-    marginTop: scaledHeight(10),
-    marginBottom: scaledHeight(20),
-  },
-  addressProperties: {
-
-  },
-  fullWidthTextInput: {
-    fontSize: normaliseFont(14),
-    marginTop: scaledHeight(10),
-    height: scaledHeight(40),
-    width: '99%',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    flexDirection: "row",
-  },
-  fullWidthLabelledInputWrapper: {
-    //borderWidth: 1, // testing
-    marginTop: scaledHeight(10),
-    width: '99%',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    //justifyContent: 'space-between',
-  },
-  inputLabel: {
-    //borderWidth: 1, // testing
-    justifyContent: 'center',
-    paddingRight: scaledWidth(20),
-  },
-  inputLabelText: {
-    //fontWeight: 'bold',
-    fontSize: normaliseFont(14),
-  },
-  halfWidthTextInputWrapper: {
-    //borderWidth: 1, // testing
-    width: '50%',
-  },
-  halfWidthTextInput: {
-    fontSize: normaliseFont(14),
-    height: scaledHeight(40),
-    width: '100%',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    flexDirection: "row",
-  },
-  importantMessage: {
-    //borderWidth: 1, // testing
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  importantMessageText: {
-    fontSize: normaliseFont(14),
-    textDecorationLine: 'underline'
-  },
-  sendButtonWrapper: {
-    //borderWidth: 1, // testing
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  errorMessageWrapper: {
-    //borderWidth: 1, // testing
-    marginBottom: scaledHeight(20),
-    paddingLeft: scaledWidth(5),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  errorMessage: {
-    width: '60%',
-  },
-  errorMessageText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
-  },
-  buttonWrapper: {
-    marginTop: scaledHeight(20),
-    marginLeft: '25%',
-    width: '50%',
-  },
-});
-
-
-let styleMaxButton = StyleSheet.create({
-  text: {
-    paddingVertical: 0,
-    marginVertical: 0,
+    color: sharedColors.error,
   },
 });
 

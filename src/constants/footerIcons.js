@@ -1,6 +1,7 @@
 let footerIcons = {
   Buy: 'line-chart',
   Sell: 'dollar',
+  Trade: 'exchange',
   Assets: 'bank',
   Send: 'upload',
   Receive: 'download',

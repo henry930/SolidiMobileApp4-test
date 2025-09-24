@@ -1,6 +1,19 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Text, StyleSheet, View, ScrollView } from 'react-native';
+import { Text, StyleSheet, View, ScrollView, Image } from 'react-native';
+
+// Material Design imports
+import {
+  Avatar,
+  Button,
+  Card,
+  Divider,
+  List,
+  Surface,
+  useTheme,
+  Icon,
+  Chip,
+} from 'react-native-paper';
 
 // Other imports
 import _ from 'lodash';
@@ -10,7 +23,7 @@ import Big from 'big.js';
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, FixedWidthButton, ImageButton } from 'src/components/atomic';
+import { FixedWidthButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -55,144 +68,131 @@ let Settings = () => {
 
   let generateWelcomeMessage = () => {
     let firstName = appState.getUserInfo('firstName');
-    let loading = firstName === '[loading]';
-    let welcomeMessage = "Hello";
+    let lastName = appState.getUserInfo('lastName');
+    let loading = firstName === '[loading]' || lastName === '[loading]';
+    
     if (loading) {
-      welcomeMessage += '!';
+      return "Loading...";
     } else {
-      welcomeMessage += `, ${firstName}!`;
+      return `${firstName} ${lastName}`;
     }
-    return welcomeMessage;
   }
 
+  let getUserEmail = () => {
+    let email = appState.getUserInfo('email');
+    return email === '[loading]' ? 'Loading...' : email;
+  }
+
+  const materialTheme = useTheme();
 
   return (
-    <View style={styles.panelContainer}>
-    <View style={styles.panelSubContainer}>
+    <View style={{ flex: 1, backgroundColor: materialTheme.colors.background }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 16 }}
+      >
+        {/* Profile Header Card */}
+        <Card style={{ marginBottom: 16, elevation: 2 }}>
+          <Card.Content style={{ padding: 24 }}>
+            <View style={{ alignItems: 'center' }}>
+              <Avatar.Image
+                size={80}
+                source={require('src/assets/profile.png')}
+                style={{ 
+                  marginBottom: 16,
+                  backgroundColor: materialTheme.colors.surfaceVariant 
+                }}
+              />
+              <Text 
+                variant="headlineSmall" 
+                style={{ 
+                  fontWeight: 'bold',
+                  color: materialTheme.colors.onSurface,
+                  marginBottom: 4
+                }}
+              >
+                {generateWelcomeMessage()}
+              </Text>
+              <Text 
+                variant="bodyMedium" 
+                style={{ 
+                  color: materialTheme.colors.onSurfaceVariant,
+                  marginBottom: 16
+                }}
+              >
+                {getUserEmail()}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Chip 
+                  icon="star" 
+                  compact
+                  style={{ backgroundColor: materialTheme.colors.tertiaryContainer }}
+                >
+                  Premium
+                </Chip>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
 
-      <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Settings</Text>
-      </View>
+        {/* Account Settings Section */}
+        <Card style={{ marginBottom: 16, elevation: 1 }}>
+          <Card.Content style={{ padding: 0 }}>
+            <List.Section>
+              <List.Subheader style={{ 
+                color: materialTheme.colors.primary,
+                fontWeight: 'bold'
+              }}>
+                Account Settings
+              </List.Subheader>
+              
+              <List.Item
+                title="Personal Details"
+                description="Manage your personal information"
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('PersonalDetails'); }}
+                style={{ paddingVertical: 4 }}
+              />
+              
+              <Divider />
+              
+              <List.Item
+                title="Identity Verification"
+                description="Verify your identity for enhanced features"
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('IdentityVerification'); }}
+                style={{ paddingVertical: 4 }}
+              />
+              
+              <Divider />
+              
+              <List.Item
+                title="Bank Account"
+                description="Manage your banking details"
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('BankAccounts'); }}
+                style={{ paddingVertical: 4 }}
+              />
+              
+              <Divider />
+              
+              <List.Item
+                title="Security"
+                description="Password, PIN, and security settings"
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('Security'); }}
+                style={{ paddingVertical: 4 }}
+              />
+            </List.Section>
+          </Card.Content>
+        </Card>
 
-      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1, margin: scaledWidth(10) }} >
 
-      <View style={styles.welcomeMessage}>
-        <Text style={styles.welcomeMessageText}>{generateWelcomeMessage()}</Text>
-      </View>
-
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Verify Identity'
-          onPress={ () => { appState.changeState('IdentityVerification'); } }
-        />
-      </View>
-
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Personal Details'
-          onPress={ () => { appState.changeState('PersonalDetails'); } }
-        />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Bank Account'
-          onPress={ () => { appState.changeState('BankAccounts'); } }
-        />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Solidi Account'
-          onPress={ () => { appState.changeState('SolidiAccount'); } }
-        />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Security'
-          onPress={ () => { appState.changeState('Security'); } }
-        />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Contact Us'
-          onPress={ () => { appState.changeState('ContactUs'); } }
-        />
-      </View>
-
-      {appState.getUserStatus('supportLevel2') === true &&
-        <View style={styles.buttonWrapper}>
-          <FixedWidthButton styles={styleButton} title='Support Tools'
-            onPress={ () => { appState.changeState('SupportTools'); } }
-          />
-        </View>
-      }
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Lock App' onPress={ () => { appState.lockApp() } } />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton styles={styleButton} title='Log Out'
-          onPress={ async () => {
-            await appState.logout();
-          } }
-        />
-      </View>
 
       </ScrollView>
-
-    </View>
     </View>
   )
 
 }
-
-
-let styles = StyleSheet.create({
-  panelContainer: {
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(5),
-    width: '100%',
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  panelSubContainer: {
-    //paddingTop: scaledHeight(10),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  heading: {
-    alignItems: 'center',
-  },
-  heading1: {
-    marginTop: scaledHeight(10),
-    marginBottom: scaledHeight(30),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  welcomeMessage: {
-    marginBottom: scaledHeight(20),
-    //borderWidth: 1, // testing
-  },
-  welcomeMessageText: {
-    fontSize: normaliseFont(16),
-  },
-  buttonWrapper: {
-    marginVertical: scaledHeight(10),
-    width: '100%',
-    alignItems: 'center',
-  },
-});
-
-let styleButton = StyleSheet.create({
-  view: {
-    //width: '100%',
-  },
-});
 
 export default Settings;

@@ -8,6 +8,7 @@ import { colors } from 'src/constants';
 import { Button, ImageButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import ImageLookup from 'src/images';
+import { sharedStyles as styles, layoutStyles as layout, buttonStyles as buttons, textStyles as text } from 'src/styles';
 
 
 
@@ -77,102 +78,119 @@ let Header = (props) => {
 
 
   return (
-    <View style={[styleArg, styles.header]}>
-      <View style={styles.buttonWrapper}>
-        {includeBackButton ? backButton : blankBackButton}
+    <View style={[styleArg, headerStyles.container]}>
+      {/* Risk Warning Banner */}
+      <View style={headerStyles.riskBanner}>
+        <Text style={headerStyles.riskBannerText}>
+          ⚠️ Don't invest unless you're prepared to lose all the money you invest. This is a high-risk investment and you should not expect to be protected if something goes wrong. Take 2 mins to learn more.
+        </Text>
       </View>
-      <View style={styles.buttonWrapper}>
-        <Image source={ImageLookup[logoImageName]} style={styles.logo} />
-      </View>
-      <View style={styles.buttonWrapper}>
-        {/*
-        Future: Build notification section.
-        { includeNotificationButton && <Button title='Alerts' styles={styleNotificationButton}
-          onPress={ () => { changeState('notifications) } }
-        /> }
-        */}
-      </View>
-      <View style={styles.buttonWrapper}>
-        {! hideSettingsButton &&
-          <ImageButton imageName='user' imageType='icon'
-            styles={_styleSettingsButton}
-            onPress={ () => { changeState('Settings') } }
-            title={titleSettingsButton}
-          />
-        }
+      
+      {/* Main Header */}
+      <View style={headerStyles.header}>
+        <View style={headerStyles.sideButtonWrapper}>
+          {includeBackButton ? backButton : blankBackButton}
+        </View>
+        <View style={headerStyles.logoWrapper}>
+          <Image source={ImageLookup[logoImageName]} style={headerStyles.logo} />
+        </View>
+        <View style={headerStyles.sideButtonWrapper}>
+          {! hideSettingsButton &&
+            <ImageButton imageName='user' imageType='icon'
+              styles={_styleSettingsButton}
+              onPress={ () => { changeState('Settings') } }
+              title={titleSettingsButton}
+            />
+          }
+        </View>
       </View>
     </View>
   );
 };
 
 
-let styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: 'center',
+const headerStyles = StyleSheet.create({
+  container: {
     width: '100%',
+    backgroundColor: 'white',
+    paddingBottom: scaledHeight(5)
+  },
+  riskBanner: {
+    width: '100%',
+    paddingHorizontal: scaledWidth(15),
+    paddingVertical: scaledHeight(8),
+    backgroundColor: colors.warning
+  },
+  riskBannerText: {
+    textAlign: 'center',
+    color: 'white',
+    fontSize: normaliseFont(11),
+    fontWeight: '600',
+    lineHeight: normaliseFont(15)
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    height: scaledHeight(50),
+    paddingVertical: scaledHeight(5),
+    backgroundColor: 'white'
+  },
+  logoWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   logo: {
-    flex: 1,
-    width: '100%',
-    height: null,
-    resizeMode: 'contain',
-    //borderWidth: 1, //testing
+    width: scaledWidth(120),
+    height: scaledHeight(30),
+    resizeMode: 'contain'
   },
-  buttonWrapper: {
-    width: '25%',
-    //alignItems: 'center', // Don't do this - for some reason it causes the clickable area around the back and settings buttons to collapse down to a small width around the icon.
-    //borderWidth: 1, //testing
-  },
-});
-
-
-let styleBackButton = StyleSheet.create({
-  image: {
-    iconSize: scaledWidth(27),
-    iconColor: colors.greyedOutIcon,
-  },
-  text: {
-    fontWeight: 'bold',
-    fontSize: normaliseFont(18),
-  },
-  view: {
-    //borderWidth: 1, //testing
+  sideButtonWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: scaledWidth(60)
   }
 });
 
 
-let styleSettingsButton = StyleSheet.create({
+const styleBackButton = {
   image: {
     iconSize: scaledWidth(27),
     iconColor: colors.greyedOutIcon,
   },
-  view: {
-    //borderWidth: 1, //testing
+  text: [
+    text.bold,
+    { fontSize: normaliseFont(18) }
+  ],
+  view: {}
+};
+
+const styleSettingsButton = {
+  image: {
+    iconSize: scaledWidth(27),
+    iconColor: colors.greyedOutIcon,
   },
-  text: {
-    fontWeight: 'bold',
-    color: 'black',
-  }
-});
+  view: {},
+  text: [
+    text.bold,
+    { color: 'black' }
+  ]
+};
 
-
-let styleSettingsButtonSelected = StyleSheet.create({
+const styleSettingsButtonSelected = {
   image: {
     iconSize: scaledWidth(27),
     iconColor: colors.selectedIcon,
   },
-  view: {
-    height: '100%',
-    width: '100%',
-    //borderWidth: 1, //testing
-  },
-  text: {
-    fontWeight: 'bold',
-    //color: 'black',
-  }
-});
+  view: [
+    layout.fullSize
+  ],
+  text: [
+    text.bold
+  ]
+};
 
 
 export default Header;

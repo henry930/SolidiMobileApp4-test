@@ -1,9 +1,19 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Image, Text, StyleSheet, View, ScrollView } from 'react-native';
+import { Image, StyleSheet, View, ScrollView } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Clipboard from '@react-native-clipboard/clipboard';
 import QRCode from 'react-native-qrcode-svg';
+
+// Material Design imports
+import {
+  Card,
+  Text,
+  useTheme,
+  Surface,
+  Avatar,
+  Divider,
+} from 'react-native-paper';
 
 // Other imports
 import _ from 'lodash';
@@ -11,7 +21,15 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { colors } from 'src/constants';
+import { colors, sharedStyles, sharedColors } from 'src/constants';
+import { 
+  colors as newColors, 
+  layoutStyles, 
+  textStyles, 
+  cardStyles, 
+  formStyles,
+  receiveStyles 
+} from 'src/styles';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton, Spinner, FixedWidthButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
@@ -172,7 +190,7 @@ let Receive = () => {
     if (addressProperties == '[loading]') {
       return (
         <View style={styles.depositDetails}>
-          <Spinner style={{height: '50%'}}/>
+          <Spinner style={styles.spinner}/>
         </View>
       )
     }
@@ -182,7 +200,7 @@ let Receive = () => {
     if (_.isEqual(addressKeys, ['error'])) {
       return (
         <View style={styles.depositDetails}>
-          <View style={{alignItems:'center'}}>
+          <View style={sharedStyles.center}>
             <Text style={styles.errorMessageText}>Error: Could not retrieve {accountString} details from server.{'\n'}</Text>
             <Button title="Tap here to contact us"
               onPress={ () => { appState.changeState('ContactUs') } }
@@ -194,172 +212,134 @@ let Receive = () => {
     }
 
     return (
-      <View style={styles.depositDetails}>
+      <View>
 
         {assetType == 'crypto' &&
-
-          <View>
-
-            <View style={{alignItems:'center'}}>
-              <QRCode
-                size={scaledWidth(130)}
-                value={addressProperties.address}
-              />
-            </View>
-
-            <View style={styles.scanMessage}>
-              <Text style={[styles.bold, styles.scanMessageText]}>Scan this QR code to deposit {assetString}</Text>
-            </View>
-
+          <View style={styles.qrCodeSection}>
+            <QRCode
+              size={scaledWidth(150)}
+              value={addressProperties.address}
+            />
+            <Text style={styles.qrCodeText}>
+              Scan this QR code to deposit {assetString}
+            </Text>
           </View>
         }
 
         { (! _.isUndefined(addressProperties.warningMessage)) &&
-          <View style={styles.warningMessage}>
-            <Text style={styles.warningMessageText}>{addressProperties.warningMessage}</Text>
-          </View>
+          <Surface style={sharedStyles.warningCard}>
+            <Text style={sharedStyles.warningText}>{addressProperties.warningMessage}</Text>
+          </Surface>
         }
 
         { (! _.isUndefined(addressProperties.infoMessage)) &&
-          <View style={styles.infoMessage}>
-            <Text style={styles.infoMessageText}>{addressProperties.infoMessage}</Text>
-          </View>
+          <Surface style={sharedStyles.infoCard}>
+            <Text style={sharedStyles.infoText}>{addressProperties.infoMessage}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('address') &&
-          <View style={styles.detailWrapper}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>Address:</Text>
-              </View>
+          <Surface style={styles.detailCard}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>Address:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.address) } }
               />
             </View>
-            <View>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.address}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.address}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('destinationTag') &&
-          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>Destination Tag:</Text>
-              </View>
+          <Surface style={styles.detailCardOneLine}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>Destination Tag:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.destinationTag) } }
               />
             </View>
-            <View style={styles.detail}>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.destinationTag}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.destinationTag}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('accountName') &&
-          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>Account Name:</Text>
-              </View>
+          <Surface style={styles.detailCardOneLine}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>Account Name:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.accountName) } }
               />
             </View>
-            <View style={styles.detail}>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.accountName}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.accountName}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('sortCode') &&
-          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>Sort Code:</Text>
-              </View>
+          <Surface style={styles.detailCardOneLine}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>Sort Code:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.sortCode) } }
               />
             </View>
-            <View style={styles.detail}>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.sortCode}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.sortCode}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('accountNumber') &&
-          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>Account Number:</Text>
-              </View>
+          <Surface style={styles.detailCardOneLine}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>Account Number:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.accountNumber) } }
               />
             </View>
-            <View style={styles.detail}>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.accountNumber}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.accountNumber}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('BIC') &&
-          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>BIC:</Text>
-              </View>
+          <Surface style={styles.detailCardOneLine}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>BIC/SWIFT:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.BIC) } }
               />
             </View>
-            <View style={styles.detail}>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.BIC}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.BIC}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('IBAN') &&
-          <View style={styles.detailWrapper}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>IBAN:</Text>
-              </View>
+          <Surface style={styles.detailCard}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>IBAN:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.IBAN) } }
               />
             </View>
-            <View style={styles.detail}>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.IBAN}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.IBAN}</Text>
+          </Surface>
         }
 
         { addressKeys.includes('reference') &&
-          <View style={[styles.detailWrapper, styles.detailWrapperOneLine]}>
-            <View style={styles.detailLabel}>
-              <View>
-                <Text style={styles.detailText}>Reference:</Text>
-              </View>
+          <Surface style={styles.detailCardOneLine}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailLabel}>Reference:</Text>
               <ImageButton imageName='clone' imageType='icon'
                 styles={styleCopyButton}
                 onPress={ () => { copyToClipboard(addressProperties.reference) } }
               />
             </View>
-            <View style={styles.detail}>
-              <Text style={[styles.detailText, styles.bold]}>{addressProperties.reference}</Text>
-            </View>
-          </View>
+            <Text style={[styles.detailValue, styles.bold]}>{addressProperties.reference}</Text>
+          </Surface>
         }
 
       </View>
@@ -378,70 +358,85 @@ let Receive = () => {
   }
 
   return (
-    <View style={styles.panelContainer}>
-    <View style={styles.panelSubContainer}>
-
-      <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Receive</Text>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
-
-      <View style={styles.description1}>
-        <Text style={styles.descriptionText}>I want to receive:</Text>
-      </View>
-
-      <View style={styles.chosenAssetWrapper}>
-        <DropDownPicker
-          listMode="MODAL"
-          searchable={true}
-          placeholder={appState.getAssetInfo(assetCA).displayString}
-          style={styles.chosenAssetDropdown}
-          containerStyle={styles.chosenAssetDropdownContainer}
-          open={openCA}
-          value={assetCA}
-          items={itemsCA}
-          setOpen={setOpenCA}
-          setValue={setAssetCA}
-          setItems={setItemsCA}
-          searchTextInputProps={{
-            maxLength: 15
-          }}
-          maxHeight={scaledHeight(300)}
-          textStyle={styles.dropdownText}
-        />
-      </View>
-
-{ (cryptoTxnsEnabled || (assetType != 'crypto')) && 
-      <View style={styles.description1}>
-        <Text style={styles.descriptionText}>{getDescriptionString()}</Text>
-      </View> }
-
-{ (cryptoTxnsEnabled || (assetType != 'crypto')) && 
-      <View style={styles.depositDetailsSection}>
-        {getDepositDetails()}
-      </View> }
-
-{ (!cryptoTxnsEnabled && (assetType == 'crypto')) && 
-      <View>
-      <Text style={styles.headingText}>Upgrade your account:</Text>
-      <Text></Text>
-      <Text style={styles.descriptionText}>To enable crypto deposits you need to either deposit from your bank account or get ID verified.</Text>
-      <Text></Text>
-
-        <View style={styles.buttonWrapper}>
-          <FixedWidthButton title="Verify ID" onPress={goToIDCheck}/>
+    <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+      
+      {/* Header Section - Full width design */}
+      <View style={styles.headerSection}>
+        {/* Header content with padding */}
+        <View style={styles.headerContent}>
+          {/* Page Title */}
+          <View style={[sharedStyles.row, { marginBottom: 12 }]}>
+            <Text variant="headlineSmall" style={[sharedStyles.headerTitle, { flex: 1 }]}>
+              Receive Crypto
+            </Text>
+            <View style={styles.secureBadge}>
+              <Text style={styles.secureText}>
+                INSTANT
+              </Text>
+            </View>
+          </View>
         </View>
+      </View>
 
-        <View style={styles.buttonWrapper}>
-          <FixedWidthButton title="Deposit GBP" onPress={changeToGBP} />
-        </View>
+      {/* Content Section */}
+      <View style={styles.panelSubContainer}>
 
-      </View> }
+        <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={styles.scrollContent} >
 
-      </ScrollView>
+          {/* Asset Selection Card */}
+          <Card style={styles.inputCard}>
+            <Card.Content>
+              <Text variant="titleMedium" style={styles.sectionTitle}>I want to receive:</Text>
+              <View style={styles.dropdownContainer}>
+                <DropDownPicker
+                  listMode="MODAL"
+                  searchable={true}
+                  placeholder={appState.getAssetInfo(assetCA).displayString}
+                  style={styles.chosenAssetDropdown}
+                  containerStyle={styles.chosenAssetDropdownContainer}
+                  open={openCA}
+                  value={assetCA}
+                  items={itemsCA}
+                  setOpen={setOpenCA}
+                  setValue={setAssetCA}
+                  setItems={setItemsCA}
+                  searchTextInputProps={{
+                    maxLength: 15
+                  }}
+                  maxHeight={scaledHeight(300)}
+                  textStyle={styles.dropdownText}
+                />
+              </View>
+            </Card.Content>
+          </Card>
 
-    </View>
+          { (cryptoTxnsEnabled || (assetType != 'crypto')) && 
+            <Card style={styles.detailsCard}>
+              <Card.Content>
+                <Text variant="titleMedium" style={styles.sectionTitle}>{getDescriptionString()}</Text>
+                {getDepositDetails()}
+              </Card.Content>
+            </Card>
+          }
+
+          { (!cryptoTxnsEnabled && (assetType == 'crypto')) && 
+            <Card style={styles.upgradeCard}>
+              <Card.Content>
+                <Text variant="titleMedium" style={styles.upgradeTitle}>Upgrade your account</Text>
+                <Text variant="bodyMedium" style={styles.upgradeDescription}>
+                  To enable crypto deposits you need to either deposit from your bank account or get ID verified.
+                </Text>
+                <View style={styles.upgradeActions}>
+                  <FixedWidthButton title="Verify ID" onPress={goToIDCheck}/>
+                  <FixedWidthButton title="Deposit GBP" onPress={changeToGBP} />
+                </View>
+              </Card.Content>
+            </Card>
+          }
+
+        </ScrollView>
+
+      </View>
     </View>
   )
 
@@ -449,69 +444,69 @@ let Receive = () => {
 
 
 let styles = StyleSheet.create({
-  panelContainer: {
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(5),
-    width: '100%',
-    height: '100%',
-  },
+  // Combine shared styles with component-specific styles
+  ...sharedStyles,
+  ...layoutStyles,
+  ...cardStyles,
+  ...receiveStyles,
+  
+  // Component-specific overrides
   panelSubContainer: {
-    paddingTop: scaledHeight(10),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
+    flex: 1,
+    paddingTop: 12,
   },
-  heading: {
-    alignItems: 'center',
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
-  heading1: {
-    marginTop: scaledHeight(10),
-    marginBottom: scaledHeight(40),
+  inputCard: {
+    ...sharedStyles.card,
+    marginBottom: 8,
+    marginHorizontal: 0,
   },
-  headingText: {
-    fontSize: normaliseFont(20),
+  detailsCard: {
+    ...sharedStyles.card,   
+    marginBottom: 8,
+    marginHorizontal: 0,
+  },
+  upgradeCard: {
+    ...sharedStyles.card,
+    marginBottom: 8,
+    marginHorizontal: 0,
+    backgroundColor: sharedColors.warning,
+  },
+  sectionTitle: {
+    ...sharedStyles.subtitleText,
+    marginBottom: 16,
     fontWeight: 'bold',
   },
-  basicText: {
-    fontSize: normaliseFont(14),
+  upgradeTitle: {
+    marginBottom: 8,
+    fontWeight: 'bold',
+  },
+  upgradeDescription: {
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  upgradeActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 8,
+  },
+  dropdownContainer: {
+    zIndex: 2,
   },
   dropdownText: {
     fontSize: normaliseFont(14),
   },
-  bold: {
-    fontWeight: 'bold',
-  },
-  description1: {
-    //borderWidth: 1, // testing
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  descriptionText: {
-    fontWeight: 'bold',
-    fontSize: normaliseFont(18),
-  },
-  chosenAssetWrapper: {
-    paddingVertical: scaledHeight(20),
-    width: '100%',
-    flexDirection: "row",
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
-    //borderWidth: 1, // testing
-  },
   chosenAssetDropdown: {
     height: scaledHeight(40),
-    width: scaledWidth(280),
   },
   chosenAssetDropdownContainer: {
-    width: scaledWidth(280),
-    //borderWidth: 1, // testing
+    width: '100%',
   },
-  depositDetailsSection: {
-    marginTop: scaledHeight(20),
-    //borderWidth: 1, // testing
-    height: '60%', // bad practice ?
+  bold: {
+    fontWeight: 'bold',
   },
   errorMessageText: {
     fontSize: normaliseFont(14),
@@ -570,6 +565,63 @@ let styles = StyleSheet.create({
     marginTop: scaledHeight(20),
     marginLeft: '25%',
     width: '50%',
+  },
+  // Modern card styles
+  header: {
+    backgroundColor: '#1565C0',
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  detailCard: {
+    backgroundColor: 'white',
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  detailCardOneLine: {
+    backgroundColor: 'white',
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 16,
+    color: '#333',
+    flexWrap: 'wrap',
   },
 });
 

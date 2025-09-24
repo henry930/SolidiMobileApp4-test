@@ -7,6 +7,7 @@ import trustpilot from './trustpilot.png';
 import asset_icons from './asset_icons';
 import maintenance from './dreamstime_xl_30079286-50percent.png';
 import update_required from './dreamstime_xxl_98694463-cropped-rotated.png';
+import trade from '../assets/trade.png';
 
 let { GBP, BTC, ETH } = asset_icons;
 
@@ -16,6 +17,7 @@ let ImageLookup = {
   trustpilot,
   maintenance,
   update_required,
+  trade,
   GBP,
   BTC,
   ETH,

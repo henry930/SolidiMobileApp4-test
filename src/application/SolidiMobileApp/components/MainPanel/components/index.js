@@ -1,6 +1,5 @@
 export {default as Test} from './Test/Test';
-export {default as Buy} from './Buy/Buy';
-export {default as Sell} from './Sell/Sell';
+export {default as Trade} from './Trade/Trade';
 export {default as Send} from './Send/Send';
 export {default as Receive} from './Receive/Receive';
 export {default as History} from './History/History';
@@ -43,3 +42,4 @@ export {default as RegisterConfirm} from './RegisterConfirm/RegisterConfirm';
 export {default as RegisterConfirm2} from './RegisterConfirm2/RegisterConfirm2';
 export {default as AccountUpdate} from './AccountUpdate/AccountUpdate';
 export {default as AccountRestricted} from './AccountRestricted/AccountRestricted';
+export {default as NavigationDebug} from './NavigationDebug/NavigationDebug';

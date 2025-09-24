@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, TextInput, StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, TextInput, View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Other imports
@@ -13,6 +13,7 @@ import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, FixedWidthButton, ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
+import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons, formStyles as forms } from 'src/styles';
 
 // Logger
 import logger from 'src/util/logger';
@@ -84,64 +85,6 @@ let SolidiAccount = () => {
     </View>
   )
 }
-
-
-let styles = StyleSheet.create({
-  panelContainer: {
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(5),
-    width: '100%',
-    height: '100%',
-  },
-  panelSubContainer: {
-    paddingTop: scaledHeight(10),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  heading: {
-    alignItems: 'center',
-  },
-  heading1: {
-    marginBottom: scaledHeight(40),
-  },
-  heading2: {
-    marginTop: scaledHeight(20),
-    marginBottom: scaledHeight(20),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  horizontalRule: {
-    borderWidth: 1,
-    borderBottomColor: 'black',
-    borderBottomWidth: 1,
-    marginTop: scaledWidth(20),
-    marginHorizontal: scaledWidth(20),
-  },
-  welcomeMessageText: {
-    fontSize: normaliseFont(16),
-  },
-  buttonWrapper: {
-    marginVertical: scaledHeight(10),
-    width: '100%',
-    alignItems: 'center',
-  },
-  parent: {
-    width: '100%',
-    height: 500,
-    margin: 10,
-    alignItems: 'center',
-  },
-  view: {
-    width: '70%',
-    marginLeft: '15%',
-  },
-});
 
 let styleButton = StyleSheet.create({
   view: {

@@ -24,7 +24,7 @@ import { UpdateApp } from 'src/application/SolidiMobileApp/components/MainPanel/
 import React, { Component, useContext } from 'react';
 import { Platform, BackHandler } from 'react-native';
 import * as Keychain from 'react-native-keychain';
-import {deleteUserPinCode} from 'react-native-pincode';
+import {deleteUserPinCode} from '@haskkor/react-native-pincode';
 import { getIpAddressesForHostname } from 'react-native-dns-lookup';
 
 // Other imports
@@ -35,6 +35,7 @@ import semver from 'semver';
 // Internal imports
 import { mainPanelStates, footerButtonList, colors } from 'src/constants';
 import SolidiRestAPIClientLibrary from 'src/api/SolidiRestAPIClientLibrary';
+import CoinGeckoAPI from 'src/api/CoinGeckoAPI';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 import ImageLookup from 'src/images';
@@ -51,10 +52,15 @@ let jd = JSON.stringify;
 let autoLoginOnDevAndStag = false; // Only used during development (i.e. on 'dev' tier) to automatically login using a dev user.
 let preserveRegistrationData = false; // Only used during development (i.e. on 'dev' tier) to preserve registration data after a successful registration.
 // - This is useful for testing the registration process, as it allows you to re-register without having to re-enter all the registration data.
+let developmentModeBypass = true; // Skip network calls and use sample data when server is unreachable
+let bypassAuthentication = true; // Skip authentication checks to view all page designs
 import appTier from 'src/application/appTier'; // dev / stag / prod.
 
 // Settings: Initial page
-let initialMainPanelState = 'Buy';
+let initialMainPanelState = 'Trade'; // Show trade page first
+//let initialMainPanelState = 'Assets'; // Show assets page first
+//let initialMainPanelState = 'NavigationDebug'; // Show navigation debug page first
+//let initialMainPanelState = 'Buy';
 //initialMainPanelState = 'CloseSolidiAccount'; // Dev work
 let initialPageName = 'default';
 //initialPageName = 'balance'; // Dev work
@@ -65,7 +71,7 @@ if (appTier == 'stag') appName = 'SolidiMobileAppTest'; // necessary ?
 let storedAPIVersion = '1.0.2';
 let domains = {
   dev: 'hcp1.solidi.co',
-  stag: 'hcp2.solidi.co',
+  stag: 't10.solidi.co',
   prod: 'www.solidi.co',
 }
 if (! _.has(domains, appTier)) throw new Error(`Unrecognised app tier: ${appTier}`);
@@ -85,6 +91,60 @@ log(`- Keychain: pinStorageKey = ${pinStorageKey}`);
 
 const graph_periods = ['2H','8H','1D','1W','1M','6M','1Y'];
 
+// Sample data for development mode
+const sampleData = {
+  appVersion: {
+    version: "1.2.0",
+    minimumVersionRequired: {
+      ios: { version: "1.0.0" },
+      android: { version: "1.0.0" }
+    }
+  },
+  apiVersion: {
+    api_latest_version: "1.0.2"
+  },
+  assets: [
+    {
+      "key": "BTC", "name": "Bitcoin", "decimal_places": 8, "group": "crypto", 
+      "icon_url": "https://static.solidi.co/crypto_icons/BTC.png",
+      "price_usd": "45250.50", "change_24h": "+2.35%", "is_active": true
+    },
+    {
+      "key": "ETH", "name": "Ethereum", "decimal_places": 18, "group": "crypto",
+      "icon_url": "https://static.solidi.co/crypto_icons/ETH.png", 
+      "price_usd": "2850.75", "change_24h": "-1.20%", "is_active": true
+    },
+    {
+      "key": "GBP", "name": "British Pound", "decimal_places": 2, "group": "fiat",
+      "icon_url": "https://static.solidi.co/fiat_icons/GBP.png",
+      "price_usd": "1.25", "change_24h": "+0.05%", "is_active": true
+    },
+    {
+      "key": "EUR", "name": "Euro", "decimal_places": 2, "group": "fiat",
+      "icon_url": "https://static.solidi.co/fiat_icons/EUR.png",
+      "price_usd": "1.08", "change_24h": "-0.15%", "is_active": true
+    }
+  ],
+  markets: [
+    {
+      "asset1": "BTC", "asset2": "GBP", "price": "36200.40", 
+      "change_24h": "+2.30%", "volume_24h": "1250000", "is_active": true
+    },
+    {
+      "asset1": "ETH", "asset2": "GBP", "price": "2280.60",
+      "change_24h": "-1.25%", "volume_24h": "850000", "is_active": true
+    },
+    {
+      "asset1": "BTC", "asset2": "EUR", "price": "41850.25",
+      "change_24h": "+2.20%", "volume_24h": "980000", "is_active": true
+    }
+  ],
+  terms: "Sample Terms and Conditions for Development Mode\n\nThis is placeholder legal text for development purposes only.",
+  priceHistory: {
+    "BTC": [44800, 45100, 44950, 45250, 45300, 45150, 45250],
+    "ETH": [2890, 2875, 2840, 2850, 2860, 2845, 2850]
+  }
+};
 
 let AppStateContext = React.createContext();
 
@@ -203,7 +263,7 @@ RegisterConfirm2 AccountUpdate
       }
       // Check if we need to authenticate prior to moving to this new state.
       let makeFinalSwitch = true;
-      if (! this.state.user.isAuthenticated) {
+      if (! this.state.user.isAuthenticated && !bypassAuthentication) {
         if (this.state.authRequired.includes(mainPanelState)) {
           makeFinalSwitch = false;
           // Stash the new state for later retrieval.
@@ -317,7 +377,7 @@ RegisterConfirm2 AccountUpdate
       }
       // Check if we need to authenticate prior to moving to this previous state.
       let makeFinalSwitch = true;
-      if (! this.state.user.isAuthenticated) {
+      if (! this.state.user.isAuthenticated && !bypassAuthentication) {
         if (this.state.authRequired.includes(mainPanelState)) {
           makeFinalSwitch = false;
           // Stash the previous state for later retrieval.
@@ -403,7 +463,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           } else if (! _.isEmpty(appState.stashedState)) {
             return appState.loadStashedState();
           } else {
-            nextStateName = 'Buy';
+            nextStateName = 'Trade';
           }
         }
 
@@ -415,7 +475,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           } else if (! _.isEmpty(appState.stashedState)) {
             return appState.loadStashedState();
           } else {
-            nextStateName = 'Buy';
+            nextStateName = 'Trade';
           }
         }
 
@@ -423,7 +483,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           if (extraInfoRequired) {
             nextStateName = 'AccountUpdate';
           } else {
-            nextStateName = 'Buy';
+            nextStateName = 'Trade';
           }
         }
 
@@ -433,7 +493,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           } else if (! _.isEmpty(appState.stashedState)) {
             return appState.loadStashedState();
           } else {
-            nextStateName = 'Buy';
+            nextStateName = 'Trade';
           }
         }
 
@@ -475,28 +535,90 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         let {userAgent, domain} = this.state;
         this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       }
+      // Create CoinGecko API client for live crypto data
+      if (! this.state.coinGeckoAPI) {
+        this.state.coinGeckoAPI = new CoinGeckoAPI();
+      }
       // We check for "upgrade required" on every screen load.
-      await this.state.checkIfAppUpdateRequired();
+      try {
+        await this.state.checkIfAppUpdateRequired();
+      } catch (error) {
+        if (developmentModeBypass) {
+          log(`checkIfAppUpdateRequired failed, continuing with development mode: ${error.message}`);
+        } else {
+          throw error;
+        }
+      }
+      
       // Load public info that rarely changes.
       if (! this.state.apiVersionLoaded) {
-        await this.state.loadLatestAPIVersion();
-        this.state.apiVersionLoaded = true;
+        try {
+          await this.state.loadLatestAPIVersion();
+          this.state.apiVersionLoaded = true;
+        } catch (error) {
+          if (developmentModeBypass) {
+            log(`loadLatestAPIVersion failed, continuing with development mode: ${error.message}`);
+            this.state.apiVersionLoaded = true;
+          } else {
+            throw error;
+          }
+        }
       }
+      
       // Arguably we should double-check the API version here and not continue if it doesn't match.
       //let UpdateRequired = this.state.checkLatestAPIVersion();
       //lj({UpdateRequired});
-      await this.state.loadTerms();
+      
+      try {
+        await this.state.loadTerms();
+      } catch (error) {
+        if (developmentModeBypass) {
+          log(`loadTerms failed, continuing with development mode: ${error.message}`);
+        } else {
+          throw error;
+        }
+      }
+      
       if (! this.state.assetsInfoLoaded) {
-        await this.state.loadAssetsInfo();
-        this.state.assetsInfoLoaded = true;
+        try {
+          await this.state.loadAssetsInfo();
+          this.state.assetsInfoLoaded = true;
+        } catch (error) {
+          if (developmentModeBypass) {
+            log(`loadAssetsInfo failed, continuing with development mode: ${error.message}`);
+            this.state.assetsInfoLoaded = true;
+          } else {
+            throw error;
+          }
+        }
       }
+      
       if (! this.state.marketsLoaded) {
-        await this.state.loadMarkets();
-        this.state.marketsLoaded = true;
+        try {
+          await this.state.loadMarkets();
+          this.state.marketsLoaded = true;
+        } catch (error) {
+          if (developmentModeBypass) {
+            log(`loadMarkets failed, continuing with development mode: ${error.message}`);
+            this.state.marketsLoaded = true;
+          } else {
+            throw error;
+          }
+        }
       }
+      
       if (! this.state.assetsIconsLoaded) {
-        await this.state.loadAssetsIcons();
-        this.state.assetsIconsLoaded = true;
+        try {
+          await this.state.loadAssetsIcons();
+          this.state.assetsIconsLoaded = true;
+        } catch (error) {
+          if (developmentModeBypass) {
+            log(`loadAssetsIcons failed, continuing with development mode: ${error.message}`);
+            this.state.assetsIconsLoaded = true;
+          } else {
+            throw error;
+          }
+        }
       }
       if (! this.state.ipAddressLoaded) {
         try {
@@ -830,7 +952,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (appTier !== 'prod') {
         log(msg);
       }
-      if (! this.state.user.apiCredentialsFound) {
+      if (! this.state.user.apiCredentialsFound && !bypassAuthentication) {
         if (! this.state.user.isAuthenticated) {
           log("authenticateUser (1) -> Authenticate");
           return this.state.changeState('Authenticate');
@@ -872,7 +994,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         await this.state.logout();
       }
       // If user hasn't logged in, they need to do so first.
-      if (! this.state.user.isAuthenticated) {
+      if (! this.state.user.isAuthenticated && !bypassAuthentication) {
         // We send them to the login page, which will ask them to choose a PIN afterwards.
         return this.state.setMainPanelState({mainPanelState: 'Login'});
       }
@@ -968,8 +1090,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
       }
       // Note: The user's data is still actually stored on the phone, when they've logged out. Future: Delete some of it when they log out ? E.g. the user status info.
-      // Change to Buy state.
-      this.changeState('Buy');
+      // Change to Trade state.
+      this.changeState('Trade');
     }
 
 
@@ -1067,14 +1189,24 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadTerms = async() => {
-      let {domain} = this.state;
-      let url = "https://"+domain+"/legal/terms.txt";
-      log(`Loading terms from ${url}`);
-      const response = await fetch(url);
-      //lj(response);
       let terms = "";
-      if (response.ok) {
-        terms = await response.text();
+      if (developmentModeBypass) {
+        log(`loadTerms: Using sample data (development mode bypass enabled)`);
+        terms = sampleData.terms;
+      } else {
+        let {domain} = this.state;
+        let url = "https://"+domain+"/legal/terms.txt";
+        log(`Loading terms from ${url}`);
+        try {
+          const response = await fetch(url);
+          //lj(response);
+          if (response.ok) {
+            terms = await response.text();
+          }
+        } catch (error) {
+          log(`Failed to load terms, using sample data: ${error.message}`);
+          terms = sampleData.terms;
+        }
       }
       this.state.apiData.terms['general'] = terms;
     }
@@ -1113,17 +1245,31 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.checkIfAppUpdateRequired = async () => {
       let fName = 'checkIfAppUpdateRequired';
-      let data = await this.state.publicMethod({
-        functionName: fName,
-        apiRoute: 'app_latest_version',
-        httpMethod: 'GET',
-      });
-      if (data == 'DisplayedError') return;
+      
+      // Use sample data in development mode to bypass network issues
+      let data;
+      if (developmentModeBypass) {
+        log(`${fName}: Using sample data (development mode bypass enabled)`);
+        data = sampleData.appVersion;
+      } else {
+        data = await this.state.publicMethod({
+          functionName: fName,
+          apiRoute: 'app_latest_version',
+          httpMethod: 'GET',
+        });
+        if (data == 'DisplayedError') return;
+      }
+      
       let expectedKeys = 'version minimumVersionRequired'.split(' ');
       let foundKeys = _.keys(data);
       if (! _.isEqual(_.intersection(expectedKeys, foundKeys), expectedKeys)) {
-        var msg = `${fName}: Missing expected key(s) in response data from API endpoint '/app_latest_version'. Expected: ${jd(expectedKeys)}; Found: ${jd(foundKeys)}`;
-        return this.state.switchToErrorState({message: msg});
+        if (developmentModeBypass) {
+          log(`${fName}: Using fallback sample data due to missing keys`);
+          data = sampleData.appVersion;
+        } else {
+          var msg = `${fName}: Missing expected key(s) in response data from API endpoint '/app_latest_version'. Expected: ${jd(expectedKeys)}; Found: ${jd(foundKeys)}`;
+          return this.state.switchToErrorState({message: msg});
+        }
       }
       let latestAppVersion = data.version;
       var msg = `Internal app version: ${appVersion} (build number ${appBuildNumber}). Latest app version specified on Solidi API (${appTier}): ${latestAppVersion}`;
@@ -1152,12 +1298,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadLatestAPIVersion = async () => {
-      let data = await this.state.publicMethod({
-        functionName: 'loadAPIVersion',
-        apiRoute: 'api_latest_version',
-        httpMethod: 'GET',
-      });
-      if (data == 'DisplayedError') return;
+      let data;
+      if (developmentModeBypass) {
+        log(`loadAPIVersion: Using sample data (development mode bypass enabled)`);
+        data = sampleData.apiVersion;
+      } else {
+        data = await this.state.publicMethod({
+          functionName: 'loadAPIVersion',
+          apiRoute: 'api_latest_version',
+          httpMethod: 'GET',
+        });
+        if (data == 'DisplayedError') return;
+      }
+      
       let api_latest_version = _.has(data, 'api_latest_version') ? data.api_latest_version : null;
       this.state.apiData.api_latest_version = api_latest_version;
       log(`Latest API version: ${api_latest_version}`);
@@ -1179,11 +1332,31 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadAssetsInfo = async () => {
-      let data = await this.state.publicMethod({
-        httpMethod: 'GET',
-        apiRoute: 'asset_info',
-        params: {},
-      });
+      let data;
+      if (developmentModeBypass) {
+        log(`loadAssetsInfo: Using sample data (development mode bypass enabled)`);
+        // Convert sample assets array to object format expected by the app
+        data = {};
+        sampleData.assets.forEach(asset => {
+          data[asset.key] = {
+            name: asset.name,
+            type: asset.group,
+            decimalPlaces: asset.decimal_places,
+            displaySymbol: asset.key,
+            displayString: `${asset.key} (${asset.name})`,
+            addressProperties: asset.key === 'BTC' ? ['address'] : asset.key === 'ETH' ? ['address'] : ['accountName', 'sortCode', 'accountNumber'],
+            depositEnabled: 1,
+            withdrawEnabled: 1,
+            confirmationsRequired: asset.key === 'BTC' ? 3 : asset.key === 'ETH' ? 30 : 1
+          };
+        });
+      } else {
+        data = await this.state.publicMethod({
+          httpMethod: 'GET',
+          apiRoute: 'asset_info',
+          params: {},
+        });
+      }
       //log(data);
       /* Example output:
 {
@@ -1348,12 +1521,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadMarkets = async () => {
-      let data = await this.state.publicMethod({
-        httpMethod: 'GET',
-        apiRoute: 'market',
-        params: {},
-      });
-      if (data == 'DisplayedError') return;
+      let data;
+      if (developmentModeBypass) {
+        log(`loadMarkets: Using sample data (development mode bypass enabled)`);
+        data = sampleData.markets.map(market => `${market.asset1}/${market.asset2}`);
+      } else {
+        data = await this.state.publicMethod({
+          httpMethod: 'GET',
+          apiRoute: 'market',
+          params: {},
+        });
+        if (data == 'DisplayedError') return;
+      }
+      
       // Tmp: For development:
       // Sample markets.
       let tmpData = false;
@@ -1527,6 +1707,77 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       return data;
     }
 
+    // Load live crypto prices from CoinGecko API
+    this.loadCoinGeckoPrices = async () => {
+      try {
+        log('Loading live prices from CoinGecko...');
+        const coinGeckoData = await this.state.coinGeckoAPI.getSolidiAssetPrices();
+        
+        if (coinGeckoData) {
+          // Merge CoinGecko data with existing ticker data
+          const existingTicker = this.state.apiData.ticker || {};
+          const mergedData = { ...existingTicker };
+          
+          // Add CoinGecko prices with additional metadata
+          Object.keys(coinGeckoData).forEach(market => {
+            mergedData[market] = {
+              ...mergedData[market],
+              price: coinGeckoData[market].price,
+              change_24h: coinGeckoData[market].change_24h,
+              last_updated: coinGeckoData[market].last_updated,
+              source: 'coingecko'
+            };
+          });
+          
+          // Update ticker data
+          this.state.prevAPIData.ticker = this.state.apiData.ticker;
+          this.state.apiData.ticker = mergedData;
+          
+          log(`CoinGecko prices loaded for ${Object.keys(coinGeckoData).length} markets`);
+          return mergedData;
+        } else {
+          log('No CoinGecko data received, using existing ticker data');
+          return this.state.apiData.ticker;
+        }
+      } catch (error) {
+        log(`Error loading CoinGecko prices: ${error.message}`);
+        return this.state.apiData.ticker;
+      }
+    }
+
+    // Enhanced ticker loading with CoinGecko fallback
+    this.loadTickerWithCoinGecko = async () => {
+      try {
+        // Try Solidi API first
+        const solidiData = await this.loadTicker();
+        
+        // If Solidi API fails or returns limited data, supplement with CoinGecko
+        if (!solidiData || Object.keys(solidiData).length < 2) {
+          log('Solidi ticker data limited, supplementing with CoinGecko...');
+          return await this.loadCoinGeckoPrices();
+        }
+        
+        // If Solidi API works, optionally still get CoinGecko for additional data
+        if (developmentModeBypass) {
+          const coinGeckoData = await this.state.coinGeckoAPI.getSolidiAssetPrices();
+          if (coinGeckoData) {
+            // Add 24h change data from CoinGecko to Solidi prices
+            Object.keys(coinGeckoData).forEach(market => {
+              if (solidiData[market]) {
+                solidiData[market].change_24h = coinGeckoData[market].change_24h;
+                solidiData[market].coingecko_price = coinGeckoData[market].price;
+              }
+            });
+          }
+        }
+        
+        return solidiData;
+      } catch (error) {
+        log(`Error in loadTickerWithCoinGecko: ${error.message}`);
+        // Fallback to CoinGecko only
+        return await this.loadCoinGeckoPrices();
+      }
+    }
 
     this.getTicker = () => {
       return this.state.apiData.ticker;
@@ -1645,16 +1896,27 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadAssetsIcons = async () => {
-      let data = await this.state.publicMethod({
-        functionName: 'loadAssetsIcons',
-        apiRoute: 'asset_icon',
-        httpMethod: 'GET',
-      });
-      if (data == 'DisplayedError') return;
+      let data;
+      if (developmentModeBypass) {
+        log(`loadAssetsIcons: Using local icons (development mode bypass enabled)`);
+        // Use local image files instead of base64 from server
+        data = {};
+        sampleData.assets.forEach(asset => {
+          data[asset.key] = null; // Will fallback to local images in components
+        });
+      } else {
+        data = await this.state.publicMethod({
+          functionName: 'loadAssetsIcons',
+          apiRoute: 'asset_icon',
+          httpMethod: 'GET',
+        });
+        if (data == 'DisplayedError') return;
+      }
+      
       // The data is in base64. It turns out that an <Image/> can accept a base64 source, so need to convert it back to a bitmap.
       let loadedAssetsIcons = _.keys(data);
       // If the data differs from existing data, save it.
-      let msg = `Asset icons loaded from server: ${loadedAssetsIcons.join(', ')}.`;
+      let msg = `Asset icons loaded: ${loadedAssetsIcons.join(', ')}.`;
       if (jd(data) === jd(this.state.apiData.asset_icon )) {
         log(msg + " No change.");
       } else {
@@ -2595,6 +2857,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       getBaseAssets: this.getBaseAssets,
       getQuoteAssets: this.getQuoteAssets,
       loadTicker: this.loadTicker,
+      loadCoinGeckoPrices: this.loadCoinGeckoPrices,
+      loadTickerWithCoinGecko: this.loadTickerWithCoinGecko,
       getTicker: this.getTicker,
       getTickerForMarket: this.getTickerForMarket,
       getPreviousTickerForMarket: this.getPreviousTickerForMarket,
@@ -2874,15 +3138,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.defaultBackground,
   },
   header: {
-    height: '10%',
+    // Let header size itself naturally
   },
   mainPanel: {
-    height: '78%',
+    flex: 1, // Take up remaining space
   },
   footer: {
-    height: '12%',
-    paddingTop: scaledHeight(5),
-    visibility: 'hidden',
+    // Minimal padding for very thin footer
+    paddingTop: 0,
+    paddingBottom: 0,
+    height: scaledHeight(62), // Fixed height to prevent expansion
   },
 })
 

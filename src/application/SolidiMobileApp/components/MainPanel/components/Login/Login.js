@@ -1,7 +1,18 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+// Material Design imports
+import {
+  Appbar,
+  Button,
+  Card,
+  HelperText,
+  Text,
+  TextInput,
+  useTheme,
+} from 'react-native-paper';
 
 // Other imports
 import _ from 'lodash';
@@ -10,10 +21,11 @@ import * as Keychain from 'react-native-keychain';
 // Internal imports
 import AppStateContext from 'src/application/data';
 import SolidiRestAPIClientLibrary from 'src/api/SolidiRestAPIClientLibrary';
-import { Button, StandardButton } from 'src/components/atomic';
+import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 import { colors } from 'src/constants';
+import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, formStyles as forms } from 'src/styles';
 
 // Logger
 import logger from 'src/util/logger';
@@ -112,229 +124,183 @@ let Login = () => {
     }
   }
 
+  const theme = useTheme();
+
   return (
-
-    <View style={styles.panelContainer}>
-    <View style={styles.panelSubContainer}>
-
-      <View style={styles.heading}>
-        <Text style={styles.headingText}>Login</Text>
-      </View>
-
-      {! _.isEmpty(errorMessage) &&
-        <View style={styles.errorWrapper}>
-          <Text style={styles.errorText}>
-            <Text style={styles.errorTextBold}>Error: </Text>
-            <Text>{errorMessage}</Text>
-          </Text>
-        </View>
-      }
+    <View style={[layout.flex1, { backgroundColor: theme.colors.background }]}>
+      <Appbar.Header elevated>
+        <Appbar.Content title="Welcome Back" subtitle="Sign in to your account" />
+        <Appbar.Action icon="account-circle" onPress={() => {}} />
+      </Appbar.Header>
 
       <KeyboardAwareScrollView
-        showsVerticalScrollIndicator={true}
-        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={layout.containerPadded}
         keyboardShouldPersistTaps='handled'
       >
+        
+        {/* Welcome Card */}
+        <Card style={cards.elevated}>
+          <Card.Content style={[layout.center, layout.paddingVertical]}>
+            <Text variant="headlineMedium" style={[text.h2, { color: theme.colors.primary }]}>
+              🔐 Secure Login
+            </Text>
+            <Text variant="bodyMedium" style={[text.bodyCenter, { color: theme.colors.onSurfaceVariant }]}>
+              Access your cryptocurrency trading account
+            </Text>
+          </Card.Content>
+        </Card>
 
-      { challenges.includes('email') &&
-        <View style={styles.emailLineWrapper}>
-          <Text style={styles.descriptionText}>Email address:</Text>
-        </View>
-      }
+        {/* Error Message */}
+        {!_.isEmpty(errorMessage) && (
+          <Card style={[cards.error, layout.marginBottomMd]}>
+            <Card.Content>
+              <Text style={{ color: theme.colors.onErrorContainer }}>
+                ⚠️ <Text style={text.bold}>Error:</Text> {errorMessage}
+              </Text>
+            </Card.Content>
+          </Card>
+        )}
 
-      { challenges.includes('email') &&
-        <View style={styles.wideTextInputWrapper}>
-          <TextInput
-            style={styles.wideTextInput}
-            onChangeText={setEmail}
-            value={email}
-            autoCapitalize={'none'}
-            autoCorrect={false}
-          />
-        </View>
-      }
+        {/* Login Form Card */}
+        <Card style={{ marginBottom: 24 }}>
+          <Card.Content>
+            <Text variant="titleMedium" style={{ marginBottom: 16, color: theme.colors.primary }}>
+              Sign In
+            </Text>
 
-      { challenges.includes('password') &&
-        <View style={styles.passwordLineWrapper}>
-          <Text style={styles.descriptionText}>Password:</Text>
-          <Button title={getPasswordButtonTitle()}
-            onPress={ () => { setPasswordVisible(! passwordVisible) } }
-          />
-        </View>
-      }
+            {/* Email Field */}
+            {challenges.includes('email') && (
+              <TextInput
+                mode="outlined"
+                label="Email Address"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                style={{ marginBottom: 16 }}
+                left={<TextInput.Icon icon="email" />}
+              />
+            )}
 
-      { challenges.includes('password') &&
-        <View style={styles.wideTextInputWrapper}>
-          <TextInput
-            secureTextEntry={! passwordVisible}
-            style={styles.wideTextInput}
-            onChangeText={setPassword}
-            value={password}
-            autoCapitalize={'none'}
-          />
-        </View>
-      }
+            {/* Password Field */}
+            {challenges.includes('password') && (
+              <TextInput
+                mode="outlined"
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!passwordVisible}
+                autoCapitalize="none"
+                style={{ marginBottom: 16 }}
+                left={<TextInput.Icon icon="lock" />}
+                right={
+                  <TextInput.Icon
+                    icon={passwordVisible ? "eye-off" : "eye"}
+                    onPress={() => setPasswordVisible(!passwordVisible)}
+                  />
+                }
+              />
+            )}
 
-      { challenges.includes('tfa') &&
-        <View style={styles.emailLineWrapper}>
-          <Text style={styles.descriptionText}>TFA (Two-Factor Authentication):</Text>
-          <Text>{'\n'}Please switch to the Google Authenticator app and look up the TFA code for your Solidi account.</Text>
-        </View>
-      }
+            {/* Two-Factor Authentication */}
+            {challenges.includes('tfa') && (
+              <>
+                <HelperText type="info" style={{ marginBottom: 8 }}>
+                  📱 Two-Factor Authentication Required
+                </HelperText>
+                <Text variant="bodySmall" style={{ marginBottom: 16, color: theme.colors.onSurfaceVariant }}>
+                  Please open Google Authenticator and enter the code for your Solidi account.
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  label="Authentication Code"
+                  value={tfa}
+                  onChangeText={setTFA}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="shield-key" />}
+                />
+              </>
+            )}
 
-      { challenges.includes('tfa') &&
-        <View style={styles.wideTextInputWrapper}>
-          <TextInput
-            style={styles.wideTextInput}
-            onChangeText={setTFA}
-            value={tfa}
-          />
-        </View>
-      }
+            {/* Login Button */}
+            <Button
+              mode="contained"
+              onPress={submitLoginRequest}
+              disabled={disableLoginButton}
+              style={{ marginBottom: 16, paddingVertical: 4 }}
+              labelStyle={{ fontSize: 16, fontWeight: '600' }}
+              icon="login"
+            >
+              Sign In
+            </Button>
 
-      <View style={styles.loginButtonWrapper}>
-        <StandardButton title="Log in"
-          onPress={ submitLoginRequest }
-          disabled={disableLoginButton}
-        />
-        <View style={styles.uploadMessage}>
-          <Text style={styles.uploadMessageText}>{uploadMessage}</Text>
-        </View>
-      </View>
+            {/* Upload Message */}
+            {uploadMessage && (
+              <HelperText type="info">
+                {uploadMessage}
+              </HelperText>
+            )}
 
-      { challenges.includes('tfa') &&
-        <StandardButton title="Start again"
-          onPress={ () => { setChallenges('email password'.split(' ')) } }
-          styles={styleStartAgainButton}
-        />
-      }
+            {/* Start Again Button for TFA */}
+            {challenges.includes('tfa') && (
+              <Button
+                mode="outlined"
+                onPress={() => setChallenges('email password'.split(' '))}
+                style={{ marginTop: 8 }}
+                icon="restart"
+              >
+                Start Again
+              </Button>
+            )}
+          </Card.Content>
+        </Card>
 
-      <View style={styles.buttonWrapper}>
-        <Button title="Forgot password?"
-          onPress={ () => { appState.changeState('ResetPassword') } }
-        />
-      </View>
+        {/* Additional Actions */}
+        <Card>
+          <Card.Content>
+            <Text variant="titleSmall" style={{ marginBottom: 16, color: theme.colors.primary }}>
+              Need Help?
+            </Text>
+            
+            <Button
+              mode="text"
+              onPress={() => appState.changeState('ResetPassword')}
+              style={{ alignSelf: 'flex-start', marginBottom: 8 }}
+              icon="key-variant"
+            >
+              Forgot Password?
+            </Button>
+            
+            <Button
+              mode="text"
+              onPress={() => appState.changeState('Register')}
+              style={{ alignSelf: 'flex-start', marginBottom: 8 }}
+              icon="account-plus"
+            >
+              Create New Account
+            </Button>
+            
+            <Button
+              mode="text"
+              onPress={() => appState.changeState('ContactUs')}
+              style={{ alignSelf: 'flex-start' }}
+              icon="help-circle"
+            >
+              Contact Support
+            </Button>
+          </Card.Content>
+        </Card>
 
-      <View style={styles.buttonWrapper}>
-        <Button title="Don't have an account?"
-          onPress={ () => { appState.changeState('Register') } }
-        />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <Button title="Any other problem? Contact us."
-          onPress={ () => { appState.changeState('ContactUs') } }
-        />
-      </View>
-
+        <View style={{ height: 32 }} />
       </KeyboardAwareScrollView>
-
     </View>
-    </View>
-
   );
 
 }
-
-
-let styles = StyleSheet.create({
-  panelContainer: {
-    paddingVertical: scaledHeight(15),
-    paddingHorizontal: scaledWidth(15),
-    width: '100%',
-    height: '100%',
-  },
-  panelSubContainer: {
-    paddingTop: scaledHeight(10),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  heading: {
-    alignItems: 'center',
-    marginBottom: scaledHeight(40),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  descriptionText: {
-    fontWeight: 'bold',
-    fontSize: normaliseFont(18),
-  },
-  errorWrapper: {
-    marginBottom: scaledHeight(30),
-  },
-  errorText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
-  },
-  errorTextBold: {
-    fontWeight: 'bold',
-  },
-  text1: {
-    fontWeight: 'bold',
-  },
-  wideTextInputWrapper: {
-    paddingVertical: scaledHeight(20),
-    width: '80%',
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    //borderWidth: 1, // testing
-  },
-  wideTextInput: {
-    fontSize: normaliseFont(16),
-    height: scaledHeight(40),
-    width: scaledWidth(359), // 1 pixel left off so that right-hand border is not cut off.
-    borderWidth: 1,
-    borderRadius: scaledWidth(8),
-    paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(20),
-  },
-  emailLineWrapper: {
-    paddingVertical: scaledHeight(5),
-    //borderWidth: 1, // testing
-  },
-  passwordLineWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    //borderWidth: 1, // testing
-  },
-  loginButtonWrapper: {
-    marginTop: scaledHeight(20),
-    marginBottom: scaledHeight(10),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    //borderWidth: 1, // testing
-  },
-  buttonWrapper: {
-    marginTop: scaledHeight(20),
-    //borderWidth: 1, // testing
-  },
-  uploadMessage: {
-    //borderWidth: 1, //testing
-    paddingRight: scaledWidth(10),
-  },
-  uploadMessageText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
-  },
-})
-
-
-let styleStartAgainButton = StyleSheet.create({
-  view: {
-    marginTop: scaledHeight(30),
-    marginBottom: scaledHeight(10),
-    backgroundColor: 'purple',
-  },
-});
 
 
 export default Login;

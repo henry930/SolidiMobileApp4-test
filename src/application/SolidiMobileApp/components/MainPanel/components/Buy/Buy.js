@@ -1,8 +1,22 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Image, Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
+import { Image, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+// Material Design imports
+import {
+  Button,
+  Card,
+  Divider,
+  HelperText,
+  Surface,
+  Text,
+  TextInput,
+  useTheme,
+  Icon,
+  ActivityIndicator,
+} from 'react-native-paper';
 
 // Other imports
 import _ from 'lodash';
@@ -10,10 +24,12 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { colors } from 'src/constants';
-import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, FixedWidthButton, Spinner, PriceGraph } from 'src/components/atomic';
+import { scaledWidth, scaledHeight } from 'src/util/dimensions';
+import { PriceGraph } from 'src/components/atomic';
+import LivePriceTicker from 'src/components/LivePriceTicker';
 import misc from 'src/util/misc';
+import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons, formStyles as forms, buyStyles } from 'src/styles';
+import ImageLookup from 'src/images';
 
 // Logger
 import logger from 'src/util/logger';
@@ -400,275 +416,349 @@ let Buy = () => {
 
   let upgradeRequired = () => {
     return (
-      <View style={styles.upgradeRequired}>
-        <Text style={styles.upgradeRequiredText}>Solidi has finished a major new release. Please upgrade to switch over to the new system. Visit our website for instructions.</Text>
-        <View style={styles.upgradeButtonSection}>
-          <Text style={styles.upgradeRequiredText}>If you have any trouble, please </Text>
-          <Button title="Contact Us" onPress={ () => { appState.changeState('ContactUs') } }
-            styles={styleContactUsButton}/>
+      <View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <Icon source="alert-circle" size={24} color={materialTheme.colors.onSecondaryContainer} />
+          <Text variant="titleMedium" style={{ 
+            marginLeft: 8, 
+            color: materialTheme.colors.onSecondaryContainer,
+            fontWeight: 'bold'
+          }}>
+            App Update Required
+          </Text>
+        </View>
+        <Text variant="bodyMedium" style={{ 
+          marginBottom: 16,
+          color: materialTheme.colors.onSecondaryContainer,
+          lineHeight: 20
+        }}>
+          Solidi has finished a major new release. Please upgrade to switch over to the new system. 
+          Visit our website for instructions.
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Text variant="bodyMedium" style={{ color: materialTheme.colors.onSecondaryContainer }}>
+            If you have any trouble, please{' '}
+          </Text>
+          <Button 
+            mode="text" 
+            onPress={() => { appState.changeState('ContactUs') }}
+            compact={true}
+            textColor={materialTheme.colors.primary}
+          >
+            Contact Us
+          </Button>
         </View>
       </View>
     )
   }
 
 
+  const materialTheme = useTheme();
+
   return (
-
-    <View style={styles.panelContainer}>
-    <View style={styles.panelSubContainer}>
-
-  
-
-  <PriceGraph assetBA={assetBA} assetQA={assetQA} historic_prices={appState.apiData.historic_prices}/>
-
-   
-
-      {!! errorMessage &&
-        <View style={styles.errorWrapper}>
-          <Text style={styles.errorMessageText}>{errorMessage}</Text>
-        </View>
-      }
-
+    <View style={{ 
+      flex: 1, 
+      backgroundColor: materialTheme.colors.background,
+    }}>
       <KeyboardAwareScrollView
-        showsVerticalScrollIndicator={true}
-        contentContainerStyle={{ flexGrow: 1, margin: 0 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ 
+          padding: 16,
+          backgroundColor: materialTheme.colors.background
+        }}
         keyboardShouldPersistTaps='handled'
       >
+        
+        {/* Hero Image Header */}
+        <Card style={{ marginBottom: 16, elevation: 2, overflow: 'hidden' }}>
+          <View style={{ position: 'relative', height: scaledHeight(180) }}>
+            <Image 
+              source={ImageLookup.buy} 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                resizeMode: 'cover',
+                opacity: 0.9
+              }} 
+            />
+            <View style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: 'rgba(76, 175, 80, 0.8)', // Green overlay for buy
+              padding: 16
+            }}>
+              <Text variant="headlineSmall" style={{ 
+                color: 'white',
+                fontWeight: 'bold',
+                textAlign: 'center'
+              }}>
+                🛒 Buy Cryptocurrency
+              </Text>
+              <Text variant="bodyMedium" style={{ 
+                color: 'white',
+                textAlign: 'center',
+                marginTop: 4,
+                opacity: 0.9
+              }}>
+                Trade with confidence on Solidi
+              </Text>
+            </View>
+          </View>
+        </Card>
+        
+        {/* Live Prices Ticker */}
+        <Card style={{ marginBottom: 16, elevation: 2 }}>
+          <Card.Content>
+            <Text variant="titleMedium" style={{ marginBottom: 12, color: materialTheme.colors.primary }}>
+              📊 Live Prices
+            </Text>
+            <LivePriceTicker 
+              markets={['BTC/GBP', 'ETH/GBP', 'LTC/GBP', 'XRP/GBP']}
+              updateInterval={30000}
+              showChange={true}
+              compact={true}
+            />
+          </Card.Content>
+        </Card>
+        
+        {/* Price Chart Card */}
+        <Card style={{ marginBottom: 16, elevation: 2 }}>
+          <Card.Content>
+            <Text variant="titleMedium" style={{ marginBottom: 12, color: materialTheme.colors.primary }}>
+              📈 Price Chart
+            </Text>
+            <PriceGraph assetBA={assetBA} assetQA={assetQA} historic_prices={appState.apiData.historic_prices}/>
+          </Card.Content>
+        </Card>
 
-      <Text style={styles.descriptionText}>I want to spend:</Text>
+        {/* Error Message */}
+        {!!errorMessage && (
+          <Card style={{ 
+            marginBottom: 16, 
+            backgroundColor: materialTheme.colors.errorContainer,
+            elevation: 3 
+          }}>
+            <Card.Content>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon source="alert-circle" size={24} color={materialTheme.colors.onErrorContainer} />
+                <Text style={{ 
+                  color: materialTheme.colors.onErrorContainer, 
+                  marginLeft: 8,
+                  flex: 1,
+                  fontSize: 16
+                }}>
+                  {errorMessage}
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
 
-      <View style={styles.quoteAssetWrapper}>
-        <TextInput
-          style={styles.volumeQA}
-          onChangeText={validateAndSetVolumeQA}
-          value={volumeQA}
-          keyboardType='decimal-pad'
-        />
-        <DropDownPicker
-          listMode="MODAL"
-          placeholder={appState.getAssetInfo(assetQA).displayString}
-          style={styles.quoteAsset}
-          containerStyle={styles.quoteAssetContainer}
-          open={openQA}
-          value={assetQA}
-          items={itemsQA}
-          setOpen={setOpenQA}
-          setValue={setAssetQA}
-          setItems={setItemsQA}
-          searchable={true}
-          searchTextInputProps={{
-            maxLength: 15
+        {/* Trading Form Card */}
+        <Card style={{ 
+          marginBottom: 16, 
+          elevation: 4,
+          backgroundColor: materialTheme.colors.surface,
+          borderTopWidth: 3,
+          borderTopColor: '#4CAF50' // Green accent for buy
+        }}>
+          <Card.Title 
+            title="Buy Cryptocurrency"
+            subtitle="Enter your trading details"
+            left={(props) => <Icon {...props} source="shopping" color="#4CAF50" />}
+            titleStyle={{ color: '#4CAF50', fontWeight: 'bold' }}
+          />
+          <Card.Content>
+
+            {/* Amount to Spend Section */}
+            <View style={{ marginBottom: 24 }}>
+              <Text variant="titleSmall" style={{ 
+                marginBottom: 12, 
+                color: materialTheme.colors.onSurface,
+                fontWeight: '600'
+              }}>
+                💷 Amount to Spend
+              </Text>
+              
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <TextInput
+                  mode="outlined"
+                  label="Enter amount"
+                  value={volumeQA}
+                  onChangeText={validateAndSetVolumeQA}
+                  keyboardType='decimal-pad'
+                  style={{ flex: 2 }}
+                  contentStyle={{ fontSize: 18 }}
+                  left={<TextInput.Icon icon="currency-gbp" />}
+                />
+                <Surface style={{ 
+                  flex: 1, 
+                  borderRadius: 4,
+                  elevation: 1 
+                }}>
+                  <DropDownPicker
+                    listMode="MODAL"
+                    placeholder={appState.getAssetInfo(assetQA).displayString}
+                    style={{ 
+                      borderColor: materialTheme.colors.outline,
+                      borderRadius: 4,
+                      minHeight: 56,
+                      backgroundColor: materialTheme.colors.surface,
+                    }}
+                    textStyle={{
+                      fontSize: 16,
+                      color: materialTheme.colors.onSurface
+                    }}
+                    open={openQA}
+                    value={assetQA}
+                    items={itemsQA}
+                    setOpen={setOpenQA}
+                    setValue={setAssetQA}
+                    setItems={setItemsQA}
+                    searchable={true}
+                    searchTextInputProps={{ maxLength: 15 }}
+                    maxHeight={scaledHeight(300)}
+                  />
+                </Surface>
+              </View>
+            </View>
+
+            <Divider style={{ marginVertical: 16 }} />
+
+            {/* Amount to Receive Section */}
+            <View style={{ marginBottom: 24 }}>
+              <Text variant="titleSmall" style={{ 
+                marginBottom: 12, 
+                color: materialTheme.colors.onSurface,
+                fontWeight: '600'
+              }}>
+                🪙 Amount to Receive
+              </Text>
+              
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <View style={{ flex: 2, position: 'relative' }}>
+                  <TextInput
+                    mode="outlined"
+                    label="You will receive"
+                    value={volumeBA}
+                    onChangeText={validateAndSetVolumeBA}
+                    keyboardType='decimal-pad'
+                    contentStyle={{ fontSize: 18 }}
+                    left={<TextInput.Icon icon="bitcoin" />}
+                  />
+                  {loadingBestPrice && volumeBA === '[loading]' && (
+                    <View style={{ 
+                      position: 'absolute', 
+                      right: 12, 
+                      top: 16, 
+                      zIndex: 10 
+                    }}>
+                      <ActivityIndicator size="small" />
+                    </View>
+                  )}
+                </View>
+                <Surface style={{ 
+                  flex: 1, 
+                  borderRadius: 4,
+                  elevation: 1 
+                }}>
+                  <DropDownPicker
+                    listMode="MODAL"
+                    placeholder={appState.getAssetInfo(assetBA).displayString}
+                    style={{ 
+                      borderColor: materialTheme.colors.outline,
+                      borderRadius: 4,
+                      minHeight: 56,
+                      backgroundColor: materialTheme.colors.surface,
+                    }}
+                    textStyle={{
+                      fontSize: 16,
+                      color: materialTheme.colors.onSurface
+                    }}
+                    open={openBA}
+                    value={assetBA}
+                    items={itemsBA}
+                    setOpen={setOpenBA}
+                    setValue={setAssetBA}
+                    setItems={setItemsBA}
+                    searchable={true}
+                    searchTextInputProps={{ maxLength: 15 }}
+                    maxHeight={scaledHeight(300)}
+                  />
+                </Surface>
+              </View>
+            </View>
+
+            {/* Current Price Display */}
+            <Surface style={{ 
+              padding: 12, 
+              borderRadius: 8, 
+              marginBottom: 16,
+              backgroundColor: 'rgba(76, 175, 80, 0.1)', // Light green for buy
+              borderWidth: 1,
+              borderColor: 'rgba(76, 175, 80, 0.3)'
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon source="trending-up" size={20} color="#4CAF50" />
+                <Text variant="bodyMedium" style={{ 
+                  marginLeft: 8,
+                  color: '#2E7D32',
+                  fontWeight: '600'
+                }}>
+                  {generatePriceDescription() || 'Loading current price...'}
+                </Text>
+              </View>
+            </Surface>
+
+            {/* Development Info */}
+            {appState.getUserStatus('supportLevel2') === true && 
+             appState.user.isAuthenticated == true && (
+              <HelperText type="info" style={{ textAlign: 'center' }}>
+                Dev Domain: {getDomain()}
+              </HelperText>
+            )}
+          </Card.Content>
+        </Card>
+
+        {/* Buy Button */}
+        <Button
+          mode="contained"
+          onPress={startBuyRequest}
+          style={{ 
+            marginBottom: 16, 
+            paddingVertical: 12,
+            borderRadius: 16,
+            elevation: 3,
+            backgroundColor: '#4CAF50' // Green theme for buy
           }}
-          maxHeight={scaledHeight(300)}
-          textStyle={styles.dropdownText}
-        />
-      </View>
+          contentStyle={{ paddingVertical: 8 }}
+          labelStyle={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}
+          icon="shopping"
+          disabled={loadingBestPrice || !!errorMessage}
+        >
+          {loadingBestPrice ? 'Loading...' : 'Buy Cryptocurrency'}
+        </Button>
 
-      <Text style={styles.descriptionText}>To get:</Text>
+        {/* API Version Upgrade Notice */}
+        {newAPIVersionDetected && (
+          <Card style={{ 
+            backgroundColor: materialTheme.colors.secondaryContainer,
+            elevation: 2,
+            marginBottom: 16
+          }}>
+            <Card.Content>
+              {upgradeRequired()}
+            </Card.Content>
+          </Card>
+        )}
 
-      <View style={styles.baseAssetWrapper}>
-        <TextInput
-          style={styles.volumeBA}
-          onChangeText={validateAndSetVolumeBA}
-          value={volumeBA}
-          keyboardType='decimal-pad'
-        />
-        <DropDownPicker
-          listMode="MODAL"
-          placeholder={appState.getAssetInfo(assetBA).displayString}
-          style={styles.baseAsset}
-          containerStyle={styles.baseAssetContainer}
-          open={openBA}
-          value={assetBA}
-          items={itemsBA}
-          setOpen={setOpenBA}
-          setValue={setAssetBA}
-          setItems={setItemsBA}
-          onChangeValue={(value) => {
-            //log({newAssetBA: value});
-          }}
-          searchable={true}
-          searchTextInputProps={{
-            maxLength: 15
-          }}
-          maxHeight={scaledHeight(300)}
-          textStyle={styles.dropdownText}
-        />
-      </View>
-
-      <View style={styles.priceWrapper}>
-        <Text style={styles.priceText}>Current price: {generatePriceDescription()}</Text>
-      </View>
-
-      {
-        appState.getUserStatus('supportLevel2') === true &&
-        appState.user.isAuthenticated == true &&
-        <View style={styles.websiteWrapper}>
-          <Text style={styles.priceText}>Domain: {getDomain()}</Text>
-        </View>
-      }
-
-      <View style={styles.buttonWrapper}>
-        <FixedWidthButton title="Buy now" onPress={ startBuyRequest } />
-      </View>
-
-
-      {newAPIVersionDetected && upgradeRequired()}
-
-
-
-
+        <View style={{ height: 20 }} />
       </KeyboardAwareScrollView>
-
     </View>
-    </View>
-
   )
 };
-
-
-let styles = StyleSheet.create({
-  panelContainer: {
-    paddingVertical: scaledHeight(0),
-    paddingHorizontal: scaledWidth(15),
-    width: '100%',
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  panelSubContainer: {
-    paddingTop: scaledHeight(0),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  heading: {
-    alignItems: 'center',
-    marginBottom: scaledHeight(0),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  basicText: {
-    fontSize: normaliseFont(14),
-  },
-  dropdownText: {
-    fontSize: normaliseFont(14),
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  descriptionText: {
-    fontWeight: 'bold',
-    fontSize: normaliseFont(18),
-  },
-  quoteAssetWrapper: {
-   // paddingVertical: scaledHeight(20),
-    paddingTop: scaledHeight(0),
-    paddingBottom: scaledHeight(20),
-
-    width: '100%',
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    zIndex: 2,
-    //borderWidth: 1, // testing
-  },
-  volumeQA: {
-    fontSize: normaliseFont(16),
-    height: scaledHeight(40),
-    width: scaledWidth(125),
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(15),
-  },
-  quoteAssetContainer: {
-    width: scaledWidth(220),
-    //borderWidth: 1, // testing
-  },
-  quoteAsset: {
-    height: scaledHeight(40),
-    width: scaledWidth(220),
-  },
-  baseAssetWrapper: {
-//    paddingVertical: scaledHeight(20),
-    paddingTop: scaledHeight(0),
-    paddingBottom: scaledHeight(20),
-    width: '100%',
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    zIndex: 1,
-    //borderWidth: 1, //testing
-  },
-  volumeBA: {
-    fontSize: normaliseFont(16),
-    height: scaledHeight(40),
-    width: scaledWidth(125),
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(15),
-    //borderWidth: 1, //testing
-  },
-  baseAssetContainer: {
-    width: scaledWidth(220),
-    //borderWidth: 1, //testing
-  },
-  baseAsset: {
-    height: scaledHeight(40),
-    width: scaledWidth(220),
-    //borderWidth: 1, //testing
-  },
-  priceWrapper: {
-    marginVertical: scaledHeight(10),
-    alignItems: 'center',
-  },
-  priceText: {
-    fontSize: normaliseFont(16),
-    fontWeight: 'bold',
-  },
-  websiteWrapper: {
-    marginVertical: scaledHeight(10),
-  },
-  buttonWrapper: {
-    marginTop: scaledHeight(20),
-    marginLeft: '25%',
-    width: '50%',
-  },
-  errorWrapper: {
-    //marginTop: scaledHeight(20),
-    marginBottom: scaledHeight(20),
-  },
-  errorMessageText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
-  },
-  upgradeRequired: {
-    marginTop: scaledHeight(40),
-    marginHorizontal: scaledWidth(30),
-  },
-  upgradeRequiredText: {
-    fontSize: normaliseFont(14),
-    fontWeight: 'bold',
-    color: 'red',
-  },
-  upgradeButtonSection: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-  },
-});
-
-
-let styleContactUsButton = StyleSheet.create({
-  text: {
-    margin: 0,
-    padding: 0,
-    fontSize: normaliseFont(14),
-  },
-});
 
 
 export default Buy;

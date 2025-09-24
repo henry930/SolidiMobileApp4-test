@@ -85,7 +85,7 @@ let PaymentNotMade = () => {
   }
 
   let buyAgain = () => {
-    appState.changeState('Buy');
+    appState.changeState('Trade');
   }
 
 

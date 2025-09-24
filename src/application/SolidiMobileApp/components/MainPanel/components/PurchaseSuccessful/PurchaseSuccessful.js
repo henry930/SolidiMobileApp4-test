@@ -109,7 +109,7 @@ let PurchaseSuccessful = () => {
 
 
   let buyAgain = () => {
-    appState.changeState('Buy');
+    appState.changeState('Trade');
   }
 
 

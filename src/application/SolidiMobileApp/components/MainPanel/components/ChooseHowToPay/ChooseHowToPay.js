@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, ScrollView, StyleSheet, View } from 'react-native';
+import { Text, ScrollView, View, StyleSheet } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 
 // Other imports
@@ -13,6 +13,7 @@ import { colors } from 'src/constants';
 import { Button, StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
+import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons, formStyles as forms } from 'src/styles';
 
 // Logger
 import logger from 'src/util/logger';
@@ -517,128 +518,6 @@ let ChooseHowToPay = () => {
   )
 
 }
-
-
-let styles = StyleSheet.create({
-  panelContainer: {
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(5),
-    width: '100%',
-    height: '100%',
-  },
-  selectPaymentMethodSection: {
-    paddingTop: scaledHeight(20),
-    paddingHorizontal: scaledWidth(30),
-  },
-  heading: {
-    alignItems: 'center',
-  },
-  heading1: {
-    marginTop: scaledHeight(10),
-  },
-  heading2: {
-    marginTop: scaledHeight(20),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  scrollDownMessage: {
-    marginVertical: scaledHeight(10),
-    alignItems: 'center',
-  },
-  scrollDownMessageText: {
-    fontSize: normaliseFont(16),
-    //fontWeight: 'bold',
-    color: 'red',
-  },
-  button: {
-    borderWidth: 1,
-    borderRadius: scaledWidth(18),
-    backgroundColor: colors.standardButton,
-  },
-  buttonLabel: {
-    fontSize: normaliseFont(16),
-    fontWeight: 'bold',
-    color: colors.standardButtonText,
-  },
-  buttonDetail: {
-    marginVertical: scaledHeight(10),
-    marginLeft: scaledWidth(15),
-  },
-  conditionsButtonWrapper: {
-    marginBottom: scaledHeight(10),
-  },
-  horizontalRule: {
-    borderBottomColor: 'black',
-    borderBottomWidth: 1,
-    marginHorizontal: scaledWidth(30),
-  },
-  horizontalRule1: {
-    marginBottom: scaledHeight(10),
-  },
-  orderDetailsSection: {
-    //borderWidth: 1, //testing
-    marginVertical: scaledHeight(20),
-    paddingHorizontal: scaledWidth(30),
-  },
-  orderDetailsLine: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  basicText: {
-    fontSize: normaliseFont(14),
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  confirmButtonWrapper: {
-    //borderWidth: 1, //testing
-    marginTop: scaledHeight(20),
-    marginBottom: scaledHeight(100),
-    paddingHorizontal: scaledWidth(30),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  paymentOptionDisabledText: {
-    fontSize: normaliseFont(14),
-    fontWeight: 'bold',
-    color: 'red',
-  },
-  monospaceText: {
-    fontSize: normaliseFont(14),
-    // For Android, a second solution may be needed.
-    fontVariant: ['tabular-nums'],
-  },
-  priceChangeMessage: {
-    //borderWidth: 1, //testing
-    marginTop: scaledHeight(20),
-    paddingHorizontal: scaledWidth(30),
-  },
-  priceChangeMessageText: {
-    fontSize: normaliseFont(16),
-    fontWeight: 'bold',
-    color: 'red',
-  },
-  errorMessage: {
-    //borderWidth: 1, //testing
-    marginTop: scaledHeight(20),
-    paddingHorizontal: scaledWidth(30),
-  },
-  errorMessageText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
-  },
-  sendOrderMessage: {
-    //borderWidth: 1, //testing
-  },
-  sendOrderMessageText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
-  },
-});
 
 
 let stylePaymentOptionButton = StyleSheet.create({

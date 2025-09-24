@@ -33,66 +33,6 @@ let Footer = (props) => {
   ]
   let hideFooter = statesWhereFooterIsHidden.includes(appState.mainPanelState);
 
-  let footerIndex = AppStateContext._currentValue.footerIndex;
-  let footerEndIndex = footerIndex + appState.numberOfFooterButtonsToDisplay - 1;
-  let newFooterIndexLeft = footerIndex - appState.numberOfFooterButtonsToDisplay;
-  let newFooterIndexRight = footerEndIndex + 1;
-
-  let maxID = footerButtonList.length - 1;
-
-  // Select 4 buttons.
-  let selectedButtons = footerButtonList.slice(footerIndex, footerEndIndex + 1);
-
-  // Check whether to add left and right buttons.
-  includeLeftButton = (footerIndex > 0) ? true : false;
-  includeRightButton = (footerEndIndex < maxID) ? true : false;
-
-  let leftButton = (
-    <View style={styles.leftButtonWrapper}>
-      <ImageButton imageName='chevron-left' imageType='icon'
-        styles={styleLeftButton}
-        onPress={ () => { appState.setFooterIndex(newFooterIndexLeft) } }
-      />
-    </View>
-  )
-  let blankLeftButton = <View style={styles.leftButtonWrapper}>
-    <View style={styles.unavailableLeftButton} />
-  </View>
-
-  let rightButton = (
-    <View style={styles.rightButtonWrapper}>
-      <ImageButton imageName='chevron-right' imageType='icon'
-        styles={styleRightButton}
-        onPress={ () => { appState.setFooterIndex(newFooterIndexRight) } }
-      />
-    </View>
-  )
-  let blankRightButton = <View style={styles.rightButtonWrapper}>
-    <View style={styles.unavailableRightButton}></View>
-  </View>
-
-  // testing:
-  //includeLeftButton = true;
-  //includeRightButton = true;
-
-  let renderPanelButton = ({ item }) => {
-    let mainPanelState = item;
-    let isSelected = mainPanelState === appState.mainPanelState;
-    let _style = isSelected ? stylePanelButtonSelected : stylePanelButton;
-    let imageName = 'question-circle';
-    if (_.keys(footerIcons).includes(mainPanelState)) {
-      imageName = footerIcons[mainPanelState];
-    }
-    return (
-      <View style={styles.buttonWrapper}>
-        <ImageButton imageName={imageName} imageType='icon'
-          title={mainPanelState} styles={_style}
-          onPress={ () => { appState.changeState(mainPanelState) } }
-        />
-      </View>
-    );
-  }
-
   // Check whether to hide the footer completely.
   if (hideFooter) {
     return (
@@ -100,20 +40,28 @@ let Footer = (props) => {
     );
   }
 
+  // Create footer buttons using map instead of FlatList for better control
+
   return (
     <View style={[styleArg, styles.footer]}>
-      {includeLeftButton ? leftButton : blankLeftButton}
-      <FlatList
-        style={styles.footerButtonList}
-        data={selectedButtons}
-        renderItem={renderPanelButton}
-        keyExtractor={(item, index) => index}
-        numColumns={4}
-        scrollEnabled={false}
-        contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}
-      >
-      </FlatList>
-      {includeRightButton ? rightButton : blankRightButton}
+      {footerButtonList.map((item, index) => {
+        let buttonName = item;
+        let imageName = footerIcons[buttonName];
+        let isSelected = buttonName === appState.mainPanelState;
+        let buttonStyle = isSelected ? stylePanelButtonSelected : stylePanelButton;
+
+        return (
+          <View style={styles.buttonWrapper} key={buttonName}>
+            <ImageButton
+              imageName={imageName}
+              imageType='icon'
+              styles={buttonStyle}
+              onPress={() => { appState.changeState(buttonName) }}
+              title={buttonName}
+            />
+          </View>
+        );
+      })}
     </View>
   );
 
@@ -123,31 +71,22 @@ let Footer = (props) => {
 let styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
-    justifyContent : 'space-between',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    //borderWidth: 1, // testing
-  },
-  leftButtonWrapper: {
-    width: '15%',
-    //borderWidth: 1, // testing
-    backgroundColor: colors.footerPanelButton,
-  },
-  unavailableLeftButton: {
-    height: '100%',
-    backgroundColor: colors.unavailableButton,
-  },
-  footerButtonList: {
-    width: '70%',
-    alignContent: 'center',
+    backgroundColor: 'white',
+    height: scaledHeight(70),
+    paddingVertical: scaledHeight(8),
+    paddingHorizontal: scaledWidth(10),
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   buttonWrapper: {
-    width: '33.33%',
-    backgroundColor: colors.footerPanelButton,
-  },
-  rightButtonWrapper: {
-    width: '15%',
-    //borderWidth: 1, // testing
-    backgroundColor: colors.footerPanelButton,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    minHeight: scaledHeight(50),
+    marginHorizontal: scaledWidth(2),
   },
   unavailableRightButton: {
     height: '100%',
@@ -190,11 +129,11 @@ let styleRightButton = StyleSheet.create({
 
 let stylePanelButton = StyleSheet.create({
   image: {
-    iconSize: scaledWidth(27),
+    iconSize: scaledWidth(24),
     iconColor: colors.greyedOutIcon,
   },
   text: {
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(12),
     color: colors.greyedOutIcon,
   },
   view: {
@@ -204,11 +143,11 @@ let stylePanelButton = StyleSheet.create({
 
 let stylePanelButtonSelected = StyleSheet.create({
   image: {
-    iconSize: scaledWidth(27),
+    iconSize: scaledWidth(24),
     iconColor: colors.selectedIcon,
   },
   text: {
-    fontSize: normaliseFont(16),
+    fontSize: normaliseFont(12),
     color: colors.selectedIcon,
     fontWeight: 'bold',
   },

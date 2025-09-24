@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Linking, Text, StyleSheet, View, ScrollView } from 'react-native';
+import { Linking, Text, View, ScrollView, StyleSheet } from 'react-native';
 
 // Other imports
 import _ from 'lodash';
@@ -12,6 +12,7 @@ import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
+import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons } from 'src/styles';
 
 // Logger
 import logger from 'src/util/logger';
@@ -119,7 +120,7 @@ let SaleSuccessful = () => {
 
 
   let buyAgain = () => {
-    appState.changeState('Buy');
+    appState.changeState('Trade');
   }
 
 
@@ -195,66 +196,6 @@ let SaleSuccessful = () => {
   )
 
 }
-
-
-let styles = StyleSheet.create({
-  panelContainer: {
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(5),
-    width: '100%',
-    height: '100%',
-  },
-  panelSubContainer: {
-    paddingTop: scaledHeight(10),
-    paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  heading: {
-    alignItems: 'center',
-  },
-  heading1: {
-    marginTop: scaledHeight(10),
-  },
-  heading2: {
-    marginTop: scaledHeight(40),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  basicText: {
-    fontSize: normaliseFont(14),
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  infoSection: {
-    paddingVertical: scaledHeight(20),
-    alignItems: 'flex-start',
-  },
-  infoSection2: {
-    paddingTop: scaledHeight(10),
-    alignItems: 'flex-start',
-  },
-  infoItem: {
-    marginBottom: scaledHeight(5),
-  },
-  button: {
-
-  },
-  button2: {
-    marginTop: scaledHeight(20),
-  },
-  button3: {
-    marginTop: scaledHeight(20),
-  },
-  buttonWrapper: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-});
 
 
 let styleTrustpilotButton = StyleSheet.create({

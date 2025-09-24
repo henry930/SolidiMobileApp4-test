@@ -1,8 +1,19 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { FlatList, Text, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View, Platform } from 'react-native';
 import { TouchableNativeFeedback, TouchableOpacity } from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
+
+// Material Design imports
+import {
+  Card,
+  Text,
+  useTheme,
+  SegmentedButtons,
+  Avatar,
+  Chip,
+  Button,
+  Surface,
+} from 'react-native-paper';
 
 // Other imports
 import _ from 'lodash';
@@ -11,7 +22,7 @@ import Big from 'big.js';
 // Internal imports
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
-import { Button, StandardButton, Spinner } from 'src/components/atomic';
+import { Spinner } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 
@@ -81,24 +92,23 @@ let History = () => {
 
 
   let displayHistoryControls = () => {
-
     return (
-      <View style={styles.historyControls}>
-        <View style={styles.historyCategoryWrapper}>
-          <DropDownPicker
-            placeholder="transactions"
-            style={styles.historyCategory}
-            open={open}
-            value={category}
-            items={categoryItems}
-            setOpen={setOpen}
-            setValue={setCategory}
-            setItems={setCategoryItems}
-            textStyle={styles.dropdownText}
-          />
-        </View>
-        <Button title='Reload' onPress={ setup } />
-      </View>
+      <Card style={{ marginBottom: 16 }}>
+        <Card.Content>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text variant="titleMedium">View:</Text>
+            <SegmentedButtons
+              value={category}
+              onValueChange={setCategory}
+              buttons={[
+                { value: 'orders', label: 'Orders' },
+                { value: 'transactions', label: 'Transactions' },
+              ]}
+              density="small"
+            />
+          </View>
+        </Card.Content>
+      </Card>
     );
   }
 
@@ -120,18 +130,31 @@ let History = () => {
   let renderTransactions = () => {
     let data = appState.getTransactions();
     data = data['txns'];
+    
+    if (!data || data.length === 0) {
+      return (
+        <Card>
+          <Card.Content style={{ alignItems: 'center', paddingVertical: 32 }}>
+            <Avatar.Icon icon="swap-horizontal" size={64} style={{ marginBottom: 16 }} />
+            <Text variant="titleMedium" style={{ marginBottom: 8 }}>
+              No transactions found
+            </Text>
+            <Text variant="bodyMedium" style={{ textAlign: 'center', color: 'rgba(0,0,0,0.6)' }}>
+              Your transaction history will appear here.
+            </Text>
+          </Card.Content>
+        </Card>
+      );
+    }
+    
     return (
-      <View style={styles.flatListWrapper}>
-        <FlatList
-          style={styles.transactionList}
-          data={data}
-          renderItem={renderTransactionItem}
-          keyExtractor={(item, index) => index}
-          numColumns={1}
-          scrollEnabled={true}
-          contentContainerStyle={{justifyContent: 'center'}}
-        />
-      </View>
+      <FlatList
+        data={data}
+        renderItem={renderTransactionItem}
+        keyExtractor={(item, index) => index.toString()}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
     );
   }
 
@@ -157,31 +180,90 @@ let History = () => {
       reference = '[none]';
     }
     if (! _.isString(reference)) reference = JSON.stringify(reference); // just in case.
+    
+    const getTransactionIcon = (code) => {
+      const iconMap = {
+        'PI': 'arrow-down-circle',
+        'PO': 'arrow-up-circle', 
+        'FI': 'cash-minus',
+        'FO': 'cash-minus',
+        'BY': 'shopping',
+        'SL': 'trending-down',
+      };
+      return iconMap[code] || 'swap-horizontal';
+    };
+
+    const getTransactionColor = (code) => {
+      const colorMap = {
+        'PI': materialTheme.colors.primary,
+        'PO': materialTheme.colors.secondary, 
+        'FI': materialTheme.colors.error,
+        'FO': materialTheme.colors.error,
+        'BY': materialTheme.colors.primary,
+        'SL': materialTheme.colors.secondary,
+      };
+      return colorMap[code] || materialTheme.colors.outline;
+    };
+    
     return (
-      <View style={styles.flatListItem}>
-        <Text style={styles.mediumText}>{txnDate} {txnTime}</Text>
-        <Text style={[styles.mediumText, styles.typeField]}>{codeToType(txnCode)}</Text>
-        <Text style={styles.mediumText}>{baseAssetVolume} {appState.getAssetInfo(baseAsset).displayString}</Text>
-        <Text style={styles.mediumText}>Reference: {reference}</Text>
-      </View>
+      <Card style={{ marginBottom: 8 }}>
+        <Card.Content style={{ paddingVertical: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              <Avatar.Icon 
+                icon={getTransactionIcon(txnCode)}
+                size={40}
+                style={{ marginRight: 12, backgroundColor: getTransactionColor(txnCode) }}
+              />
+              <View style={{ flex: 1 }}>
+                <Text variant="titleMedium" style={{ fontWeight: '600' }}>
+                  {codeToType(txnCode)}
+                </Text>
+                <Text variant="bodyMedium" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                  {txnDate} {txnTime}
+                </Text>
+                <Text variant="bodySmall" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                  Ref: {reference}
+                </Text>
+              </View>
+            </View>
+            <Text variant="titleMedium" style={{ fontWeight: '600' }}>
+              {baseAssetVolume} {appState.getAssetInfo(baseAsset).displayString}
+            </Text>
+          </View>
+        </Card.Content>
+      </Card>
     );
   }
 
 
   let renderOrders = () => {
     let data = appState.getOrders();
+    
+    if (data.length === 0) {
+      return (
+        <Card>
+          <Card.Content style={{ alignItems: 'center', paddingVertical: 32 }}>
+            <Avatar.Icon icon="shopping-outline" size={64} style={{ marginBottom: 16 }} />
+            <Text variant="titleMedium" style={{ marginBottom: 8 }}>
+              No orders found
+            </Text>
+            <Text variant="bodyMedium" style={{ textAlign: 'center', color: 'rgba(0,0,0,0.6)' }}>
+              Your trading orders will appear here once you make some trades.
+            </Text>
+          </Card.Content>
+        </Card>
+      );
+    }
+    
     return (
-      <View style={styles.flatListWrapper}>
-        <FlatList
-          style={styles.orderList}
-          data={data}
-          renderItem={renderOrderItem}
-          keyExtractor={(item, index) => index}
-          numColumns={1}
-          scrollEnabled={true}
-          contentContainerStyle={{justifyContent: 'center'}}
-        />
-      </View>
+      <FlatList
+        data={data}
+        renderItem={renderOrderItem}
+        keyExtractor={(item, index) => index.toString()}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
     );
   }
 
@@ -196,53 +278,92 @@ let History = () => {
     let baseVolume = Big(item['baseVolume']).toFixed(baseDP);
     let quoteVolume = Big(item['quoteVolume']).toFixed(quoteDP);
     let orderStatus = item['status'];
-    let _styleOrder = styles.settledOrderStatus;
-    if (orderStatus == 'LIVE') _styleOrder = styles.liveOrderStatus;
-    if (orderStatus == 'CANCELLED') _styleOrder = styles.cancelledOrderStatus;
+    
+    const getStatusColor = (status) => {
+      switch(status) {
+        case 'LIVE': return materialTheme.colors.primary;
+        case 'SETTLED': return materialTheme.colors.tertiary;
+        case 'CANCELLED': return materialTheme.colors.error;
+        default: return materialTheme.colors.outline;
+      }
+    };
+
+    const getOrderIcon = (side) => {
+      return side === 'BUY' ? 'trending-up' : 'trending-down';
+    };
+
     return (
-      <Touchable onPress = {() => {
-        if (orderStatus != 'SETTLED') return;
-        // Move to order-specific page.
-        let side = orderSide.toLowerCase();
-        appState.changeStateParameters.orderID = orderID;
-        if (side == 'buy') {
-          appState.changeState('PurchaseSuccessful');
-        } else {
-          appState.changeState('SaleSuccessful');
-        }
-      }}>
-        <View style={styles.flatListItem}>
-          <View style={styles.orderTopWrapper}>
-            <Text style={styles.mediumText}>{item['date']} {item['time']}</Text>
-            <Text style={[styles.mediumText, _styleOrder]}>{orderStatus}</Text>
+      <Surface style={{ marginBottom: 8, borderRadius: 12 }} elevation={1}>
+        <TouchableOpacity 
+          onPress={() => {
+            if (orderStatus != 'SETTLED') return;
+            // Move to order-specific page.
+            let side = orderSide.toLowerCase();
+            appState.changeStateParameters.orderID = orderID;
+            if (side == 'buy') {
+              appState.changeState('PurchaseSuccessful');
+            } else {
+              appState.changeState('SaleSuccessful');
+            }
+          }}
+          style={{ padding: 16 }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Avatar.Icon 
+                icon={getOrderIcon(orderSide)}
+                size={32}
+                style={{ marginRight: 8 }}
+              />
+              <Text variant="titleMedium" style={{ fontWeight: '600' }}>
+                {orderSide}
+              </Text>
+            </View>
+            <Chip 
+              mode="flat"
+              textStyle={{ fontSize: 12, color: getStatusColor(orderStatus) }}
+              style={{ backgroundColor: `${getStatusColor(orderStatus)}20` }}
+            >
+              {orderStatus}
+            </Chip>
           </View>
-          <Text style={[styles.mediumText, styles.typeField]}>{orderSide}</Text>
-          <Text style={styles.mediumText}>Spent {quoteVolume} {quoteAsset} to get {baseVolume} {baseAsset}.</Text>
-        </View>
-      </Touchable>
+          
+          <Text variant="bodyMedium" style={{ color: 'rgba(0,0,0,0.6)', marginBottom: 4 }}>
+            {item['date']} {item['time']}
+          </Text>
+          
+          <Text variant="bodyMedium">
+            Spent {quoteVolume} {quoteAsset} to get {baseVolume} {baseAsset}
+          </Text>
+        </TouchableOpacity>
+      </Surface>
     );
   }
 
 
+  const materialTheme = useTheme();
+
   return (
-    <View style={styles.panelContainer}>
+    <View style={{ flex: 1, backgroundColor: materialTheme.colors.background, padding: 16 }}>
+      <Card style={{ marginBottom: 16 }}>
+        <Card.Title 
+          title="Transaction History" 
+          subtitle="View your trading orders and transactions"
+          left={(props) => <Avatar.Icon {...props} icon="history" />}
+        />
+      </Card>
 
-      <View style={styles.historySection}>
-
-        <View style={[styles.heading, styles.heading1]}>
-          <Text style={styles.headingText}>History</Text>
+      { isLoading && (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Spinner/>
         </View>
+      )}
 
-        { isLoading && <Spinner/> }
+      {! isLoading && displayHistoryControls()}
 
-        {! isLoading && displayHistoryControls()}
+      {! isLoading && category === 'orders' && renderOrders()}
 
-        {! isLoading && category === 'orders' &&
-          renderOrders()}
-
-        {! isLoading && category === 'transactions' &&
-          renderTransactions()}
-      </View>
+      {! isLoading && category === 'transactions' && renderTransactions()}
     </View>
   );
 

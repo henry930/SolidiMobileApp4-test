@@ -14,6 +14,7 @@ import AppStateContext from 'src/application/data';
 import { colors, mainPanelStates } from 'src/constants';
 import misc from 'src/util/misc';
 import * as allPanels from './components/index';
+import { sharedStyles as styles, layoutStyles as layout } from 'src/styles';
 
 // Logger
 import logger from 'src/util/logger';
@@ -72,20 +73,12 @@ let MainPanel = (props) => {
 
 
   return (
-      <View style={[styleArg, styles.mainPanel]}>
+      <View style={[styleArg, layout.flex1, { backgroundColor: colors.mainPanelBackground }]}>
         {selectPanelComponent()}
       </View>
     );
 
 };
-
-
-let styles = StyleSheet.create({
-  mainPanel: {
-    alignItems: 'center',
-    backgroundColor: colors.mainPanelBackground,
-  },
-});
 
 
 export default MainPanel;

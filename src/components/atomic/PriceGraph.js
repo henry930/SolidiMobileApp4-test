@@ -247,15 +247,12 @@ let PriceGraph = ({assetBA, assetQA, historic_prices}) => {
 
 let styles = StyleSheet.create({
   buttonWrapper2: {
-    marginTop: scaledHeight(-30),
-    marginBottom: scaledHeight(20),
+    marginTop: scaledHeight(-20), // Reduced from -30 to -20
+    marginBottom: scaledHeight(10), // Reduced from 20 to 10
     justifyContent:'center',
-
     flexDirection: "row",
     alignItems: "center",
- //   height: scaledHeight(70),
-//    paddingHorizontal: scaledWidth(10),
-  //  paddingVertical: scaledWidth(0),
+    paddingHorizontal: scaledWidth(5), // Added padding to center buttons better
   },
   loading: {
     position: 'absolute',
@@ -272,46 +269,46 @@ let styles = StyleSheet.create({
 });
 
 let styleButton = StyleSheet.create({
-  view: {minWidth: 300,
+  view: {
     backgroundColor: colors.greyedOutIcon,
-    height: scaledHeight(20),
-    paddingHorizontal: scaledWidth(15),
-    minWidth:'12%',
+    height: scaledHeight(12), // Reduced from 20 to 12
+    paddingHorizontal: scaledWidth(8), // Reduced from 15 to 8
+    minWidth:'10%', // Reduced from 12% to 10%
+    borderRadius: 6, // Added border radius for modern look
   },
   text: {
     color: colors.standardButtonText,
-    fontWeight: 'bold',
-    fontSize: normaliseFont(12),
+    fontWeight: '600', // Slightly less bold
+    fontSize: normaliseFont(10), // Reduced from 12 to 10
     padding:'0%',
     margin: '0%',
   },
   wrapper: {
     marginTop: scaledHeight(0),
-    marginBottom: scaledHeight(10),
-    marginLeft: scaledWidth(5),
- //   height: '10pt',
+    marginBottom: scaledHeight(6), // Reduced from 10 to 6
+    marginLeft: scaledWidth(3), // Reduced from 5 to 3
   }
 });
 
 let styleButtonSelected = StyleSheet.create({
   view: {
-//    backgroundColor: 'red',
-    height: scaledHeight(20),
-    paddingHorizontal: scaledWidth(15),
-    minWidth:'12%',
+    backgroundColor: colors.selectedIcon, // Added background color for selected state
+    height: scaledHeight(12), // Reduced from 20 to 12
+    paddingHorizontal: scaledWidth(8), // Reduced from 15 to 8
+    minWidth:'10%', // Reduced from 12% to 10%
+    borderRadius: 6, // Added border radius for modern look
   },
   text: {
-    color: colors.standardButtonText,
-    fontWeight: 'bold',
-    fontSize: normaliseFont(12),
+    color: 'white', // White text for selected state
+    fontWeight: '600', // Slightly less bold
+    fontSize: normaliseFont(10), // Reduced from 12 to 10
     padding:'0%',
     margin: '0%',
   },
   wrapper: {
     marginTop: scaledHeight(0),
-    marginBottom: scaledHeight(10),
-    marginLeft: scaledWidth(5),
- //   height: '10pt',
+    marginBottom: scaledHeight(6), // Reduced from 10 to 6
+    marginLeft: scaledWidth(3), // Reduced from 5 to 3
   }
 });
 

@@ -176,7 +176,7 @@ let SendSuccessful = () => {
       </View>
 
       <View style={styles.button2}>
-        <StandardButton title="Buy an asset" onPress={ () => appState.changeState('Buy') } />
+        <StandardButton title="Trade assets" onPress={ () => appState.changeState('Trade') } />
       </View>
 
       </ScrollView>

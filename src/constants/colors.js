@@ -12,6 +12,8 @@ export const colors = {
   selectedIcon: '#1652f0',
   lightgrey: 'rgb(204,204,204)',
   placeHolderTextColor: 'grey',
+  warning: '#ff6b35', // Orange-red warning color
+  border: '#e0e0e0', // Light grey border color
 }
 
 export default colors;

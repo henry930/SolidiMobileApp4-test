@@ -7,12 +7,14 @@ import {
   View,
 } from 'react-native';
 import SplashScreen from 'react-native-splash-screen';
+import { PaperProvider } from 'react-native-paper';
 
 // Internal imports
-import { AppStateProvider } from 'src/application/data';
+import { AppStateProvider } from '../data';
+import { theme } from '../../constants';
 
 // Logger
-import logger from 'src/util/logger';
+import logger from '../../util/logger';
 let logger2 = logger.extend('App');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
@@ -44,7 +46,9 @@ let App = () => {
   }, []);
 
   return (
-    <AppStateProvider />
+    <PaperProvider theme={theme}>
+      <AppStateProvider />
+    </PaperProvider>
   )
 };
 

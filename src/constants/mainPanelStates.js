@@ -2,6 +2,7 @@
 export const mainPanelStates = [
   'Buy',
   'Sell',
+  'Trade',
   'Assets',
   'History',
   'Send',
@@ -44,6 +45,7 @@ export const mainPanelStates = [
   'RegisterConfirm2',
   'AccountUpdate',
   'AccountRestricted',
+  'NavigationDebug',
 ];
 
 export default mainPanelStates;
