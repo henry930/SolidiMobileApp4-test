@@ -13,6 +13,9 @@ import {
   useTheme,
   Icon,
   Chip,
+  Dialog,
+  Portal,
+  Paragraph,
 } from 'react-native-paper';
 
 // Other imports
@@ -38,6 +41,7 @@ let Settings = () => {
 
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
+  let [showLogoutDialog, setShowLogoutDialog] = useState(false);
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
 
@@ -183,6 +187,16 @@ let Settings = () => {
               <Divider />
               
               <List.Item
+                title="Account Review"
+                description="Complete enhanced due diligence form"
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('Questionnaire'); }}
+                style={{ paddingVertical: 4 }}
+              />
+              
+              <Divider />
+              
+              <List.Item
                 title="Security"
                 description="Password, PIN, and security settings"
                 right={props => <List.Icon {...props} icon="chevron-right" />}
@@ -193,9 +207,54 @@ let Settings = () => {
           </Card.Content>
         </Card>
 
-
+        {/* Logout Section */}
+        <Card style={{ marginBottom: 16, elevation: 1 }}>
+          <Card.Content style={{ padding: 16 }}>
+            <Button
+              mode="outlined"
+              icon="logout"
+              onPress={() => setShowLogoutDialog(true)}
+              style={{
+                borderColor: materialTheme.colors.error,
+                borderWidth: 1,
+              }}
+              textColor={materialTheme.colors.error}
+              contentStyle={{ paddingVertical: 8 }}
+            >
+              Logout
+            </Button>
+          </Card.Content>
+        </Card>
 
       </ScrollView>
+
+      {/* Logout Confirmation Dialog */}
+      <Portal>
+        <Dialog visible={showLogoutDialog} onDismiss={() => setShowLogoutDialog(false)}>
+          <Dialog.Title>Confirm Logout</Dialog.Title>
+          <Dialog.Content>
+            <Paragraph>Are you sure you want to logout? You will need to login again to access your account.</Paragraph>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
+            <Button 
+              onPress={async () => {
+                setShowLogoutDialog(false);
+                try {
+                  await appState.logout();
+                  // After logout, redirect to login page
+                  appState.changeState('Login');
+                } catch (error) {
+                  console.error('Logout error:', error);
+                }
+              }}
+              textColor={materialTheme.colors.error}
+            >
+              Logout
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   )
 

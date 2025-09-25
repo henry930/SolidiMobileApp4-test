@@ -98,8 +98,15 @@ let Header = (props) => {
           {! hideSettingsButton &&
             <ImageButton imageName='user' imageType='icon'
               styles={_styleSettingsButton}
-              onPress={ () => { changeState('Settings') } }
-              title={titleSettingsButton}
+              onPress={ () => { 
+                // Check if user is authenticated to decide navigation
+                if (appState.user.isAuthenticated) {
+                  changeState('Settings'); // Go to profile/settings page
+                } else {
+                  changeState('Login'); // Go to login page
+                }
+              }}
+              title={appState.user.isAuthenticated ? 'Profile' : 'Login'}
             />
           }
         </View>

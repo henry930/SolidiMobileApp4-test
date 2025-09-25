@@ -1,5 +1,6 @@
 // React imports
 import AppStateContext from 'src/application/data';
+import { appTier } from 'src/application/appTier';
 
 import React, { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, StyleSheet, View, TouchableOpacity } from 'react-native';
@@ -13,6 +14,9 @@ import { LineChart } from 'react-native-chart-kit'
 import logger from 'src/util/logger';
 let logger2 = logger.extend('PriceGraph ');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+
+// OFFLINE MODE - Set to true to disable all API calls for layout testing
+const OFFLINE_MODE = true;
 
 let PriceGraph = ({assetBA, assetQA, historic_prices}) => {
   let appState = useContext(AppStateContext);
@@ -46,6 +50,28 @@ let PriceGraph = ({assetBA, assetQA, historic_prices}) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // OFFLINE MODE - Return mock data for layout testing
+      if (OFFLINE_MODE) {
+        log(`[OFFLINE MODE] Generating mock price data for ${asset} - ${period}`);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+        
+        // Generate mock price data
+        const basePrice = asset === 'BTC' ? 45000 : asset === 'ETH' ? 3000 : 1000;
+        const dataPoints = period === '2H' ? 12 : period === '8H' ? 48 : 24;
+        const mockPrices = [];
+        
+        for (let i = 0; i < dataPoints; i++) {
+          const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
+          const price = basePrice * (1 + variation);
+          mockPrices.push(price);
+        }
+        
+        setGraphData(mockPrices);
+        setCurrentPrice(mockPrices[mockPrices.length - 1]);
+        setLoading(false);
+        return;
+      }
       
       const coinId = coinGeckoIds[asset] || 'bitcoin';
       let days = '1';

@@ -1,0 +1,517 @@
+{
+        "formtitle":"Self Categorisation",
+        "formintro":"",
+        "formid": "customer-categorisation",
+        "uuid": "12312cc5-a949-49ed-977e-c81fecc2476f",
+        "js":"finprom-categorisation.js",
+        "submittext": "Submit",
+        "submiturl": "/submitquestions",
+        "startpage2": "restrictedconfirm",
+        "startpage2": "certified",
+        "startpage2": "sophisticated",
+        "startpage": "intro",
+        "startpage3": "restricteddetails",
+        "pages": [
+        {
+          "pageid": "intro",
+          "nextbutton": "Continue",
+          "prevbutton": null,
+          "nextpage": "investortype",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails2",
+            "label": "<h5>The UK Financial Conduct Authority (FCA) requires that we ask you some additional quesitons to better understand your financial circumstances and serve you.<br><br>The FCA prescribes three investor categories. Most customers will fit into the Restricted Investor category - please don't let the name put you off - this category is sufficient for most customers.<br><br>The questions are about your current circumstances so you can disregard anything you have told us previously.<br><br>This categorisation is entirely self declared - Solidi will not be asking for proof / documentation of these statements.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+        ]
+        }
+        , {
+          "pageid": "investortype",
+          "nextbutton": "Continue",
+          "nextpage": "accountpurpose",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>Which type of investor are you?</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please choose the investor type which best describes you.",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "entitydetails2",
+            "label": "<h5>The UK Financial Conduct Authority (FCA) divide investors into three categories. Please choose the investor type which best describes you.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "accountpurpose",
+            "label": "",
+            "values": [
+              {
+                "id": "restricted",
+                "text": "<b>Restricted investor</b><br>You've invested less than 10% of your net worth in high risk assets (such as Crypto) over the last 12 months, <b>and</b> you intend to limit such investments to less than 10% in the year ahead.<br>&nbsp;"
+              },
+              {
+                "id": "hnw",
+                "text": "<b>High-Net-Worth investor</b><br>You've an annual income of at least £100,000 <b>or</b> assets of at least £250,000.<br>&nbsp;"
+              },
+              {
+                "id": "certified",
+                "text": "<b>Certified-Sophisticated investor</b><br>You're recevied a certificate in the last three years from an authorised firm confirming that you understand the risks of crypto investing.<br>&nbsp;"
+              },
+              {
+                "id": "none",
+                "text": "<b>None of the above</b><br>If none of the above apply then unfortunately the FCA will not allow us to provide you with an account."
+              }
+            ],
+            "answer": ""
+          }
+
+          ]
+        }
+        , {
+          "pageid": "restricted",
+          "nextbutton": "Continue",
+          "nextpage": "restricteddetails",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>Restricted investor</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>Putting all your money into a single business or type of investment is risky. Spreading your money across different investments makes you less dependent on any one to do well.<br><br>Your should not invest more than 10% of your net assets in high-risk investments. Doing so could expose you to significant losses.<br><br>For the purposes of this statement, net assets do NOT include: your home (primary residence), your pension (or any pension withdrawals) or any rights under qualifying contracts of insurance.<br><br>For the purposes of this statement, high-risk investments are: peer-to-peer (P2P) loans; investment based crowdfunding; and unlisted debt and equity (such as in companies not listed on an exchange like the London Stock Exchange).",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ]
+        }
+
+        , {
+          "pageid": "restricteddetails",
+          "nextbutton": "Continue",
+          "nextpage": "restrictedconfirm",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>Restricted investor</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>Please confirm whether you quality as a restricted investor on the basis that A and B apply to you.<br><br>A) In the past twelve months have you invested less than 10% of your net assets in high-risk investments (as defined on previous page)?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "prev12months",
+            "label": "",
+            "values": [
+              {
+                "id": "yes",
+                "text": "<b>Yes (I have invested less than 10% of my net assets)<br>&nbsp;</b>"
+              }
+              ,{
+                "id": "no",
+                "text": "<b>No (I have invested more than 10% of my net assets)<br>&nbsp;</b>"
+              }
+            ],
+            "guidance": "",
+            "mustselectoption": "yes",
+            "validationmsg": "To qualify as a restricted investor you must have invested 10% of less of your assets in high risk investments",
+            "answer": ""
+          }
+          ,{
+            "type": "number",
+            "id":  "prevamount",
+            "label": "<h5>If yes, over the last twelve months roughly what percentage of your net assets have you invested in high-risk investments (as defined in previous page)?</h5>",
+            "prepend-icon": "fa-percent",
+            "placeholder": "",
+            "guidance": "",  
+            "min": 0,
+            "max": 10,
+            "step": "any",
+            "validationmsg": "To qualify as a restricted investor you cannot have invested more than 10%",
+            "answer": ""  
+          }
+
+
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>B) In the next twelve months do you intend to limit your investment in high-risk (as defined on previous page) to less than 10% of your net assets?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "next12months",
+            "label": "",
+            "values": [
+              {
+                "id": "yes",
+                "text": "<b>Yes (I intend to invest less than 10% of my net assets)<br>&nbsp;</b>"
+              }
+              ,{
+                "id": "no",
+                "text": "<b>No (I intend to invest more than 10% of my net assets)<br>&nbsp;</b>"
+              }
+            ],
+            "guidance":"",
+            "mustselectoption": "yes",
+            "validationmsg": "To qualify as a restricted investor you must commit to investing 10% of less of your assets in high risk investments in the next 12 months",
+            "answer": ""
+          }
+          ,{
+            "type": "number",
+            "subtype": "number",
+            "id":  "nextamount",
+            "label": "<h5>If yes, in the next twelve months roughly what percentage of your net assets do you intend to invest in high-risk investments (as defined in previous page)?</h5>",
+            "prepend-icon": "fa-percent",
+            "placeholder": "",
+            "guidance": "",
+            "min": 0,
+            "max": 10,
+            "step": "any",
+            "validationmsg": "To qualify as a restricted investor you cannot have invested more than 10%",
+            "answer": ""  
+          }
+          ]
+        }
+
+        , {
+          "pageid": "restrictedconfirm",
+          "nextbutton": "Sign and Confirm",
+          "nextpage": "submitToServer",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>Restricted investor</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>I accept that being a restricted investor will expose me to promotions for investment where there is a risk of losing all the money I invest.<br><br>I am aware that it is open to me to seek professional advice before making any investment in a high-risk investment.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "text",
+            "id":  "signature",
+            "label": "Signed",
+            "prepend-icon": "",
+            "placeholder": "",
+            "value": "${firstname} ${lastname}",
+            "guidance": "",  
+            "validationmsg": "To qualify as a restricted investor you cannot have invested more than 10%",
+            "answer": ""  
+          }
+          ,{
+            "type": "text",
+            "id":  "date",
+            "label": "Date",
+            "prepend-icon": "",
+            "placeholder": "",
+            "value": "${todaysdate}",
+            "guidance": "",  
+            "validationmsg": "To qualify as a restricted investor you cannot have invested more than 10%",
+            "answer": ""  
+          }
+          ]
+        }
+
+
+
+
+
+
+        , {
+          "pageid": "hnw",
+          "nextbutton": "Continue",
+          "nextpage": "hnwconfirm",
+          "validate":"checkHNW(domform, formdata, page)",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>High-Net-Worth investor</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>Please confirm whether you quality as a high-net-worth investor on the basis that A or B apply to you.<br><br>In the last financial year did you have:<br><br>A) an annual income of £100,000 or more? Income does NOT include any one off pension withdraws.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "hnwincome",
+            "label": "",
+            "values": [
+              {
+                "id": "no",
+                "text": "<b>No<br>&nbsp;</b>"
+              }
+              , {
+                "id": "yes",
+                "text": "<b>Yes<br>&nbsp;</b>"
+              }
+            ],
+            "guidance": "",
+            "answer":""
+          }
+          ,{
+            "type": "number",
+            "id":  "hnwincomeamount",
+            "label": "<h5>If yes, please specify your income (as defined above) to the nearest £10,000 in the last financial year.</h5>",
+            "prepend-icon": "fa-gbp",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""
+          }
+
+
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>B) net assets of £250,000 or more? Net assets do NOT include: your home (primary residence), your pension (or any pension withdraws) or any rights under qualifying contracts of insurance.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "hnwassets",
+            "label": "",
+            "values": [
+              {
+                "id": "no",
+                "text": "<b>No<br>&nbsp;</b>"
+              }
+              ,{
+                "id": "yes",
+                "text": "<b>Yes<br>&nbsp;</b>"
+              }
+            ],
+            "guidance":"",
+            "mustselectoption": "*",
+            "validationmsg": "You must select either 'yes' or 'no'",
+            "answer": ""
+          }
+          ,{
+            "type": "number",
+            "subtype": "number",
+            "id":  "hwnassetsamount",
+            "label": "<h5>If yes, please specify your net assets (as defined above) to the nearest £100,000 in the last financial year.</h5>",
+            "prepend-icon": "fa-gbp",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+
+
+
+
+          ]
+        }
+
+        , {
+          "pageid": "hnwconfirm",
+          "nextbutton": "Sign and Confirm",
+          "nextpage": "submitToServer",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>High Net Worth investor</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>I accept that being a high-net-worth investor will expose me to promotions for investment where there is a significant risk of losing all the money I invest.<br><br>I am aware that it is open to me to seek professional advice before making any investment in a high-risk investment.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "text",
+            "id":  "hnwsignature",
+            "label": "Signed",
+            "prepend-icon": "",
+            "placeholder": "",
+            "value": "${firstname} ${lastname}",
+            "guidance": "",  
+            "validationmsg": "",
+            "answer": ""  
+          }
+          ,{
+            "type": "text",
+            "id":  "hwndate",
+            "label": "Date",
+            "prepend-icon": "",
+            "placeholder": "",
+            "value": "${todaysdate}",
+            "guidance": "",  
+            "validationmsg": "",
+            "answer": ""  
+          }
+          ]
+        }
+
+
+
+
+
+        , {
+          "pageid": "certified",
+          "nextbutton": "Continue",
+          "nextpage": "sophisticatedconfirm",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>Sophisticated investor</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>Please confirm whether you quality as a sophisticated investor on the basis that in the last three years you have received a certificate from an authorised firm confirming that you understand the risks involved with crypto investment.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "sophisticatedgotcertificate",
+            "label": "",
+            "values": [
+              {
+                "id": "no",
+                "text": "<b>No<br>&nbsp;</b>"
+              }
+              , {
+                "id": "yes",
+                "text": "<b>Yes<br>&nbsp;</b>"
+              }
+            ],
+            "guidance": "",
+            "mustselectoption": "yes",
+            "validationmsg": "To qualify as a sophisticated investor you must select 'Yes'",
+            "answer":""
+          }
+          ,{
+            "type": "text",
+            "id":  "authorisedfirm",
+            "label": "<h5>If yes, what was the name of the authorised firm?.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "You must supply the name of the authorised firm",
+            "required": "yes",
+            "answer": ""
+          }
+
+          ]
+        }
+
+        , {
+          "pageid": "sophisticatedconfirm",
+          "nextbutton": "Sign and Confirm",
+          "nextpage": "submitToServer",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>High Net Worth investor</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h5>I accept that being a high-net-worth investor will expose me to promotions for investment where there is a significant risk of losing all the money I invest.<br><br>I am aware that it is open to me to seek professional advice before making any investment in a high-risk investment.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "text",
+            "id":  "hnwsignature",
+            "label": "Signed",
+            "prepend-icon": "",
+            "placeholder": "",
+            "value": "${firstname} ${lastname}",
+            "guidance": "",  
+            "validationmsg": "",
+            "answer": ""  
+          }
+          ,{
+            "type": "text",
+            "id":  "hwndate",
+            "label": "Date",
+            "prepend-icon": "",
+            "placeholder": "",
+            "value": "${todaysdate}",
+            "guidance": "",  
+            "validationmsg": "",
+            "answer": ""  
+          }
+          ]
+        }
+
+      ]
+}

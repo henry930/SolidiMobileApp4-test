@@ -46,3 +46,4 @@ export {default as RegisterConfirm2} from './RegisterConfirm2/RegisterConfirm2';
 export {default as AccountUpdate} from './AccountUpdate/AccountUpdate';
 export {default as AccountRestricted} from './AccountRestricted/AccountRestricted';
 export {default as NavigationDebug} from './NavigationDebug/NavigationDebug';
+export {default as Questionnaire} from './Questionnaire/Questionnaire';

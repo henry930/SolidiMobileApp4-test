@@ -69,8 +69,12 @@ let initialPageName = 'default';
 let appName = 'SolidiMobileApp';
 if (appTier == 'stag') appName = 'SolidiMobileAppTest'; // necessary ?
 let storedAPIVersion = '1.0.2';
+
+// OFFLINE MODE - Set to true to disable all API calls for layout testing
+let OFFLINE_MODE = true;
+
 let domains = {
-  dev: 'hcp1.solidi.co',
+  dev: 't2.solidi.co',
   stag: 't10.solidi.co',
   prod: 'www.solidi.co',
 }
@@ -539,6 +543,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (! this.state.coinGeckoAPI) {
         this.state.coinGeckoAPI = new CoinGeckoAPI();
       }
+      // OFFLINE MODE - Skip all network checks
+      if (OFFLINE_MODE) {
+        log(`[OFFLINE MODE] Skipping all network setup checks`);
+        this.state.apiVersionLoaded = true;
+        return;
+      }
+      
       // We check for "upgrade required" on every screen load.
       try {
         await this.state.checkIfAppUpdateRequired();
@@ -643,6 +654,17 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.login = async ({email, password, tfa = ''}) => {
       if (this.state.user.isAuthenticated) return;
+      
+      // OFFLINE MODE - Skip API and directly login with mock credentials
+      if (OFFLINE_MODE) {
+        log(`[OFFLINE MODE] Mock login for email: ${email}`);
+        let mockApiKey = "mock_api_key_for_testing_layouts_only";
+        let mockApiSecret = "mock_api_secret_for_testing_layouts_only";
+        _.assign(this.state.user, {email, password});
+        await this.state.loginWithAPIKeyAndSecret({apiKey: mockApiKey, apiSecret: mockApiSecret});
+        return "SUCCESS";
+      }
+      
       // Create public API client.
       let {userAgent, domain} = this.state;
       let apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
@@ -704,7 +726,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log(`apiSecret: ${apiSecret}`);
       }
       // Load user stuff.
-      await this.state.loadInitialStuffAboutUser();
+      if (OFFLINE_MODE) {
+        log(`[OFFLINE MODE] Skipping loadInitialStuffAboutUser`);
+      } else {
+        await this.state.loadInitialStuffAboutUser();
+      }
       return "SUCCESS";
     }
 
@@ -787,6 +813,59 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     // Note: publicMethod and privateMethod have to be kept in sync.
     // Future: Perhaps they could be refactored into a single function with two wrapper functions.
 
+    // Mock API response generator for offline mode
+    this.getMockResponse = (apiRoute, params) => {
+      // Simulate API delay
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          switch (apiRoute) {
+            case 'hello':
+              resolve("Solidi 1.0.2 [OFFLINE MODE]");
+              break;
+            case apiRoute.includes('login_mobile') ? apiRoute : '':
+              resolve({
+                apiKey: "mock_api_key_for_testing_layouts_only",
+                apiSecret: "mock_api_secret_for_testing_layouts_only"
+              });
+              break;
+            case 'user':
+              resolve({
+                email: "test@example.com",
+                firstName: "Test",
+                lastName: "User",
+                status: "active"
+              });
+              break;
+            case 'version':
+              resolve({
+                version: "1.0.2",
+                updateRequired: false
+              });
+              break;
+            case 'terms':
+              resolve({
+                terms: "Mock terms and conditions for offline testing",
+                version: "1.0"
+              });
+              break;
+            case 'portfolio':
+            case 'transactions':
+            case 'history':
+              resolve({
+                data: [],
+                message: "No data in offline mode"
+              });
+              break;
+            default:
+              log(`[OFFLINE MODE] Unknown API route: ${apiRoute}, returning empty success`);
+              resolve({
+                success: true,
+                message: "Mock response for offline testing"
+              });
+          }
+        }, 100); // Small delay to simulate network
+      });
+    };
 
     this.publicMethod = async (args) => {
       let fName = 'publicMethod';
@@ -798,6 +877,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (_.isNil(keyNames)) keyNames = [];
       if (_.isNil(noAbort)) noAbort = false;
       if (this.state.mainPanelState === 'RequestFailed') return;
+      
+      // OFFLINE MODE - Return mock data for layout testing
+      if (OFFLINE_MODE) {
+        log(`[OFFLINE MODE] Mocking API call: ${apiRoute}`);
+        return this.getMockResponse(apiRoute, params);
+      }
       let tag = apiRoute.split('/')[0];
       let abortController = this.state.createAbortController({tag, noAbort});
       let data = await this.state.apiClient.publicMethod({httpMethod, apiRoute, params, abortController});
@@ -869,6 +954,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (_.isNil(keyNames)) keyNames = [];
       if (_.isNil(noAbort)) noAbort = false;
       if (this.state.mainPanelState === 'RequestFailed') return;
+      
+      // OFFLINE MODE - Return mock data for layout testing
+      if (OFFLINE_MODE) {
+        log(`[OFFLINE MODE] Mocking private API call: ${apiRoute}`);
+        return this.getMockResponse(apiRoute, params);
+      }
       let tag = apiRoute.split('/')[0];
       let abortController = this.state.createAbortController({tag, noAbort});
       let data = await this.state.apiClient.privateMethod({httpMethod, apiRoute, params, abortController});
