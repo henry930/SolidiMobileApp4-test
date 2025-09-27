@@ -1,0 +1,271 @@
+{
+        "formtitle":"Crypto Suitability Assessment",
+        "formintro":"",
+        "formid": "crypto-appropriateness-assessment2",
+        "uuid": "e822a3cb-7a94-47da-ae5f-7984efd642a5",
+        "submittext": "I'm ready, lets go!",
+        "submiturl": "/submitquestions",
+        "startpage2": "question1",
+        "startpage": "intro",
+        "startpage2": "review",
+        "pages": [
+        {
+          "pageid": "intro",
+          "nextbutton": "Continue",
+          "prevbutton": null,
+          "nextpage": "question1",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails2",
+            "label": "<h5>Our regulator, the UK Financial Conduct Authority (FCA) wants to make sure that purchasing / investing in crypto is suitable for you.<br><br>To achieve this they required Solidi to ask you some questions to understand your knowledge of crypto, the risks and the benefits.<br><br>This should only take 2 minutes.<br><br>If you don't achieve a pass you can retake the test. If you don't pass on the second attempt then you have to wait 24 hours to take the test again.<br><br>We want you to be aware of the risks and benefits of crypto investing and so we have prepared a <a href=\"https://blog.solidi.co/investing-in-cryptocurrency-understanding-the-risks-and-regulatory-warnings/\">short blog post</a> to help with your knowledge.</a></h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+        ]
+        }
+
+
+
+
+        , {
+          "pageid": "question1",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "question2",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 1 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>Can you sell your crypto assets whenever you want?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q1_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "<b>Yes</b> - there will always be a buyer at a good price regardless of market volatility.<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "<b>Yes</b> - but like stocks and shares I can only sell when the markets are open.<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "<b>No</b> - like any asset (including stocks, shares etc) there may not always be a buyer prepared to purchase, particularly if prices are going down.<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "question2",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "question3",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 2 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>What is the maximum percentage of your net assets that the regulator recommends you should you allocate to high risk investments such as crypto?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q2_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "<b>10%</b> - The regulator recommends a maximum of 10% of your net worth be invested in high risk investments.<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "<b>50%</b> - The regulator recommends up to 50% in crypto.<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "<b>100%</b> - The regulator makes no recommendations so I can put as much as I want into crypto.<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "question3",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "question4",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 3 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>What is your overall risk appettite?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q3_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "I am risk adverse, I prefer cash savings with guaranteed, albeit modest returns.<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "I am confortable with a small amounts of risk. Crypto is not that risky so it suits my limited risk appettite.<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "I am comfortable with risk. I understand that crypto is a high risk investment.<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "question4",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "review",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 4 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>What happens to your crypto assets if Solidi becomes insolvent?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q4_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "My crypto assets are segregated in Solidi's cold storage and are protected during insolvency, however it might take some time to return these to me during which I would be unable to sell them, even if prices are droping.<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "My crypto assets can be immediately withdrawn and I can continue to trade them.<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "My crypto assets would be converted to fiat and the cash returned to me immediately.<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "review",
+          "nextbutton": "Submit2",
+          "prevbutton": "Previous",
+          "nextpage": "submitToServer",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "title",
+            "label": "<h2>Submit?</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          , {
+            "type": "legend",
+            "id":  "entitydetails2",
+            "label": "<h5>Thank you - that is the end of the assessment<br><br>Happy with your answers? You can go back and review them before submitting.<br><br>Remember, due to UK regulations you must pass this test invest using a UK crypto exchange (i.e. Solidi) and you can only take this test twice in 24 hours.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+        ]
+        }
+
+      ]
+}

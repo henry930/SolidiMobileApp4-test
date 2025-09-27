@@ -1,0 +1,772 @@
+{
+        "formtitle":"Business Account application",
+        "formintro":"Please fill out the form below to apply to open a business account.<br><br>Please provide as much detail as possible as this will ensure our onboarding team can get your account fully enabled without delay.",
+        "formid": "business-account-application-form",
+        "uuid": "cc02e1fe-05f4-4ea2-af43-77c7450af1dc",
+        "submittext": "Submit Application",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails",
+            "label": "<h2>Company Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "legalname",
+            "label": "Legal Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "This is the full legal name of the company.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "tradingname",
+            "label": "Trading Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "This is the trading name/identity of the company.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "radio",
+            "id":  "companytype",
+            "label": "Company Type",
+            "values": [
+              {
+                "id": "listed",
+                "text": "Listed Public Company"
+              },
+              {
+                "id": "unlisted",
+                "text": "Unlisted Public Company"
+              },
+              {
+                "id": "ltd",
+                "text": "Private Limited Company"
+              },
+              {
+                "id": "soletrader",
+                "text": "Sole Trader"
+              },
+              {
+                "id": "partnership",
+                "text": "Partnership"
+              },
+              {
+                "id": "charity",
+                "text": "Charity"
+              }
+            ],
+            "guidance": "",  
+            "answer": ""
+          },
+
+
+          {
+            "type": "text",
+            "id":  "compno",
+            "label": "Company Number",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "dateofincorporation",
+            "label": "Date of Incorporation",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "incorpcountry",
+            "label": "Incorporation Country",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "radio",
+            "id":  "regulated",
+            "label": "Regulated Status",
+            "values": [
+              {
+                "id": "regulated",
+                "text": "Regulated"
+              },
+              {
+                "id": "unregulated",
+                "text": "Unregulated"
+              }
+            ],
+            "guidance": "",  
+            "answer": ""
+          },
+
+          {
+            "type": "text",
+            "id":  "regulator",
+            "label": "Regulator (if any)",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "If the company is regulated, please provide the name of the regulatory.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "regulatorydetails",
+            "label": "Regulatory Details (including FRN or equivalent)",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "If the company is regulated, please provide further details.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "stockexchange",
+            "label": "Stock Exchange (if any)",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "tickersymbol",
+            "label": "Ticker Symbol",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+
+
+
+          {
+            "type": "legend",
+            "id":  "contactdetails",
+            "label": "<h2>Contact Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "telephone",
+            "label": "Telephone number",
+            "prepend-icon": "fa-phone",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "website",
+            "label": "Website (if any)",
+            "prepend-icon": "fa-home",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "email",
+            "label": "Company email",
+            "prepend-icon": "fa-at",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "tradingaddress",
+            "label": "Trading Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "tradingpostcode",
+            "label": "Postcode",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "registeredaddress",
+            "label": "Registered Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "registeredpostcode",
+            "label": "Postcode",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+
+
+
+          {
+            "type": "legend",
+            "id":  "directors",
+            "label": "<h2>Directors</h2>"
+          },
+          {
+            "type": "legend",
+            "id":  "directorsdesc",
+            "label": "<h4>Please provide details of all directors (if more than 4, complete the form a second time with only the directors section filled out)</h4>"
+          },
+
+          {
+            "type": "text",
+            "id":  "dir1name",
+            "label": "Director 1 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir1dob",
+            "label": "Director 1 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir1nationality",
+            "label": "Director 1 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "dir1address",
+            "label": "Director 1 - Home Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "text",
+            "id":  "dir2name",
+            "label": "Director 2 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir2dob",
+            "label": "Director 2 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir2nationality",
+            "label": "Director 2 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "dir2address",
+            "label": "Director 2 - Home Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+          {
+            "type": "text",
+            "id":  "dir3name",
+            "label": "Director 3 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir3dob",
+            "label": "Director 3 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir3nationality",
+            "label": "Director 3 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "dir3address",
+            "label": "Director 3 - Home Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+          {
+            "type": "text",
+            "id":  "dir4name",
+            "label": "Director 4 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir4dob",
+            "label": "Director 4 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "dir4nationality",
+            "label": "Director 4 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "dir4address",
+            "label": "Director 4 - Home Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+
+          {
+            "type": "legend",
+            "id":  "beneficialowners",
+            "label": "<h2>Shareholders / Beneficial Owners</h2>"
+          },
+          {
+            "type": "legend",
+            "id":  "directorsdesc",
+            "label": "<h4>Please provide details of all shareholders / beneficial owners with a 10% or greater holding (if more than 4, complete the form a second time with only the shareholders section filled out)</h4>"
+          },
+
+          {
+            "type": "text",
+            "id":  "bo1name",
+            "label": "Beneficial Owner 1 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo1dob",
+            "label": "Beneficial Owner 1 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo1nationality",
+            "label": "Beneficial Owner 1 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo1share",
+            "label": "Beneficial Owner 1 - % Ownership",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "bo1address",
+            "label": "Beneficial Owner 1 - Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+          {
+            "type": "text",
+            "id":  "bo2name",
+            "label": "Beneficial Owner 2 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo2dob",
+            "label": "Beneficial Owner 2 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo2nationality",
+            "label": "Beneficial Owner 2 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo2share",
+            "label": "Beneficial Owner 2 - % Ownership",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "bo2address",
+            "label": "Beneficial Owner 2 - Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+          {
+            "type": "text",
+            "id":  "bo3name",
+            "label": "Beneficial Owner 3 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo3dob",
+            "label": "Beneficial Owner 3 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo3nationality",
+            "label": "Beneficial Owner 3 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo3share",
+            "label": "Beneficial Owner 3 - % Ownership",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "bo3address",
+            "label": "Beneficial Owner 3 - Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+          {
+            "type": "text",
+            "id":  "bo4name",
+            "label": "Beneficial Owner 4 - Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo4dob",
+            "label": "Beneficial Owner 4 - DOB",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo4nationality",
+            "label": "Beneficial Owner 4 - Nationality",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "bo4share",
+            "label": "Beneficial Owner 4 - % Ownership",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "bo4address",
+            "label": "Beneficial Owner 4 - Address",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+
+
+          {
+            "type": "legend",
+            "id":  "linkedentitieslegend",
+            "label": "<h2>Linked Entities</h2>"
+          },
+          {
+            "type": "legend",
+            "id":  "linkedentitiesinstructions",
+            "label": "<h4>Please give full details of any linked entities / companies which Shareholders / Directors have a 25% of greater shareholding or controlling interest.</h4>"
+          },
+
+
+          {
+            "type": "textarea",
+            "id":  "linkedentities",
+            "label": "Linked Entities",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+
+
+
+
+          {
+            "type": "legend",
+            "id":  "companyactivitieslegend",
+            "label": "<h2>Company's main activities</h2>"
+          },
+          {
+            "type": "legend",
+            "id":  "companyactivitiesinstructions",
+            "label": "<h4>What are the company’s main business activities, where does it trade, who are its customers and how does it acquire these?</h4>"
+          },
+
+          {
+            "type": "textarea",
+            "id":  "companyactivities",
+            "label": "Main Activities",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "sourceofincome",
+            "label": "Source of Income",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please give an example of the activity the company undertakes to make money. E.g. a typical sale.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "purposeofaccount",
+            "label": "Purpose of Account",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide the reason for opening the account and how this relates to the company’s main activities.",  
+            "answer": ""  
+          },
+
+
+
+
+          {
+            "type": "legend",
+            "id":  "estimatedactivitylegend",
+            "label": "<h2>Estimated Activity</h2>"
+          },
+          {
+            "type": "legend",
+            "id":  "estimatedactivityinstructions",
+            "label": "<h4>Please provide your estimated monthly transaction volumes</h4>"
+          },
+
+          {
+            "type": "textarea",
+            "id":  "depositamt",
+            "label": "Deposits",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide amount of deposits and currencies",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "withdrawamt",
+            "label": "Withdraws",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide amount of withdraws and currencies",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "soureoffunds",
+            "label": "Source of Funds",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide details of the source of funds being used to fund your account.",  
+            "answer": ""  
+          },
+
+
+          {
+            "type": "textarea",
+            "id":  "otherinfo",
+            "label": "Any other relevant info",
+            "rows": "6",
+            "placeholder": "(insert any other information which may be relevant)",
+            "guidance": "Insert any other information which may be relevant.",  
+            "answer": ""
+          },
+
+          {
+            "type": "legend",
+            "id":  "estimatedactivitylegend",
+            "label": "<h5>By submitting this form you confirm that the information supplied in this application is complete and accurate.<br><br>You agree to Solidi's full Terms and Conditions (<a href=\"https://www.solidi.co/terms\">https://www.solidi.co/terms</a>) which you confirm you have read, understood and agree to be bound by.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+
+          {
+            "type": "upload",
+            "id":  "boardresolution",
+            "label": "Supporting Documents",
+            "guidance": "If you are a public company you must upload a Board Resolution confirming the agreement of the Board of Directors to open an account with Solidi",  
+            "answer": ""
+          },
+
+
+          {
+            "type": "radio",
+            "id":  "depositfrequency",
+            "label": "Select one...",
+            "values": [
+              {
+                "id": "publiccompany",
+                "text": "Public Company - I have supplied a Board Resolution confirming the agreement of the Board of Directors to open an account with Solidi"
+              },
+              {
+                "id": "privatecompany",
+                "text": "Private Company / Partnership - All Directors/Partners have opened accounts with Solidi and uploaded documents for Identity Verification"
+              },
+              {
+                "id": "noneofabove",
+                "text": "None of the above apply"
+              }
+            ],
+            "guidance": "",  
+            "answer": ""
+          }
+        ]
+}

@@ -109,7 +109,8 @@ let NavigationDebug = () => {
         { name: 'Test', icon: 'test-tube' },
         { name: 'SupportTools', icon: 'tools' },
       ]
-    }
+    },
+
   ];
 
   const navigateToPage = (pageName) => {

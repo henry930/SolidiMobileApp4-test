@@ -1,0 +1,118 @@
+{
+        "formtitle":"Business Account - Application Review",
+        "formintro":"Review the business account application submitted by the customer and make a decision.",
+        "formid": "business-account-application-review",
+        "uuid": "f8118812-c02a-4870-b26b-289c8a8d3af0",
+        "submittext": "Submit",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "text",
+            "id":  "companyname",
+            "label": "Company Name",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "solidicompanyid",
+            "label": "Solidi Company ID",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Fill this in - generally it should be for the same account you are completing the form in, but occasionally might be different.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "directorids",
+            "label": "Solidi Director ID(s)",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Fill in the Solidi ID(s) of all the director accounts. For single director companies this may be the same as the company ID.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "cddchecked",
+            "label": "CDD Checked",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Enter date of CDD check and any additional details",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "eddchecked",
+            "label": "EDD Checked",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Enter date of EDD check and any additional details",  
+            "answer": ""  
+          },
+          {
+            "type": "select",
+            "id":  "outcome",
+            "label": "Outcome",
+            "values": [
+              {
+                "id": "passhigh",
+                "text": "Pass - higher risk"
+              },
+              {
+                "id": "passmedium",
+                "text": "Pass - medium risk"
+              },
+              {
+                "id": "passlow",
+                "text": "Pass - lower risk"
+              },
+              {
+                "id": "fail",
+                "text": "Fail - No further action"
+              },
+              {
+                "id": "failadditionalaction",
+                "text": "Fail - Additional action required"
+              }
+            ],
+            "answer": ""
+          },
+          {
+            "type": "textarea",
+            "id":  "outcomecomments",
+            "label": "Outcome Comments",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",
+            "answer": "",
+            "rows": 3
+          },
+          {
+            "type": "text",
+            "id":  "solidireviewer",
+            "label": "Solidi Reviewer",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Enter name of the staff member(s) who conducted the review",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "riskassessment",
+            "label": "Risk Assessment",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Provide all details of the checks performed on the application and details of perceived risks, mitigation factors, etc.",
+            "answer": "",
+            "rows": 20
+          },
+          {
+            "type": "upload",
+            "id":  "supportingdocuments",
+            "label": "Supporting Documents",
+            "answer": ""
+          }
+        ]
+}

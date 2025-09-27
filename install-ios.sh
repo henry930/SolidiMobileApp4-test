@@ -14,10 +14,10 @@ fi
 
 if [ ! -z "$APP_PATH" ]; then
     echo "Found app at: $APP_PATH"
-    echo "Installing to iPhone 14 Pro Max simulator..."
-    xcrun simctl install 07AC46F6-1AF5-431C-BC18-853D9AF3EF39 "$APP_PATH"
+    echo "Installing to currently booted simulator..."
+    xcrun simctl install booted "$APP_PATH"
     echo "Launching app..."
-    xcrun simctl launch 07AC46F6-1AF5-431C-BC18-853D9AF3EF39 co.solidi.mobile.test
+    xcrun simctl launch booted co.solidi.mobile.test
 else
     echo "Build failed - no app found"
 fi

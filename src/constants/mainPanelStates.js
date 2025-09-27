@@ -49,6 +49,11 @@ export const mainPanelStates = [
   'AccountUpdate',
   'AccountRestricted',
   'NavigationDebug',
+  'AccountReview',
+  'SelfCategorisation',
+  'Questionnaire',
+  'AddressBook',
+  'Wallet',
 ];
 
 export default mainPanelStates;

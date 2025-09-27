@@ -104,7 +104,7 @@ let History = () => {
               onValueChange={setCategory}
               buttons={[
                 { value: 'orders', label: 'Orders' },
-                { value: 'transactions', label: 'Transactions' },
+                { value: 'transactions', label: 'Txns' },
               ]}
               density="small"
             />

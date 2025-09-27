@@ -1,16 +1,17 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Text, TextInput, StyleSheet, View, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { Text, TextInput, StyleSheet, View, ScrollView, Alert, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { RadioButton, Checkbox, Title } from 'react-native-paper';
+import RenderHtml from 'react-native-render-html';
 
 // Other imports
 import _ from 'lodash';
-// import DocumentPicker from 'react-native-document-picker';
+import DocumentPicker from 'react-native-document-picker';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { Button, StandardButton } from 'src/components/atomic';
+import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { colors } from 'src/constants';
 
@@ -19,14 +20,38 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('Questionnaire');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
-// Import the questionnaire data
-import questionnaireData from '../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json';
+// Available forms - add new forms here as needed
+const availableForms = {
+  'account-purpose-questionnaire': () => require('../../../../../../../json/account-purpose-questionnaire.json'),
+  'business-account-application-form': () => require('../../../../../../../json/business-account-application-form.json'),
+  'business-account-application-review': () => require('../../../../../../../json/business-account-application-review.json'),
+  'cryptobasket-limits-form': () => require('../../../../../../../json/cryptobasket-limits-form.json'),
+  'enhanced-due-diligence-form': () => require('../../../../../../../json/enhanced-due-diligence-form.json'),
+  'enhanced-due-diligence-review-form': () => require('../../../../../../../json/enhanced-due-diligence-review-form.json'),
+  'finprom-categorisation': () => require('../../../../../../../json/finprom-categorisation.json'),
+  'finprom-suitability': () => require('../../../../../../../json/finprom-suitability.json'),
+  'finprom-suitability2': () => require('../../../../../../../json/finprom-suitability2.json'),
+  'professional-tier-application-form': () => require('../../../../../../../json/professional-tier-application-form.json'),
+  'professional-tier-application-review-form': () => require('../../../../../../../json/professional-tier-application-review-form.json'),
+  'transaction-monitor-withdraw-questions': () => require('../../../../../../../json/transaction-monitor-withdraw-questions.json'),
+  'travel-rule-deposit-questions': () => require('../../../../../../../json/travel-rule-deposit-questions.json'),
+  'travel-rule-withdraw-questions': () => require('../../../../../../../json/travel-rule-withdraw-questions.json'),
+};
 
 let Questionnaire = () => {
 
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
+  const { width } = useWindowDimensions();
+
+  // Form selection state - get from appState
+  let selectedForm = appState.selectedQuestionnaireForm || 'account-purpose-questionnaire';
+  let [questionnaireData, setQuestionnaireData] = useState({
+    formtitle: 'Loading...',
+    formintro: '',
+    questions: []
+  });
 
   // Form state
   let [answers, setAnswers] = useState({});
@@ -35,21 +60,129 @@ let Questionnaire = () => {
   let [uploadMessage, setUploadMessage] = useState('');
   let [disableSubmitButton, setDisableSubmitButton] = useState(false);
 
+  // Navigation state - supports both question-based and page-based navigation
+  let [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  let [currentPageIndex, setCurrentPageIndex] = useState(0);
+  let [currentPageQuestionIndex, setCurrentPageQuestionIndex] = useState(0);
+  let [isPageBasedForm, setIsPageBasedForm] = useState(false);
+
+  // Load form data on component mount
+  useEffect(() => {
+    loadFormData();
+    // Initialize state
+    setAnswers({});
+    setErrorMessage('');
+    setUploadMessage('');
+    setCurrentQuestionIndex(0);
+    setCurrentPageIndex(0);
+    setCurrentPageQuestionIndex(0);
+  }, []);
+
   // Initial setup
   useEffect(() => {
     setup();
-  }, []);
+  }, [questionnaireData]);
+
+  // Reset navigation when form changes
+  useEffect(() => {
+    setCurrentQuestionIndex(0);
+    setCurrentPageIndex(0);
+    setCurrentPageQuestionIndex(0);
+    setAnswers({});
+    setErrorMessage('');
+    loadFormData();
+  }, [selectedForm]);
+
+  let loadFormData = () => {
+    try {
+      console.log(`Loading form: ${selectedForm}`);
+      const formLoader = availableForms[selectedForm];
+      if (formLoader) {
+        const data = formLoader();
+        console.log(`Loaded form data:`, {
+          formtitle: data.formtitle,
+          hasPages: !!data.pages,
+          hasQuestions: !!data.questions,
+          questionsCount: data.questions ? data.questions.length : 0,
+          pagesCount: data.pages ? data.pages.length : 0
+        });
+        
+        // Handle different JSON structures
+        let processedData = { ...data };
+        
+        // Check if this is a page-based form
+        if (data.pages && Array.isArray(data.pages) && data.pages.length > 0) {
+          console.log('Detected page-based form');
+          setIsPageBasedForm(true);
+          // Keep the pages structure intact for page-based navigation
+          processedData.pages = data.pages;
+          
+          // Also create a flattened questions array for compatibility
+          let allQuestions = [];
+          data.pages.forEach(page => {
+            if (page.questions && Array.isArray(page.questions)) {
+              allQuestions = allQuestions.concat(page.questions);
+            }
+          });
+          processedData.questions = allQuestions;
+          console.log(`Flattened ${allQuestions.length} questions from ${data.pages.length} pages`);
+        } else {
+          console.log('Detected traditional question-based form');
+          setIsPageBasedForm(false);
+          // Traditional question-based form
+          if (!processedData.questions) {
+            processedData.questions = [];
+          }
+          console.log(`Form has ${processedData.questions.length} questions`);
+        }
+        
+        setQuestionnaireData(processedData);
+      } else {
+        console.log(`No form loader found for: ${selectedForm}`);
+      }
+    } catch (err) {
+      console.log(`Error loading form ${selectedForm}:`, err);
+      // Set empty structure to prevent crashes
+      setQuestionnaireData({
+        formtitle: 'Error Loading Form',
+        formintro: 'There was an error loading this form.',
+        questions: [],
+        pages: []
+      });
+      setIsPageBasedForm(false);
+    }
+  };
 
   let setup = async () => {
     try {
+      if (!questionnaireData) return;
+      
       await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       
       // Initialize answers with empty values
       let initialAnswers = {};
-      questionnaireData.questions.forEach(question => {
-        initialAnswers[question.id] = question.answer || '';
-      });
+      
+      if (isPageBasedForm && questionnaireData.pages) {
+        // Initialize from page-based structure
+        questionnaireData.pages.forEach(page => {
+          if (page.questions && Array.isArray(page.questions)) {
+            page.questions.forEach(question => {
+              if (question.id) {
+                initialAnswers[question.id] = question.answer || '';
+              }
+            });
+          }
+        });
+      } else if (questionnaireData.questions && Array.isArray(questionnaireData.questions)) {
+        // Initialize from traditional question structure
+        questionnaireData.questions.forEach(question => {
+          if (question.id) {
+            initialAnswers[question.id] = question.answer || '';
+          }
+        });
+      }
+      
       setAnswers(initialAnswers);
       
       triggerRender(renderCount + 1);
@@ -75,38 +208,131 @@ let Questionnaire = () => {
     }));
   };
 
-  // Handle file upload (simplified for offline mode)
+  // Handle checkbox selection (multiple values)
+  let handleCheckboxChange = (questionId, optionId) => {
+    setAnswers(prevAnswers => {
+      const currentValues = prevAnswers[questionId] || [];
+      let newValues;
+      
+      if (currentValues.includes(optionId)) {
+        // Remove the option if it's already selected
+        newValues = currentValues.filter(id => id !== optionId);
+      } else {
+        // Add the option if it's not selected
+        newValues = [...currentValues, optionId];
+      }
+      
+      return {
+        ...prevAnswers,
+        [questionId]: newValues
+      };
+    });
+  };
+
+  // Handle file upload with proper document picker
   let handleFileUpload = async (questionId) => {
-    // Simulate file upload in offline mode
-    const mockFileName = `mock_document_${questionId}.pdf`;
-    
-    setUploadedFiles(prevFiles => ({
-      ...prevFiles,
-      [questionId]: { name: mockFileName, uri: 'mock://file', type: 'application/pdf' }
-    }));
-    
-    // Store file reference in answers
-    setAnswers(prevAnswers => ({
-      ...prevAnswers,
-      [questionId]: mockFileName
-    }));
-    
-    setUploadMessage(`File "${mockFileName}" uploaded successfully (offline mode)`);
-    setTimeout(() => setUploadMessage(''), 3000);
+    try {
+      setUploadMessage('Opening file picker...');
+      
+      const result = await DocumentPicker.pick({
+        type: [
+          DocumentPicker.types.pdf,
+          DocumentPicker.types.images,
+          DocumentPicker.types.doc,
+          DocumentPicker.types.docx,
+          DocumentPicker.types.plainText,
+        ],
+        allowMultiSelection: false,
+      });
+
+      if (result && result[0]) {
+        const file = result[0];
+        
+        setUploadedFiles(prevFiles => ({
+          ...prevFiles,
+          [questionId]: {
+            name: file.name,
+            uri: file.uri,
+            type: file.type,
+            size: file.size,
+          }
+        }));
+        
+        // Store file reference in answers
+        setAnswers(prevAnswers => ({
+          ...prevAnswers,
+          [questionId]: file.name
+        }));
+        
+        setUploadMessage(`File "${file.name}" uploaded successfully`);
+        setTimeout(() => setUploadMessage(''), 3000);
+      }
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        setUploadMessage('File selection cancelled');
+        setTimeout(() => setUploadMessage(''), 2000);
+      } else {
+        console.error('Document picker error:', err);
+        setUploadMessage('Error selecting file. Please try again.');
+        setTimeout(() => setUploadMessage(''), 3000);
+      }
+    }
   };
 
   // Validate form
   let validateForm = () => {
     let missingFields = [];
+    let invalidFields = [];
     
-    questionnaireData.questions.forEach(question => {
-      if (!answers[question.id] || answers[question.id].trim() === '') {
-        missingFields.push(question.label);
+    // Get all questions from either questions array or pages array
+    let allQuestions = [];
+    if (isPageBasedForm && questionnaireData.pages) {
+      questionnaireData.pages.forEach(page => {
+        if (page.questions) {
+          allQuestions.push(...page.questions);
+        }
+      });
+    } else if (questionnaireData.questions) {
+      allQuestions = questionnaireData.questions;
+    }
+    
+    allQuestions.forEach(question => {
+      // Skip validation for display-only question types
+      if (question.type === 'legend' || question.type === 'header' || !question.id) {
+        return;
+      }
+      
+      const answer = answers[question.id];
+      
+      // Check if answer exists and is not empty
+      if (!answer || (typeof answer === 'string' && answer.trim() === '')) {
+        missingFields.push(question.label?.replace(/<[^>]*>/g, '') || question.id); // Strip HTML tags
+        return;
+      }
+      
+      // For number fields, validate constraints
+      if (question.type === 'number') {
+        const numValue = parseFloat(answer);
+        if (isNaN(numValue)) {
+          invalidFields.push(`${question.label?.replace(/<[^>]*>/g, '') || question.id} (must be a valid number)`);
+        } else {
+          if (question.min !== undefined && numValue < question.min) {
+            invalidFields.push(`${question.label?.replace(/<[^>]*>/g, '') || question.id} (minimum value: ${question.min})`);
+          }
+          if (question.max !== undefined && numValue > question.max) {
+            invalidFields.push(`${question.label?.replace(/<[^>]*>/g, '') || question.id} (maximum value: ${question.max})`);
+          }
+        }
       }
     });
     
     if (missingFields.length > 0) {
       setErrorMessage(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+      return false;
+    }
+    
+    if (invalidFields.length > 0) {
+      setErrorMessage(`Please correct the following fields: ${invalidFields.join(', ')}`);
       return false;
     }
     
@@ -175,22 +401,312 @@ let Questionnaire = () => {
     }
   };
 
+  // Navigation functions
+  let goToNextQuestion = () => {
+    if (isPageBasedForm) {
+      return goToNextInPage();
+    }
+    
+    if (!validateCurrentQuestion()) {
+      setErrorMessage('Please answer this question before continuing.');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    if (questionnaireData && 
+        questionnaireData.questions && 
+        Array.isArray(questionnaireData.questions) && 
+        currentQuestionIndex < questionnaireData.questions.length - 1) {
+      setErrorMessage(''); // Clear any existing error
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  let goToPreviousQuestion = () => {
+    if (isPageBasedForm) {
+      return goToPreviousInPage();
+    }
+    
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  // Page-based navigation functions (question by question within pages)
+  let goToNextInPage = () => {
+    if (!validateCurrentPageQuestion()) {
+      setErrorMessage('Please answer the current question before continuing.');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    if (questionnaireData && questionnaireData.pages && questionnaireData.pages[currentPageIndex]) {
+      const currentPage = questionnaireData.pages[currentPageIndex];
+      
+      // Move to next question in current page
+      if (currentPageQuestionIndex < currentPage.questions.length - 1) {
+        setCurrentPageQuestionIndex(currentPageQuestionIndex + 1);
+        setErrorMessage(''); // Clear any existing error
+      } 
+      // Move to next page if at end of current page questions
+      else if (currentPageIndex < questionnaireData.pages.length - 1) {
+        setCurrentPageIndex(currentPageIndex + 1);
+        setCurrentPageQuestionIndex(0);
+        setErrorMessage(''); // Clear any existing error
+      }
+    }
+  };
+
+  let goToPreviousInPage = () => {
+    // Move to previous question in current page
+    if (currentPageQuestionIndex > 0) {
+      setCurrentPageQuestionIndex(currentPageQuestionIndex - 1);
+      setErrorMessage(''); // Clear any existing error
+    }
+    // Move to previous page if at beginning of current page questions
+    else if (currentPageIndex > 0) {
+      const previousPageIndex = currentPageIndex - 1;
+      setCurrentPageIndex(previousPageIndex);
+      
+      // Set to last question of previous page
+      if (questionnaireData && questionnaireData.pages && questionnaireData.pages[previousPageIndex]) {
+        const previousPage = questionnaireData.pages[previousPageIndex];
+        setCurrentPageQuestionIndex(Math.max(0, previousPage.questions.length - 1));
+      }
+      setErrorMessage(''); // Clear any existing error
+    }
+  };
+
+  let isFirstQuestion = () => {
+    if (isPageBasedForm) {
+      return currentPageIndex === 0 && currentPageQuestionIndex === 0;
+    } else {
+      return currentQuestionIndex === 0;
+    }
+  };
+  
+  let isLastQuestion = () => {
+    if (isPageBasedForm) {
+      if (!questionnaireData || !questionnaireData.pages || !Array.isArray(questionnaireData.pages)) {
+        return false;
+      }
+      // Check if we're on the last page and last question of that page
+      const isLastPage = currentPageIndex === questionnaireData.pages.length - 1;
+      if (!isLastPage) return false;
+      
+      const lastPage = questionnaireData.pages[currentPageIndex];
+      if (!lastPage || !lastPage.questions) return false;
+      
+      return currentPageQuestionIndex === lastPage.questions.length - 1;
+    } else {
+      if (!questionnaireData || !questionnaireData.questions || !Array.isArray(questionnaireData.questions)) {
+        return false;
+      }
+      return currentQuestionIndex === questionnaireData.questions.length - 1;
+    }
+  };
+
+  // Validate current question
+  let validateCurrentQuestion = () => {
+    if (!questionnaireData || !questionnaireData.questions[currentQuestionIndex]) {
+      return false;
+    }
+
+    const currentQuestion = questionnaireData.questions[currentQuestionIndex];
+    
+    // Skip validation for display-only question types
+    if (currentQuestion.type === 'legend' || currentQuestion.type === 'header' || !currentQuestion.id) {
+      return true;
+    }
+    
+    const answer = answers[currentQuestion.id];
+
+    // Check if answer exists and is not empty
+    if (!answer) {
+      return false;
+    }
+
+    // For text fields, check if not just whitespace
+    if (typeof answer === 'string' && answer.trim() === '') {
+      return false;
+    }
+
+    // For checkbox arrays, check if at least one is selected
+    if (Array.isArray(answer) && answer.length === 0) {
+      return false;
+    }
+
+    // For number fields, validate numeric constraints
+    if (currentQuestion.type === 'number') {
+      const numValue = parseFloat(answer);
+      if (isNaN(numValue)) {
+        return false;
+      }
+      
+      // Check min/max constraints if provided
+      if (currentQuestion.min !== undefined && numValue < currentQuestion.min) {
+        return false;
+      }
+      if (currentQuestion.max !== undefined && numValue > currentQuestion.max) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Validate current question in page (for page-based forms)
+  let validateCurrentPageQuestion = () => {
+    if (!questionnaireData || !questionnaireData.pages || !questionnaireData.pages[currentPageIndex]) {
+      return false;
+    }
+
+    const currentPage = questionnaireData.pages[currentPageIndex];
+    if (!currentPage.questions || !Array.isArray(currentPage.questions) || currentPageQuestionIndex >= currentPage.questions.length) {
+      return true; // No question to validate
+    }
+
+    const question = currentPage.questions[currentPageQuestionIndex];
+    if (!question.id) return true; // Skip questions without IDs (like legend type)
+
+    // Skip validation for display-only question types
+    if (question.type === 'legend' || question.type === 'header') {
+      return true;
+    }
+
+    const answer = answers[question.id];
+
+    // Check if answer exists and is not empty
+    if (!answer) {
+      return false;
+    }
+
+    // For text fields, check if not just whitespace
+    if (typeof answer === 'string' && answer.trim() === '') {
+      return false;
+    }
+
+    // For checkbox arrays, check if at least one is selected
+    if (Array.isArray(answer) && answer.length === 0) {
+      return false;
+    }
+
+    // For number fields, validate numeric constraints
+    if (question.type === 'number') {
+      const numValue = parseFloat(answer);
+      if (isNaN(numValue)) {
+        return false;
+      }
+      
+      // Check min/max constraints if provided
+      if (question.min !== undefined && numValue < question.min) {
+        return false;
+      }
+      if (question.max !== undefined && numValue > question.max) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Validate current page (for page-based forms) - all questions
+  let validateCurrentPage = () => {
+    if (!questionnaireData || !questionnaireData.pages || !questionnaireData.pages[currentPageIndex]) {
+      return false;
+    }
+
+    const currentPage = questionnaireData.pages[currentPageIndex];
+    if (!currentPage.questions || !Array.isArray(currentPage.questions)) {
+      return true; // No questions to validate
+    }
+
+    // Validate all questions on the current page
+    for (let question of currentPage.questions) {
+      if (!question.id) continue; // Skip questions without IDs (like legend type)
+      
+      const answer = answers[question.id];
+
+      // Skip validation for display-only question types
+      if (question.type === 'legend' || question.type === 'header') {
+        continue;
+      }
+
+      // Check if answer exists and is not empty
+      if (!answer) {
+        return false;
+      }
+
+      // For text fields, check if not just whitespace
+      if (typeof answer === 'string' && answer.trim() === '') {
+        return false;
+      }
+
+      // For checkbox arrays, check if at least one is selected
+      if (Array.isArray(answer) && answer.length === 0) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  let canGoToNext = () => {
+    return isPageBasedForm ? validateCurrentPageQuestion() : validateCurrentQuestion();
+  };
+
+  // Helper function to render guidance text as HTML
+  let renderGuidance = (guidance) => {
+    if (!guidance) return null;
+    
+    // Check if the guidance contains HTML tags
+    if (guidance.includes('<') && guidance.includes('>')) {
+      return (
+        <RenderHtml
+          contentWidth={width - 64}
+          source={{ html: guidance }}
+          baseStyle={styles.guidanceText}
+        />
+      );
+    } else {
+      return <Text style={styles.guidanceText}>{guidance}</Text>;
+    }
+  };
+
   // Render different question types
   let renderQuestion = (question, index) => {
     switch (question.type) {
+      case 'legend':
+      case 'header':
+        return (
+          <View key={question.id || `legend-${index}`} style={styles.legendWrapper}>
+            {question.label && question.label.includes('<') && question.label.includes('>') ? (
+              <RenderHtml
+                contentWidth={width - 32}
+                source={{ html: question.label }}
+                baseStyle={styles.legendText}
+              />
+            ) : (
+              <Text style={styles.legendText}>{question.label}</Text>
+            )}
+            {renderGuidance(question.guidance)}
+          </View>
+        );
+
       case 'text':
         return (
           <View key={question.id} style={styles.questionWrapper}>
             <Text style={styles.questionLabel}>{question.label}</Text>
-            {question.guidance ? (
-              <Text style={styles.guidanceText}>{question.guidance}</Text>
-            ) : null}
+            {renderGuidance(question.guidance)}
             <TextInput
               style={styles.textInput}
-              placeholder={question.placeholder}
+              placeholder={question.placeholder || "Enter text here..."}
               value={answers[question.id] || ''}
               onChangeText={(value) => handleInputChange(question.id, value)}
               autoCapitalize="sentences"
+              autoFocus={currentQuestionIndex === index}
+              blurOnSubmit={false}
+              returnKeyType="next"
             />
           </View>
         );
@@ -199,18 +715,53 @@ let Questionnaire = () => {
         return (
           <View key={question.id} style={styles.questionWrapper}>
             <Text style={styles.questionLabel}>{question.label}</Text>
-            {question.guidance ? (
-              <Text style={styles.guidanceText}>{question.guidance}</Text>
-            ) : null}
+            {renderGuidance(question.guidance)}
             <TextInput
               style={[styles.textInput, styles.textArea]}
-              placeholder={question.placeholder}
+              placeholder={question.placeholder || "Enter detailed text here..."}
               value={answers[question.id] || ''}
               onChangeText={(value) => handleInputChange(question.id, value)}
               multiline
               numberOfLines={4}
               autoCapitalize="sentences"
+              autoFocus={currentQuestionIndex === index}
+              blurOnSubmit={false}
             />
+          </View>
+        );
+
+      case 'number':
+        return (
+          <View key={question.id} style={styles.questionWrapper}>
+            {question.label && question.label.includes('<') && question.label.includes('>') ? (
+              <RenderHtml
+                contentWidth={width - 32}
+                source={{ html: question.label }}
+                baseStyle={styles.questionLabel}
+              />
+            ) : (
+              <Text style={styles.questionLabel}>{question.label}</Text>
+            )}
+            {renderGuidance(question.guidance)}
+            <TextInput
+              style={styles.textInput}
+              placeholder={question.placeholder || "Enter number..."}
+              value={answers[question.id] || ''}
+              onChangeText={(value) => {
+                // Basic number validation
+                const numericValue = value.replace(/[^0-9.-]/g, '');
+                handleInputChange(question.id, numericValue);
+              }}
+              keyboardType="numeric"
+              autoFocus={currentQuestionIndex === index}
+              blurOnSubmit={false}
+              returnKeyType="next"
+            />
+            {question.min !== undefined && question.max !== undefined && (
+              <Text style={styles.validationHintText}>
+                Please enter a value between {question.min} and {question.max}
+              </Text>
+            )}
           </View>
         );
         
@@ -218,20 +769,85 @@ let Questionnaire = () => {
         return (
           <View key={question.id} style={styles.questionWrapper}>
             <Text style={styles.questionLabel}>{question.label}</Text>
-            {question.guidance ? (
-              <Text style={styles.guidanceText}>{question.guidance}</Text>
-            ) : null}
+            {renderGuidance(question.guidance)}
             <RadioButton.Group
               onValueChange={(value) => handleRadioChange(question.id, value)}
               value={answers[question.id] || ''}
             >
               {question.values.map((option) => (
-                <View key={option.id} style={styles.radioOption}>
+                <TouchableOpacity 
+                  key={option.id} 
+                  style={[
+                    styles.radioOption,
+                    answers[question.id] === option.id && styles.selectedRadioOption
+                  ]}
+                  onPress={() => handleRadioChange(question.id, option.id)}
+                >
                   <RadioButton value={option.id} />
-                  <Text style={styles.radioText}>{option.text}</Text>
-                </View>
+                  {option.text && option.text.includes('<') && option.text.includes('>') ? (
+                    <RenderHtml
+                      contentWidth={width - 120}
+                      source={{ html: option.text }}
+                      baseStyle={[
+                        styles.radioText,
+                        answers[question.id] === option.id && styles.selectedRadioText
+                      ]}
+                    />
+                  ) : (
+                    <Text style={[
+                      styles.radioText,
+                      answers[question.id] === option.id && styles.selectedRadioText
+                    ]}>
+                      {option.text}
+                    </Text>
+                  )}
+                </TouchableOpacity>
               ))}
             </RadioButton.Group>
+          </View>
+        );
+
+      case 'checkbox':
+        return (
+          <View key={question.id} style={styles.questionWrapper}>
+            <Text style={styles.questionLabel}>{question.label}</Text>
+            {renderGuidance(question.guidance)}
+            {question.values.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.checkboxOption,
+                  answers[question.id] && answers[question.id].includes(option.id) && styles.selectedCheckboxOption
+                ]}
+                onPress={() => handleCheckboxChange(question.id, option.id)}
+              >
+                <Checkbox
+                  status={
+                    answers[question.id] && answers[question.id].includes(option.id)
+                      ? 'checked'
+                      : 'unchecked'
+                  }
+                  onPress={() => handleCheckboxChange(question.id, option.id)}
+                />
+                {option.text && option.text.includes('<') && option.text.includes('>') ? (
+                  <RenderHtml
+                    contentWidth={width - 120}
+                    source={{ html: option.text }}
+                    baseStyle={[
+                      styles.checkboxText,
+                      answers[question.id] && answers[question.id].includes(option.id) && styles.selectedCheckboxText
+                    ]}
+                  />
+                ) : (
+                  <Text style={[
+                    styles.checkboxText,
+                    answers[question.id] && answers[question.id].includes(option.id) && styles.selectedCheckboxText
+                  ]}>
+                    {option.text}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         );
         
@@ -239,9 +855,7 @@ let Questionnaire = () => {
         return (
           <View key={question.id} style={styles.questionWrapper}>
             <Text style={styles.questionLabel}>{question.label}</Text>
-            {question.guidance ? (
-              <Text style={styles.guidanceText}>{question.guidance}</Text>
-            ) : null}
+            {renderGuidance(question.guidance)}
             <TouchableOpacity
               style={styles.uploadButton}
               onPress={() => handleFileUpload(question.id)}
@@ -263,6 +877,15 @@ let Questionnaire = () => {
     }
   };
 
+  console.log('=== MAIN RENDER DEBUG ===');
+  console.log('questionnaireData exists:', questionnaireData ? 'yes' : 'no');
+  console.log('questionnaireData.questions exists:', questionnaireData?.questions ? 'yes' : 'no');
+  console.log('questionnaireData.questions is array:', Array.isArray(questionnaireData?.questions));
+  console.log('questionnaireData.pages exists:', questionnaireData?.pages ? 'yes' : 'no');
+  console.log('questionnaireData.pages is array:', Array.isArray(questionnaireData?.pages));
+  console.log('isPageBasedForm:', isPageBasedForm);
+  console.log('========================');
+
   return (
     <View style={styles.panelContainer}>
       <KeyboardAwareScrollView
@@ -271,40 +894,137 @@ let Questionnaire = () => {
         enableOnAndroid={true}
         keyboardShouldPersistTaps="handled"
       >
-        <Title style={styles.title}>{questionnaireData.formtitle}</Title>
-        
-        {questionnaireData.formintro ? (
-          <View style={styles.introWrapper}>
-            <Text style={styles.introText}>{questionnaireData.formintro}</Text>
-          </View>
-        ) : null}
+        {questionnaireData && questionnaireData.questions && Array.isArray(questionnaireData.questions) ? (
+          <>
+            <Title style={styles.title}>{questionnaireData.formtitle}</Title>
+            
+            {questionnaireData.formintro ? (
+              <View style={styles.introWrapper}>
+                {questionnaireData.formintro.includes('<') && questionnaireData.formintro.includes('>') ? (
+                  <RenderHtml
+                    contentWidth={width - 32}
+                    source={{ html: questionnaireData.formintro }}
+                    baseStyle={styles.introText}
+                  />
+                ) : (
+                  <Text style={styles.introText}>{questionnaireData.formintro}</Text>
+                )}
+              </View>
+            ) : null}
 
-        {!_.isEmpty(errorMessage) && (
-          <View style={styles.errorWrapper}>
-            <Text style={styles.errorText}>
-              <Text style={styles.errorTextBold}>Error: </Text>
-              <Text>{errorMessage}</Text>
-            </Text>
-          </View>
+            {!_.isEmpty(errorMessage) && (
+              <View style={styles.errorWrapper}>
+                <Text style={styles.errorText}>
+                  <Text style={styles.errorTextBold}>Error: </Text>
+                  <Text>{errorMessage}</Text>
+                </Text>
+              </View>
+            )}
+
+            {!_.isEmpty(uploadMessage) && (
+              <View style={styles.uploadMessageWrapper}>
+                <Text style={styles.uploadMessageText}>{uploadMessage}</Text>
+              </View>
+            )}
+
+            {/* Progress indicator */}
+            {isPageBasedForm ? (
+              questionnaireData.pages && Array.isArray(questionnaireData.pages) && (
+                <View style={styles.progressWrapper}>
+                  <Text style={styles.progressText}>
+                    Page {currentPageIndex + 1} of {questionnaireData.pages.length}
+                    {questionnaireData.pages[currentPageIndex] && questionnaireData.pages[currentPageIndex].questions && (
+                      ` - Question ${currentPageQuestionIndex + 1} of ${questionnaireData.pages[currentPageIndex].questions.length}`
+                    )}
+                  </Text>
+                </View>
+              )
+            ) : (
+              questionnaireData.questions && Array.isArray(questionnaireData.questions) && (
+                <View style={styles.progressWrapper}>
+                  <Text style={styles.progressText}>
+                    Question {currentQuestionIndex + 1} of {questionnaireData.questions.length}
+                  </Text>
+                </View>
+              )
+            )}
+
+            {/* Render current content */}
+            {isPageBasedForm ? (
+              // Render current question from current page
+              questionnaireData.pages && 
+              questionnaireData.pages[currentPageIndex] && 
+              questionnaireData.pages[currentPageIndex].questions &&
+              questionnaireData.pages[currentPageIndex].questions[currentPageQuestionIndex] ? (
+                (() => {
+                  const currentQuestion = questionnaireData.pages[currentPageIndex].questions[currentPageQuestionIndex];
+                  console.log(`Rendering page ${currentPageIndex} question ${currentPageQuestionIndex}:`, currentQuestion.type, currentQuestion.label?.substring(0, 50));
+                  return renderQuestion(currentQuestion, currentPageQuestionIndex);
+                })()
+              ) : (
+                <Text style={styles.loadingText}>No question found at page {currentPageIndex}, question {currentPageQuestionIndex}</Text>
+              )
+            ) : (
+              // Render single current question
+              questionnaireData.questions && questionnaireData.questions[currentQuestionIndex] ? (
+                (() => {
+                  const currentQuestion = questionnaireData.questions[currentQuestionIndex];
+                  console.log(`Rendering question ${currentQuestionIndex}:`, currentQuestion.type, currentQuestion.label?.substring(0, 50));
+                  return renderQuestion(currentQuestion, currentQuestionIndex);
+                })()
+              ) : (
+                <Text style={styles.loadingText}>No question found at index {currentQuestionIndex}</Text>
+              )
+            )}
+
+            {/* Navigation buttons */}
+            <View style={styles.navigationWrapper}>
+              <TouchableOpacity 
+                style={[styles.navButton, styles.backButton, isFirstQuestion() && styles.disabledButton]}
+                onPress={goToPreviousQuestion}
+                disabled={isFirstQuestion()}
+              >
+                <Text style={[styles.backButtonText, isFirstQuestion() && styles.disabledButtonText]}>
+                  {isPageBasedForm && questionnaireData.pages && questionnaireData.pages[currentPageIndex] && questionnaireData.pages[currentPageIndex].prevbutton 
+                    ? questionnaireData.pages[currentPageIndex].prevbutton 
+                    : '← Back'}
+                </Text>
+              </TouchableOpacity>
+
+              {isLastQuestion() ? (
+                <TouchableOpacity 
+                  style={[styles.navButton, styles.submitButton]}
+                  onPress={submitQuestionnaire}
+                  disabled={disableSubmitButton}
+                >
+                  <Text style={styles.submitButtonText}>
+                    {questionnaireData.submittext || 'Submit'}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity 
+                  style={[
+                    styles.navButton, 
+                    styles.nextButton, 
+                    !canGoToNext() && styles.disabledNextButton
+                  ]}
+                  onPress={goToNextQuestion}
+                >
+                  <Text style={[
+                    styles.navButtonText,
+                    !canGoToNext() && styles.disabledNextButtonText
+                  ]}>
+                    {isPageBasedForm && questionnaireData.pages && questionnaireData.pages[currentPageIndex] && questionnaireData.pages[currentPageIndex].nextbutton 
+                      ? questionnaireData.pages[currentPageIndex].nextbutton + ' →' 
+                      : 'Next →'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </>
+        ) : (
+          <Text style={styles.loadingText}>Loading form...</Text>
         )}
-
-        {!_.isEmpty(uploadMessage) && (
-          <View style={styles.uploadMessageWrapper}>
-            <Text style={styles.uploadMessageText}>{uploadMessage}</Text>
-          </View>
-        )}
-
-        {/* Render all questions */}
-        {questionnaireData.questions.map((question, index) => renderQuestion(question, index))}
-
-        {/* Submit button */}
-        <View style={styles.submitButtonWrapper}>
-          <StandardButton
-            title={questionnaireData.submittext}
-            onPress={submitQuestionnaire}
-            disabled={disableSubmitButton}
-          />
-        </View>
 
         <View style={styles.bottomSpacer} />
       </KeyboardAwareScrollView>
@@ -323,6 +1043,12 @@ const styles = StyleSheet.create({
     color: colors.black,
     textAlign: 'center',
     marginVertical: scaledHeight(20),
+  },
+  loadingText: {
+    fontSize: normaliseFont(16),
+    color: colors.gray,
+    textAlign: 'center',
+    marginTop: scaledHeight(50),
   },
   scrollView: {
     flex: 1,
@@ -373,13 +1099,79 @@ const styles = StyleSheet.create({
   },
   radioOption: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: scaledHeight(8),
+    alignItems: 'flex-start',
+    marginBottom: scaledHeight(12),
+    paddingHorizontal: scaledWidth(16),
+    paddingVertical: scaledHeight(14),
+    borderWidth: 2,
+    borderColor: colors.lightGray,
+    borderRadius: 12,
+    backgroundColor: colors.white,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    minHeight: scaledHeight(50),
+  },
+  selectedRadioOption: {
+    borderColor: colors.primary,
+    backgroundColor: '#f0f7ff',
+    shadowOpacity: 0.15,
   },
   radioText: {
-    fontSize: normaliseFont(14),
-    color: colors.black,
-    marginLeft: scaledWidth(8),
+    fontSize: normaliseFont(15),
+    color: colors.darkGray,
+    marginLeft: scaledWidth(12),
+    flex: 1,
+    lineHeight: normaliseFont(22),
+    flexWrap: 'wrap',
+    flexShrink: 1,
+  },
+  selectedRadioText: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  checkboxOption: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: scaledHeight(12),
+    paddingHorizontal: scaledWidth(16),
+    paddingVertical: scaledHeight(14),
+    borderWidth: 2,
+    borderColor: colors.lightGray,
+    borderRadius: 12,
+    backgroundColor: colors.white,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    minHeight: scaledHeight(50),
+  },
+  selectedCheckboxOption: {
+    borderColor: colors.success,
+    backgroundColor: '#f0fff4',
+    shadowOpacity: 0.15,
+  },
+  checkboxText: {
+    fontSize: normaliseFont(15),
+    color: colors.darkGray,
+    marginLeft: scaledWidth(12),
+    flex: 1,
+    lineHeight: normaliseFont(22),
+    flexWrap: 'wrap',
+    flexShrink: 1,
+  },
+  selectedCheckboxText: {
+    color: colors.success,
+    fontWeight: '600',
   },
   uploadButton: {
     borderWidth: 1,
@@ -426,12 +1218,99 @@ const styles = StyleSheet.create({
     fontSize: normaliseFont(14),
     color: colors.success,
   },
+  validationHintText: {
+    fontSize: normaliseFont(12),
+    color: colors.darkGray,
+    marginTop: scaledHeight(5),
+    fontStyle: 'italic',
+  },
   submitButtonWrapper: {
     marginHorizontal: scaledWidth(20),
     marginTop: scaledHeight(30),
   },
   bottomSpacer: {
     height: scaledHeight(50),
+  },
+  // Navigation styles
+  progressWrapper: {
+    marginHorizontal: scaledWidth(20),
+    marginBottom: scaledHeight(20),
+    alignItems: 'center',
+  },
+  progressText: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: colors.primary,
+    backgroundColor: colors.lightBlue,
+    paddingHorizontal: scaledWidth(15),
+    paddingVertical: scaledHeight(8),
+    borderRadius: 20,
+  },
+  navigationWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: scaledWidth(20),
+    marginTop: scaledHeight(30),
+    marginBottom: scaledHeight(20),
+  },
+  navButton: {
+    paddingHorizontal: scaledWidth(24),
+    paddingVertical: scaledHeight(14),
+    borderRadius: 8,
+    minWidth: scaledWidth(100),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButton: {
+    backgroundColor: colors.lightGray,
+    borderWidth: 1,
+    borderColor: colors.gray,
+  },
+  nextButton: {
+    backgroundColor: colors.primary,
+  },
+  submitButton: {
+    backgroundColor: colors.success,
+  },
+  disabledButton: {
+    backgroundColor: colors.lightGray,
+    borderColor: colors.lightGray,
+  },
+  disabledNextButton: {
+    backgroundColor: colors.lightGray,
+    opacity: 0.6,
+  },
+  navButtonText: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: colors.white,
+  },
+  backButtonText: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: colors.darkGray,
+  },
+  submitButtonText: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: colors.white,
+  },
+  disabledButtonText: {
+    color: colors.gray,
+  },
+  disabledNextButtonText: {
+    color: colors.gray,
+  },
+  legendWrapper: {
+    marginHorizontal: scaledWidth(20),
+    marginBottom: scaledHeight(20),
+    padding: scaledWidth(16),
+  },
+  legendText: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: colors.black,
+    lineHeight: normaliseFont(24),
   },
 });
 

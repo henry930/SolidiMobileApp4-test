@@ -1,0 +1,184 @@
+{
+        "formtitle":"Account Questionnaire",
+        "formintro":"As part of our legal duty to understand our customers and how they use their account we occasionally need to ask additional information.<br><br>Could you please answer the questions below to help us better understand how you are using your account.",
+        "formid": "account-purpose-questionnaire",
+        "uuid": "a94a893b-b24b-4135-8e74-dfc647ffc8aa",
+        "submittext": "Submit",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "checkbox",
+            "id":  "accountpurpose",
+            "label": "Purpose of the account",
+            "values": [
+              {
+                "id": "buysell",
+                "text": "Buying/Selling crypto currency for own personal use."
+              },
+              {
+                "id": "buysellthird",
+                "text": "Buying/Selling crypto currency on behalf of third parties (please provide details below in 'additional info')."
+              },
+              {
+                "id": "icos",
+                "text": "Taking part in ICO's."
+              },
+              {
+                "id": "nfts",
+                "text": "Buying/Selling NFT's."
+              },
+              {
+                "id": "goods",
+                "text": "Buying/Selling goods (please provide details below in 'additional info')."
+              },
+              {
+                "id": "othertextbox",
+                "text": "Other (please specify):"
+              }
+            ],
+            "answer": ""
+          },
+          {
+            "type": "textarea",
+            "id":  "accountpurpose_moredetails",
+            "label": "Purpose of the account (additional info)",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "occupation",
+            "label": "Main Occupation",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide your main occupation (including retired)",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "income",
+            "label": "Income",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide your income from your main occupation",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "background",
+            "label": "Other income sources",
+            "prepend-icon": "",
+            "placeholder": "e.g. investment income, part time jobs, property income, inheritance income",
+            "guidance": "Please provide an overview of other sources of income/weath to help us understand the source(s) of funds for your account.",  
+            "answer": ""  
+          },
+          {
+            "type": "radio",
+            "id":  "depositfrequency",
+            "label": "Expected deposit/withdraw frequency",
+            "guidance": "How regularly do you expect to deposit or withdraw funds from your account (not trading).",  
+            "values": [
+              {
+                "id": "multday",
+                "text": "Multiple times per day"
+              },
+              {
+                "id": "daily",
+                "text": "Daily"
+              },
+              {
+                "id": "weekly",
+                "text": "Weekly"
+              },
+              {
+                "id": "biweekly",
+                "text": "Bi-Weekly"
+              },
+              {
+                "id": "monthly",
+                "text": "Monthly"
+              },
+              {
+                "id": "adhoc",
+                "text": "Adhoc"
+              },
+              {
+                "id": "othertextbox",
+                "text": "Other"
+              }
+            ],
+            "answer": ""
+          },
+          {
+            "type": "textarea",
+            "id":  "depositfrequency_moredetails",
+            "label": "Additional Details",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the expected deposit / withdraw frequency.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "monthlydeposit",
+            "label": "Expected Monthly Deposit/Withdraw",
+            "prepend-icon": "fa-gbp",
+            "answer": ""
+          },
+          {
+            "type": "checkbox",
+            "id":  "ongoingsource",
+            "label": "Source of Deposits",
+            "values": [
+              {
+                "id": "salary",
+                "text": "Salary"
+              },
+              {
+                "id": "selfempincome",
+                "text": "Self Employed Income"
+              },
+              {
+                "id": "bonus",
+                "text": "Bonus"
+              },
+              {
+                "id": "savings",
+                "text": "Savings"
+              },
+              {
+                "id": "investments",
+                "text": "Investments"
+              },
+              {
+                "id": "inheritance",
+                "text": "Inheritance"
+              },
+              {
+                "id": "propertysale",
+                "text": "Property Sale"
+              },
+              {
+                "id": "businessssale",
+                "text": "Business Sale"
+              },
+              {
+                "id": "othertextbox",
+                "text": "Other"
+              }
+            ],
+            "answer": ""
+          },
+          {
+            "type": "textarea",
+            "id":  "otherinfo",
+            "label": "Any other relevant info",
+            "rows": "6",
+            "placeholder": "(insert any other information which may be relevant)",
+            "guidance": "Insert any other information which may be relevant. This is optional and usually not required.",  
+            "answer": ""
+          }
+        ]
+}

@@ -30,14 +30,13 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-                <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Your camera is needed to take a photo of an identity verification document.</string>
+	<string>Your camera is needed to scan QR codes for wallet addresses and take photos of identity verification documents.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>You may want to browse your photo library and upload an existing photo of an identity verification document.</string>
 	<key>UIAppFonts</key>

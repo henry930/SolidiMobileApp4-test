@@ -145,6 +145,40 @@ let Settings = () => {
           </Card.Content>
         </Card>
 
+        {/* Wallet & Finance Section */}
+        <Card style={{ marginBottom: 16, elevation: 1 }}>
+          <Card.Content style={{ padding: 0 }}>
+            <List.Section>
+              <List.Subheader style={{ 
+                color: materialTheme.colors.primary,
+                fontWeight: 'bold'
+              }}>
+                Wallet & Finance
+              </List.Subheader>
+              
+              <List.Item
+                title="Wallet"
+                description="Manage deposits, withdrawals, and balances"
+                left={props => <List.Icon {...props} icon="wallet" />}
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('Wallet'); }}
+                style={{ paddingVertical: 4 }}
+              />
+              
+              <Divider />
+              
+              <List.Item
+                title="Assets"
+                description="View your cryptocurrency and fiat balances"
+                left={props => <List.Icon {...props} icon="chart-line" />}
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('Assets'); }}
+                style={{ paddingVertical: 4 }}
+              />
+            </List.Section>
+          </Card.Content>
+        </Card>
+
         {/* Account Settings Section */}
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 0 }}>
@@ -207,6 +241,38 @@ let Settings = () => {
           </Card.Content>
         </Card>
 
+        {/* Activity & Management Section */}
+        <Card style={{ marginBottom: 16, elevation: 1 }}>
+          <Card.Content style={{ padding: 0 }}>
+            <List.Section>
+              <List.Subheader style={{ 
+                color: materialTheme.colors.primary,
+                fontWeight: 'bold'
+              }}>
+                Activity & Management
+              </List.Subheader>
+              
+              <List.Item
+                title="Transaction History"
+                description="View your trading and transaction history"
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('History'); }}
+                style={{ paddingVertical: 4 }}
+              />
+              
+              <Divider />
+              
+              <List.Item
+                title="Address Book"
+                description="Manage your saved addresses and contacts"
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('AddressBook'); }}
+                style={{ paddingVertical: 4 }}
+              />
+            </List.Section>
+          </Card.Content>
+        </Card>
+
         {/* Logout Section */}
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 16 }}>
@@ -230,7 +296,11 @@ let Settings = () => {
 
       {/* Logout Confirmation Dialog */}
       <Portal>
-        <Dialog visible={showLogoutDialog} onDismiss={() => setShowLogoutDialog(false)}>
+        <Dialog 
+          visible={showLogoutDialog} 
+          onDismiss={() => setShowLogoutDialog(false)}
+          style={{ borderRadius: 8 }}
+        >
           <Dialog.Title>Confirm Logout</Dialog.Title>
           <Dialog.Content>
             <Paragraph>Are you sure you want to logout? You will need to login again to access your account.</Paragraph>

@@ -18,14 +18,8 @@ import logger from '../../util/logger';
 let logger2 = logger.extend('App');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
-
-
-
 let App = () => {
-
-
   log('========== start: helloWorld ==========');
-
 
   const initialFunction = () => {
     try {
@@ -38,21 +32,38 @@ let App = () => {
     }
   }
 
-
   useEffect(() => {
     initialFunction();
-    // Wait 0.5 seconds to hide the splash screen, so that we avoid any blank page issues just between the splash screen disappearing and the app screen loading.
-    setTimeout(SplashScreen.hide, 500);
+    // Hide splash screen immediately for debugging
+    try {
+      SplashScreen.hide();
+    } catch (error) {
+      console.log('SplashScreen error:', error);
+    }
   }, []);
 
   return (
-    <PaperProvider theme={theme}>
-      <AppStateProvider />
-    </PaperProvider>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.text}>Loading app state...</Text>
+      <PaperProvider theme={theme}>
+        <AppStateProvider />
+      </PaperProvider>
+    </SafeAreaView>
   )
 };
 
-
-
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 18,
+    color: '#333',
+    marginBottom: 20,
+  },
+});
 
 export default App;

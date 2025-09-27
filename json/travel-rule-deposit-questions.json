@@ -1,0 +1,91 @@
+{
+        "formtitle":"Deposit Query",
+        "formintro":"Under new UK regulations, known as the Travel Rule, all UK exchanges need to request some additional details about deposits.<br><br>This is to protect customers from unintended transfers and scams, as well as to combat money laundering.<br><br>Please accept our apologies for the delay - this is a temporary step which will be removed shortly as part of the new deposit procedure.",
+        "formid": "travel-rule-deposit-questions",
+        "uuid": "1a0ba44d-e764-4c58-9578-980e421d8263",
+        "submittext": "Submit Response",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "legend",
+            "id":  "introduction",
+            "label": "<h2>Deposit Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_id",
+            "label": "Transaction ID",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "This is the transaction ID of the deposit",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_amt",
+            "label": "Transaction Amount",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Amount of the transaction and currency",  
+            "answer": ""  
+          },
+          {
+            "type": "legend",
+            "id":  "custinfo",
+            "label": "<h2>Sender Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_name",
+            "label": "Sender",
+            "prepend-icon": "",
+            "placeholder": "First name and lastname of sender (or business name)",
+            "guidance": "Who is the sender (originator) of this transaction? This is not the name of the exchange which sent it, but the name of the customer of the exchange. In most cases this is you!",  
+            "answer": ""  
+          },
+
+          {
+            "type": "radio",
+            "id":  "desttype",
+            "label": "Sender Type",
+            "values": [
+              {
+                "id": "exchange",
+                "text": "Exchange / Other Business"
+              },
+              {
+                "id": "wallet",
+                "text": "Hosted Wallet (where you/the sender doesn't have a 12 or 24 seed phrase / private keys for the wallet)"
+              },
+              {
+                "id": "unhosted",
+                "text": "Unhosted Wallet (where you(or the sender) DO have the 12 or 24 word seed phrase) (e.g. phone wallet, ledger, trezor)"
+              },
+              {
+                "id": "othertextbox",
+                "text": "Other (please give details)"
+              }
+            ],
+            "guidance": "How frequently do you expect to make this or a similiar transaction",  
+            "answer": ""
+          },
+
+          {
+            "type": "text",
+            "id":  "destination",
+            "label": "Sender Business / Device",
+            "prepend-icon": "",
+            "placeholder": "Binance, Coinbase, Ledger Nano etc",
+            "guidance": "Where is this transaction coming from? If it is an exchange? Or wallet? Please provide the name and if a website then the URL.",  
+            "answer": ""  
+          }
+        ]
+}

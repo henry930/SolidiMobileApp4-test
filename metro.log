@@ -1,0 +1,1003 @@
+
+                        ▒▒▓▓▓▓▒▒
+                     ▒▓▓▓▒▒░░▒▒▓▓▓▒
+                  ▒▓▓▓▓░░░▒▒▒▒░░░▓▓▓▓▒
+                 ▓▓▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▓▓
+                 ▓▓░░░░░▒▓▓▓▓▓▓▒░░░░░▓▓
+                 ▓▓░░▓▓▒░░░▒▒░░░▒▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▒▒▒▒▓▓▓▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░▓▓
+                 ▓▓▒░░▒▒▓▓▓▓▓▓▓▓▒░░░▒▓▓
+                  ▒▓▓▓▒░░░▒▓▓▒░░░▒▓▓▓▒
+                     ▒▓▓▓▒░░░░▒▓▓▓▒
+                        ▒▒▓▓▓▓▒▒
+
+
+                Welcome to Metro v0.80.12
+              Fast - Scalable - Integrated
+
+
+ BUNDLE  ./index.js 
+
+ BUNDLE  ./index.js 
+
+ LOG  Running "SolidiMobileApp4" with {"rootTag":11,"initialProps":{}}
+error: Error: Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+  21 |
+  22 | // Import the questionnaire data
+> 23 | import questionnaireData from '../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json';
+     |                                ^
+  24 |
+  25 | let Questionnaire = () => {
+  26 |
+    at ModuleResolver.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:112:15)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:232:43)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 48)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 15)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+ ERROR  [Error: undefined Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+[0m [90m 21 |[39m
+ [90m 22 |[39m [90m// Import the questionnaire data[39m
+[31m[1m>[22m[39m[90m 23 |[39m [36mimport[39m questionnaireData [36mfrom[39m [32m'../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json'[39m[33m;[39m
+ [90m    |[39m                                [31m[1m^[22m[39m
+ [90m 24 |[39m
+ [90m 25 |[39m [36mlet[39m [33mQuestionnaire[39m [33m=[39m () [33m=>[39m {
+ [90m 26 |[39m[0m]
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+error: Error: Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+  21 |
+  22 | // Import the questionnaire data
+> 23 | import questionnaireData from '../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json';
+     |                                ^
+  24 |
+  25 | let Questionnaire = () => {
+  26 |
+    at ModuleResolver.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:112:15)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:232:43)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 48)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 15)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+ ERROR  [Error: undefined Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+[0m [90m 21 |[39m
+ [90m 22 |[39m [90m// Import the questionnaire data[39m
+[31m[1m>[22m[39m[90m 23 |[39m [36mimport[39m questionnaireData [36mfrom[39m [32m'../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json'[39m[33m;[39m
+ [90m    |[39m                                [31m[1m^[22m[39m
+ [90m 24 |[39m
+ [90m 25 |[39m [36mlet[39m [33mQuestionnaire[39m [33m=[39m () [33m=>[39m {
+ [90m 26 |[39m[0m]
+error: Error: Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+  21 |
+  22 | // Import the questionnaire data
+> 23 | import questionnaireData from '../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json';
+     |                                ^
+  24 |
+  25 | let Questionnaire = () => {
+  26 |
+    at ModuleResolver.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:112:15)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:232:43)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 48)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 15)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+ ERROR  [Error: undefined Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+[0m [90m 21 |[39m
+ [90m 22 |[39m [90m// Import the questionnaire data[39m
+[31m[1m>[22m[39m[90m 23 |[39m [36mimport[39m questionnaireData [36mfrom[39m [32m'../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json'[39m[33m;[39m
+ [90m    |[39m                                [31m[1m^[22m[39m
+ [90m 24 |[39m
+ [90m 25 |[39m [36mlet[39m [33mQuestionnaire[39m [33m=[39m () [33m=>[39m {
+ [90m 26 |[39m[0m]
+error: Error: Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+  21 |
+  22 | // Import the questionnaire data
+> 23 | import questionnaireData from '../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json';
+     |                                ^
+  24 |
+  25 | let Questionnaire = () => {
+  26 |
+    at ModuleResolver.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:112:15)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:232:43)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 48)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 15)
+    at async visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+ ERROR  [Error: undefined Unable to resolve module ../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json from /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js: 
+
+None of these files exist:
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json
+[0m [90m 21 |[39m
+ [90m 22 |[39m [90m// Import the questionnaire data[39m
+[31m[1m>[22m[39m[90m 23 |[39m [36mimport[39m questionnaireData [36mfrom[39m [32m'../../../../../../../json/4a056019-026e-4e5e-8ddd-ebda93fd2064.json'[39m[33m;[39m
+ [90m    |[39m                                [31m[1m^[22m[39m
+ [90m 24 |[39m
+ [90m 25 |[39m [36mlet[39m [33mQuestionnaire[39m [33m=[39m () [33m=>[39m {
+ [90m 26 |[39m[0m]
+ LOG  [32m10:28:59 | DEBUG : Logger created. [0m
+ ERROR  Warning: Failed prop type: Invalid prop `styles.text` of type `array` supplied to `ImageButton`, expected `object`.
+    at ImageButton (http://localhost:8081/src/components/atomic/ImageButton/ImageButton.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:39:21)
+    in Header (created by AppStateProvider)
+    in RCTSafeAreaView (created by AppStateProvider)
+    in AppStateProvider (created by App)
+    in ThemeProvider (created by PaperProvider)
+    in RCTView (created by View)
+    in View (created by Portal.Host)
+    in Portal.Host (created by PaperProvider)
+    in RNCSafeAreaProvider (created by SafeAreaProvider)
+    in SafeAreaProvider (created by SafeAreaInsetsContext)
+    in SafeAreaProviderCompat (created by PaperProvider)
+    in PaperProvider (created by App)
+    in RCTSafeAreaView (created by App)
+    in App (created by ApplicationRoot)
+    in ApplicationRoot
+    in RCTView (created by View)
+    in View (created by AppContainer)
+    in RCTView (created by View)
+    in View (created by AppContainer)
+    in AppContainer
+    in SolidiMobileApp4(RootComponent)
+ LOG  [34m10:28:59 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m10:28:59 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m10:28:59 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:28:59 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:28:59 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"BlankExampleComponent","pageName":"default"}] [0m
+ LOG  [34m10:28:59 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:28:59 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m10:28:59 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  Assets Render - Current ticker data: {}
+ LOG  Assets Render - Ticker keys: []
+ LOG  Assets page rendering...
+ LOG  Assets: Render - renderCount: 0
+ LOG  Assets: Setup starting...
+ LOG  Assets: Calling generalSetup...
+ LOG  Assets: generalSetup completed
+ LOG  Assets: Attempting to load balances...
+ LOG  [34m10:29:07 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"Assets","pageName":"default"}] [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start (called from Assets) [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Assets","pageName":"default"} [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Mocking private API call: balance [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+ LOG  Assets: Balances loaded successfully
+ LOG  Assets: Loading ticker data with CoinGecko...
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Unknown API route: balance, returning empty success [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : User balances loaded from server. New data saved to appState. {"success":true,"message":"Mock response for offline testing"} [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Mocking API call: ticker [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Unknown API route: ticker, returning empty success [0m
+ LOG  [34m10:29:07 | [0m[7m AppState [0m[34m | INFO : Prices loaded from server. New data saved to appState. {"success":true,"message":"Mock response for offline testing"} [0m
+ LOG  [34m10:29:07 | [0m[7m CoinGeckoAPI [0m[34m | INFO : Fetching prices for: bitcoin,ethereum,litecoin,ripple [0m
+ LOG  Assets: Ticker data loaded successfully: {"message": "Mock response for offline testing", "success": true}
+ LOG  Assets Render - Current ticker data: {"message": "Mock response for offline testing", "success": true}
+ LOG  Assets Render - Ticker keys: ["success", "message"]
+ LOG  Assets page rendering...
+ LOG  Assets: Render - renderCount: 1
+ LOG  Assets Render - Current ticker data: {"message": "Mock response for offline testing", "success": true}
+ LOG  Assets Render - Ticker keys: ["success", "message"]
+ LOG  Assets page rendering...
+ LOG  Assets: Render - renderCount: 1
+ LOG  Assets: Setup completed successfully
+ LOG  [34m10:29:08 | [0m[7m CoinGeckoAPI [0m[34m | INFO : Successfully fetched prices for 8 markets [0m
+ LOG  [34m10:30:07 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Assets","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Explore"}. [0m
+ LOG  [34m10:30:07 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:30:07 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Assets","pageName":"default"}} [0m
+ LOG  [34m10:30:07 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:30:07 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 1 (mainPanelState = Explore) [0m
+ LOG  Assets Render - Current ticker data: {"message": "Mock response for offline testing", "success": true}
+ LOG  Assets Render - Ticker keys: ["success", "message"]
+ LOG  Assets page rendering...
+ LOG  Assets: Render - renderCount: 0
+ LOG  Assets: Setup starting...
+ LOG  Assets: Calling generalSetup...
+ LOG  Assets: generalSetup completed
+ LOG  Assets: Attempting to load balances...
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Assets"}. [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Assets","pageName":"default"} [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 2 (mainPanelState = Assets) [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start (called from Assets) [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Assets","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Assets","pageName":"default"} [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Mocking private API call: balance [0m
+ LOG  Assets: Balances loaded successfully
+ LOG  Assets: Loading ticker data with CoinGecko...
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Unknown API route: balance, returning empty success [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : User balances loaded from server. No change. [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Mocking API call: ticker [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Unknown API route: ticker, returning empty success [0m
+ LOG  [34m10:30:08 | [0m[7m AppState [0m[34m | INFO : Prices loaded from server. No change. [0m
+ LOG  [34m10:30:08 | [0m[7m CoinGeckoAPI [0m[34m | INFO : Fetching prices for: bitcoin,ethereum,litecoin,ripple [0m
+ LOG  Assets: Ticker data loaded successfully: {"message": "Mock response for offline testing", "success": true}
+ LOG  Assets Render - Current ticker data: {"message": "Mock response for offline testing", "success": true}
+ LOG  Assets Render - Ticker keys: ["success", "message"]
+ LOG  Assets page rendering...
+ LOG  Assets: Render - renderCount: 1
+ LOG  Assets Render - Current ticker data: {"message": "Mock response for offline testing", "success": true}
+ LOG  Assets Render - Ticker keys: ["success", "message"]
+ LOG  Assets page rendering...
+ LOG  Assets: Render - renderCount: 1
+ LOG  Assets: Setup completed successfully
+ LOG  [34m10:30:09 | [0m[7m CoinGeckoAPI [0m[34m | INFO : Successfully fetched prices for 8 markets [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Assets","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Trade"}. [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Assets","pageName":"default"}} [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Trade","pageName":"default"} [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 3 (mainPanelState = Trade) [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start (called from Trade) [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Trade","pageName":"default"}
+- {"mainPanelState":"Assets","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Assets","pageName":"default"} [0m
+ LOG  [34m10:30:09 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:30:09 | [0m[7m Trade [0m[34m | INFO : fetchBestPriceForQuoteAssetVolume: Error = appState.getBestPrice is not a function (it is undefined) [0m
+ WARN  (ADVICE) View #2267 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ WARN  (ADVICE) View #2265 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ WARN  (ADVICE) View #2267 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ WARN  (ADVICE) View #2265 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ LOG  [34m10:30:10 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Trade","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Explore"}. [0m
+ LOG  [34m10:30:10 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:30:10 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Trade","pageName":"default"}} [0m
+ LOG  [34m10:30:10 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:30:10 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 4 (mainPanelState = Explore) [0m
+ LOG  [34m10:33:02 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m10:33:02 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:33:02 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:33:02 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m10:33:02 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"Questionnaire","pageName":"default"}] [0m
+ LOG  [34m10:33:02 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:33:02 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m10:33:02 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+ LOG  [34m10:33:19 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Questionnaire","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Transfer"}. [0m
+ LOG  [34m10:33:19 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:33:19 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Questionnaire","pageName":"default"}} [0m
+ LOG  [34m10:33:19 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Transfer","pageName":"default"} [0m
+ LOG  [34m10:33:19 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 1 (mainPanelState = Transfer) [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Transfer","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Trade"}. [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Transfer","pageName":"default"}} [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Trade","pageName":"default"} [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 2 (mainPanelState = Trade) [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start (called from Trade) [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Trade","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m10:33:34 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:33:34 | [0m[7m Trade [0m[34m | INFO : fetchBestPriceForQuoteAssetVolume: Error = appState.getBestPrice is not a function (it is undefined) [0m
+ WARN  (ADVICE) View #3035 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ WARN  (ADVICE) View #3033 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ WARN  (ADVICE) View #3035 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ WARN  (ADVICE) View #3033 of type RCTView has a shadow set but cannot calculate shadow efficiently. Consider setting a background color to fix this, or apply the shadow to a more specific component.
+ LOG  [34m10:33:46 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Trade","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Explore"}. [0m
+ LOG  [34m10:33:46 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:33:46 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Trade","pageName":"default"}} [0m
+ LOG  [34m10:33:46 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:33:46 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 3 (mainPanelState = Explore) [0m
+ ERROR  Error: setMainPanelState: Unknown mainPanelState: Questionnaire, js engine: hermes
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+ LOG  [34m10:34:49 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m10:34:49 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Unknown mainPanelState: Questionnaire [0m
+ LOG  [34m10:34:51 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m10:34:51 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:34:51 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:34:51 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m10:34:51 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"Explore","pageName":"default"}] [0m
+ LOG  [34m10:34:51 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:34:51 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m10:34:51 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+ ERROR  Error: setMainPanelState: Unknown mainPanelState: Questionnaire, js engine: hermes
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+ LOG  [34m10:35:09 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m10:35:09 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Unknown mainPanelState: Questionnaire [0m
+ LOG  [34m10:35:50 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m10:35:50 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:35:50 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:35:50 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m10:35:50 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"Explore","pageName":"default"}] [0m
+ LOG  [34m10:35:50 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:35:50 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m10:35:50 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+ LOG  [34m10:36:19 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m10:36:19 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:36:19 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:36:19 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m10:36:19 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"Explore","pageName":"default"}] [0m
+ LOG  [34m10:36:19 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:36:19 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m10:36:19 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+ ERROR  Warning: Failed prop type: Invalid prop `styles.text` of type `array` supplied to `ImageButton`, expected `object`.
+    in ImageButton (created by Header)
+    in RCTView (created by View)
+    in View (created by Header)
+    in RCTView (created by View)
+    in View (created by Header)
+    in RCTView (created by View)
+    in View (created by Header)
+    in Header (created by AppStateProvider)
+    in RCTSafeAreaView (created by AppStateProvider)
+    in AppStateProvider (created by App)
+    in ThemeProvider (created by PaperProvider)
+    in RCTView (created by View)
+    in View (created by Portal.Host)
+    in Portal.Host (created by PaperProvider)
+    in RNCSafeAreaProvider (created by SafeAreaProvider)
+    in SafeAreaProvider (created by SafeAreaInsetsContext)
+    in SafeAreaProviderCompat (created by PaperProvider)
+    in PaperProvider (created by App)
+    in RCTSafeAreaView (created by App)
+    in App (created by ApplicationRoot)
+    in ApplicationRoot
+    in RCTView (created by View)
+    in View (created by AppContainer)
+    in RCTView (created by View)
+    in View (created by AppContainer)
+    in AppContainer
+    in SolidiMobileApp4(RootComponent)
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 1 (mainPanelState = Questionnaire) [0m
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:38:50 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:42:37 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:42:37 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:42:37 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:42:47 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:42:47 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:42:47 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:43:12 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:43:12 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:43:12 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:43:34 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:43:34 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:43:34 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:43:57 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m10:43:57 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:43:57 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m10:43:57 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m10:43:57 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"Explore","pageName":"default"}] [0m
+ LOG  [34m10:43:57 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:43:57 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m10:43:57 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 1 (mainPanelState = Questionnaire) [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:45:42 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:48:03 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:48:03 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:48:03 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:48:14 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:48:14 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:48:14 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:48:29 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:48:29 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:48:29 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:48:57 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:48:57 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:48:57 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [32m10:55:50 | [0m[7m AppState [0m[32m | DEBUG : decrementStateHistory: Start [0m
+ LOG  [32m10:55:50 | [0m[7m AppState [0m[32m | DEBUG :  [0m
+ LOG  [34m10:55:50 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:55:50 | [0m[7m AppState [0m[34m | INFO : {
+  "newFooterIndex": 0
+} [0m
+ LOG  [34m10:55:50 | [0m[7m AppState [0m[34m | INFO : decrementStateHistory: currentState = {"mainPanelState":"Questionnaire","pageName":"default"}. New stateChangeID: 2. previousStoredState = {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 3 (mainPanelState = Questionnaire) [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m10:55:58 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m10:58:59 | [0m[7m AppState [0m[34m | INFO : Begin: lockAppTimer() - (30 minutes) [0m
+ LOG  [34m10:58:59 | [0m[7m AppState [0m[34m | INFO : lockAppTimer has finished. The app is in a logged-out state. Resetting timer and exiting here. [0m
+ LOG  [34m10:58:59 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:00:10 | [0m[7m AppState [0m[34m | INFO : Begin: lockAppTimer() - (30 minutes) [0m
+ LOG  [34m11:00:10 | [0m[7m AppState [0m[34m | INFO : lockAppTimer has finished. The app is in a logged-out state. Resetting timer and exiting here. [0m
+ LOG  [34m11:00:10 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:01:28 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:01:28 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:01:28 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:01:50 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:01:50 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:01:50 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:02:16 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:02:16 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:02:16 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:02:23 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:02:23 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:02:23 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:02:39 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:02:39 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:02:39 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:03:09 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:03:09 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:03:09 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:03:46 | [0m[7m AppState [0m[34m | INFO : Begin: lockAppTimer() - (30 minutes) [0m
+ LOG  [34m11:03:46 | [0m[7m AppState [0m[34m | INFO : lockAppTimer has finished. The app is in a logged-out state. Resetting timer and exiting here. [0m
+ LOG  [34m11:03:46 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:04:51 | [0m[7m AppState [0m[34m | INFO : Begin: lockAppTimer() - (30 minutes) [0m
+ LOG  [34m11:04:51 | [0m[7m AppState [0m[34m | INFO : lockAppTimer has finished. The app is in a logged-out state. Resetting timer and exiting here. [0m
+ LOG  [34m11:04:51 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:05:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Questionnaire","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Transfer"}. [0m
+ LOG  [34m11:05:34 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:05:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Questionnaire","pageName":"default"}} [0m
+ LOG  [34m11:05:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Transfer","pageName":"default"} [0m
+ LOG  [34m11:05:34 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 4 (mainPanelState = Transfer) [0m
+ ERROR  VirtualizedLists should never be nested inside plain ScrollViews with the same orientation because it can break windowing and other functionality - use another VirtualizedList-backed container instead. 
+    at VirtualizedList (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:79237:36)
+    at FlatList (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:78541:36)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at Picker (http://localhost:8081/node_modules/react-native-dropdown-picker/src/components/Picker.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:26:26)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at Card.Content (http://localhost:8081/node_modules/react-native-paper/src/components/Card/CardContent.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:37:21)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at anonymous (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:76080:62)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at anonymous (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:76080:62)
+    at anonymous (http://localhost:8081/node_modules/react-native-paper/src/components/Surface.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:85:26)
+    at anonymous (http://localhost:8081/node_modules/react-native-paper/src/components/Surface.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:165:32)
+    at Card (http://localhost:8081/node_modules/react-native-paper/src/components/Card/Card.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:54:30)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at RCTScrollContentView
+    at RCTScrollView
+    at ScrollView (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:70173:36)
+    at ScrollView
+    at KeyboardAwareScrollView (http://localhost:8081/node_modules/react-native-keyboard-aware-scroll-view/lib/KeyboardAwareHOC.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:73:38)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at Transfer (http://localhost:8081/src/application/SolidiMobileApp/components/MainPanel/components/Transfer/Transfer.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:71:42)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at MainPanel (http://localhost:8081/src/application/SolidiMobileApp/components/MainPanel/MainPanel.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:34:25)
+    at RCTSafeAreaView
+    at AppStateProvider (http://localhost:8081/src/application/data/AppState.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:184:36)
+    at ThemeProvider (http://localhost:8081/node_modules/@callstack/react-theme-provider/lib/createThemeProvider.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:52:38)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at Portal.Host (http://localhost:8081/node_modules/react-native-paper/src/components/Portal/PortalHost.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:48:36)
+    at RNCSafeAreaProvider
+    at SafeAreaProvider (http://localhost:8081/node_modules/react-native-safe-area-context/src/SafeAreaContext.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:34:24)
+    at SafeAreaProviderCompat (http://localhost:8081/node_modules/react-native-paper/src/core/SafeAreaProviderCompat.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:40:25)
+    at PaperProvider (http://localhost:8081/node_modules/react-native-paper/src/core/PaperProvider.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:19:37)
+    at RCTSafeAreaView
+    at App (http://localhost:8081/src/application/SolidiMobileApp/App.bundle//&platform=ios&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:38:26)
+    at ApplicationRoot
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at RCTView
+    at View (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59454:43)
+    at AppContainer (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:59296:36)
+    at SolidiMobileApp4(RootComponent) (http://localhost:8081/index.bundle//&platform=ios&dev=true&minify=false:110933:28)
+ LOG  [34m11:05:36 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+ LOG  [34m11:05:39 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Transfer","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Explore"}. [0m
+ LOG  [34m11:05:39 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:05:39 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Transfer","pageName":"default"}} [0m
+ LOG  [34m11:05:39 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:05:39 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 5 (mainPanelState = Explore) [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 6 (mainPanelState = Questionnaire) [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:05:44 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:05:50 | [0m[7m AppState [0m[34m | INFO : Begin: lockAppTimer() - (30 minutes) [0m
+ LOG  [34m11:05:50 | [0m[7m AppState [0m[34m | INFO : lockAppTimer has finished. The app is in a logged-out state. Resetting timer and exiting here. [0m
+ LOG  [34m11:05:50 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:05:52 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Questionnaire","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Explore"}. [0m
+ LOG  [34m11:05:52 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:05:52 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Questionnaire","pageName":"default"}} [0m
+ LOG  [34m11:05:52 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:05:52 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 7 (mainPanelState = Explore) [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 8 (mainPanelState = Questionnaire) [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:05:56 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [32m11:07:19 | [0m[7m AppState [0m[32m | DEBUG : decrementStateHistory: Start [0m
+ LOG  [32m11:07:19 | [0m[7m AppState [0m[32m | DEBUG :  [0m
+ LOG  [34m11:07:19 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:07:19 | [0m[7m AppState [0m[34m | INFO : {
+  "newFooterIndex": 0
+} [0m
+ LOG  [34m11:07:19 | [0m[7m AppState [0m[34m | INFO : decrementStateHistory: currentState = {"mainPanelState":"Questionnaire","pageName":"default"}. New stateChangeID: 9. previousStoredState = {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 10 (mainPanelState = Questionnaire) [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:07:22 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:08:50 | [0m[7m AppState [0m[34m | INFO : Begin: lockAppTimer() - (30 minutes) [0m
+ LOG  [34m11:08:50 | [0m[7m AppState [0m[34m | INFO : lockAppTimer has finished. The app is in a logged-out state. Resetting timer and exiting here. [0m
+ LOG  [34m11:08:50 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:10:29 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:10:29 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:10:29 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:10:49 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:10:49 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:10:49 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:11:10 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:11:10 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:11:10 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [34m11:11:53 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Questionnaire","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Explore"}. [0m
+ LOG  [34m11:11:53 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:11:53 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Questionnaire","pageName":"default"}} [0m
+ LOG  [34m11:11:53 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:11:53 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 11 (mainPanelState = Explore) [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 12 (mainPanelState = Questionnaire) [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"}
+- {"mainPanelState":"Transfer","pageName":"default"}
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:11:56 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+ LOG  [32m11:12:21 | [0m[7m AppState [0m[32m | DEBUG : decrementStateHistory: Start [0m
+ LOG  [32m11:12:21 | [0m[7m AppState [0m[32m | DEBUG :  [0m
+ LOG  [34m11:12:21 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:12:21 | [0m[7m AppState [0m[34m | INFO : {
+  "newFooterIndex": 0
+} [0m
+ LOG  [34m11:12:21 | [0m[7m AppState [0m[34m | INFO : decrementStateHistory: currentState = {"mainPanelState":"Questionnaire","pageName":"default"}. New stateChangeID: 13. previousStoredState = {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:15:41 | [0m[7m AppState [0m[34m | INFO : dev domain: t2.solidi.co [0m
+ LOG  [34m11:15:41 | [0m[7m AppState [0m[34m | INFO : - Keychain: apiCredentialsStorageKey = API_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m11:15:41 | [0m[7m AppState [0m[34m | INFO : - Keychain: pinStorageKey = PIN_dev_SolidiMobileApp_t2.solidi.co [0m
+ LOG  [34m11:15:41 | [0m[7m App [0m[34m | INFO : ========== start: helloWorld ========== [0m
+ LOG  [34m11:15:41 | [0m[7m AppState [0m[34m | INFO : Reset state history to: [{"mainPanelState":"Explore","pageName":"default"}] [0m
+ LOG  [34m11:15:41 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:15:41 | [0m[7m AppState [0m[34m | INFO : No PIN found in Keychain. [0m
+ LOG  [34m11:15:41 | [0m[7m AppState [0m[34m | INFO : No API credentials found in Keychain. [0m
+error: SyntaxError: /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Explore/Explore.js: Expected corresponding JSX closing tag for <Card.Content>. (122:12)
+
+  120 |                 </TouchableOpacity>
+  121 |               </Modal>
+> 122 |             </View>
+      |             ^
+  123 |           </Card.Content>
+  124 |         </Card>
+  125 |
+ ERROR  [Error: TransformError SyntaxError: /Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Explore/Explore.js: Expected corresponding JSX closing tag for <Card.Content>. (122:12)
+
+[0m [90m 120 |[39m                 [33m<[39m[33m/[39m[33mTouchableOpacity[39m[33m>[39m
+ [90m 121 |[39m               [33m<[39m[33m/[39m[33mModal[39m[33m>[39m
+[31m[1m>[22m[39m[90m 122 |[39m             [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 123 |[39m           [33m<[39m[33m/[39m[33mCard[39m[33m.[39m[33mContent[39m[33m>[39m
+ [90m 124 |[39m         [33m<[39m[33m/[39m[33mCard[39m[33m>[39m
+ [90m 125 |[39m[0m]
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Server._symbolicate (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:978:31)
+    at async Server._processRequest (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/Server.js:419:7)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Current state = {"mainPanelState":"Explore","pageName":"default"}. Attempting to set state to: {"mainPanelState":"Questionnaire","pageName":"default"}. [0m
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : Begin: resetLockAppTimer() [0m
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Latest stored state: {"mainPanelState":"Explore","pageName":"default"}} [0m
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: Store new state history entry: {"mainPanelState":"Questionnaire","pageName":"default"} [0m
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : setMainPanelState: New stateChangeID: 1 (mainPanelState = Questionnaire) [0m
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : generalSetup: Start [0m
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : State history (most recent at the top):
+- {"mainPanelState":"Questionnaire","pageName":"default"}
+- {"mainPanelState":"Explore","pageName":"default"} [0m
+ LOG  [34m11:17:31 | [0m[7m AppState [0m[34m | INFO : [OFFLINE MODE] Skipping all network setup checks [0m
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]
+error: Error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+    at DependencyGraph.resolveDependency (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js:244:17)
+    at /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/lib/transformHelpers.js:156:21
+    at resolveDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async buildSubgraph (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/buildSubgraph.js:103:3)
+    at async Graph._buildDelta (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:157:22)
+    at async Graph.traverseDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/Graph.js:49:19)
+    at async DeltaCalculator._getChangedDependencies (/Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/DeltaBundler/DeltaCalculator.js:187:42)
+ ERROR  [Error: InternalError Metro has encountered an error: While trying to resolve module `react-native-render-html` from file `/Users/henry/Documents/SolidiMobileApp4/src/application/SolidiMobileApp/components/MainPanel/components/Questionnaire/Questionnaire.js`, the package `/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/package.json` was successfully found. However, this package itself specifies a `main` module field that could not be resolved (`/Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/`. Indeed, none of these files exist:
+
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg)
+  * /Users/henry/Documents/SolidiMobileApp4/node_modules/react-native-render-html/src/index(.ios.js|.native.js|.js|.ios.jsx|.native.jsx|.jsx|.ios.json|.native.json|.json|.ios.ts|.native.ts|.ts|.ios.tsx|.native.tsx|.tsx|.ios.svg|.native.svg|.svg): /Users/henry/Documents/SolidiMobileApp4/node_modules/metro/src/node-haste/DependencyGraph.js (244:17)
+
+[0m [90m 242 |[39m         }
+ [90m 243 |[39m         [36mif[39m (error [36minstanceof[39m [33mInvalidPackageError[39m) {
+[31m[1m>[22m[39m[90m 244 |[39m           [36mthrow[39m [36mnew[39m [33mPackageResolutionError[39m({
+ [90m     |[39m                 [31m[1m^[22m[39m
+ [90m 245 |[39m             packageError[33m:[39m error[33m,[39m
+ [90m 246 |[39m             originModulePath[33m:[39m [36mfrom[39m[33m,[39m
+ [90m 247 |[39m             targetModuleName[33m:[39m to[33m,[39m[0m]

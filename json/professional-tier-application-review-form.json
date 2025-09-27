@@ -1,0 +1,129 @@
+{
+        "formtitle":"Professional Tier Limits Review",
+        "formintro":"Review the customers applications and existing details in their account.<br><br>Consult the guidance in the procedure <a href=\"https://solidi.freshdesk.com/a/solutions/articles/35000164640\">https://solidi.freshdesk.com/a/solutions/articles/35000164640</a>.",
+        "formid": "professional-tier-application-review-form",
+        "uuid": "6791c7b0-afbd-4768-82dd-17a266f5bbe2",
+        "submittext": "Submit Application",
+        "submiturl": "/submitquestions",
+        "questions":[
+
+          {
+            "type": "text",
+            "id":  "user_id",
+            "label": "Customer Account ID",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "formreview",
+            "label": "Review of info provided in form",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Does the information supplied by the customer match with our existing information? Has any significant time elapsed since originally supplied that could account for differences? (E.g. slight salary increase). If so then update the information.",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "reason",
+            "label": "Reason for Limits",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "What was the reason for the customer requesting higher limits.",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "sofsow",
+            "label": "SOF / SOW",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Are the proposed limits supported by SOF/SOW evidence? Can we justify the limits?",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "pepstatus",
+            "label": "PEP status",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Is the customer or relation a PEP - what actions are we taking to mitigate this?",  
+            "answer": ""  
+          }, 
+         {
+            "type": "textarea",
+            "id":  "adversemedia",
+            "label": "Adverse Media",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Provide details of adverse media searches performed.",  
+            "answer": ""  
+          },
+
+         {
+            "type": "textarea",
+            "id":  "opensource",
+            "label": "Open Source",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Provide details of open source searches/checks performed.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "upload",
+            "id":  "opensourcedocs",
+            "label": "Additional Supporting Documents",
+            "guidance": "Please provide any additional documents found in opensource / adverse media searches",
+            "answer": ""
+          },
+
+          {
+            "type": "radio",
+            "id":  "approved",
+            "label": "Approved",
+            "values": [
+              {
+                "id": "yes",
+                "text": "Yes"
+              },
+              {
+                "id": "no",
+                "text": "No"
+              },
+              {
+                "id": "partial",
+                "text": "Partial"
+              }
+            ],
+            "guidance": "Are we approving this limit increase?",  
+            "answer": ""
+          },
+
+
+          {
+            "type": "textarea",
+            "id":  "additionaldetails",
+            "label": "Additonal Details",
+            "prepend-icon": "fa-gbp",
+            "placeholder": "",
+            "guidance": "Provide any further relevant details",  
+            "answer": ""  
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ]
+}

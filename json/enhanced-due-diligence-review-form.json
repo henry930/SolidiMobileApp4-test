@@ -1,0 +1,140 @@
+{
+        "formtitle":"Enhanced Due Dilgence / Account Review",
+        "formintro":"Review the Account Review form provided by the customer.<br><br>Consult the guidance in the procedure <a href=\"https://solidi.freshdesk.com/a/solutions/articles/35000164640\">https://solidi.freshdesk.com/a/solutions/articles/35000164640</a>.",
+        "formid": "enhanced-due-diligence-review-form",
+        "uuid": "cb8f8af3-5415-4a41-86cb-038d158560ef",
+        "submittext": "Submit Application",
+        "submiturl": "/submitquestions",
+        "questions":[
+
+          {
+            "type": "text",
+            "id":  "user_id",
+            "label": "Customer Account ID",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "formreview",
+            "label": "Review of info provided in form",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Does the information supplied by the customer match with our existing information? Has any significant time elapsed since originally supplied that could account for differences? (E.g. slight salary increase). If so then update the information.",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "reason",
+            "label": "Reason for Account Review / Enhanced Due Diligence",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "What was the reason for the customer account being reviewed / EDD applied? What risks have we identified?",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "reason",
+            "label": "Additional Information requested",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "What additional information was requested from the customer. Was this supplied? Was it suitable? Has it addressed / mitigated the risks outlined above?",  
+            "answer": ""  
+          },
+
+          {
+            "type": "textarea",
+            "id":  "sofsow",
+            "label": "SOF / SOW",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Are the current limits supported by SOF/SOW evidence? Can we justify the limits?",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "pepstatus",
+            "label": "PEP status",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Is the customer or relation a PEP - what actions are we taking to mitigate this?",  
+            "answer": ""  
+          }, 
+         {
+            "type": "textarea",
+            "id":  "adversemedia",
+            "label": "Adverse Media",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Provide details of adverse media searches performed.",  
+            "answer": ""  
+          },
+
+         {
+            "type": "textarea",
+            "id":  "opensource",
+            "label": "Open Source",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Provide details of open source searches/checks performed.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "upload",
+            "id":  "opensourcedocs",
+            "label": "Additional Supporting Documents",
+            "guidance": "Please provide any additional documents found in opensource / adverse media searches",
+            "answer": ""
+          },
+
+          {
+            "type": "radio",
+            "id":  "approved",
+            "label": "Approved",
+            "values": [
+              {
+                "id": "yes",
+                "text": "Yes"
+              },
+              {
+                "id": "no",
+                "text": "No"
+              },
+              {
+                "id": "partial",
+                "text": "Partial"
+              }
+            ],
+            "guidance": "Are we approving the continued business with this customer?",  
+            "answer": ""
+          },
+
+
+          {
+            "type": "textarea",
+            "id":  "additionaldetails",
+            "label": "Additonal Details",
+            "prepend-icon": "fa-gbp",
+            "placeholder": "",
+            "guidance": "Provide any further relevant details",  
+            "answer": ""  
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ]
+}

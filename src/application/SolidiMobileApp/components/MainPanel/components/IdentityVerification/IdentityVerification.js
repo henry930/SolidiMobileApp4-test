@@ -15,6 +15,7 @@ import {
   IconButton
 } from 'react-native-paper';
 import {launchCamera} from 'react-native-image-picker';
+import DocumentPicker from 'react-native-document-picker';
 import RNFS from 'react-native-fs';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -237,38 +238,74 @@ let IdentityVerification = () => {
 
 
   let takePhotoOfDocument = async (documentCategory) => {
-    log('Taking photo...');
-    let options = {
-      mediaType: 'photo',
-      cameraType: 'back',
+    try {
+      log('Taking photo...');
+      let options = {
+        mediaType: 'photo',
+        cameraType: 'back',
+        quality: 0.8, // Add quality setting
+      }
+      
+      let result = await launchCamera(options);
+      
+      // Check if component is still mounted
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      
+      // Log result for debugging
+      log('Camera result:', JSON.stringify(result));
+      
+      // Handle user cancellation
+      if (result.didCancel) {
+        log('User cancelled camera');
+        return;
+      }
+      
+      // Handle errors
+      if (result.errorMessage) {
+        console.error('Camera error:', result.errorMessage);
+        let message = `Camera error: ${result.errorMessage}`;
+        if (documentCategory === 'identity') {
+          setUploadPhoto1Message(message);
+        } else if (documentCategory === 'address') {
+          setUploadPhoto2Message(message);
+        }
+        return;
+      }
+      
+      // Check if we have assets
+      if (!result.assets || result.assets.length === 0) {
+        let message = 'No photo was captured. Please try again.';
+        if (documentCategory === 'identity') {
+          setUploadPhoto1Message(message);
+        } else if (documentCategory === 'address') {
+          setUploadPhoto2Message(message);
+        }
+        return;
+      }
+      
+      let image = result.assets[0];
+      log('Image captured:', image);
+      
+      // Save result in app state (more resilient than page state)
+      if (documentCategory === 'identity') {
+        appState.panels.identityVerification.photo1 = image;
+        setUploadPhoto1Message('');
+      } else if (documentCategory === 'address') {
+        appState.panels.identityVerification.photo2 = image;
+        setUploadPhoto2Message('');
+      }
+      
+      triggerRender(renderCount + 1); // Ensure re-render
+      
+    } catch (error) {
+      console.error('Camera function error:', error);
+      let message = 'Camera unavailable. Please try uploading a photo instead.';
+      if (documentCategory === 'identity') {
+        setUploadPhoto1Message(message);
+      } else if (documentCategory === 'address') {
+        setUploadPhoto2Message(message);
+      }
     }
-    let result = await launchCamera(options);
-    // Future: Handle the case where the user clicks "Cancel" after going into the Camera app.
-    if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-    //lj({result});
-    // Note from docs: Image/video captured via camera will be stored in temporary folder so will be deleted any time, so don't expect it to persist.
-    // Example results:
-    /*
-    iOS
-{"assets":[{"fileSize":5169332,"height":4032,"uri":"file:///var/mobile/Containers/Data/Application/6B354087-5CA1-4560-A7E3-237CB8504DA4/tmp/EC710A32-F187-40EF-ACDD-A49CCF64E6B5.jpg","type":"image/jpg","fileName":"EC710A32-F187-40EF-ACDD-A49CCF64E6B5.jpg","width":3024}]}
-
-    Android:
-{"assets":[{"height":4160,"width":3120,"type":"image/jpeg","fileName":"rn_image_picker_lib_temp_1505c1a0-e458-455e-a038-7959e521cc95.jpg","fileSize":3564018,"uri":"file:///data/user/0/com.solidimobileapp4/cache/rn_image_picker_lib_temp_1505c1a0-e458-455e-a038-7959e521cc95.jpg"}]}
-    */
-    // If user cancels out of Camera app: result = {"didCancel":true}}
-    if (_.has(result, 'didCancel') && result.didCancel) return;
-    // Future: Check for any more errors.
-    let image = result.assets[0];
-    //lj({image});
-    // Save result in app state (more resilient than page state).
-    if (documentCategory == 'identity') {
-      appState.panels.identityVerification.photo1 = image;
-      setUploadPhoto1Message('');
-    } else if (documentCategory == 'address') {
-      appState.panels.identityVerification.photo2 = image;
-      setUploadPhoto2Message('');
-    }
-    triggerRender(renderCount+1); // Ensure re-render.
   }
 
 
@@ -289,6 +326,54 @@ let IdentityVerification = () => {
       msg = 'Photo ready.';
     }
     return msg;
+  }
+
+
+  let selectPhotoFromLibrary = async (documentCategory) => {
+    try {
+      log('Selecting photo from library...');
+      
+      const result = await DocumentPicker.pick({
+        type: [DocumentPicker.types.images],
+        allowMultiSelection: false,
+      });
+
+      if (result && result[0]) {
+        const file = result[0];
+        log('File selected:', file);
+        
+        // Convert the selected file to the same format as camera photos
+        const photoData = {
+          uri: file.uri,
+          type: file.type,
+          fileName: file.name,
+          fileSize: file.size,
+        };
+
+        // Save result in app state (same as camera photos)
+        if (documentCategory == 'identity') {
+          appState.panels.identityVerification.photo1 = photoData;
+          setUploadPhoto1Message('');
+        } else if (documentCategory == 'address') {
+          appState.panels.identityVerification.photo2 = photoData;
+          setUploadPhoto2Message('');
+        }
+        
+        triggerRender(renderCount + 1); // Ensure re-render
+      }
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        log('File selection cancelled');
+      } else {
+        console.error('File picker error:', err);
+        let message = 'Error selecting file. Please try again.';
+        if (documentCategory == 'identity') {
+          setUploadPhoto1Message(message);
+        } else if (documentCategory == 'address') {
+          setUploadPhoto2Message(message);
+        }
+      }
+    }
   }
 
 
@@ -504,7 +589,7 @@ let IdentityVerification = () => {
                   </PaperButton>
                   <PaperButton
                     mode="contained"
-                    onPress={() => uploadPhoto('identity')}
+                    onPress={() => selectPhotoFromLibrary('identity')}
                     disabled={disablePhoto1Buttons}
                     style={{ flex: 0.48 }}
                     icon="upload"
@@ -513,11 +598,23 @@ let IdentityVerification = () => {
                   </PaperButton>
                 </View>
 
-                {/* Messages */}
+                {/* Messages and Upload Button */}
                 {(generateTakePhoto1Message() || uploadPhoto1Message) && (
-                  <HelperText type="info" visible={true} style={{ marginTop: 10 }}>
-                    {generateTakePhoto1Message() || uploadPhoto1Message}
-                  </HelperText>
+                  <View style={{ marginTop: 10 }}>
+                    <HelperText type="info" visible={true}>
+                      {generateTakePhoto1Message() || uploadPhoto1Message}
+                    </HelperText>
+                    {generateTakePhoto1Message() && (
+                      <PaperButton
+                        mode="contained"
+                        onPress={() => uploadPhoto('identity')}
+                        style={{ marginTop: 8 }}
+                        icon="cloud-upload"
+                      >
+                        Upload to Server
+                      </PaperButton>
+                    )}
+                  </View>
                 )}
               </Card.Content>
             )}
@@ -597,7 +694,7 @@ let IdentityVerification = () => {
                   </PaperButton>
                   <PaperButton
                     mode="contained"
-                    onPress={() => uploadPhoto('address')}
+                    onPress={() => selectPhotoFromLibrary('address')}
                     disabled={disablePhoto2Buttons}
                     style={{ flex: 0.48 }}
                     icon="upload"
@@ -606,11 +703,23 @@ let IdentityVerification = () => {
                   </PaperButton>
                 </View>
 
-                {/* Messages */}
+                {/* Messages and Upload Button */}
                 {(generateTakePhoto2Message() || uploadPhoto2Message) && (
-                  <HelperText type="info" visible={true} style={{ marginTop: 10 }}>
-                    {generateTakePhoto2Message() || uploadPhoto2Message}
-                  </HelperText>
+                  <View style={{ marginTop: 10 }}>
+                    <HelperText type="info" visible={true}>
+                      {generateTakePhoto2Message() || uploadPhoto2Message}
+                    </HelperText>
+                    {generateTakePhoto2Message() && (
+                      <PaperButton
+                        mode="contained"
+                        onPress={() => uploadPhoto('address')}
+                        style={{ marginTop: 8 }}
+                        icon="cloud-upload"
+                      >
+                        Upload to Server
+                      </PaperButton>
+                    )}
+                  </View>
                 )}
               </Card.Content>
             )}

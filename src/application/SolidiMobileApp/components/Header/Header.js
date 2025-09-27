@@ -106,7 +106,6 @@ let Header = (props) => {
                   changeState('Login'); // Go to login page
                 }
               }}
-              title={appState.user.isAuthenticated ? 'Profile' : 'Login'}
             />
           }
         </View>

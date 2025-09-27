@@ -25,6 +25,14 @@ const config = {
       },
     }),
     babelTransformerPath: require.resolve('react-native-svg-transformer'),
+    minifierPath: 'metro-minify-terser',
+    minifierConfig: {
+      ecma: 8,
+      keep_fnames: true,
+      mangle: {
+        keep_fnames: true,
+      },
+    },
   },
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),
@@ -36,7 +44,15 @@ const config = {
   watchFolders: [
     path.resolve(__dirname, 'src')
   ],
-  resetCache: true,
+  resetCache: false,
+  maxWorkers: 4,
+  cacheStores: [
+    {
+      get: () => Promise.resolve(null),
+      set: () => Promise.resolve(),
+      clear: () => Promise.resolve(),
+    },
+  ],
 };
 
 //module.exports = mergeConfig(defaultConfig, config);

@@ -8,6 +8,7 @@ let footerIcons = {
   Send: 'upload',
   Receive: 'download',
   History: 'tasks',
+  AddressBook: 'address-book',
 }
 
 /* Alternative choices:

@@ -138,6 +138,10 @@ let PersonalDetails = () => {
   let [citizenship, setCitizenship] = useState(getDummyUserInfo('citizenship'));
   let generateCitizenshipOptionsList = () => {
     let countries = appState.getCountries();
+    // Add error handling to ensure countries is an array
+    if (!Array.isArray(countries)) {
+      return [{label: 'United Kingdom', value: 'GB'}]; // Default fallback
+    }
     return countries.map(x => { return {label: x.name, value: x.code} });
   }
   let [citizenshipOptionsList, setCitizenshipOptionsList] = useState(generateCitizenshipOptionsList());
@@ -175,6 +179,10 @@ let PersonalDetails = () => {
   let [country, setCountry] = useState(getDummyUserInfo('country'));
   let generateCountryOptionsList = () => {
     let countries = appState.getCountries();
+    // Add error handling to ensure countries is an array
+    if (!Array.isArray(countries)) {
+      return [{label: 'United Kingdom', value: 'GB'}]; // Default fallback
+    }
     return countries.map(x => { return {label: x.name, value: x.code} });
   }
   let [countryOptionsList, setCountryOptionsList] = useState(generateCountryOptionsList());

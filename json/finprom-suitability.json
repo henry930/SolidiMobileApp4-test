@@ -1,0 +1,271 @@
+{
+        "formtitle":"Crypto Suitability Assessment",
+        "formintro":"",
+        "formid": "crypto-appropriateness-assessment",
+        "uuid": "f47fa99b-728c-4305-a6f9-3fece7f6c80d",
+        "submittext": "I'm ready, lets go!",
+        "submiturl": "/submitquestions",
+        "startpage2": "question1",
+        "startpage": "intro",
+        "startpage2": "review",
+        "pages": [
+        {
+          "pageid": "intro",
+          "nextbutton": "Continue",
+          "prevbutton": null,
+          "nextpage": "question1",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "entitydetails2",
+            "label": "<h5>Our regulator, the UK Financial Conduct Authority (FCA) wants to make sure that purchasing / investing in crypto is suitable for you.<br><br>To achieve this they required Solidi to ask you some questions to understand your knowledge of crypto, the risks and the benefits.<br><br>This should only take 2 minutes.<br><br>If you don't achieve a pass you can retake the test. If you don't pass on the second attempt then you have to wait 24 hours to take the test again.<br><br>We want you to be aware of the risks and benefits of crypto investing and so we have prepared a <a href=\"https://blog.solidi.co/investing-in-cryptocurrency-understanding-the-risks-and-regulatory-warnings/\">short blog post</a> to help with your knowledge.</a></h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+        ]
+        }
+
+
+
+
+        , {
+          "pageid": "question1",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "question2",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 1 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>How risky is investing in crypto? (as determined by the regulator)</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q1_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "<b>Low Risk</b><br>Similiar risks (and returns) to saving money in a bank account<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "<b>Medium Risk</b><br>Similiar risks (and returns) to investing in companies listed in a recognised stock market<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "<b>High Risk</b><br>Similiar risks (and returns) to investing in unlisted stocks and shares<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "question2",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "question3",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 2 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>What protections does crypto investing come with?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q2_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "<b>Financial Services Compensation Scheme (FSCS)</b><br>Crypto investments are protected by the Financial Services Compensation Scheme<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "<b>Financial Ombudsman Service (FOS)</b><br>Crypto is not protected by the FSCS but I can complain to the Financial Ombudsman Service if something goes wrong<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "<b>Neither</b><br>Crypto has neither FSCS or FOS coverage, but I can withdraw my crypto to my own Phone / Hardware wallet where I can keep it safe<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "question3",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "question4",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 3 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>What can happen to the price of crypto?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q3_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "<b>Rapidly up and down</b><br>The price of crypto can go rapidly down as well as up with potential for signficant loses and gains.<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "<b>Prices increase rapidly</b><br>I can expect the price of crypto to increase very rapidly with almost guaranteed returns.<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "<b>Stable pricing with modest movements</b><br>Crypto is a stable investment in which I can expect modest gains and loses.<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "question4",
+          "nextbutton": "Continue",
+          "prevbutton": "Previous",
+          "nextpage": "review",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "pagetitle",
+            "label": "<h2>Question 4 of 4</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "legend",
+            "id":  "question",
+            "label": "<h5>If you invest in a new crypto currency which fails, how much of your investment will you get back?</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          ,{
+            "type": "radio",
+            "id":  "q4_qa",
+            "label": "",
+            "values": [
+              {
+                "id": "one",
+                "text": "<b>100%</b><br>I will be able to claim back all my investment.<br>&nbsp;"
+              }
+              , {
+                "id": "two",
+                "text": "<b>Some of my money</b><br>I will be able to get back some of my money, possibly by the Financial Services Compensation Scheme<br>&nbsp;"
+              }
+              , {
+                "id": "three",
+                "text": "<b>Potentially no returns</b><br>If a crypto I invest in fails I understand that as a high risk, unregulated investment, I may get back none of my initial capital.<br>&nbsp;"
+              }
+            ],
+            "guidance": "",
+            "answer": "",
+            "mustselectoption": "*",
+            "validationmsg": "Please choose an answer"
+
+          }
+
+          ]
+        }
+
+
+        , {
+          "pageid": "review",
+          "nextbutton": "Submit2",
+          "prevbutton": "Previous",
+          "nextpage": "submitToServer",
+          "questions":[
+          {
+            "type": "legend",
+            "id":  "title",
+            "label": "<h2>Submit?</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+          , {
+            "type": "legend",
+            "id":  "entitydetails2",
+            "label": "<h5>Thank you - that is the end of the assessment<br><br>Happy with your answers? You can go back and review them before submitting.<br><br>Remember, due to UK regulations you must pass this test invest using a UK crypto exchange (i.e. Solidi) and you can only take this test twice in 24 hours.</h5>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "",  
+            "answer": ""  
+          }
+        ]
+        }
+
+      ]
+}

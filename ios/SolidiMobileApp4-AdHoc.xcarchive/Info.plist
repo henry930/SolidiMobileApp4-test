@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ApplicationProperties</key>
+	<dict>
+		<key>ApplicationPath</key>
+		<string>Applications/SolidiMobileApp4.app</string>
+		<key>Architectures</key>
+		<array>
+			<string>arm64</string>
+		</array>
+		<key>CFBundleIdentifier</key>
+		<string>com.henryyeung.mysolidimobileapp</string>
+		<key>CFBundleShortVersionString</key>
+		<string>1.2.0</string>
+		<key>CFBundleVersion</key>
+		<string>33</string>
+		<key>SigningIdentity</key>
+		<string>Apple Development: Henry Yeung (Q9K7UR378U)</string>
+		<key>Team</key>
+		<string>MWSWL2JBVG</string>
+	</dict>
+	<key>ArchiveVersion</key>
+	<integer>2</integer>
+	<key>CreationDate</key>
+	<date>2025-09-26T22:09:41Z</date>
+	<key>Name</key>
+	<string>SolidiMobileApp4</string>
+	<key>SchemeName</key>
+	<string>SolidiMobileApp4</string>
+</dict>
+</plist>

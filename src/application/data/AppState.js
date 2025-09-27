@@ -57,9 +57,9 @@ let bypassAuthentication = true; // Skip authentication checks to view all page 
 import appTier from 'src/application/appTier'; // dev / stag / prod.
 
 // Settings: Initial page
-let initialMainPanelState = 'Trade'; // Show trade page first
-//let initialMainPanelState = 'Assets'; // Show assets page first
-//let initialMainPanelState = 'NavigationDebug'; // Show navigation debug page first
+//let initialMainPanelState = 'Trade'; // Show trade page first
+//let initialMainPanelState = 'Assets'; // Show assets page first  
+let initialMainPanelState = 'Explore'; // Show explore page first to access dynamic forms
 //let initialMainPanelState = 'Buy';
 //initialMainPanelState = 'CloseSolidiAccount'; // Dev work
 let initialPageName = 'default';
@@ -461,7 +461,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             nextStateName = 'PIN';
             nextPageName = 'choose';
           } else if (extraInfoRequired) {
-            nextStateName = 'AccountUpdate';
+            nextStateName = 'Trade'; // Redirect to index page instead of AccountUpdate
           } else if (appState.panels.buy.activeOrder) {
             nextStateName = 'ChooseHowToPay';
           } else if (! _.isEmpty(appState.stashedState)) {
@@ -473,7 +473,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
         if (mainPanelState === 'PIN') {
           if (extraInfoRequired) {
-            nextStateName = 'AccountUpdate';
+            nextStateName = 'Trade'; // Redirect to index page instead of AccountUpdate
           } else if (appState.panels.buy.activeOrder) {
             nextStateName = 'ChooseHowToPay';
           } else if (! _.isEmpty(appState.stashedState)) {
@@ -485,7 +485,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
         if (mainPanelState === 'RegisterConfirm2') {
           if (extraInfoRequired) {
-            nextStateName = 'AccountUpdate';
+            nextStateName = 'Trade'; // Redirect to index page instead of AccountUpdate
           } else {
             nextStateName = 'Trade';
           }
@@ -3118,6 +3118,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         'SendSuccessful',
         'Settings',
         'WaitingForPayment',
+        'Wallet',
         'SolidiAccount',
         'AccountUpdate',
       ],

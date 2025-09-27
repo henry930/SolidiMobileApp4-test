@@ -239,6 +239,63 @@ let Login = () => {
               Sign In
             </Button>
 
+            {/* Dummy Login Section for Testing */}
+            <Card style={{ marginBottom: 16, backgroundColor: '#f0f8ff' }}>
+              <Card.Content>
+                <Text variant="titleSmall" style={{ marginBottom: 12, color: '#2196F3', fontWeight: '600' }}>
+                  🧪 Quick Test Login
+                </Text>
+                <Text variant="bodySmall" style={{ marginBottom: 12, color: '#666' }}>
+                  Use these dummy credentials to quickly test authenticated pages:
+                </Text>
+                
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    setEmail('test@example.com');
+                    setPassword('password123');
+                    // Auto-submit after a short delay
+                    setTimeout(() => {
+                      submitLoginRequest();
+                    }, 500);
+                  }}
+                  style={{ marginBottom: 8 }}
+                  icon="account-circle"
+                  compact
+                >
+                  Login as Test User
+                </Button>
+
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    setEmail('admin@solidi.co');
+                    setPassword('admin123');
+                    setTimeout(() => {
+                      submitLoginRequest();
+                    }, 500);
+                  }}
+                  style={{ marginBottom: 8 }}
+                  icon="shield-account"
+                  compact
+                >
+                  Login as Admin
+                </Button>
+
+                <Button
+                  mode="text"
+                  onPress={() => {
+                    setEmail('demo@demo.com');
+                    setPassword('demo');
+                  }}
+                  compact
+                  textColor="#666"
+                >
+                  Fill Demo Credentials
+                </Button>
+              </Card.Content>
+            </Card>
+
             {/* Upload Message */}
             {uploadMessage && (
               <HelperText type="info">

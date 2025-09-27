@@ -71,8 +71,23 @@ let Trade = () => {
   }
 
   // Functions that derive dropdown properties from the current lists of base and quote assets.
-  let generateBaseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
-  let generateQuoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
+  let generateBaseAssetItems = () => { 
+    let baseAssets = appState.getBaseAssets();
+    // Fallback to default assets if API data is empty
+    if (!baseAssets || baseAssets.length === 0) {
+      baseAssets = ['BTC', 'ETH', 'LTC', 'XRP'];
+    }
+    return deriveAssetItems(baseAssets);
+  }
+  
+  let generateQuoteAssetItems = () => { 
+    let quoteAssets = appState.getQuoteAssets();
+    // Fallback to default assets if API data is empty
+    if (!quoteAssets || quoteAssets.length === 0) {
+      quoteAssets = ['GBP', 'EUR', 'USD'];
+    }
+    return deriveAssetItems(quoteAssets);
+  }
 
   // Volume state:
   // BA = Base Asset

@@ -47,3 +47,7 @@ export {default as AccountUpdate} from './AccountUpdate/AccountUpdate';
 export {default as AccountRestricted} from './AccountRestricted/AccountRestricted';
 export {default as NavigationDebug} from './NavigationDebug/NavigationDebug';
 export {default as Questionnaire} from './Questionnaire/Questionnaire';
+export {default as AccountReview} from './Questionnaires/AccountReview';
+export {default as SelfCategorisation} from './Questionnaires/SelfCategorisation';
+export {default as AddressBook} from './AddressBook/AddressBook';
+export {default as Wallet} from './Wallet/Wallet';

@@ -1,0 +1,134 @@
+{
+        "formtitle":"Withdraw Query",
+        "formintro":"To protect you against frauds and scams we monitor transaction into and out of Solidi.<br><br>We have some questions regarding a withdraw which has been flagged by our transaction monitoring system.<br><br>We have provided details of the transaction in the form below. Please complete the form by providing details of the recipient / destination of the transfer to help us understand the purpose of the withdraw.",
+        "formid": "transaction-monitor-withdraw-questions",
+        "uuid": "ef783344-31ea-4ac8-93c5-5fc749254e66",
+        "submittext": "Submit Response",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "legend",
+            "id":  "introduction",
+            "label": "<h2>Transaction Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_address",
+            "label": "Transaction Address",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "This is the address the cryptocurrency was sent to",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_id",
+            "label": "Transaction ID",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "This is the transaction/blockchain ID",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_time",
+            "label": "Transaction Time",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Date & Time the transaction was sent.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_amt",
+            "label": "Transaction Amount",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Amount of the transaction and currency",  
+            "answer": ""  
+          },
+          {
+            "type": "legend",
+            "id":  "custinfo",
+            "label": "<h2>Receiver Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_dest",
+            "label": "Receiver",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Who is the receiver of this transaction?",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "transaction_purpose",
+            "label": "Purpose of the transfer",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "What is the purpose of the transaction? Please give as much detail as possible.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "radio",
+            "id":  "depositfrequency",
+            "label": "Expected Frequency",
+            "values": [
+              {
+                "id": "single",
+                "text": "Single 'one off' transaction"
+              },
+              {
+                "id": "daily",
+                "text": "Daily"
+              },
+              {
+                "id": "weekly",
+                "text": "Weekly"
+              },
+              {
+                "id": "monthly",
+                "text": "Monthly"
+              },
+              {
+                "id": "adhoc",
+                "text": "Adhoc"
+              },
+              {
+                "id": "othertextbox",
+                "text": "Other (please give details)"
+              }
+            ],
+            "guidance": "How frequently do you expect to make this or a similiar transaction",  
+            "answer": ""
+          },
+
+          {
+            "type": "upload",
+            "id":  "supportingdocuments",
+            "label": "Supporting Documents",
+            "guidance": "Please upload any supporting documents, screenshots, emails, to support the details above. (you can upload multiple documents)",  
+            "answer": ""
+          },
+
+          {
+            "type": "textarea",
+            "id":  "otherinfo",
+            "label": "Any other relevant info",
+            "rows": "6",
+            "placeholder": "(insert any other information which may be relevant)",
+            "guidance": "Insert any other information which may be relevant.",  
+            "answer": ""
+          }
+        ]
+}

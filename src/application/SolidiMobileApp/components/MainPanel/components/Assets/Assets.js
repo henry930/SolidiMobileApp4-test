@@ -527,6 +527,82 @@ let Assets = () => {
       <View style={{ flex: 1, paddingTop: 12 }}>
 
 
+        {/* Quick Wallet Actions */}
+        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+          <Card style={{ elevation: 2, borderRadius: 12 }}>
+            <Card.Content style={{ padding: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+                  Wallet Actions
+                </Text>
+                <TouchableOpacity
+                  onPress={() => appState.changeState('Wallet')}
+                  style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 8,
+                    backgroundColor: 'rgba(25, 118, 210, 0.1)'
+                  }}
+                >
+                  <Text style={{ 
+                    color: '#1976D2', 
+                    fontSize: 12, 
+                    fontWeight: '600',
+                    marginRight: 4
+                  }}>
+                    View All
+                  </Text>
+                  <Icon name="chevron-right" size={16} color="#1976D2" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#1976D2',
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onPress={() => appState.changeState('Wallet')}
+                >
+                  <Icon name="plus" size={18} color="white" style={{ marginRight: 8 }} />
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                    Deposit
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    backgroundColor: 'white',
+                    borderWidth: 1,
+                    borderColor: '#1976D2',
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    borderRadius: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onPress={() => appState.changeState('Send')}
+                >
+                  <Icon name="send" size={18} color="#1976D2" style={{ marginRight: 8 }} />
+                  <Text style={{ color: '#1976D2', fontWeight: '600', fontSize: 14 }}>
+                    Send
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Card.Content>
+          </Card>
+        </View>
+
         {/* Assets List - Full width with padding */}
         <View style={{ flex: 1, paddingHorizontal: 16 }}>
           {renderAssets()}

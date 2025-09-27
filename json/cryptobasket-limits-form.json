@@ -1,0 +1,168 @@
+{
+        "formtitle":"Crypto Basket application",
+        "formintro":"Please fill out the form below to apply for additional limits for funding the Crypto Basket.<br><br>Please provide as much detail as possible as this will ensure our compliance team can get your account upgraded without delay.",
+        "formid": "cryptobasketsquestionaire",
+        "uuid": "41a69bd5-4639-4b46-b41b-8b9ce763e21e",
+        "submittext": "Submit",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "text",
+            "id":  "occupation",
+            "label": "Main Occupation",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide your main occupation (including retired)",  
+            "answer": ""  
+          },
+          {
+            "type": "textarea",
+            "id":  "background",
+            "label": "Other income sources",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide an overview of other sources of income/weath to help us understand the source(s) of funds for your account.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "linkedinprofile",
+            "label": "LinkedIn profile",
+            "prepend-icon": "fa-linkedin-square",
+            "placeholder": "(if any)",
+            "guidance": "Please provide a link to your linkedin profile. This assists with our Identification & Verification process, but will be kept completely confidential and we won't connect with you.",  
+            "answer": ""
+          },
+          {
+            "type": "text",
+            "id":  "initialdeposit",
+            "label": "Initial Deposit",
+            "prepend-icon": "fa-gbp",
+            "answer": ""
+          },
+          {
+            "type": "checkbox",
+            "id":  "sourceofdeposit",
+            "label": "Source of Initial Deposit",
+            "values": [
+              {
+                "id": "salary",
+                "text": "Salary"
+              },
+              {
+                "id": "bonus",
+                "text": "Bonus"
+              },
+              {
+                "id": "savings",
+                "text": "Savings"
+              },
+              {
+                "id": "investments",
+                "text": "Investments"
+              },
+              {
+                "id": "inheritance",
+                "text": "Inheritance"
+              },
+              {
+                "id": "propertysale",
+                "text": "Property Sale"
+              },
+              {
+                "id": "businessssale",
+                "text": "Business Sale"
+              }
+            ],
+            "answer": ""
+          },
+          {
+            "type": "upload",
+            "id":  "initaldepositsupportingdocs",
+            "label": "Supporting Documents",
+            "answer": ""
+          },
+          {
+            "type": "text",
+            "id":  "ongoingdeposits",
+            "label": "Ongoing Deposit(s)",
+            "prepend-icon": "fa-gbp",
+            "answer": ""
+          },
+          {
+            "type": "radio",
+            "id":  "depositfrequency",
+            "label": "Deposit Frequency",
+            "values": [
+              {
+                "id": "daily",
+                "text": "Daily"
+              },
+              {
+                "id": "weekly",
+                "text": "Weekly"
+              },
+              {
+                "id": "monthly",
+                "text": "Monthly"
+              },
+              {
+                "id": "adhoc",
+                "text": "Adhoc"
+              }
+            ],
+            "answer": ""
+          },
+          {
+            "type": "checkbox",
+            "id":  "ongoingsource",
+            "label": "Source of Ongoing Deposits",
+            "values": [
+              {
+                "id": "salary",
+                "text": "Salary"
+              },
+              {
+                "id": "bonus",
+                "text": "Bonus"
+              },
+              {
+                "id": "savings",
+                "text": "Savings"
+              },
+              {
+                "id": "investments",
+                "text": "Investments"
+              },
+              {
+                "id": "inheritance",
+                "text": "Inheritance"
+              },
+              {
+                "id": "propertysale",
+                "text": "Property Sale"
+              },
+              {
+                "id": "businessssale",
+                "text": "Business Sale"
+              }
+            ],
+            "answer": ""
+          },
+          {
+            "type": "upload",
+            "id":  "ongoingsupportingdocuments",
+            "label": "Supporting Documents",
+            "answer": ""
+          },
+          {
+            "type": "textarea",
+            "id":  "otherinfo",
+            "label": "Any other relevant info",
+            "rows": "6",
+            "placeholder": "(insert any other information which may be relevant)",
+            "guidance": "Insert any other information which may be relevant. This is optional and usually not required.",  
+            "answer": ""
+          }
+        ]
+}

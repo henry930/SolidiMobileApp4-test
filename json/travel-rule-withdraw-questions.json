@@ -1,0 +1,91 @@
+{
+        "formtitle":"Withdraw Destination Query",
+        "formintro":"Under new UK regulations, known as the Travel Rule, all UK exchanges need to request some additional details about withdraws.<br><br>This is to protect you from unintended transfers and scams, similar to the way your bank asks for the name of a receiver when you transfer funds.<br><br>Please accept our apologies for the delay - this is a temporary step which will be removed shortly as part of the withdraw procedure - any fees you have paid for the withdraw will be refunded.",
+        "formid": "travel-rule-withdraw-questions",
+        "uuid": "544cc666-e319-4f4a-9238-1c4fe43d204a",
+        "submittext": "Submit Response",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "legend",
+            "id":  "introduction",
+            "label": "<h2>Transaction Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_address",
+            "label": "Transaction Address",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "This is the address the cryptocurrency was sent to",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_amt",
+            "label": "Transaction Amount",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Amount of the transaction and currency",  
+            "answer": ""  
+          },
+          {
+            "type": "legend",
+            "id":  "custinfo",
+            "label": "<h2>Receiver Details</h2>",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide additional details for the previous answer.",  
+            "answer": ""  
+          },
+          {
+            "type": "text",
+            "id":  "transaction_name",
+            "label": "Receiver",
+            "prepend-icon": "",
+            "placeholder": "First name and lastname of receiver (or business name)",
+            "guidance": "Who is the receiver (beneficiary) of this transaction?",  
+            "answer": ""  
+          },
+
+          {
+            "type": "radio",
+            "id":  "desttype",
+            "label": "Destination Type",
+            "values": [
+              {
+                "id": "exchange",
+                "text": "Exchange / Other Business"
+              },
+              {
+                "id": "wallet",
+                "text": "Hosted Wallet"
+              },
+              {
+                "id": "unhosted",
+                "text": "Unhosted Wallet (e.g. phone wallet, ledger, trezor)"
+              },
+              {
+                "id": "othertextbox",
+                "text": "Other (please give details)"
+              }
+            ],
+            "guidance": "How frequently do you expect to make this or a similiar transaction",  
+            "answer": ""
+          },
+
+          {
+            "type": "text",
+            "id":  "destination",
+            "label": "Destination Business / Device",
+            "prepend-icon": "",
+            "placeholder": "Binance, Coinbase, Ledger Nano etc",
+            "guidance": "Where is this transaction going to? Is it an exchange? A phone wallet? A hardware wallet?",  
+            "answer": ""  
+          }
+        ]
+}

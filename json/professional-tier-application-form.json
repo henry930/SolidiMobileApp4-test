@@ -1,0 +1,155 @@
+{
+        "formtitle":"Professional Tier Limits application",
+        "formintro":"Please fill out the form below to apply for our Professional tier trading limits.<br><br>Please provide as much detail as possible as this will ensure our compliance team can get your account upgraded without delay.",
+        "formid": "professional-tier-applicaiton-form",
+        "uuid": "0a096d5d-04b9-4ca9-90ed-cf84ff6c8e9a",
+        "submittext": "Submit Application",
+        "submiturl": "/submitquestions",
+        "questions":[
+          {
+            "type": "text",
+            "id":  "occupation",
+            "label": "Current Occupation",
+            "prepend-icon": "",
+            "placeholder": "",
+            "guidance": "Please provide your current occupation or alternatively retired, home maker, benefits or otherwise.",  
+            "answer": ""  
+          },
+          {
+
+            "type": "textarea",
+            "id":  "sof",
+            "label": "Source of funds",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Where are you sending money from to fund your account / purchases. E.g. a bank account, savings account, pervious crypto purchase etc.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "upload",
+            "id":  "sofupload",
+            "label": "Supporting Documents",
+            "guidance": "Please provide a document to support your source of funds, eg. a bank / savings account statement",  
+            "answer": ""
+          },
+
+          {
+
+            "type": "textarea",
+            "id":  "sow",
+            "label": "Source of wealth",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "How have you come by your overall wealth? This could be via salary, inheritance, previous sucessful investments, sale of a houses or business etc.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "upload",
+            "id":  "sowupload",
+            "label": "Supporting Documents",
+            "guidance": "Please provide a document to support your source of wealth, eg. a payslip, inheritance details, deed of sale etc.",  
+            "answer": ""
+          },
+
+          {
+            "type": "text",
+            "id":  "investamount",
+            "label": "Expected monthly / one off buys(invest)",
+            "prepend-icon": "fa-gbp",
+            "placeholder": "",
+            "guidance": "Please indicate the amount you expect in buy/invest.",  
+            "answer": ""  
+          },
+          {
+            "type": "radio",
+            "id":  "investfreq",
+            "label": "Invest(Buy) Frequency",
+            "values": [
+              {
+                "id": "oneoff",
+                "text": "One off investment"
+              },
+              {
+                "id": "daily",
+                "text": "Daily"
+              },
+              {
+                "id": "weekly",
+                "text": "Weekly"
+              },
+              {
+                "id": "monthly",
+                "text": "Monthly"
+              },
+              {
+                "id": "adhoc",
+                "text": "Adhoc"
+              }
+            ],
+            "guidance": "",  
+            "answer": ""
+          },
+
+
+          {
+            "type": "text",
+            "id":  "divestamount",
+            "label": "Expected monthly / one off sales(divest)",
+            "prepend-icon": "fa-gbp",
+            "placeholder": "",
+            "guidance": "Please indicate the amount you expect in sell/divest.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "radio",
+            "id":  "divestfreq",
+            "label": "Divest(sell) Frequency",
+            "values": [
+              {
+                "id": "oneoff",
+                "text": "One off investment"
+              },
+              {
+                "id": "daily",
+                "text": "Daily"
+              },
+              {
+                "id": "weekly",
+                "text": "Weekly"
+              },
+              {
+                "id": "monthly",
+                "text": "Monthly"
+              },
+              {
+                "id": "adhoc",
+                "text": "Adhoc"
+              }
+            ],
+            "guidance": "",  
+            "answer": ""
+          },
+
+          {
+
+            "type": "textarea",
+            "id":  "use",
+            "label": "Use of crypto",
+            "prepend-icon": "fa-map",
+            "placeholder": "",
+            "guidance": "Please provide details of what you are using the crypto for or how you came to acquire any crypto currency you are selling.",  
+            "answer": ""  
+          },
+
+          {
+            "type": "upload",
+            "id":  "supportingdocs",
+            "label": "Additional Supporting Documents",
+            "guidance": "Please provide any additional documents which may be relevant - e.g. for selling crypto then please provide documents showing purchase of crypto / crypto statements etc.",
+            "answer": ""
+          }
+        ]
+}

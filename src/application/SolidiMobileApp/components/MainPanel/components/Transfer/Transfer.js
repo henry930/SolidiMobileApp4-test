@@ -221,7 +221,7 @@ let Transfer = () => {
               value: 'send',
               label: 'Send',
               icon: 'upload',
-              style: transferType === 'send' ? { backgroundColor: '#FF6B35' } : {},
+              style: transferType === 'send' ? { backgroundColor: '#1565C0' } : {},
               labelStyle: transferType === 'send' ? { color: 'white' } : {}
             },
             {
@@ -303,7 +303,7 @@ let Transfer = () => {
                 onPress={handleSend}
                 style={{ 
                   marginTop: 8,
-                  backgroundColor: '#FF6B35'
+                  backgroundColor: '#1565C0'
                 }}
                 contentStyle={{ paddingVertical: 8 }}
               >
