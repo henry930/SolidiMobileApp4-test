@@ -130,9 +130,9 @@ const headerStyles = StyleSheet.create({
   riskBannerText: {
     textAlign: 'center',
     color: 'white',
-    fontSize: normaliseFont(11),
+    fontSize: normaliseFont(10),
     fontWeight: '600',
-    lineHeight: normaliseFont(15)
+    lineHeight: normaliseFont(14)
   },
   header: {
     flexDirection: 'row',

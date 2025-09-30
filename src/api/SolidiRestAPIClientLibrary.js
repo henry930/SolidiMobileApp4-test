@@ -56,6 +56,15 @@ export default class SolidiRestAPIClientLibrary {
     this._checkExactExpectedArgs(args, expected, 'constructor');
     _.assign(this, args);
 
+    // ===== LOGGING TEST START =====
+    console.log('\n' + '🚀'.repeat(50));
+    console.log('🔥 SOLIDI API CLIENT INITIALIZED WITH ENHANCED LOGGING! 🔥');
+    console.log(`📡 Domain: ${this.domain}`);
+    console.log(`🔑 API Key: ${this.apiKey || 'None'}`);
+    console.log('🎯 LOGGING IS WORKING - YOU SHOULD SEE THIS MESSAGE!');
+    console.log('🚀'.repeat(50));
+    // ===== LOGGING TEST END =====
+
     // When testing for release into production, it is not possible to use www.solidi.co (as this is pointing to the current live server)
     // and it is not easy to override the DNS when testing on a mobile app.
     // Instead we use the hostname 'tt.solidi.co', however as the new production server is setup as www.solidi.co and expects all messages
@@ -150,6 +159,16 @@ export default class SolidiRestAPIClientLibrary {
     let expected = 'privateAPICall, httpMethod, apiRoute, params, apiVersion, abortController'.split(', ');
     this._checkExactExpectedArgs(args, expected, 'makeAPICall');
     let {privateAPICall, httpMethod, apiRoute, params, apiVersion, abortController} = args;
+    
+    // ===== API CALL DETECTION START =====
+    console.log('\n' + '🔴'.repeat(60));
+    console.log('🚨 API CALL DETECTED! ENHANCED LOGGING ACTIVE! 🚨');
+    console.log(`🎯 API Route: ${apiRoute}`);
+    console.log(`📡 Method: ${httpMethod}`);
+    console.log(`🔒 Private: ${privateAPICall ? 'YES' : 'NO'}`);
+    console.log('🔴'.repeat(60));
+    // ===== API CALL DETECTION END =====
+    
     let path = `/api2/${apiVersion}/${apiRoute}`;
     let uri = 'https://' + this.domain + path;
     if (params == null) params = {};
@@ -228,7 +247,24 @@ export default class SolidiRestAPIClientLibrary {
         msg += ` with parameters = ${postDataStr2}`;
       }
       log(msg);
+
+      // ===== SIMPLIFIED API LOGGING =====
+      if (apiRoute.includes('login')) {
+        console.log('\n' + '🔐'.repeat(40));
+        console.log('🚨 LOGIN API CALL DETECTED! 🚨');
+        console.log(`📍 ENDPOINT: ${httpMethod} ${uri}`);
+        console.log('�'.repeat(40));
+      }
+      // ===== SIMPLIFIED API LOGGING END =====
+
       let response = await fetch(uri, options);
+
+      // ===== SIMPLIFIED RESPONSE LOGGING =====
+      if (apiRoute.includes('login')) {
+        console.log('\n' + '📡 LOGIN RESPONSE RECEIVED');
+        console.log(`📊 STATUS: ${response.status} ${response.statusText}`);
+      }
+      // ===== SIMPLIFIED RESPONSE LOGGING END =====
       if (! response.ok) {
         // Return 503 errors to caller.
         // We might want to return all non-[200-299] codes.
@@ -237,6 +273,15 @@ export default class SolidiRestAPIClientLibrary {
         }
       }
       let responseData = await response.text();
+      
+      // ===== SIMPLIFIED RESPONSE BODY LOGGING =====
+      if (apiRoute.includes('login')) {
+        console.log('\n💾 LOGIN RESPONSE BODY:');
+        console.log(responseData);
+        console.log('-'.repeat(40));
+      }
+      // ===== SIMPLIFIED RESPONSE BODY LOGGING END =====
+      
       let responseDataStr = responseData;
       if (responseDataStr.length > 300) {
         responseDataStr = responseDataStr.substring(0, 300) + ' ... ';
@@ -275,6 +320,43 @@ export default class SolidiRestAPIClientLibrary {
       */
       try {
         result = JSON.parse(responseData);
+        
+        // ===== SAVE API CREDENTIALS TO FILE =====
+        if (result && result.data && result.data.apiKey && result.data.apiSecret) {
+          const fs = require('react-native-fs');
+          const credentialsData = {
+            timestamp: new Date().toISOString(),
+            apiKey: result.data.apiKey,
+            apiSecret: result.data.apiSecret,
+            userID: result.data.userID,
+            email: result.data.email,
+            fullResponse: result
+          };
+          
+          const filePath = `${fs.DocumentDirectoryPath}/solidi_api_credentials.json`;
+          fs.writeFile(filePath, JSON.stringify(credentialsData, null, 2))
+            .then(() => {
+              console.log('\n' + '🎉'.repeat(60));
+              console.log('� API CREDENTIALS SAVED TO FILE! 💾');
+              console.log(`📁 File: ${filePath}`);
+              console.log(`🔑 API Key: ${result.data.apiKey}`);
+              console.log(`🔐 API Secret: ${result.data.apiSecret}`);
+              console.log('🎉'.repeat(60));
+            })
+            .catch(err => console.log('❌ Failed to save credentials:', err));
+        }
+        // ===== SAVE API CREDENTIALS TO FILE END =====
+        
+        // ===== SIMPLIFIED JSON RESPONSE LOGGING =====
+        if (result && result.data && result.data.apiKey) {
+          console.log('\n' + '🎊'.repeat(60));
+          console.log('✅ LOGIN SUCCESS - API CREDENTIALS FOUND!');
+          console.log(`🔑 API Key: ${result.data.apiKey}`);
+          console.log(`🔐 API Secret: ${result.data.apiSecret}`);
+          console.log('🎊'.repeat(60));
+        }
+        // ===== SIMPLIFIED JSON RESPONSE LOGGING END =====
+        
       } catch(err) {
         log(`Can't parse received data: ${responseData}`);
         return {error: 'cannot_parse_data', responseData};

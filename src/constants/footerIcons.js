@@ -3,6 +3,7 @@ let footerIcons = {
   Sell: 'dollar',
   Trade: 'exchange',
   Assets: 'bank',
+  Wallet: 'credit-card',
   Explore: 'compass',
   Transfer: 'arrows-h',
   Send: 'upload',

@@ -45,6 +45,10 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('AppState');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
+// ===== BASIC CONSOLE TEST =====
+console.log('🎯 APPSTATE.JS LOADED - CONSOLE LOGGING IS WORKING! 🎯');
+// ===== BASIC CONSOLE TEST END =====
+
 // Shortcuts
 let jd = JSON.stringify;
 
@@ -71,7 +75,7 @@ if (appTier == 'stag') appName = 'SolidiMobileAppTest'; // necessary ?
 let storedAPIVersion = '1.0.2';
 
 // OFFLINE MODE - Set to true to disable all API calls for layout testing
-let OFFLINE_MODE = true;
+let OFFLINE_MODE = false;
 
 let domains = {
   dev: 't2.solidi.co',
@@ -537,7 +541,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Create public API client.
       if (! this.state.apiClient) {
         let {userAgent, domain} = this.state;
+        
+        // ===== SIMPLIFIED APPSTATE API CLIENT CREATION =====
+        console.log('🔥 APPSTATE: CREATING SOLIDI API CLIENT');
+        console.log(`🌐 Domain: ${domain}`);
+        // ===== SIMPLIFIED APPSTATE API CLIENT CREATION END =====
+        
         this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
+        
+        console.log('✅ API CLIENT CREATED SUCCESSFULLY!');
       }
       // Create CoinGecko API client for live crypto data
       if (! this.state.coinGeckoAPI) {
@@ -667,8 +679,17 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       
       // Create public API client.
       let {userAgent, domain} = this.state;
+      
+      // ===== SIMPLIFIED LOGIN API CLIENT CREATION =====
+      console.log(' LOGIN: CREATING API CLIENT FOR LOGIN');
+      console.log(`📧 Email: ${email}`);
+      console.log(`🌐 Domain: ${domain}`);
+      // ===== SIMPLIFIED LOGIN API CLIENT CREATION END =====
+      
       let apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
       this.state.apiClient = apiClient;
+      
+      console.log('✅ LOGIN API CLIENT CREATED SUCCESSFULLY!');
       // Use the email and password to load the API Key and Secret from the server.
       let apiRoute = 'login_mobile' + `/${email}`;
       let optionalParams = {
@@ -750,6 +771,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Step 1: Save credentials of current user.
       log(`loginAsDifferentUser: Step 1: Save credentials of current user.`);
       let {apiKey, apiSecret} = this.state.apiClient;
+      log(`apiKey: ${apiKey}`);
+      log(`apiSecret: ${apiSecret}`);
       _.assign(this.state.originalUser, {apiKey, apiSecret});
       // Step 2: Request credentials of new user.
       log(`loginAsDifferentUser: Step 2: Request credentials of new user.`);
@@ -883,9 +906,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log(`[OFFLINE MODE] Mocking API call: ${apiRoute}`);
         return this.getMockResponse(apiRoute, params);
       }
+      
+      // Log API request details
+      console.log(`🌐 [PUBLIC API REQUEST] ${httpMethod} ${apiRoute}`);
+      console.log(`📤 [PUBLIC API REQUEST PARAMS]`, params);
+      console.log(`🔧 [PUBLIC API FUNCTION]`, functionName);
+      
       let tag = apiRoute.split('/')[0];
       let abortController = this.state.createAbortController({tag, noAbort});
       let data = await this.state.apiClient.publicMethod({httpMethod, apiRoute, params, abortController});
+      
+      // Log API response details
+      console.log(`📥 [PUBLIC API RESPONSE] ${httpMethod} ${apiRoute}`);
+      console.log(`📊 [PUBLIC API RESPONSE DATA]`, data);
       // Examine errors.
       //data = {'error': 503}; // dev
       if (_.has(data, 'error')) {
@@ -960,9 +993,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log(`[OFFLINE MODE] Mocking private API call: ${apiRoute}`);
         return this.getMockResponse(apiRoute, params);
       }
+      
+      // Log API request details
+      console.log(`🚀 [API REQUEST] ${httpMethod} ${apiRoute}`);
+      console.log(`📤 [API REQUEST PARAMS]`, params);
+      console.log(`🔧 [API FUNCTION]`, functionName);
+      
       let tag = apiRoute.split('/')[0];
       let abortController = this.state.createAbortController({tag, noAbort});
       let data = await this.state.apiClient.privateMethod({httpMethod, apiRoute, params, abortController});
+      
+      // Log API response details
+      console.log(`📥 [API RESPONSE] ${httpMethod} ${apiRoute}`);
+      console.log(`📊 [API RESPONSE DATA]`, data);
       if (_.has(data, 'error')) {
         let error = data.error;
         if (error == 'cannot_parse_data') {
@@ -2050,6 +2093,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // The following information can be changed by the user while the app is in use, so we reload it every time this function is called.
       await this.loadUserInfo();
       await this.loadUserStatus();
+      await this.loadPersonalDetailOptions(); // Load dropdown options for Personal Details page
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
     }
@@ -2176,6 +2220,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // These are default accounts for withdrawals. They should be external addresses / accounts held by the user.
       // We use these when the user sells an asset - they may choose to receive the payment into this account.
       let funcName = 'loadDefaultAccountForAsset';
+      console.log(`🏦 [BANK ACCOUNT LOAD] Loading account for asset: ${asset}`);
+      
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
       let assets = this.state.getAssets();
       if (! assets.includes(asset)) { console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); return; }
@@ -2184,6 +2230,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         apiRoute: `default_account/${asset}`,
       });
       if (data == 'DisplayedError') return;
+      
+      console.log(`🏦 [BANK ACCOUNT LOAD] Received data:`, data);
+      
       // Example result for GBP:
       /*
       {"accountName":"Mr John Q Fish, Esq","sortCode":"83-44-05","accountNumber":"55566677"}
@@ -2214,6 +2263,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.updateDefaultAccountForAsset = async (asset, params) => {
       let funcName = 'updateDefaultAccountForAsset';
+      console.log(`🏦 [BANK ACCOUNT UPDATE] Starting update for asset: ${asset}`);
+      console.log(`🏦 [BANK ACCOUNT PARAMS]`, params);
+      
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
       let assets = this.state.getAssets();
       if (! assets.includes(asset)) { console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); return; }
@@ -2224,15 +2276,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       });
       if (data == 'DisplayedError') return;
       if (data.result == 'success') {
-        let msg = `Updated ${asset} default account with parameters = ${params}`;
+        let msg = `Updated ${asset} default account with parameters = ${JSON.stringify(params)}`;
+        console.log(`✅ [BANK ACCOUNT SUCCESS] ${msg}`);
         log(msg);
         // Save data in local storage.
         this.state.user.info.defaultAccount[asset] = params;
       }
       if (_.has(data, 'error')) {
         let msg = `Error returned from API request: ${JSON.stringify(data.error)}`;
+        console.error(`❌ [BANK ACCOUNT ERROR] ${msg}`);
         logger.error(msg);
       }
+      console.log(`🏦 [BANK ACCOUNT UPDATE] Complete. Final result:`, data);
       return data;
     }
 
@@ -3062,6 +3117,41 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         },
       },
       registerData: null,
+      
+      // Clean user data model - no dummy data
+      blankUserData: {
+        // Basic personal information
+        title: '',
+        firstName: '',
+        middleNames: '',
+        lastName: '',
+        gender: '',
+        dateOfBirth: '',
+        
+        // Location and citizenship
+        citizenship: '',
+        country: '',
+        
+        // Contact information
+        email: '',
+        mobile: '',
+        landline: '',
+        
+        // Address information
+        postcode: '',
+        address_1: '',
+        address_2: '',
+        address_3: '',
+        address_4: '',
+        
+        // Email preferences
+        emailPreferences: {
+          systemAnnouncements: false,
+          newsAndFeatureUpdates: false,
+          promotionsAndSpecialOffers: false,
+        },
+      },
+      
       blankRegisterConfirmData: {
         email: '',
         password: '',

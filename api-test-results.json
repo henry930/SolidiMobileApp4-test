@@ -1,0 +1,336 @@
+{
+  "timestamp": "2025-09-30T17:38:34.702Z",
+  "testSummary": {
+    "total": 11,
+    "passed": 11,
+    "failed": 0,
+    "publicEndpoints": 5,
+    "privateEndpoints": 6,
+    "externalAPIs": 0
+  },
+  "authentication": {
+    "success": true,
+    "apiKey": "iqZKMVbnCcXgpLteFaSuUMbndUw4BkWSCrXylu8PycdcGNBKXKF56twx",
+    "apiSecret": "HIDDEN_FOR_SECURITY",
+    "method": "Extracted from real app login",
+    "note": "Credentials extracted from successful mobile app login"
+  },
+  "publicEndpoints": {
+    "ticker": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "BTC/GBP": {
+            "ask": "DOWN",
+            "bid": "DOWN",
+            "max_ask": "DOWN",
+            "max_bid": "DOWN",
+            "min_ask": "DOWN",
+            "min_bid": "DOWN"
+          },
+          "XBT/GBP": {
+            "ask": "DOWN",
+            "bid": "DOWN",
+            "max_ask": "DOWN",
+            "max_bid": "DOWN",
+            "min_ask": "DOWN",
+            "min_bid": "DOWN"
+          }
+        }
+      },
+      "testedAt": "2025-09-30T17:38:34.946Z",
+      "requiresAuth": false
+    },
+    "api_version": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "api_latest_version": "1.0.2"
+        }
+      },
+      "testedAt": "2025-09-30T17:38:35.990Z",
+      "requiresAuth": false
+    },
+    "app_version": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "version": "1.0.29",
+          "minimumVersionRequired": {
+            "ios": {
+              "version": "1.0.29"
+            },
+            "android": {
+              "version": "1.0.29"
+            }
+          }
+        }
+      },
+      "testedAt": "2025-09-30T17:38:37.034Z",
+      "requiresAuth": false
+    }
+  },
+  "privateEndpoints": {
+    "security_check": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "pepResult": false
+        }
+      },
+      "testedAt": "2025-09-30T17:38:38.158Z",
+      "requiresAuth": true
+    },
+    "balance": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "BTC": "0.00000000",
+          "ETH": "0.000000000000000000",
+          "GBP": "0.00",
+          "LINK": "0.00000000",
+          "LTC": "0.00000000",
+          "XRP": "0.000000"
+        }
+      },
+      "testedAt": "2025-09-30T17:38:39.220Z",
+      "requiresAuth": true
+    },
+    "transaction": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "total": "0",
+          "txns": []
+        }
+      },
+      "testedAt": "2025-09-30T17:38:40.286Z",
+      "requiresAuth": true
+    },
+    "user": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "acctype": "P",
+          "address_1": "Flat 2",
+          "address_2": "Charis House",
+          "address_3": "1 Grace Street",
+          "address_4": "London",
+          "appretake": true,
+          "appretakedate": "2000-01-02T00:00:00.000Z",
+          "appropriate": "TBD",
+          "apptest": "2000-01-01T00:00:00.000Z",
+          "bankLimit": "50.00",
+          "btcLimit": "50.00000000",
+          "cat": null,
+          "catreq": true,
+          "citizenship": "GB",
+          "compname": null,
+          "compno": null,
+          "coolend": "2025-10-01T08:15:50.000Z",
+          "cooling": true,
+          "country": "GB",
+          "created": "2025-09-30T08:15:50.000Z",
+          "cryptoLimit": "50.00",
+          "dateOfBirth": "04/05/1979",
+          "deposit": "SCENGRS",
+          "email": "henry930@gmail.com",
+          "emailPreferences": [
+            "buyAndSellEmails"
+          ],
+          "firstName": "Henry",
+          "freeWithdraw": 0,
+          "gender": "Male",
+          "landline": null,
+          "lastName": "Yeung",
+          "lastcat": "2000-01-01T00:00:00.000Z",
+          "limitPeriod": 25,
+          "middleNames": null,
+          "mobile": "+447878701404",
+          "postcode": "E33DJ",
+          "prw": null,
+          "tier": 1,
+          "title": null,
+          "uuid": "e2ad15b8-c48d-4d97-8935-959f9e725761"
+        }
+      },
+      "testedAt": "2025-09-30T17:38:41.353Z",
+      "requiresAuth": true
+    },
+    "fee": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": {
+          "BTC": {
+            "withdraw": {
+              "highFee": "0.00050000",
+              "lowFee": "0.00015000",
+              "mediumFee": "0.00030000",
+              "standardHighFee": "0.00050000",
+              "standardLowFee": "0.00015000",
+              "standardMediumFee": "0.00030000"
+            }
+          },
+          "ETH": {
+            "withdraw": {
+              "highFee": "0.00100000",
+              "lowFee": "-1.00000000",
+              "mediumFee": "-1.00000000",
+              "standardHighFee": "0.00100000",
+              "standardLowFee": "-1.00000000",
+              "standardMediumFee": "-1.00000000"
+            }
+          },
+          "GBP": {
+            "withdraw": {
+              "highFee": "0.50000000",
+              "lowFee": "0.50000000",
+              "mediumFee": "0.50000000",
+              "standardHighFee": "0.50000000",
+              "standardLowFee": "0.50000000",
+              "standardMediumFee": "0.50000000"
+            }
+          },
+          "LINK": {
+            "withdraw": {
+              "highFee": "-1.00000000",
+              "lowFee": "0.40000000",
+              "mediumFee": "-1.00000000",
+              "standardHighFee": "-1.00000000",
+              "standardLowFee": "0.40000000",
+              "standardMediumFee": "-1.00000000"
+            }
+          },
+          "LTC": {
+            "withdraw": {
+              "highFee": "0.00011000",
+              "lowFee": "0.00000000",
+              "mediumFee": "0.00005100",
+              "standardHighFee": "0.00011000",
+              "standardLowFee": "0.00000000",
+              "standardMediumFee": "0.00005100"
+            }
+          },
+          "XRP": {
+            "withdraw": {
+              "highFee": "0.02000000",
+              "lowFee": "-1.00000000",
+              "mediumFee": "-1.00000000",
+              "standardHighFee": "0.02000000",
+              "standardLowFee": "-1.00000000",
+              "standardMediumFee": "-1.00000000"
+            }
+          }
+        }
+      },
+      "testedAt": "2025-09-30T17:38:42.415Z",
+      "requiresAuth": true
+    },
+    "order": {
+      "success": true,
+      "response": {
+        "error": null,
+        "data": []
+      },
+      "testedAt": "2025-09-30T17:38:43.473Z",
+      "requiresAuth": true
+    }
+  },
+  "externalAPIs": {
+    "coingecko_prices": {
+      "success": true,
+      "response": {
+        "bitcoin": {
+          "gbp": 84168,
+          "gbp_24h_change": -0.8055374528464557,
+          "usd": 113297,
+          "usd_24h_change": -0.544898209222472
+        },
+        "ethereum": {
+          "gbp": 3045.96,
+          "gbp_24h_change": -1.4133012387279023,
+          "usd": 4100.12,
+          "usd_24h_change": -1.154258929946713
+        }
+      },
+      "testedAt": "2025-09-30T17:38:44.716Z",
+      "requiresAuth": false
+    },
+    "coingecko_market": {
+      "success": true,
+      "response": [
+        {
+          "id": "bitcoin",
+          "symbol": "btc",
+          "name": "Bitcoin",
+          "image": "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400",
+          "current_price": 84168,
+          "market_cap": 1676605872887,
+          "market_cap_rank": 1,
+          "fully_diluted_valuation": 1676605872887,
+          "total_volume": 40869380957,
+          "high_24h": 85443,
+          "low_24h": 83835,
+          "price_change_24h": -683.5091175743291,
+          "price_change_percentage_24h": -0.80554,
+          "market_cap_change_24h": -13318218595.338867,
+          "market_cap_change_percentage_24h": -0.7881,
+          "circulating_supply": 19928203,
+          "total_supply": 19928203,
+          "max_supply": 21000000,
+          "ath": 91369,
+          "ath_change_percentage": -7.95046,
+          "ath_date": "2025-08-14T00:37:02.582Z",
+          "atl": 43.9,
+          "atl_change_percentage": 191473.05075,
+          "atl_date": "2013-07-05T00:00:00.000Z",
+          "roi": null,
+          "last_updated": "2025-09-30T17:38:42.043Z"
+        },
+        {
+          "id": "ethereum",
+          "symbol": "eth",
+          "name": "Ethereum",
+          "image": "https://coin-images.coingecko.com/coins/images/279/large/ethereum.png?1696501628",
+          "current_price": 3045.96,
+          "market_cap": 367486815726,
+          "market_cap_rank": 2,
+          "fully_diluted_valuation": 367486815726,
+          "total_volume": 23844223901,
+          "high_24h": 3149.44,
+          "low_24h": 3043.44,
+          "price_change_24h": -43.66568608714488,
+          "price_change_percentage_24h": -1.4133,
+          "market_cap_change_24h": -5112476881.458069,
+          "market_cap_change_percentage_24h": -1.37211,
+          "circulating_supply": 120702766.1885211,
+          "total_supply": 120702766.1885211,
+          "max_supply": null,
+          "ath": 3685.5,
+          "ath_change_percentage": -17.25439,
+          "ath_date": "2025-08-24T18:41:03.538Z",
+          "atl": 0.280314,
+          "atl_change_percentage": 1087816.85396,
+          "atl_date": "2015-10-20T00:00:00.000Z",
+          "roi": {
+            "times": 47.37719711569463,
+            "currency": "btc",
+            "percentage": 4737.719711569463
+          },
+          "last_updated": "2025-09-30T17:38:33.785Z"
+        }
+      ],
+      "testedAt": "2025-09-30T17:38:44.888Z",
+      "requiresAuth": false
+    }
+  },
+  "errors": []
+}

@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Material Design imports
@@ -26,7 +26,7 @@ import { Title } from 'src/components/shared';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 import { colors } from 'src/constants';
-import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, formStyles as forms } from 'src/styles';
+import { sharedStyles as styles, textStyles as text, formStyles as forms } from 'src/styles';
 
 // Logger
 import logger from 'src/util/logger';
@@ -89,7 +89,6 @@ let Login = () => {
     password = 'bigFish6';
     */
     setDisableLoginButton(true);
-    setErrorMessage('');
     try {
       if (! (email && password) ) {
         let msg;
@@ -100,7 +99,14 @@ let Login = () => {
         } else {
           msg = 'Email and password are required.';
         }
-        setErrorMessage(msg);
+        
+        // Show error as popup alert
+        Alert.alert(
+          "Login Error",
+          msg,
+          [{ text: "OK", style: "default" }]
+        );
+        
         setDisableLoginButton(false);
         return;
       }
@@ -115,11 +121,18 @@ let Login = () => {
         setDisableLoginButton(false);
         return;
       }
-      // Change state.
-      await appState.moveToNextState();
+      // Redirect to profile page on successful login.
+      appState.changeState('PersonalDetails');
     } catch(err) {
       logger.error(err);
-      setErrorMessage(err.message);
+      
+      // Show error as popup alert
+      Alert.alert(
+        "Login Error",
+        err.message || "An error occurred during login. Please try again.",
+        [{ text: "OK", style: "default" }]
+      );
+      
       setUploadMessage('');
       setDisableLoginButton(false);
     }
@@ -142,17 +155,6 @@ let Login = () => {
         }}
         keyboardShouldPersistTaps='handled'
       >
-
-        {/* Error Message */}
-        {!_.isEmpty(errorMessage) && (
-          <Card style={[cards.error, layout.marginBottomMd]}>
-            <Card.Content>
-              <Text style={{ color: theme.colors.onErrorContainer }}>
-                ⚠️ <Text style={text.bold}>Error:</Text> {errorMessage}
-              </Text>
-            </Card.Content>
-          </Card>
-        )}
 
         {/* Login Form Card */}
         <Card style={{ 

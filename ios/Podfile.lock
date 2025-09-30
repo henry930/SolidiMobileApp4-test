@@ -1159,6 +1159,8 @@ PODS:
     - React-Core
   - RNCClipboard (1.14.0):
     - React-Core
+  - RNDateTimePicker (8.4.5):
+    - React-Core
   - RNDnsLookup (1.0.6):
     - React
   - RNFS (2.20.0):
@@ -1265,6 +1267,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
+  - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNDnsLookup (from `../node_modules/react-native-dns-lookup`)
   - RNFS (from `../node_modules/react-native-fs`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
@@ -1406,6 +1409,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
     :path: "../node_modules/@react-native-clipboard/clipboard"
+  RNDateTimePicker:
+    :path: "../node_modules/@react-native-community/datetimepicker"
   RNDnsLookup:
     :path: "../node_modules/react-native-dns-lookup"
   RNFS:
@@ -1493,6 +1498,7 @@ SPEC CHECKSUMS:
   ReactCommon: 1a93f1ef5c6e33bf14b9563cdb8e7621a893aa37
   RNCAsyncStorage: addfc2cb6511dbe199c56c6b26ede383b6c38919
   RNCClipboard: 090462274cc05b02628bd158baf6d73c3abe8441
+  RNDateTimePicker: e1e3719be6e3f88077c44037f44070ff6c476bac
   RNDnsLookup: 1afbfef1d1f9f9ba427b4afdd81c12c4790de3ff
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNKeychain: bfe3d12bf4620fe488771c414530bf16e88f3678

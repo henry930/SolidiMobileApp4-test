@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Material Design imports
@@ -62,52 +62,14 @@ let PersonalDetails = () => {
   let permittedPageNames = 'default'.split(' ');
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'PersonalDetails');
 
-  // Helper function to provide dummy data when real data is not available
-  const getDummyUserInfo = (key) => {
-    const dummyData = {
-      // Basic personal information
-      title: 'Mr',
-      firstName: 'John',
-      middleNames: 'William',
-      lastName: 'Doe',
-      gender: 'Male',
-      dateOfBirth: '01/01/1990',
-      
-      // Location and citizenship
-      citizenship: 'GB',
-      country: 'GB',
-      
-      // Contact information
-      email: 'john.doe@example.com',
-      mobile: '+44 7700 900123',
-      landline: '+44 20 7946 0958',
-      
-      // Address information
-      postcode: 'SW1A 1AA',
-      address_1: '10 Downing Street',
-      address_2: 'Westminster',
-      address_3: 'London',
-      address_4: 'Greater London',
-      
-      // System fields
-      uuid: 'dummy-uuid-12345-67890',
-      
-      // Financial limits (in case they're displayed)
-      btcLimit: '1000.00000000',
-      bankLimit: '1000.00',
-      cryptoLimit: '1000.00000000',
-      monthBtcLimit: '5000.00000000',
-      monthBankLimit: '5000.00',
-      monthCryptoLimit: '5000.00000000',
-      freeWithdraw: '5',
-    };
-    
-    // Get the value from appState, if not available use dummy data, if not available use empty string
+  // Helper function to get user info from appState or return empty string
+  const getUserInfo = (key) => {
+    // Get the value from appState, if not available return empty string
     const realValue = appState.getUserInfo(key);
     if (realValue && realValue !== '[loading]' && realValue !== null && realValue !== undefined) {
       return realValue;
     }
-    return dummyData[key] || '';
+    return '';
   };
 
   // Misc
@@ -117,16 +79,17 @@ let PersonalDetails = () => {
   let [activeSection, setActiveSection] = useState('basic');
 
   // Title dropdown
-  let [title, setTitle] = useState(getDummyUserInfo('title'));
+  let [title, setTitle] = useState(getUserInfo('title'));
   let generateTitleOptionsList = () => {
     let titleOptions = appState.getPersonalDetailOptions('title');
+    console.log(`👤 [UI] Title options loaded:`, titleOptions);
     return titleOptions.map(x => ({label: x, value: x}) );
   }
   let [titleOptionsList, setTitleOptionsList] = useState(generateTitleOptionsList());
   let [titleMenuVisible, setTitleMenuVisible] = useState(false);
 
   // Gender dropdown
-  let [gender, setGender] = useState(getDummyUserInfo('gender'));
+  let [gender, setGender] = useState(getUserInfo('gender'));
   let generateGenderOptionsList = () => {
     let genderOptions = appState.getPersonalDetailOptions('gender');
     return genderOptions.map(x => ({label: x, value: x}) );
@@ -135,7 +98,7 @@ let PersonalDetails = () => {
   let [genderMenuVisible, setGenderMenuVisible] = useState(false);
 
   // Citizenship dropdown
-  let [citizenship, setCitizenship] = useState(getDummyUserInfo('citizenship'));
+  let [citizenship, setCitizenship] = useState(getUserInfo('citizenship'));
   let generateCitizenshipOptionsList = () => {
     let countries = appState.getCountries();
     // Add error handling to ensure countries is an array
@@ -147,16 +110,110 @@ let PersonalDetails = () => {
   let [citizenshipOptionsList, setCitizenshipOptionsList] = useState(generateCitizenshipOptionsList());
   let [citizenshipMenuVisible, setCitizenshipMenuVisible] = useState(false);
 
-  // Address details with dummy data
-  let [postcode, setPostcode] = useState('SW1A 1AA');
+  // Address details - start with empty values
+  let [postcode, setPostcode] = useState(getUserInfo('postcode'));
   let [address, setAddress] = useState({
-    address_1: '10 Downing Street',
-    address_2: 'Westminster',
-    address_3: 'London',
-    address_4: 'Greater London',
+    address_1: getUserInfo('address_1'),
+    address_2: getUserInfo('address_2'),
+    address_3: getUserInfo('address_3'),
+    address_4: getUserInfo('address_4'),
   });
   let [disableSearchPostcodeButton, setDisableSearchPostcodeButton] = useState(false);
   let [disableSaveAddressButton, setDisableSaveAddressButton] = useState(false);
+
+  // Save button for personal details
+  let [disableSaveButton, setDisableSaveButton] = useState(false);
+  let [saveMessage, setSaveMessage] = useState('');
+
+  // Form data state to track changes before saving
+  let [formData, setFormData] = useState({
+    firstName: '',
+    middleNames: '',
+    lastName: '',
+    dateOfBirth: '',
+    mobile: '',
+    landline: '',
+    email: ''
+  });
+
+  // Country code dropdown for phone numbers
+  let [countryCode, setCountryCode] = useState('+44');
+  let generateCountryCodeOptionsList = () => {
+    return [
+      {label: '🇬🇧 +44 (United Kingdom)', value: '+44'},
+      {label: '🇺🇸 +1 (United States)', value: '+1'},
+      {label: '🇨🇦 +1 (Canada)', value: '+1'},
+      {label: '🇫🇷 +33 (France)', value: '+33'},
+      {label: '🇩🇪 +49 (Germany)', value: '+49'},
+      {label: '🇪🇸 +34 (Spain)', value: '+34'},
+      {label: '🇮🇹 +39 (Italy)', value: '+39'},
+      {label: '🇳🇱 +31 (Netherlands)', value: '+31'},
+      {label: '🇦🇺 +61 (Australia)', value: '+61'},
+      {label: '🇯🇵 +81 (Japan)', value: '+81'},
+      {label: '🇰🇷 +82 (South Korea)', value: '+82'},
+      {label: '🇸🇬 +65 (Singapore)', value: '+65'},
+      {label: '🇭🇰 +852 (Hong Kong)', value: '+852'},
+    ];
+  }
+  let [countryCodeOptionsList, setCountryCodeOptionsList] = useState(generateCountryCodeOptionsList());
+
+  let showCountryCodePicker = () => {
+    let buttons = countryCodeOptionsList.slice(0, 8).map(option => ({
+      text: option.label,
+      onPress: () => {
+        setCountryCode(option.value);
+      }
+    }));
+    buttons.push({ text: 'More...', onPress: () => showMoreCountryCodes() });
+    buttons.push({ text: 'Cancel', style: 'cancel' });
+    
+    Alert.alert('Select Country Code', '', buttons);
+  };
+
+  let showMoreCountryCodes = () => {
+    let buttons = countryCodeOptionsList.slice(8).map(option => ({
+      text: option.label,
+      onPress: () => {
+        setCountryCode(option.value);
+      }
+    }));
+    buttons.push({ text: 'Back', onPress: () => showCountryCodePicker() });
+    buttons.push({ text: 'Cancel', style: 'cancel' });
+    
+    Alert.alert('Select Country Code (More)', '', buttons);
+  };
+
+  // Country picker functions - Alert-based like Register page
+  let showCountryPicker = () => {
+    console.log('🔍 showCountryPicker called');
+    let buttons = countryOptionsList.slice(0, 8).map(option => ({
+      text: option.label,
+      onPress: () => {
+        console.log('🔍 Country selected:', option.value);
+        setCountry(option.value);
+        updateUserData({detail: 'country', value: option.value});
+      }
+    }));
+    buttons.push({ text: 'More...', onPress: () => showMoreCountries() });
+    buttons.push({ text: 'Cancel', style: 'cancel' });
+    
+    Alert.alert('Select Country', '', buttons);
+  };
+
+  let showMoreCountries = () => {
+    let buttons = countryOptionsList.slice(8).map(option => ({
+      text: option.label,
+      onPress: () => {
+        console.log('🔍 Country selected:', option.value);
+        setCountry(option.value);
+        updateUserData({detail: 'country', value: option.value});
+      }
+    }));
+    buttons.push({ text: 'Back', onPress: () => showCountryPicker() });
+    buttons.push({ text: 'Cancel', style: 'cancel' });
+    
+    Alert.alert('Select Country (More)', '', buttons);
+  };
 
   // foundAddress dropdown
   let initialSelectedAddress = '[no addresses listed]';
@@ -176,17 +233,18 @@ let PersonalDetails = () => {
   let [openSelectAddress, setOpenSelectAddress] = useState(false);
 
   // Country dropdown
-  let [country, setCountry] = useState(getDummyUserInfo('country'));
+  let [country, setCountry] = useState(getUserInfo('country'));
   let generateCountryOptionsList = () => {
     let countries = appState.getCountries();
+    console.log(`👤 [UI] Countries loaded:`, countries);
     // Add error handling to ensure countries is an array
     if (!Array.isArray(countries)) {
+      console.log(`👤 [UI] Countries not loaded yet, using fallback`);
       return [{label: 'United Kingdom', value: 'GB'}]; // Default fallback
     }
     return countries.map(x => { return {label: x.name, value: x.code} });
   }
   let [countryOptionsList, setCountryOptionsList] = useState(generateCountryOptionsList());
-  let [countryMenuVisible, setCountryMenuVisible] = useState(false);
 
   // Found addresses dropdown
   let [selectedAddressMenuVisible, setSelectedAddressMenuVisible] = useState(false);
@@ -207,20 +265,20 @@ let PersonalDetails = () => {
       await appState.loadInitialStuffAboutUser();
       await appState.loadCountries();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      setTitle(getDummyUserInfo('title'));
+      setTitle(getUserInfo('title'));
       setTitleOptionsList(generateTitleOptionsList());
-      setGender(getDummyUserInfo('gender'));
+      setGender(getUserInfo('gender'));
       setGenderOptionsList(generateGenderOptionsList());
-      setCitizenship(getDummyUserInfo('citizenship'));
+      setCitizenship(getUserInfo('citizenship'));
       setCitizenshipOptionsList(generateCitizenshipOptionsList());
-      setPostcode(getDummyUserInfo('postcode'));
+      setPostcode(getUserInfo('postcode'));
       setAddress({
-        address_1: getDummyUserInfo('address_1'),
-        address_2: getDummyUserInfo('address_2'),
-        address_3: getDummyUserInfo('address_3'),
-        address_4: getDummyUserInfo('address_4'),
+        address_1: getUserInfo('address_1'),
+        address_2: getUserInfo('address_2'),
+        address_3: getUserInfo('address_3'),
+        address_4: getUserInfo('address_4'),
       });
-      setCountry(getDummyUserInfo('country'));
+      setCountry(getUserInfo('country'));
       setCountryOptionsList(generateCountryOptionsList());
       triggerRender(renderCount+1);
     } catch(err) {
@@ -430,6 +488,104 @@ country
     setDisableSaveAddressButton(false);
   }
 
+  let savePersonalDetails = async () => {
+    /*
+    Save all personal details at once:
+    - Collect all current form values
+    - Send them to the server in a single request
+    - Show loading message and disable button during save
+    - Show success/error feedback to user
+    */
+    console.log(`👤 [UI] Personal Details Save button pressed`);
+    
+    setDisableSaveButton(true);
+    setSaveMessage('Saving personal details...');
+    setErrorDisplay({}); // Clear any existing errors
+
+    try {
+      let functionName = 'savePersonalDetails';
+      
+      // Collect all current form data
+      let personalData = {
+        title: title,
+        firstName: formData.firstName || getUserInfo('firstName'),
+        middleNames: formData.middleNames || getUserInfo('middleNames'),
+        lastName: formData.lastName || getUserInfo('lastName'), 
+        gender: gender,
+        dateOfBirth: formData.dateOfBirth || getUserInfo('dateOfBirth'),
+        citizenship: citizenship,
+        mobile: formData.mobile || getUserInfo('mobile'),
+        landline: formData.landline || getUserInfo('landline'),
+        email: formData.email || getUserInfo('email'),
+        country: country
+      };
+
+      console.log(`👤 [UI] Personal data to save:`, personalData);
+      log(`API request: Save personal details: ${jd(personalData)}`);
+      
+      let apiRoute = 'user/update_bulk';
+      let params = { userData: personalData };
+      let result = await appState.privateMethod({ functionName, apiRoute, params });
+      
+      console.log(`👤 [UI] Received response from Personal Details save:`, result);
+      
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      
+      if (result === 'DisplayedError') return;
+      
+      if (_.has(result, 'error')) {
+        let error = result.error;
+        log(`Error returned from API request (Save personal details): ${JSON.stringify(error)}`);
+        
+        if (_.isObject(error)) {
+          if (_.isEmpty(error)) {
+            error = 'Received an empty error object ({}) from the server.';
+          } else {
+            error = JSON.stringify(error);
+          }
+        }
+        
+        // Check for field-specific validation errors
+        let detailNames = Object.keys(personalData);
+        let errorFound = false;
+        
+        for (let detailName of detailNames) {
+          let selector = `ValidationError: [${detailName}]: `;
+          if (error.startsWith(selector)) {
+            let errorMessage = error.replace(selector, '');
+            setErrorDisplay({...errorDisplay, [detailName]: errorMessage});
+            errorFound = true;
+            break;
+          }
+        }
+        
+        if (!errorFound) {
+          // General error
+          setErrorDisplay({...errorDisplay, 'general': error});
+        }
+        
+        setSaveMessage('');
+      } else {
+        // Success - update appState with all the new values
+        Object.keys(personalData).forEach(key => {
+          if (personalData[key] && personalData[key] !== '[loading]') {
+            appState.setUserInfo({[key]: personalData[key]});
+          }
+        });
+        
+        setSaveMessage('Personal details saved successfully!');
+        setTimeout(() => setSaveMessage(''), 3000); // Clear success message after 3 seconds
+      }
+      
+    } catch (err) {
+      logger.error(err);
+      setErrorDisplay({...errorDisplay, 'general': err.message});
+      setSaveMessage('');
+    }
+    
+    setDisableSaveButton(false);
+  }
+
 
   const materialTheme = useTheme();
 
@@ -498,7 +654,7 @@ country
                     <TextInput
                       label="Title"
                       mode="outlined"
-                      value={title}
+                      value={title || "Select Title"}
                       editable={false}
                       right={<TextInput.Icon icon="chevron-down" />}
                       style={{ backgroundColor: 'transparent' }}
@@ -525,10 +681,9 @@ country
             <TextInput
               label="First Name"
               mode="outlined"
-              defaultValue={getDummyUserInfo('firstName')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'firstName', value});
+              defaultValue={formData.firstName || getUserInfo('firstName')}
+              onChangeText={(value) => {
+                setFormData({...formData, firstName: value});
               }}
               autoComplete={'off'}
               autoCapitalize={'words'}
@@ -542,10 +697,9 @@ country
             <TextInput
               label="Middle Names"
               mode="outlined"
-              defaultValue={getDummyUserInfo('middleNames')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'middleNames', value});
+              defaultValue={formData.middleNames || getUserInfo('middleNames')}
+              onChangeText={(value) => {
+                setFormData({...formData, middleNames: value});
               }}
               autoComplete={'off'}
               autoCapitalize={'words'}
@@ -559,10 +713,9 @@ country
             <TextInput
               label="Last Name"
               mode="outlined"
-              defaultValue={getDummyUserInfo('lastName')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'lastName', value});
+              defaultValue={formData.lastName || getUserInfo('lastName')}
+              onChangeText={(value) => {
+                setFormData({...formData, lastName: value});
               }}
               autoComplete={'off'}
               autoCapitalize={'words'}
@@ -607,10 +760,9 @@ country
             <TextInput
               label="Date of Birth"
               mode="outlined"
-              defaultValue={getDummyUserInfo('dateOfBirth')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'dateOfBirth', value});
+              defaultValue={formData.dateOfBirth || getUserInfo('dateOfBirth')}
+              onChangeText={(value) => {
+                setFormData({...formData, dateOfBirth: value});
               }}
               keyboardType='default'
               placeholder="DD/MM/YYYY"
@@ -666,19 +818,41 @@ country
 
             {renderError('mobile')}
 
-            {/* Mobile - using Material Design TextInput */}
-            <TextInput
-              label="Mobile Number"
-              mode="outlined"
-              defaultValue={getDummyUserInfo('mobile')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'mobile', value});
-              }}
-              autoCapitalize='none'
-              keyboardType='phone-pad'
-              style={{ marginBottom: 16 }}
-            />
+            {/* Mobile Number Field with Country Code */}
+            <Text variant="bodyMedium" style={{ marginBottom: 8, color: materialTheme.colors.onSurfaceVariant }}>
+              Mobile Number
+            </Text>
+            <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
+              {/* Country Code Selector */}
+              <TouchableOpacity 
+                onPress={showCountryCodePicker}
+                style={{ flex: 0.3 }}
+              >
+                <TextInput
+                  mode="outlined"
+                  value={countryCode}
+                  editable={false}
+                  style={{ textAlign: 'center' }}
+                  right={<TextInput.Icon icon="chevron-down" />}
+                  dense
+                  pointerEvents="none"
+                />
+              </TouchableOpacity>
+              
+              {/* Phone Number Input */}
+              <TextInput
+                mode="outlined"
+                placeholder="7834123123"
+                defaultValue={formData.mobile || getUserInfo('mobile')}
+                onChangeText={(value) => {
+                  setFormData({...formData, mobile: value});
+                }}
+                keyboardType="phone-pad"
+                style={{ flex: 0.7 }}
+                left={<TextInput.Icon icon="phone" />}
+                dense
+              />
+            </View>
 
             {renderError('landline')}
 
@@ -686,10 +860,9 @@ country
             <TextInput
               label="Landline Number"
               mode="outlined"
-              defaultValue={getDummyUserInfo('landline')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'landline', value});
+              defaultValue={formData.landline || getUserInfo('landline')}
+              onChangeText={(value) => {
+                setFormData({...formData, landline: value});
               }}
               autoCapitalize='none'
               keyboardType='phone-pad'
@@ -700,7 +873,7 @@ country
             <TextInput
               label="Email Address"
               mode="outlined"
-              value={getDummyUserInfo('email')}
+              value={formData.email || getUserInfo('email')}
               editable={false}
               style={{ marginBottom: 8 }}
             />
@@ -870,36 +1043,19 @@ country
 
             {renderError('country')}
 
-            {/* Country Dropdown */}
-            <View style={{ marginBottom: 16 }}>
-              <Menu
-                visible={countryMenuVisible}
-                onDismiss={() => setCountryMenuVisible(false)}
-                anchor={
-                  <TouchableRipple onPress={() => setCountryMenuVisible(true)}>
-                    <TextInput
-                      label="Country"
-                      mode="outlined"
-                      value={countryOptionsList.find(c => c.value === country)?.label || country}
-                      editable={false}
-                      right={<TextInput.Icon icon="chevron-down" />}
-                      style={{ backgroundColor: 'transparent' }}
-                    />
-                  </TouchableRipple>
-                }>
-                {countryOptionsList.map((option, index) => (
-                  <Menu.Item
-                    key={index}
-                    onPress={() => {
-                      setCountry(option.value);
-                      updateUserData({detail: 'country', value: option.value});
-                      setCountryMenuVisible(false);
-                    }}
-                    title={option.label}
-                  />
-                ))}
-              </Menu>
-            </View>
+            {/* Country Dropdown - Alert-based like Register page */}
+            <TouchableOpacity onPress={showCountryPicker}>
+              <TextInput
+                label="Country"
+                mode="outlined"
+                value={countryOptionsList.find(c => c.value === country)?.label || country}
+                editable={false}
+                style={{ marginBottom: 16 }}
+                left={<TextInput.Icon icon="earth" />}
+                right={<TextInput.Icon icon="chevron-down" />}
+                pointerEvents="none"
+              />
+            </TouchableOpacity>
             
           </Card.Content>
         </Card>
@@ -923,10 +1079,9 @@ country
             <TextInput
               label="Email"
               mode="outlined"
-              defaultValue={getDummyUserInfo('email')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'email', value});
+              defaultValue={formData.email || getUserInfo('email')}
+              onChangeText={(value) => {
+                setFormData({...formData, email: value});
               }}
               keyboardType='email-address'
               autoCapitalize='none'
@@ -939,10 +1094,9 @@ country
             <TextInput
               label="Mobile Number"
               mode="outlined"
-              defaultValue={getDummyUserInfo('mobile')}
-              onEndEditing={event => {
-                let value = event.nativeEvent.text;
-                updateUserData({detail:'mobile', value});
+              defaultValue={formData.mobile || getUserInfo('mobile')}
+              onChangeText={(value) => {
+                setFormData({...formData, mobile: value});
               }}
               keyboardType='phone-pad'
               style={{ marginBottom: 16 }}
@@ -951,6 +1105,47 @@ country
           </Card.Content>
         </Card>
         )}
+
+        {/* Save Button Section */}
+        <Card style={{ marginBottom: 16, elevation: 2 }}>
+          <Card.Content style={{ padding: 20 }}>
+            {/* Save Message */}
+            {saveMessage && (
+              <Text 
+                variant="bodyMedium" 
+                style={{ 
+                  marginBottom: 16, 
+                  textAlign: 'center',
+                  color: saveMessage.includes('successfully') 
+                    ? materialTheme.colors.primary 
+                    : materialTheme.colors.onSurface,
+                  fontWeight: saveMessage.includes('successfully') ? '600' : '400'
+                }}
+              >
+                {saveMessage}
+              </Text>
+            )}
+            
+            {/* Save Button */}
+            <Button
+              mode="contained"
+              onPress={savePersonalDetails}
+              disabled={disableSaveButton}
+              loading={disableSaveButton}
+              icon="content-save"
+              style={{ 
+                paddingVertical: 8,
+                backgroundColor: materialTheme.colors.primary
+              }}
+              labelStyle={{ 
+                fontSize: 16, 
+                fontWeight: '600' 
+              }}
+            >
+              {disableSaveButton ? 'Saving...' : 'Save Personal Details'}
+            </Button>
+          </Card.Content>
+        </Card>
 
         {/* Error Display Section */}
         {Object.keys(errorDisplay).map(detail => (

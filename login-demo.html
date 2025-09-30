@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solidi Login System Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
+        
+        .error {
+            border-color: #FF3B30 !important;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #0056CC;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .logout-btn {
+            background-color: #FF3B30;
+            margin-top: 5px;
+        }
+        
+        .logout-btn:hover {
+            background-color: #D70015;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #007AFF;
+        }
+        
+        .auth-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        
+        .authenticated {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .not-authenticated {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .tfa-form {
+            display: none;
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        .demo-credentials {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .demo-credentials h3 {
+            margin-top: 0;
+            color: #0056CC;
+        }
+        
+        .demo-credentials code {
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #0056CC;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">SOLIDI</div>
+        <h1>Login Demo</h1>
+        
+        <div class="auth-status" id="authStatus">
+            🔓 Not Authenticated
+        </div>
+        
+        <div class="demo-credentials">
+            <h3>🧪 Test Credentials</h3>
+            <p><strong>Your Registered Account:</strong> <code>henry930@gmail.com</code> / <code>anypassword</code></p>
+            <p><strong>Valid Login:</strong> <code>user@example.com</code> / <code>password123</code></p>
+            <p><strong>TFA Required:</strong> <code>tfa@example.com</code> / <code>password123</code> (TFA: <code>123456</code>)</p>
+            <p><strong>Invalid User:</strong> <code>invalid@example.com</code> / <code>anypassword</code></p>
+            <p><strong>Offline Mode:</strong> <code>offline@example.com</code> / <code>anypassword</code></p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="henry930@gmail.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="password123">
+            </div>
+            
+            <button type="submit" id="loginBtn">Login</button>
+            <button type="button" id="logoutBtn" class="logout-btn" style="display: none;">Logout</button>
+            
+            <div class="tfa-form" id="tfaForm">
+                <label for="tfaCode">Two-Factor Authentication Code</label>
+                <input type="text" id="tfaCode" name="tfaCode" placeholder="123456" maxlength="6">
+                <button type="button" id="tfaSubmitBtn">Submit TFA</button>
+            </div>
+            
+            <div class="status" id="status"></div>
+        </form>
+        
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        // Mock Platform
+        const Platform = { OS: 'ios' };
+        
+        // Mock API client (same as mobile app)
+        const apiClient = {
+            publicMethod: async ({ httpMethod, apiRoute, params, abortController }) => {
+                console.log('🔗 API Call:', { httpMethod, apiRoute, params: { ...params, password: '***' } });
+                
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                const { password, tfa } = params;
+                const email = apiRoute.split('/')[1]; // Extract email from route
+                
+                // Special handling for registered user henry930@gmail.com
+                if (email === 'henry930@gmail.com') {
+                    return {
+                        apiKey: 'henry930_api_key_12345',
+                        apiSecret: 'henry930_api_secret_67890'
+                    };
+                }
+                
+                // Simulate different login scenarios for other test accounts
+                if (email === 'invalid@example.com') {
+                    return {
+                        error: {
+                            code: 401,
+                            message: 'Invalid username or password.'
+                        }
+                    };
+                }
+                
+                if (email === 'tfa@example.com' && !tfa) {
+                    return {
+                        error: {
+                            code: 400,
+                            message: 'Error in login',
+                            details: {
+                                tfa_required: true
+                            }
+                        }
+                    };
+                }
+                
+                if (email === 'tfa@example.com' && tfa === '123456') {
+                    return {
+                        apiKey: 'test_api_key_with_tfa',
+                        apiSecret: 'test_api_secret_with_tfa'
+                    };
+                }
+                
+                if (password !== 'password123' && !email.includes('offline') && email !== 'henry930@gmail.com') {
+                    return {
+                        error: {
+                            code: 401,
+                            message: 'Invalid username or password.'
+                        }
+                    };
+                }
+                
+                // Successful login for other test accounts
+                return {
+                    apiKey: 'test_api_key_' + Math.random().toString(36).substr(2, 9),
+                    apiSecret: 'test_api_secret_' + Math.random().toString(36).substr(2, 9)
+                };
+            }
+        };
+        
+        // Mock misc utility
+        const misc = {
+            hasExactKeys: (containerName, container, keyNames, functionName) => {
+                const keys = Array.isArray(keyNames) ? keyNames : keyNames.split(', ');
+                return keys.every(key => container && container.hasOwnProperty(key));
+            }
+        };
+        
+        // Login system (exact same logic as AppState.js)
+        const loginSystem = {
+            user: {
+                isAuthenticated: false,
+                email: '',
+                password: ''
+            },
+            
+            userAgent: 'SolidiMobileApp/1.0.0',
+            domain: 'api.solidifx.com',
+            apiClient: null,
+            
+            createAbortController: () => ({ signal: {} }),
+            
+            loginWithAPIKeyAndSecret: async ({ apiKey, apiSecret }) => {
+                console.log('🔐 Setting up authenticated user with API credentials');
+                loginSystem.user.isAuthenticated = true;
+                loginSystem.apiClient = { ...apiClient, apiKey, apiSecret };
+            },
+            
+            logout: async () => {
+                console.log('🚪 Logging out user...');
+                loginSystem.user.isAuthenticated = false;
+                loginSystem.user.email = '';
+                loginSystem.user.password = '';
+                loginSystem.apiClient = null;
+            },
+            
+            login: async ({ email, password, tfa = '' }) => {
+                if (loginSystem.user.isAuthenticated) {
+                    return "ALREADY_AUTHENTICATED";
+                }
+                
+                // OFFLINE MODE simulation
+                const OFFLINE_MODE = email.includes('offline');
+                if (OFFLINE_MODE) {
+                    console.log(`[OFFLINE MODE] Mock login for email: ${email}`);
+                    let mockApiKey = "mock_api_key_for_testing_layouts_only";
+                    let mockApiSecret = "mock_api_secret_for_testing_layouts_only";
+                    Object.assign(loginSystem.user, { email, password });
+                    await loginSystem.loginWithAPIKeyAndSecret({ apiKey: mockApiKey, apiSecret: mockApiSecret });
+                    return "SUCCESS";
+                }
+                
+                // Create public API client
+                loginSystem.apiClient = apiClient;
+                
+                // Use the email and password to load the API Key and Secret from the server
+                const apiRoute = 'login_mobile' + `/${email}`;
+                const optionalParams = {
+                    origin: {
+                        clientType: 'mobile',
+                        os: Platform.OS,
+                        appVersion: '1.0.0',
+                        appBuildNumber: '1',
+                        appTier: 'dev',
+                    }
+                };
+                const params = { password, tfa, optionalParams };
+                const abortController = loginSystem.createAbortController();
+                
+                const data = await apiClient.publicMethod({ 
+                    httpMethod: 'POST', 
+                    apiRoute, 
+                    params, 
+                    abortController 
+                });
+                
+                // Handle errors
+                if (data.error) {
+                    if (data.error.code == 400 && data.error.details) {
+                        if (data.error.details.tfa_required) {
+                            return "TFA_REQUIRED";
+                        }
+                    }
+                    throw new Error(data.error.message);
+                }
+                
+                // Validate response
+                const keyNames = ['apiKey', 'apiSecret'];
+                if (!misc.hasExactKeys('data', data, keyNames, 'submitLoginRequest')) {
+                    throw new Error('Invalid username or password.');
+                }
+                
+                const { apiKey, apiSecret } = data;
+                Object.assign(loginSystem.user, { email, password });
+                await loginSystem.loginWithAPIKeyAndSecret({ apiKey, apiSecret });
+                
+                return "SUCCESS";
+            }
+        };
+        
+        // UI elements
+        const form = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const status = document.getElementById('status');
+        const messages = document.getElementById('messages');
+        const authStatus = document.getElementById('authStatus');
+        const tfaForm = document.getElementById('tfaForm');
+        const tfaSubmitBtn = document.getElementById('tfaSubmitBtn');
+        
+        let pendingTfaEmail = '';
+        let pendingTfaPassword = '';
+        
+        function updateAuthStatus() {
+            if (loginSystem.user.isAuthenticated) {
+                authStatus.textContent = `🔐 Authenticated as ${loginSystem.user.email}`;
+                authStatus.className = 'auth-status authenticated';
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                form.querySelector('input[name="email"]').disabled = true;
+                form.querySelector('input[name="password"]').disabled = true;
+            } else {
+                authStatus.textContent = '🔓 Not Authenticated';
+                authStatus.className = 'auth-status not-authenticated';
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                form.querySelector('input[name="email"]').disabled = false;
+                form.querySelector('input[name="password"]').disabled = false;
+                tfaForm.style.display = 'none';
+            }
+        }
+        
+        function clearMessages() {
+            messages.innerHTML = '';
+            document.querySelectorAll('input').forEach(input => {
+                input.classList.remove('error');
+            });
+        }
+        
+        function showMessage(message, type) {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.innerHTML = message;
+            messages.appendChild(div);
+        }
+        
+        function setLoading(loading) {
+            loginBtn.disabled = loading;
+            loginBtn.textContent = loading ? 'Logging in...' : 'Login';
+            status.textContent = loading ? 'Authenticating...' : '';
+        }
+        
+        // Login form handler
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (loginSystem.user.isAuthenticated) {
+                showMessage('⚠️ You are already logged in. Logout first to login as a different user.', 'warning');
+                return;
+            }
+            
+            clearMessages();
+            setLoading(true);
+            
+            const formData = new FormData(form);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            
+            try {
+                const result = await loginSystem.login({ email, password });
+                
+                if (result === 'SUCCESS') {
+                    showMessage(`🎉 Login successful!<br>Welcome, ${email}`, 'success');
+                    updateAuthStatus();
+                } else if (result === 'TFA_REQUIRED') {
+                    pendingTfaEmail = email;
+                    pendingTfaPassword = password;
+                    tfaForm.style.display = 'block';
+                    showMessage('🔒 Two-factor authentication required. Please enter your TFA code.', 'info');
+                    document.getElementById('tfaCode').focus();
+                } else if (result === 'ALREADY_AUTHENTICATED') {
+                    showMessage('⚠️ Already authenticated.', 'warning');
+                }
+            } catch (error) {
+                showMessage(`❌ Login failed: ${error.message}`, 'error-message');
+                document.getElementById('email').classList.add('error');
+                document.getElementById('password').classList.add('error');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        // TFA submission
+        tfaSubmitBtn.addEventListener('click', async () => {
+            const tfaCode = document.getElementById('tfaCode').value;
+            
+            if (!tfaCode) {
+                showMessage('❌ Please enter your TFA code.', 'error-message');
+                return;
+            }
+            
+            clearMessages();
+            setLoading(true);
+            
+            try {
+                const result = await loginSystem.login({ 
+                    email: pendingTfaEmail, 
+                    password: pendingTfaPassword, 
+                    tfa: tfaCode 
+                });
+                
+                if (result === 'SUCCESS') {
+                    showMessage(`🎉 Login successful with TFA!<br>Welcome, ${pendingTfaEmail}`, 'success');
+                    updateAuthStatus();
+                    tfaForm.style.display = 'none';
+                } else {
+                    showMessage('❌ Invalid TFA code. Please try again.', 'error-message');
+                }
+            } catch (error) {
+                showMessage(`❌ TFA verification failed: ${error.message}`, 'error-message');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        // Logout handler
+        logoutBtn.addEventListener('click', async () => {
+            await loginSystem.logout();
+            showMessage('👋 Logged out successfully!', 'info');
+            updateAuthStatus();
+            form.reset();
+            clearMessages();
+        });
+        
+        // Real-time validation feedback
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.remove('error');
+            });
+        });
+        
+        // Initialize
+        updateAuthStatus();
+        
+        console.log('🚀 Solidi Login Demo loaded!');
+        console.log('📱 This uses the exact same login logic as the mobile app');
+    </script>
+</body>
+</html>

@@ -75,14 +75,21 @@ let BankAccounts = () => {
 
   let setup = async () => {
     try {
-      // Disabled API calls for design testing
-      // await appState.generalSetup();
-      // await appState.loadInitialStuffAboutUser();
+      // Load initial user data and bank account details
+      await appState.generalSetup();
+      await appState.loadInitialStuffAboutUser();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      // account1 = appState.getDefaultAccountForAsset(accountAsset);
-      // setAccountName(account1.accountName);
-      // setSortCode(account1.sortCode);
-      // setAccountNumber(account1.accountNumber);
+      
+      // Load existing bank account data if available
+      account1 = appState.getDefaultAccountForAsset(accountAsset);
+      console.log(`🏦 [UI] Loading existing bank account data:`, account1);
+      if (account1 && account1 !== '[loading]') {
+        setAccountName(account1.accountName || '');
+        setSortCode(account1.sortCode || '');
+        setAccountNumber(account1.accountNumber || '');
+        console.log(`🏦 [UI] Loaded bank account: ${account1.accountName}, ${account1.sortCode}, ${account1.accountNumber}`);
+      }
+      
       setUpdateMessage('');
       setIsLoading(false);
       triggerRender(renderCount+1);
@@ -95,13 +102,21 @@ let BankAccounts = () => {
 
   let updateBankAccountDetails = async () => {
     let params = {accountName, sortCode, accountNumber};
+    console.log(`🏦 [UI] Bank Account Update button pressed`);
+    console.log(`🏦 [UI] Form values:`, params);
+    
     setUpdateMessage('');
     let output = await appState.updateDefaultAccountForAsset('GBP', params);
+    
+    console.log(`🏦 [UI] Received response from API:`, output);
+    
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     // Future: The error should be an object with 'code' and 'message' properties.
     if (_.has(output, 'error')) {
+      console.log(`❌ [UI] Error in bank account update:`, output.error);
       setErrorMessage(misc.itemToString(output.error));
     } else if (output.result == 'success') {
+      console.log(`✅ [UI] Bank account update successful`);
       await misc.sleep(0.1);
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setUpdateMessage('Update successful');
@@ -117,6 +132,14 @@ let BankAccounts = () => {
         return appState.loadStashedState();
       }
     }
+  }
+
+  // Helper function to check if bank account details are missing
+  let hasEmptyBankFields = () => {
+    const currentAccount = appState.getDefaultAccountForAsset(accountAsset);
+    return _.isEmpty(accountName || currentAccount.accountName) || 
+           _.isEmpty(sortCode || currentAccount.sortCode) || 
+           _.isEmpty(accountNumber || currentAccount.accountNumber);
   }
 
 
@@ -138,6 +161,7 @@ let BankAccounts = () => {
 
             { ! isLoading &&
         _.isEmpty(errorMessage) &&
+        hasEmptyBankFields() &&
         <Card style={{ 
           marginBottom: 16, 
           elevation: 2,
@@ -207,9 +231,28 @@ let BankAccounts = () => {
               label="Sort Code"
               mode="outlined"
               defaultValue={appState.getDefaultAccountForAsset(accountAsset).sortCode}
-              onChangeText={setSortCode}
+              onChangeText={(text) => {
+                // Remove all non-numeric characters
+                const numericOnly = text.replace(/[^0-9]/g, '');
+                
+                // Limit to 6 digits
+                const limitedText = numericOnly.substring(0, 6);
+                
+                // Format as NN-NN-NN
+                let formatted = '';
+                for (let i = 0; i < limitedText.length; i++) {
+                  if (i === 2 || i === 4) {
+                    formatted += '-';
+                  }
+                  formatted += limitedText[i];
+                }
+                
+                setSortCode(formatted);
+              }}
+              value={sortCode}
               placeholder="01-02-03"
-              keyboardType="numbers-and-punctuation"
+              keyboardType="number-pad"
+              maxLength={8} // 6 digits + 2 hyphens
               style={{ marginBottom: 16 }}
             />
 
@@ -218,9 +261,19 @@ let BankAccounts = () => {
               label="Account Number"
               mode="outlined"
               defaultValue={appState.getDefaultAccountForAsset(accountAsset).accountNumber}
-              onChangeText={setAccountNumber}
-              placeholder="01230123"
+              onChangeText={(text) => {
+                // Remove all non-numeric characters
+                const numericOnly = text.replace(/[^0-9]/g, '');
+                
+                // Limit to exactly 8 digits
+                const limitedText = numericOnly.substring(0, 8);
+                
+                setAccountNumber(limitedText);
+              }}
+              value={accountNumber}
+              placeholder="12345678"
               keyboardType="number-pad"
+              maxLength={8}
               style={{ marginBottom: 16 }}
             />
 

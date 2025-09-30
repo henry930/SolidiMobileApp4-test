@@ -227,16 +227,6 @@ let Settings = () => {
                 onPress={() => { appState.changeState('Questionnaire'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
-              <Divider />
-              
-              <List.Item
-                title="Security"
-                description="Password, PIN, and security settings"
-                right={props => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => { appState.changeState('Security'); }}
-                style={{ paddingVertical: 4 }}
-              />
             </List.Section>
           </Card.Content>
         </Card>

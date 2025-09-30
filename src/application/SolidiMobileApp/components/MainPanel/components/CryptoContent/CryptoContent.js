@@ -33,6 +33,101 @@ let CryptoContent = () => {
   let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
 
+  // API Testing - Test authentication and API endpoints when component mounts
+  useEffect(() => {
+    const checkAuthenticationAndTestAPI = async () => {
+      console.log('=== CryptoContent Authentication & API Testing Started ===');
+      
+      // Check authentication first
+      console.log('1. Checking authentication status...');
+      const isAuthenticated = appState.user?.isAuthenticated;
+      const hasApiCredentials = appState.user?.apiCredentialsFound;
+      const hasPrivateMethod = !!appState.privateMethod;
+      
+      console.log('Authentication Status:', {
+        isAuthenticated,
+        hasApiCredentials, 
+        hasPrivateMethod,
+        userEmail: appState.user?.email,
+        bypassAuth: appState.bypassAuthentication // Check if auth is bypassed for dev
+      });
+
+      // Redirect to login if not authenticated (unless auth is bypassed for development)
+      if (!isAuthenticated && !appState.bypassAuthentication) {
+        console.log('❌ User not authenticated - redirecting to login...');
+        appState.authenticateUser();
+        return; // Exit early, don't run API tests
+      }
+
+      if (!hasPrivateMethod) {
+        console.log('❌ No privateMethod available - API testing skipped');
+        return;
+      }
+
+      console.log('✅ User authenticated - proceeding with API tests...');
+      
+      try {
+        // Test 1: Load Balance API
+        console.log('\n2. Testing Balance API...');
+        try {
+          const balanceData = await appState.loadBalances();
+          console.log('✅ Balance API Response:', balanceData);
+          console.log('Current balance in AppState:', appState.apiData?.balance);
+        } catch (error) {
+          console.log('❌ Balance API Error:', error);
+        }
+
+        // Test 2: Load Ticker API  
+        console.log('\n3. Testing Ticker API...');
+        try {
+          const tickerData = await appState.loadTicker();
+          console.log('✅ Ticker API Response:', tickerData);
+          console.log('Current ticker in AppState:', appState.apiData?.ticker);
+        } catch (error) {
+          console.log('❌ Ticker API Error:', error);
+        }
+
+        // Test 3: Direct API calls
+        console.log('\n4. Testing Direct API Calls...');
+        try {
+          // Test balance endpoint directly
+          console.log('Testing balance endpoint directly...');
+          const directBalanceResponse = await appState.privateMethod({
+            httpMethod: 'POST',
+            apiRoute: 'balance',
+            params: {}
+          });
+          console.log('✅ Direct Balance Response:', directBalanceResponse);
+
+          // Test ticker endpoint directly (this is actually a public endpoint)
+          console.log('Testing ticker endpoint directly...');
+          const directTickerResponse = await appState.publicMethod({
+            httpMethod: 'GET', 
+            apiRoute: 'ticker',
+            params: {}
+          });
+          console.log('✅ Direct Ticker Response:', directTickerResponse);
+
+        } catch (error) {
+          console.log('❌ Direct API call error:', error);
+        }
+
+        // Test 4: Check current API data state
+        console.log('\n5. Current API Data State:');
+        console.log('apiData:', appState.apiData);
+        console.log('selectedCrypto:', appState.selectedCrypto);
+        
+        console.log('\n=== CryptoContent API Testing Completed ===\n');
+        
+      } catch (error) {
+        console.log('❌ API Testing failed:', error);
+      }
+    };
+
+    // Run authentication check and API tests
+    checkAuthenticationAndTestAPI();
+  }, []); // Empty dependency array - run once on mount
+
   // Get crypto data from app state (passed when navigating)
   const cryptoData = appState.selectedCrypto || {};
   const {

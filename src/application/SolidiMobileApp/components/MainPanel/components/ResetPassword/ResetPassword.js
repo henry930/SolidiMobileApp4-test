@@ -1,7 +1,19 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, TextInput, StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+// Material Design imports
+import {
+  Card,
+  Text,
+  TextInput,
+  Button,
+  useTheme,
+  Surface,
+  Avatar,
+  Divider,
+} from 'react-native-paper';
 
 // Other imports
 import _ from 'lodash';
@@ -9,10 +21,13 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { colors } from 'src/constants';
+import { colors, sharedStyles, sharedColors, layoutStyles, cardStyles } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton, Spinner } from 'src/components/atomic';
 import misc from 'src/util/misc';
+
+// Create local references for commonly used styles
+const layout = layoutStyles;
+const cards = cardStyles;
 
 // Logger
 import logger from 'src/util/logger';
@@ -35,6 +50,7 @@ let ResetPassword = () => {
   let [renderCount, triggerRender] = useState(0);
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
+  let theme = useTheme();
 
   let pageName = appState.pageName;
   let permittedPageNames = 'default'.split(' ');
@@ -43,6 +59,7 @@ let ResetPassword = () => {
   let [errorMessage, setErrorMessage] = useState('');
   let [email, setEmail] = useState('');
   let [resultMessage, setResultMessage] = useState('');
+  let [isLoading, setIsLoading] = useState(false);
 
 
 
@@ -66,144 +83,162 @@ let ResetPassword = () => {
 
 
   return (
-    <View style={styles.panelContainer}>
-    <View style={styles.panelSubContainer}>
-
-      <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Reset Password</Text>
-      </View>
-
-      {! _.isEmpty(errorMessage) &&
-        <View style={styles.errorWrapper}>
-          <Text style={styles.errorText}>
-            <Text style={styles.errorTextBold}>Error: </Text>
-            <Text>{errorMessage}</Text>
-          </Text>
-        </View>
-      }
-
+    <Surface style={[layout.container, { backgroundColor: theme.colors.background }]}>
       <KeyboardAwareScrollView
-        showsVerticalScrollIndicator={true}
-        contentContainerStyle={{ flexGrow: 1, margin: 20 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={layout.scrollContainer}
         keyboardShouldPersistTaps='handled'
       >
-
-      <Text style={styles.descriptionText}>Your email address:</Text>
-
-      <View style={styles.wideTextInputWrapper}>
-        <TextInput
-          style={styles.wideTextInput}
-          onChangeText={setEmail}
-          value={email}
-          autoCapitalize={'none'}
-          autoCorrect={false}
-        />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <StandardButton title="Reset password"
-          onPress={ async () => {
-            if (_.isEmpty(email)) {
-              setErrorMessage('Please enter your email address.');
-            } else {
-              setErrorMessage('');
-              let output = await appState.resetPassword({email});
-              if (_.has(output, 'result')) {
-                let result = output.result;
-                if (result == 'success') {
-                  setResultMessage("An email containing a password reset link has been sent to your email address. After you have followed the link and reset your password on the main website, you'll be able to log in to this app.");
-                }
-              }
-            }
-          } }
-        />
-      </View>
-
-      {! _.isEmpty(resultMessage) &&
-        <View style={styles.resultWrapper}>
-          <Text style={styles.resultText}>
-            <Text>{resultMessage}</Text>
+        
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <Avatar.Icon 
+            size={60} 
+            icon="lock-reset" 
+            style={[styles.headerIcon, { backgroundColor: theme.colors.primary }]}
+          />
+          <Text variant="headlineMedium" style={styles.headerTitle}>
+            Reset Password
+          </Text>
+          <Text variant="bodyMedium" style={[styles.headerSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+            Enter your email address to receive a password reset link
           </Text>
         </View>
-      }
+
+        {/* Main Content Card */}
+        <Card style={[cards.elevated, styles.mainCard]}>
+          <Card.Content style={styles.cardContent}>
+            
+            {/* Email Input */}
+            <TextInput
+              label="Email Address"
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.textInput}
+              error={!_.isEmpty(errorMessage)}
+              left={<TextInput.Icon icon="email" />}
+            />
+
+            {/* Error Message */}
+            {!_.isEmpty(errorMessage) && (
+              <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                {errorMessage}
+              </Text>
+            )}
+
+            {/* Success Message */}
+            {!_.isEmpty(resultMessage) && (
+              <Card style={[styles.resultCard, { backgroundColor: theme.colors.primaryContainer }]}>
+                <Card.Content>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onPrimaryContainer }}>
+                    {resultMessage}
+                  </Text>
+                </Card.Content>
+              </Card>
+            )}
+
+            {/* Reset Button */}
+            <Button
+              mode="contained"
+              onPress={async () => {
+                if (_.isEmpty(email)) {
+                  setErrorMessage('Please enter your email address.');
+                } else {
+                  setErrorMessage('');
+                  setIsLoading(true);
+                  
+                  try {
+                    let output = await appState.resetPassword({email});
+                    if (_.has(output, 'result')) {
+                      let result = output.result;
+                      if (result == 'success') {
+                        // Show success popup and redirect
+                        Alert.alert(
+                          'Password Reset Sent',
+                          'An email containing a password reset link has been sent to your email address. After you have followed the link and reset your password on the main website, you\'ll be able to log in to this app.',
+                          [
+                            {
+                              text: 'OK',
+                              onPress: () => {
+                                // Redirect to index page
+                                appState.setMainPanelState('index');
+                              }
+                            }
+                          ]
+                        );
+                      } else {
+                        setErrorMessage('Failed to send reset email. Please try again.');
+                      }
+                    } else {
+                      setErrorMessage('An error occurred. Please try again.');
+                    }
+                  } catch (error) {
+                    setErrorMessage('Network error. Please check your connection and try again.');
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }
+              }}
+              loading={isLoading}
+              disabled={isLoading}
+              style={styles.resetButton}
+              icon="send"
+            >
+              {isLoading ? 'Sending...' : 'Send Reset Link'}
+            </Button>
+
+          </Card.Content>
+        </Card>
 
       </KeyboardAwareScrollView>
-
-    </View>
-    </View>
+    </Surface>
   )
 
 }
 
 
 let styles = StyleSheet.create({
-  panelContainer: {
-    paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(5),
-    width: '100%',
-    height: '100%',
-  },
-  panelSubContainer: {
-    paddingTop: scaledHeight(10),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  heading: {
+  headerContainer: {
     alignItems: 'center',
-  },
-  heading1: {
-    marginTop: scaledHeight(10),
-    marginBottom: scaledHeight(40),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  basicText: {
-    fontSize: normaliseFont(14),
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  descriptionText: {
-    fontWeight: 'bold',
-    fontSize: normaliseFont(18),
-  },
-  errorWrapper: {
     marginBottom: scaledHeight(30),
+    paddingHorizontal: scaledWidth(20),
+  },
+  headerIcon: {
+    marginBottom: scaledHeight(15),
+  },
+  headerTitle: {
+    textAlign: 'center',
+    marginBottom: scaledHeight(8),
+    fontWeight: '600',
+  },
+  headerSubtitle: {
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  mainCard: {
+    marginHorizontal: scaledWidth(20),
+    marginBottom: scaledHeight(20),
+  },
+  cardContent: {
+    paddingVertical: scaledHeight(20),
+  },
+  textInput: {
+    marginBottom: scaledHeight(10),
   },
   errorText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
+    marginBottom: scaledHeight(15),
+    marginLeft: scaledWidth(5),
   },
-  errorTextBold: {
-    fontSize: normaliseFont(14),
-    fontWeight: 'bold',
+  resultCard: {
+    marginVertical: scaledHeight(15),
   },
-  wideTextInputWrapper: {
-    paddingVertical: scaledHeight(30),
-    width: '80%',
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    //borderWidth: 1, // testing
-  },
-  wideTextInput: {
-    fontSize: normaliseFont(16),
-    height: scaledHeight(40),
-    width: scaledWidth(360),
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(20),
-  },
-  resultWrapper: {
+  resetButton: {
     marginTop: scaledHeight(20),
-  },
-  resultText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
+    paddingVertical: scaledHeight(5),
   },
 });
 

@@ -200,6 +200,81 @@ let Questionnaire = () => {
     }));
   };
 
+  // Function to group legend questions with the next non-legend question
+  let getQuestionGroup = (questions, questionIndex) => {
+    if (!questions || !Array.isArray(questions) || questionIndex >= questions.length) {
+      return { legends: [], mainQuestion: null, nextIndex: questionIndex };
+    }
+
+    let legends = [];
+    let currentIndex = questionIndex;
+    let mainQuestion = null;
+
+    // Collect all legend questions starting from the current index
+    while (currentIndex < questions.length) {
+      const currentQuestion = questions[currentIndex];
+      
+      if (currentQuestion.type === 'legend' || currentQuestion.type === 'header') {
+        legends.push(currentQuestion);
+        currentIndex++;
+      } else {
+        // Found the first non-legend question
+        mainQuestion = currentQuestion;
+        break;
+      }
+    }
+
+    // If we only found legends and no main question, treat the last legend as standalone
+    if (legends.length > 0 && !mainQuestion) {
+      mainQuestion = legends.pop(); // Take the last legend as the main question
+    }
+
+    return {
+      legends: legends,
+      mainQuestion: mainQuestion,
+      nextIndex: currentIndex + 1
+    };
+  };
+
+  // Function to count total question groups (for progress display)
+  let countQuestionGroups = (questions) => {
+    if (!questions || !Array.isArray(questions)) return 0;
+    
+    let groupCount = 0;
+    let index = 0;
+    
+    while (index < questions.length) {
+      const group = getQuestionGroup(questions, index);
+      if (group.mainQuestion || group.legends.length > 0) {
+        groupCount++;
+      }
+      index = group.nextIndex;
+    }
+    
+    return groupCount;
+  };
+
+  // Function to get current question group index (for progress display)
+  let getCurrentQuestionGroupIndex = (questions, currentIndex) => {
+    if (!questions || !Array.isArray(questions)) return 0;
+    
+    let groupIndex = 0;
+    let index = 0;
+    
+    while (index < questions.length && index <= currentIndex) {
+      const group = getQuestionGroup(questions, index);
+      if (index === currentIndex) {
+        return groupIndex;
+      }
+      if (group.mainQuestion || group.legends.length > 0) {
+        groupIndex++;
+      }
+      index = group.nextIndex;
+    }
+    
+    return groupIndex;
+  };
+
   // Handle radio button selection
   let handleRadioChange = (questionId, value) => {
     setAnswers(prevAnswers => ({
@@ -417,8 +492,16 @@ let Questionnaire = () => {
         questionnaireData.questions && 
         Array.isArray(questionnaireData.questions) && 
         currentQuestionIndex < questionnaireData.questions.length - 1) {
+      
       setErrorMessage(''); // Clear any existing error
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      
+      // Find the next question group to skip over legend-only questions
+      const currentGroup = getQuestionGroup(questionnaireData.questions, currentQuestionIndex);
+      const nextIndex = currentGroup.nextIndex;
+      
+      if (nextIndex < questionnaireData.questions.length) {
+        setCurrentQuestionIndex(nextIndex);
+      }
     }
   };
 
@@ -428,7 +511,20 @@ let Questionnaire = () => {
     }
     
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      // Find the previous non-legend question
+      let prevIndex = currentQuestionIndex - 1;
+      
+      // Skip backwards over any legend questions to find the previous actual question
+      while (prevIndex >= 0 && 
+             questionnaireData.questions[prevIndex] && 
+             (questionnaireData.questions[prevIndex].type === 'legend' || 
+              questionnaireData.questions[prevIndex].type === 'header')) {
+        prevIndex--;
+      }
+      
+      if (prevIndex >= 0) {
+        setCurrentQuestionIndex(prevIndex);
+      }
     }
   };
 
@@ -443,9 +539,13 @@ let Questionnaire = () => {
     if (questionnaireData && questionnaireData.pages && questionnaireData.pages[currentPageIndex]) {
       const currentPage = questionnaireData.pages[currentPageIndex];
       
+      // Find the next question group to skip over legend-only questions
+      const currentGroup = getQuestionGroup(currentPage.questions, currentPageQuestionIndex);
+      const nextIndex = currentGroup.nextIndex;
+      
       // Move to next question in current page
-      if (currentPageQuestionIndex < currentPage.questions.length - 1) {
-        setCurrentPageQuestionIndex(currentPageQuestionIndex + 1);
+      if (nextIndex < currentPage.questions.length) {
+        setCurrentPageQuestionIndex(nextIndex);
         setErrorMessage(''); // Clear any existing error
       } 
       // Move to next page if at end of current page questions
@@ -460,7 +560,21 @@ let Questionnaire = () => {
   let goToPreviousInPage = () => {
     // Move to previous question in current page
     if (currentPageQuestionIndex > 0) {
-      setCurrentPageQuestionIndex(currentPageQuestionIndex - 1);
+      // Find the previous non-legend question in current page
+      const currentPage = questionnaireData.pages[currentPageIndex];
+      let prevIndex = currentPageQuestionIndex - 1;
+      
+      // Skip backwards over any legend questions to find the previous actual question
+      while (prevIndex >= 0 && 
+             currentPage.questions[prevIndex] && 
+             (currentPage.questions[prevIndex].type === 'legend' || 
+              currentPage.questions[prevIndex].type === 'header')) {
+        prevIndex--;
+      }
+      
+      if (prevIndex >= 0) {
+        setCurrentPageQuestionIndex(prevIndex);
+      }
       setErrorMessage(''); // Clear any existing error
     }
     // Move to previous page if at beginning of current page questions
@@ -934,7 +1048,12 @@ let Questionnaire = () => {
                   <Text style={styles.progressText}>
                     Page {currentPageIndex + 1} of {questionnaireData.pages.length}
                     {questionnaireData.pages[currentPageIndex] && questionnaireData.pages[currentPageIndex].questions && (
-                      ` - Question ${currentPageQuestionIndex + 1} of ${questionnaireData.pages[currentPageIndex].questions.length}`
+                      (() => {
+                        const pageQuestions = questionnaireData.pages[currentPageIndex].questions;
+                        const totalGroups = countQuestionGroups(pageQuestions);
+                        const currentGroupIndex = getCurrentQuestionGroupIndex(pageQuestions, currentPageQuestionIndex);
+                        return ` - Question ${currentGroupIndex + 1} of ${totalGroups}`;
+                      })()
                     )}
                   </Text>
                 </View>
@@ -943,7 +1062,7 @@ let Questionnaire = () => {
               questionnaireData.questions && Array.isArray(questionnaireData.questions) && (
                 <View style={styles.progressWrapper}>
                   <Text style={styles.progressText}>
-                    Question {currentQuestionIndex + 1} of {questionnaireData.questions.length}
+                    Question {getCurrentQuestionGroupIndex(questionnaireData.questions, currentQuestionIndex) + 1} of {countQuestionGroups(questionnaireData.questions)}
                   </Text>
                 </View>
               )
@@ -957,20 +1076,41 @@ let Questionnaire = () => {
               questionnaireData.pages[currentPageIndex].questions &&
               questionnaireData.pages[currentPageIndex].questions[currentPageQuestionIndex] ? (
                 (() => {
-                  const currentQuestion = questionnaireData.pages[currentPageIndex].questions[currentPageQuestionIndex];
-                  console.log(`Rendering page ${currentPageIndex} question ${currentPageQuestionIndex}:`, currentQuestion.type, currentQuestion.label?.substring(0, 50));
-                  return renderQuestion(currentQuestion, currentPageQuestionIndex);
+                  const pageQuestions = questionnaireData.pages[currentPageIndex].questions;
+                  const questionGroup = getQuestionGroup(pageQuestions, currentPageQuestionIndex);
+                  console.log(`Rendering page ${currentPageIndex} question group:`, questionGroup.legends.length, 'legends +', questionGroup.mainQuestion?.type);
+                  
+                  return (
+                    <View>
+                      {/* Render all legend questions first */}
+                      {questionGroup.legends.map((legend, index) => 
+                        renderQuestion(legend, currentPageQuestionIndex + index)
+                      )}
+                      {/* Render the main question */}
+                      {questionGroup.mainQuestion && renderQuestion(questionGroup.mainQuestion, currentPageQuestionIndex + questionGroup.legends.length)}
+                    </View>
+                  );
                 })()
               ) : (
                 <Text style={styles.loadingText}>No question found at page {currentPageIndex}, question {currentPageQuestionIndex}</Text>
               )
             ) : (
-              // Render single current question
+              // Render single current question with any preceding legends
               questionnaireData.questions && questionnaireData.questions[currentQuestionIndex] ? (
                 (() => {
-                  const currentQuestion = questionnaireData.questions[currentQuestionIndex];
-                  console.log(`Rendering question ${currentQuestionIndex}:`, currentQuestion.type, currentQuestion.label?.substring(0, 50));
-                  return renderQuestion(currentQuestion, currentQuestionIndex);
+                  const questionGroup = getQuestionGroup(questionnaireData.questions, currentQuestionIndex);
+                  console.log(`Rendering question group:`, questionGroup.legends.length, 'legends +', questionGroup.mainQuestion?.type);
+                  
+                  return (
+                    <View>
+                      {/* Render all legend questions first */}
+                      {questionGroup.legends.map((legend, index) => 
+                        renderQuestion(legend, currentQuestionIndex + index)
+                      )}
+                      {/* Render the main question */}
+                      {questionGroup.mainQuestion && renderQuestion(questionGroup.mainQuestion, currentQuestionIndex + questionGroup.legends.length)}
+                    </View>
+                  );
                 })()
               ) : (
                 <Text style={styles.loadingText}>No question found at index {currentQuestionIndex}</Text>
@@ -1304,12 +1444,12 @@ const styles = StyleSheet.create({
   legendWrapper: {
     marginHorizontal: scaledWidth(20),
     marginBottom: scaledHeight(20),
-    padding: scaledWidth(16),
   },
   legendText: {
     fontSize: normaliseFont(16),
     fontWeight: '600',
     color: colors.black,
+    marginBottom: scaledHeight(8),
     lineHeight: normaliseFont(24),
   },
 });

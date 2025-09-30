@@ -42,6 +42,16 @@ let Assets = () => {
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
   let stateChangeID = appState.stateChangeID;
+  
+  // API loading states
+  let [isLoadingBalances, setIsLoadingBalances] = useState(false);
+  let [isLoadingTicker, setIsLoadingTicker] = useState(false);
+
+  // Refresh function for manual data reload
+  let refreshData = async () => {
+    console.log('🔄 Manual refresh triggered');
+    await setup();
+  };
 
 
 
@@ -53,51 +63,68 @@ let Assets = () => {
 
 
   let setup = async () => {
-    console.log('Assets: Setup starting...');
+    console.log('🚀 Assets: Setup starting...');
+    
     try {
-      console.log('Assets: Calling generalSetup...');
+      console.log('⚙️ Assets: Calling generalSetup...');
       await appState.generalSetup({caller: 'Assets'});
-      console.log('Assets: generalSetup completed');
+      console.log('✅ Assets: generalSetup completed');
       
-      // Try to load balances with a timeout to prevent blocking
+      // Load balances with loading state
+      console.log('💰 Assets: Loading user balances...');
+      setIsLoadingBalances(true);
       try {
-        console.log('Assets: Attempting to load balances...');
         const balancePromise = appState.loadBalances();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Balance loading timeout')), 3000)
+          setTimeout(() => reject(new Error('Balance loading timeout after 5 seconds')), 5000)
         );
-        await Promise.race([balancePromise, timeoutPromise]);
-        console.log('Assets: Balances loaded successfully');
+        
+        const balanceData = await Promise.race([balancePromise, timeoutPromise]);
+        console.log('✅ Assets: Balances loaded successfully:', balanceData);
+        
+        // Trigger render to show balance data
+        triggerRender(renderCount + 1);
       } catch (balanceError) {
-        console.log('Assets: Balance loading failed, will use dummy data:', balanceError.message);
+        console.log('⚠️ Assets: Balance loading failed, continuing with demo data:', balanceError.message);
+      } finally {
+        setIsLoadingBalances(false);
       }
       
-      // Load live ticker data with CoinGecko integration
-      console.log('Assets: Loading ticker data with CoinGecko...');
+      // Load ticker data with loading state
+      console.log('📈 Assets: Loading ticker data with CoinGecko integration...');
+      setIsLoadingTicker(true);
       try {
         const tickerData = await appState.loadTickerWithCoinGecko();
-        console.log('Assets: Ticker data loaded successfully:', tickerData);
+        console.log('✅ Assets: Ticker data loaded successfully. Markets available:', 
+          tickerData ? Object.keys(tickerData).length : 0);
+        console.log('📊 Assets: Ticker sample data:', 
+          tickerData ? Object.keys(tickerData).slice(0, 3).map(key => `${key}: £${tickerData[key].price || 'N/A'}`) : 'None');
         
-        // Force a re-render to show updated data
+        // Force a re-render to show updated price data
         triggerRender(renderCount + 1);
-      } catch (error) {
-        console.log('Assets: Error loading ticker data:', error);
+      } catch (tickerError) {
+        console.log('⚠️ Assets: Ticker loading failed, will use demo prices:', tickerError.message);
+      } finally {
+        setIsLoadingTicker(false);
       }
       
       if (appState.stateChangeIDHasChanged(stateChangeID)) {
-        console.log('Assets: State change detected, exiting setup');
+        console.log('🔄 Assets: State change detected, exiting setup');
         return;
       }
       
-      // Trigger render to show updated data
-      triggerRender(renderCount+1);
-      console.log('Assets: Setup completed successfully');
+      // Final render trigger
+      triggerRender(renderCount + 1);
+      console.log('🎉 Assets: Setup completed successfully');
+      
     } catch(err) {
       let msg = `Assets.setup: Error = ${err}`;
-      console.log(msg);
-      // Trigger render even if setup fails
-      triggerRender(renderCount+1);
-      console.log('Assets: Setup completed with error handling');
+      console.log('❌ Assets:', msg);
+      console.error(err);
+      
+      // Even if setup fails, trigger render to show demo data
+      triggerRender(renderCount + 1);
+      console.log('🔄 Assets: Setup completed with error recovery');
     }
   }
 
@@ -111,8 +138,11 @@ let Assets = () => {
     let asset = item.asset;
     let volume = item.balance;
     
-    // Safeguard: If volume contains [loading], replace with fallback data
-    if (volume === '[loading]' || volume === undefined || volume === null) {
+    console.log(`🎨 Rendering asset: ${asset}, balance: ${volume}`);
+    
+    // Safeguard: If volume contains [loading] or is invalid, replace with fallback data
+    if (volume === '[loading]' || volume === undefined || volume === null || volume === '') {
+      console.log(`⚠️ ${asset}: Invalid balance (${volume}), using fallback`);
       // Default fallback balances for different assets
       const fallbackBalances = {
         'BTC': '0.15420000',
@@ -128,6 +158,9 @@ let Assets = () => {
         'EUR': '850.25',
       };
       volume = fallbackBalances[asset] || '0.00000000';
+      console.log(`🔄 ${asset}: Using fallback balance: ${volume}`);
+    } else {
+      console.log(`✅ ${asset}: Using real balance: ${volume}`);
     }
     
     // Always use static asset info to avoid any [loading] from appState
@@ -157,18 +190,24 @@ let Assets = () => {
     let name = assetInfo.name;
     let symbol = assetInfo.displaySymbol;
     
-    // Get live price from ticker
+    // Get live price from ticker with enhanced logging
     let market = `${asset}/GBP`;
     let ticker = appState.getTicker();
     let currentPrice = null;
     let priceChange = null;
     let portfolioValue = '0.00';
     
+    console.log(`💰 ${asset}: Looking for price in market ${market}`);
+    console.log(`📊 ${asset}: Ticker available:`, ticker ? 'Yes' : 'No');
+    
     // Check for live ticker data first
     if (ticker && ticker[market] && ticker[market].price) {
       currentPrice = parseFloat(ticker[market].price);
       priceChange = ticker[market].change_24h || null;
+      console.log(`✅ ${asset}: Found live price £${currentPrice}, change: ${priceChange || 'N/A'}%`);
     } else {
+      console.log(`⚠️ ${asset}: No live price found, using demo price`);
+      
       // Fallback to demo data for development
       const demoPrice = {
         'BTC': 45000,
@@ -186,10 +225,14 @@ let Assets = () => {
       
       if (demoPrice[asset]) {
         currentPrice = demoPrice[asset];
+        console.log(`🎯 ${asset}: Using demo price £${currentPrice}`);
         // Demo price change data
         priceChange = Math.random() > 0.5 ? 
           +(Math.random() * 10).toFixed(2) : 
           -(Math.random() * 10).toFixed(2);
+        console.log(`🎲 ${asset}: Generated demo change: ${priceChange}%`);
+      } else {
+        console.log(`❌ ${asset}: No demo price available`);
       }
     }
     
@@ -334,20 +377,58 @@ let Assets = () => {
 
 
   let renderAssets = () => {
-    // Always use dummy data to avoid any loading states
-    let validData = [
-      { asset: 'BTC', balance: '0.15420000' },
-      { asset: 'ETH', balance: '2.45000000' },
-      { asset: 'LTC', balance: '12.75000000' },
-      { asset: 'XRP', balance: '1500.00000000' },
-      { asset: 'ADA', balance: '850.00000000' },
-      { asset: 'DOT', balance: '45.50000000' },
-      { asset: 'LINK', balance: '25.75000000' },
-      { asset: 'UNI', balance: '18.25000000' },
-      { asset: 'GBP', balance: '2450.75' },
-      { asset: 'USD', balance: '1200.50' },
-      { asset: 'EUR', balance: '850.25' },
-    ];
+    console.log('🔍 renderAssets: Starting to build asset list...');
+    
+    // Try to get real balance data from API first
+    let balanceData = {};
+    try {
+      if (appState.state && appState.state.apiData && appState.state.apiData.balance) {
+        balanceData = appState.state.apiData.balance;
+        console.log('✅ renderAssets: Using real balance data:', balanceData);
+      } else {
+        console.log('⚠️ renderAssets: No real balance data available, checking individual balances...');
+        
+        // Try to get individual balances
+        const assetList = ['BTC', 'ETH', 'LTC', 'XRP', 'ADA', 'DOT', 'LINK', 'UNI', 'GBP', 'USD', 'EUR'];
+        assetList.forEach(asset => {
+          const balance = appState.getBalance(asset);
+          if (balance && balance !== '[loading]') {
+            balanceData[asset] = balance;
+          }
+        });
+      }
+    } catch (error) {
+      console.log('❌ renderAssets: Error getting balance data:', error);
+    }
+    
+    // Create asset list from real data or fallback to demo data
+    let validData = [];
+    
+    if (Object.keys(balanceData).length > 0) {
+      console.log('✅ renderAssets: Building list from real balance data');
+      validData = Object.keys(balanceData).map(asset => ({
+        asset: asset,
+        balance: balanceData[asset]
+      }));
+    } else {
+      console.log('⚠️ renderAssets: No real data available, using demo data');
+      // Fallback to demo data only when real data is not available
+      validData = [
+        { asset: 'BTC', balance: '0.15420000' },
+        { asset: 'ETH', balance: '2.45000000' },
+        { asset: 'LTC', balance: '12.75000000' },
+        { asset: 'XRP', balance: '1500.00000000' },
+        { asset: 'ADA', balance: '850.00000000' },
+        { asset: 'DOT', balance: '45.50000000' },
+        { asset: 'LINK', balance: '25.75000000' },
+        { asset: 'UNI', balance: '18.25000000' },
+        { asset: 'GBP', balance: '2450.75' },
+        { asset: 'USD', balance: '1200.50' },
+        { asset: 'EUR', balance: '850.25' },
+      ];
+    }
+    
+    console.log(`📊 renderAssets: Final asset list has ${validData.length} assets:`, validData.map(a => `${a.asset}:${a.balance}`));
     
     return (
       <FlatList
@@ -377,18 +458,31 @@ let Assets = () => {
       <Title 
         rightElement={
           <View style={{
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            paddingHorizontal: 8,
-            paddingVertical: 4,
-            borderRadius: 12
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8
           }}>
-            <Text style={{
-              color: 'white',
-              fontSize: 10,
-              fontWeight: '600'
-            }}>
-              LIVE
-            </Text>
+            
+            {/* Refresh Button */}
+            <TouchableOpacity 
+              onPress={refreshData}
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 12,
+                opacity: (isLoadingBalances || isLoadingTicker) ? 0.5 : 1
+              }}
+              disabled={isLoadingBalances || isLoadingTicker}
+            >
+              <Text style={{
+                color: 'white',
+                fontSize: 10,
+                fontWeight: '600'
+              }}>
+                🔄 REFRESH
+              </Text>
+            </TouchableOpacity>
           </View>
         }
         customContent={
@@ -422,25 +516,34 @@ let Assets = () => {
                 color: '#000000'
               }}>
                 {(() => {
-                  // Always use dummy data to avoid any [loading] values
+                  console.log('💰 Calculating total portfolio value...');
                   let totalValue = 0;
                   const ticker = appState.getTicker();
                   
-                  // Force dummy data to prevent [loading] from appearing anywhere
-                  const dummyBalances = {
-                    'BTC': '0.15420000',
-                    'ETH': '2.45000000',
-                    'LTC': '12.75000000',
-                    'XRP': '1500.00000000',
-                    'ADA': '850.00000000',
-                    'DOT': '45.50000000',
-                    'LINK': '25.75000000',
-                    'UNI': '18.25000000',
-                    'GBP': '2450.75',
-                    'USD': '1200.50',
-                    'EUR': '850.25',
-                  };
+                  // Try to get real balance data first
+                  let balanceData = {};
+                  if (appState.state && appState.state.apiData && appState.state.apiData.balance) {
+                    balanceData = appState.state.apiData.balance;
+                    console.log('✅ Using real balance data for total value:', balanceData);
+                  } else {
+                    // Fallback to dummy data for demo purposes
+                    console.log('⚠️ No real balance data, using demo data for total value');
+                    balanceData = {
+                      'BTC': '0.15420000',
+                      'ETH': '2.45000000',
+                      'LTC': '12.75000000',
+                      'XRP': '1500.00000000',
+                      'ADA': '850.00000000',
+                      'DOT': '45.50000000',
+                      'LINK': '25.75000000',
+                      'UNI': '18.25000000',
+                      'GBP': '2450.75',
+                      'USD': '1200.50',
+                      'EUR': '850.25',
+                    };
+                  }
                   
+                  // Price data - prefer live ticker, fallback to demo prices
                   const demoPrice = {
                     'BTC': 45000,
                     'ETH': 2800,
@@ -455,22 +558,30 @@ let Assets = () => {
                     'EUR': 0.95
                   };
                   
-                  Object.keys(dummyBalances).forEach(asset => {
-                    const balance = parseFloat(dummyBalances[asset]);
+                  console.log('📈 Available ticker data:', ticker);
+                  
+                  Object.keys(balanceData).forEach(asset => {
+                    const balance = parseFloat(balanceData[asset]);
                     const market = `${asset}/GBP`;
                     let price = null;
                     
+                    // Try to get live price from ticker first
                     if (ticker && ticker[market] && ticker[market].price) {
                       price = parseFloat(ticker[market].price);
+                      console.log(`📊 ${asset}: Live price £${price} from ticker`);
                     } else if (demoPrice[asset]) {
                       price = demoPrice[asset];
+                      console.log(`📊 ${asset}: Demo price £${price}`);
                     }
                     
                     if (!isNaN(balance) && price && !isNaN(price)) {
-                      totalValue += balance * price;
+                      const assetValue = balance * price;
+                      totalValue += assetValue;
+                      console.log(`💎 ${asset}: ${balance} × £${price} = £${assetValue.toFixed(2)}`);
                     }
                   });
                   
+                  console.log(`🏆 Total portfolio value: £${totalValue.toFixed(2)}`);
                   return totalValue > 0 ? `£${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '£0.00';
                 })()}
               </Text>
@@ -527,84 +638,9 @@ let Assets = () => {
       <View style={{ flex: 1, paddingTop: 12 }}>
 
 
-        {/* Quick Wallet Actions */}
-        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-          <Card style={{ elevation: 2, borderRadius: 12 }}>
-            <Card.Content style={{ padding: 16 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
-                  Wallet Actions
-                </Text>
-                <TouchableOpacity
-                  onPress={() => appState.changeState('Wallet')}
-                  style={{ 
-                    flexDirection: 'row', 
-                    alignItems: 'center',
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 8,
-                    backgroundColor: 'rgba(25, 118, 210, 0.1)'
-                  }}
-                >
-                  <Text style={{ 
-                    color: '#1976D2', 
-                    fontSize: 12, 
-                    fontWeight: '600',
-                    marginRight: 4
-                  }}>
-                    View All
-                  </Text>
-                  <Icon name="chevron-right" size={16} color="#1976D2" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <TouchableOpacity
-                  style={{
-                    flex: 1,
-                    backgroundColor: '#1976D2',
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    borderRadius: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onPress={() => appState.changeState('Wallet')}
-                >
-                  <Icon name="plus" size={18} color="white" style={{ marginRight: 8 }} />
-                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
-                    Deposit
-                  </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={{
-                    flex: 1,
-                    backgroundColor: 'white',
-                    borderWidth: 1,
-                    borderColor: '#1976D2',
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    borderRadius: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onPress={() => appState.changeState('Send')}
-                >
-                  <Icon name="send" size={18} color="#1976D2" style={{ marginRight: 8 }} />
-                  <Text style={{ color: '#1976D2', fontWeight: '600', fontSize: 14 }}>
-                    Send
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </Card.Content>
-          </Card>
-        </View>
-
         {/* Assets List - Full width with padding */}
         <View style={{ flex: 1, paddingHorizontal: 16 }}>
+          
           {renderAssets()}
           
           {/* Debug info */}
