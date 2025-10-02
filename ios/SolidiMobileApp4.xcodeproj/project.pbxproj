@@ -8,13 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* SolidiMobileApp4Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* SolidiMobileApp4Tests.m */; };
-		0A89B490919483F39A5B83CB /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6A4509C71B6A81E111CC6B1 /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		5F47D38C9B58483C2B9B7171 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 11E5137F0F57DFA241C62CA9 /* PrivacyInfo.xcprivacy */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		9DC8D64E06FC0B675A2E58C7 /* libPods-SolidiMobileApp4.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 59B9B4032C27F59341796752 /* libPods-SolidiMobileApp4.a */; };
+		DC2D675E0923AAF394904AF3 /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A5B42BCA7158F26B48D6844D /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a */; };
+		DC3B80A1F58F94D3A3F64C4D /* libPods-SolidiMobileApp4.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D66455D011465D9032394A91 /* libPods-SolidiMobileApp4.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,19 +38,19 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = SolidiMobileApp4/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = SolidiMobileApp4/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = SolidiMobileApp4/main.m; sourceTree = "<group>"; };
-		39B89701E4A4B127B8B7E76A /* Pods-SolidiMobileApp4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4.debug.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4.debug.xcconfig"; sourceTree = "<group>"; };
-		59B9B4032C27F59341796752 /* libPods-SolidiMobileApp4.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SolidiMobileApp4.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		386B962D8E05BB2A8A6A8B95 /* Pods-SolidiMobileApp4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4.debug.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4.debug.xcconfig"; sourceTree = "<group>"; };
+		62F388B9F18683E64D4661AF /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = SolidiMobileApp4/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		84EE362A5E481F780485C175 /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig"; sourceTree = "<group>"; };
-		9189E50CBBB9FE42558D694A /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig"; sourceTree = "<group>"; };
-		BCEBE28C507E85AF65ECBA96 /* Pods-SolidiMobileApp4.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4.release.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4.release.xcconfig"; sourceTree = "<group>"; };
-		C6A4509C71B6A81E111CC6B1 /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A5B42BCA7158F26B48D6844D /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B107FAA6D9D5983AF43DEC8B /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig"; sourceTree = "<group>"; };
+		B169E136A19C1A2027B81235 /* Pods-SolidiMobileApp4.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SolidiMobileApp4.release.xcconfig"; path = "Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4.release.xcconfig"; sourceTree = "<group>"; };
 		CE03275427A9639F001BDF07 /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialIcons.ttf"; sourceTree = "<group>"; };
 		CE03275827A9639F001BDF07 /* FontAwesome5_Solid.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome5_Solid.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf"; sourceTree = "<group>"; };
 		CE03275E27A965A9001BDF07 /* FontAwesome5_Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome5_Regular.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf"; sourceTree = "<group>"; };
 		CE03275F27A9676B001BDF07 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialCommunityIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"; sourceTree = "<group>"; };
 		CE03276027A96A61001BDF07 /* FontAwesome.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf"; sourceTree = "<group>"; };
 		CE03276127A96A61001BDF07 /* FontAwesome5_Brands.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome5_Brands.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf"; sourceTree = "<group>"; };
+		D66455D011465D9032394A91 /* libPods-SolidiMobileApp4.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SolidiMobileApp4.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -59,7 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A89B490919483F39A5B83CB /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a in Frameworks */,
+				DC2D675E0923AAF394904AF3 /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,7 +67,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9DC8D64E06FC0B675A2E58C7 /* libPods-SolidiMobileApp4.a in Frameworks */,
+				DC3B80A1F58F94D3A3F64C4D /* libPods-SolidiMobileApp4.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,8 +110,8 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				59B9B4032C27F59341796752 /* libPods-SolidiMobileApp4.a */,
-				C6A4509C71B6A81E111CC6B1 /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a */,
+				D66455D011465D9032394A91 /* libPods-SolidiMobileApp4.a */,
+				A5B42BCA7158F26B48D6844D /* libPods-SolidiMobileApp4-SolidiMobileApp4Tests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -119,10 +119,10 @@
 		616A4D72B1212856AE9BB259 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				39B89701E4A4B127B8B7E76A /* Pods-SolidiMobileApp4.debug.xcconfig */,
-				BCEBE28C507E85AF65ECBA96 /* Pods-SolidiMobileApp4.release.xcconfig */,
-				84EE362A5E481F780485C175 /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig */,
-				9189E50CBBB9FE42558D694A /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */,
+				386B962D8E05BB2A8A6A8B95 /* Pods-SolidiMobileApp4.debug.xcconfig */,
+				B169E136A19C1A2027B81235 /* Pods-SolidiMobileApp4.release.xcconfig */,
+				62F388B9F18683E64D4661AF /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig */,
+				B107FAA6D9D5983AF43DEC8B /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -178,12 +178,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "SolidiMobileApp4Tests" */;
 			buildPhases = (
-				161CBE352A6419F414252331 /* [CP] Check Pods Manifest.lock */,
+				1C4F07744CAD9553F6C95EF8 /* [CP] Check Pods Manifest.lock */,
 				00E356EA1AD99517003FC87E /* Sources */,
 				00E356EB1AD99517003FC87E /* Frameworks */,
 				00E356EC1AD99517003FC87E /* Resources */,
-				570ED10F6A3D22FCA6D65524 /* [CP] Embed Pods Frameworks */,
-				E4F8025AD263B709FD9D3158 /* [CP] Copy Pods Resources */,
+				9D236D8CA1650692FFB9109C /* [CP] Embed Pods Frameworks */,
+				EDF94B28DA8E21C1AC763D35 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -199,14 +199,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "SolidiMobileApp4" */;
 			buildPhases = (
-				9CE00B7AE843CDCC0B2FC108 /* [CP] Check Pods Manifest.lock */,
+				0DEDC02D3D928FC10FD94381 /* [CP] Check Pods Manifest.lock */,
 				FD10A7F022414F080027D42C /* Start Packager */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				2EEA03ADEF0A1F4706A106FE /* [CP] Embed Pods Frameworks */,
-				F0E08BE6DE75643141EC6134 /* [CP] Copy Pods Resources */,
+				0FBDB7EA3D9BBB6B47D47876 /* [CP] Embed Pods Frameworks */,
+				D4833170685D22E93A5BC7A6 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -288,63 +288,7 @@
 			shellPath = /bin/sh;
 			shellScript = "# React Native build script\nset -e\n\n# Set Node.js binary path\nexport NODE_BINARY=\"/Users/henry/.nvm/versions/node/v22.20.0/bin/node\"\n\n# Disable Metro auto-start since we're running it manually\nexport RCT_NO_LAUNCH_PACKAGER=1\n\n# Run the React Native build script\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
-		161CBE352A6419F414252331 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		2EEA03ADEF0A1F4706A106FE /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		570ED10F6A3D22FCA6D65524 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		9CE00B7AE843CDCC0B2FC108 /* [CP] Check Pods Manifest.lock */ = {
+		0DEDC02D3D928FC10FD94381 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -366,24 +310,63 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E4F8025AD263B709FD9D3158 /* [CP] Copy Pods Resources */ = {
+		0FBDB7EA3D9BBB6B47D47876 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-resources-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Copy Pods Resources";
+			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-resources-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F0E08BE6DE75643141EC6134 /* [CP] Copy Pods Resources */ = {
+		1C4F07744CAD9553F6C95EF8 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		9D236D8CA1650692FFB9109C /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D4833170685D22E93A5BC7A6 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -398,6 +381,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4/Pods-SolidiMobileApp4-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EDF94B28DA8E21C1AC763D35 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SolidiMobileApp4-SolidiMobileApp4Tests/Pods-SolidiMobileApp4-SolidiMobileApp4Tests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FD10A7F022414F080027D42C /* Start Packager */ = {
@@ -452,7 +452,7 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 84EE362A5E481F780485C175 /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig */;
+			baseConfigurationReference = 62F388B9F18683E64D4661AF /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -485,7 +485,7 @@
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9189E50CBBB9FE42558D694A /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */;
+			baseConfigurationReference = B107FAA6D9D5983AF43DEC8B /* Pods-SolidiMobileApp4-SolidiMobileApp4Tests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -515,7 +515,7 @@
 		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 39B89701E4A4B127B8B7E76A /* Pods-SolidiMobileApp4.debug.xcconfig */;
+			baseConfigurationReference = 386B962D8E05BB2A8A6A8B95 /* Pods-SolidiMobileApp4.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
@@ -551,7 +551,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BCEBE28C507E85AF65ECBA96 /* Pods-SolidiMobileApp4.release.xcconfig */;
+			baseConfigurationReference = B169E136A19C1A2027B81235 /* Pods-SolidiMobileApp4.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;

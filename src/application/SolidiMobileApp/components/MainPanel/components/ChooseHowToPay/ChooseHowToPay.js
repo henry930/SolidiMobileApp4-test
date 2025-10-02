@@ -1,7 +1,19 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, ScrollView, View, StyleSheet } from 'react-native';
-import { RadioButton } from 'react-native-paper';
+import { ScrollView, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { 
+  RadioButton, 
+  Card, 
+  Text, 
+  Button, 
+  Surface, 
+  ActivityIndicator,
+  Chip,
+  Icon,
+  Divider
+} from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Other imports
 import _ from 'lodash';
@@ -10,7 +22,7 @@ import Big from 'big.js';
 // Internal imports
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
-import { Button, StandardButton } from 'src/components/atomic';
+import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons, formStyles as forms } from 'src/styles';
@@ -78,6 +90,13 @@ let ChooseHowToPay = () => {
     setup();
   }, []); // Pass empty array to only run once on mount.
 
+  // Re-trigger render when payment choice changes to update totals
+  useEffect(() => {
+    if (!_.isEmpty(paymentChoiceDetails)) {
+      triggerRender(renderCount + 1);
+    }
+  }, [paymentChoice, paymentChoiceDetails]);
+
 
   let setup = async () => {
     try {
@@ -94,7 +113,7 @@ let ChooseHowToPay = () => {
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `ChooseHowToPay.setup: Error = ${err}`;
-      console.log(msg);
+      deb(msg);
     }
   }
 
@@ -152,26 +171,33 @@ let ChooseHowToPay = () => {
 
 
   let calculateFeeQA = () => {
-    if (_.isEmpty(paymentChoiceDetails)) return '';
-    if (! _.has(paymentChoiceDetails, paymentChoice)) return '';
+    // If we don't have payment choice details yet, return a default fee
+    if (_.isEmpty(paymentChoiceDetails)) {
+      return '0.00';
+    }
+    
+    if (! _.has(paymentChoiceDetails, paymentChoice)) {
+      return '0.00';
+    }
+    
     let feeVolume = paymentChoiceDetails[paymentChoice]['feeVolume'];
     feeVolume = appState.getFullDecimalValue({asset: assetQA, value: feeVolume, functionName: 'ChooseHowToPay'});
-    //log(`Payment method = ${paymentChoice}: Fee = ${feeVolume} ${assetQA}`);
     return feeVolume;
   }
 
 
-  let calculateTotalQA = (params) => {
-    let feeVolume;
-    if (! _.isNil(params)) {
-      ({feeVolume} = params);
+  let calculateTotalQA = () => {
+    let fee = calculateFeeQA();
+    
+    // Handle empty fee gracefully
+    if (!fee || fee === '') {
+      fee = '0.00';
     }
-    if (_.isNil(feeVolume)) feeVolume = calculateFeeQA();
-    if (_.isEmpty(feeVolume)) return ''; // We can't know the total without the fee.
-    let volumeQA2 = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'});
-    if (_.isNil(assetQA) || _.isEmpty(assetQA)) return '';
-    let quoteDP = appState.getAssetInfo(assetQA).decimalPlaces;
-    let total = Big(volumeQA2).plus(Big(feeVolume)).toFixed(quoteDP);
+    
+    // Use the volumeQA variable that's already available from appState.panels.buy
+    let volumeQA_value = appState.getFullDecimalValue({asset: assetQA, value: volumeQA, functionName: 'ChooseHowToPay'});
+    let total = new Big(volumeQA_value).plus(new Big(fee)).toFixed(2);
+    
     return total;
   }
 
@@ -188,13 +214,29 @@ let ChooseHowToPay = () => {
   }
 
 
-  let paymentOptionDisabled = (option) => {
-    if (! _.has(paymentChoiceDetails, option)) {
-      return false; // hacky
+  let paymentOptionDisabled = (methodKey) => {
+    // If still loading, disable all options
+    if (isLoading) {
+      return true;
     }
-    let optionDetails = paymentChoiceDetails[option];
-    if (_.has(optionDetails, 'error')) return true;
-    if (option === 'balance' && balanceTooSmall()) return true;
+    
+    // If no payment choice details available, disable
+    if (_.isEmpty(paymentChoiceDetails)) {
+      return true;
+    }
+    
+    // If this specific method isn't available, disable
+    if (!_.has(paymentChoiceDetails, methodKey)) {
+      return false; // Keep the original "hacky" behavior for now
+    }
+    
+    // Skip error checking to allow selection even with insufficient currency
+    // (Removed the error check that was preventing selection)
+    
+    if (methodKey === 'balance' && balanceTooSmall()) {
+      return true;
+    }
+    
     return false;
   }
 
@@ -382,144 +424,682 @@ let ChooseHowToPay = () => {
 
 
   return (
+    <View style={[layout.flex1, { backgroundColor: '#f5f5f5' }]}>
+      {/* Header */}
+      <Surface style={modernStyles.header} elevation={2}>
+        <View style={modernStyles.headerContent}>
+          <TouchableOpacity 
+            onPress={() => appState.changeState('Trade')} 
+            style={modernStyles.backButton}
+          >
+            <Icon2 name="arrow-left" size={24} color="#333" />
+          </TouchableOpacity>
+          <View style={modernStyles.headerTitleContainer}>
+            <Text style={modernStyles.headerTitle}>Confirm & Pay</Text>
+            <Text style={modernStyles.headerSubtitle}>Choose your payment method</Text>
+          </View>
+          <View style={modernStyles.headerProgress}>
+            <Text style={modernStyles.progressText}>Step 2 of 3</Text>
+          </View>
+        </View>
+      </Surface>
 
-    <View style={styles.panelContainer}>
+      <KeyboardAwareScrollView 
+        ref={refScrollView} 
+        style={layout.flex1}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Order Summary Card */}
+        <Card style={modernStyles.orderSummaryCard}>
+          <Card.Content style={modernStyles.cardContent}>
+            <View style={modernStyles.cardHeader}>
+              <Icon2 name="receipt" size={24} color="#007AFF" />
+              <Text style={modernStyles.cardTitle}>Order Summary</Text>
+            </View>
+            
+            <View style={modernStyles.orderDetails}>
+              <View style={modernStyles.orderRow}>
+                <Text style={modernStyles.orderLabel}>You're buying</Text>
+                <Text style={modernStyles.orderValue}>{calculateVolumeBA()} {assetBA}</Text>
+              </View>
+              
+              <View style={modernStyles.orderRow}>
+                <Text style={modernStyles.orderLabel}>You'll spend</Text>
+                <Text style={modernStyles.orderValue}>{calculateVolumeQA()} {assetQA}</Text>
+              </View>
+              
+              <View style={modernStyles.orderRow}>
+                <Text style={modernStyles.orderLabel}>Processing fee</Text>
+                <Text style={modernStyles.orderValue}>{calculateFeeQA()} {assetQA}</Text>
+              </View>
+              
+              <Divider style={{ marginVertical: 12 }} />
+              
+              <View style={[modernStyles.orderRow, modernStyles.totalRow]}>
+                <Text style={modernStyles.totalLabel}>Total amount</Text>
+                <Text style={modernStyles.totalValue}>{calculateTotalQA()} {assetQA}</Text>
+              </View>
+              
+              {/* Debug info */}
+              <View style={{ marginTop: 8, opacity: 0.7 }}>
+                <Text style={{ fontSize: 10, color: '#666' }}>
+                  Payment Method: {paymentChoice} | Render: {renderCount}
+                </Text>
+                <Text style={{ fontSize: 10, color: '#666' }}>
+                  Fee: {calculateFeeQA()} | Total: {calculateTotalQA()}
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
 
-      <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Choose how you want to pay</Text>
-      </View>
+        {/* Order Validity Warning */}
+        <Card style={[modernStyles.messageCard, modernStyles.warningCard]}>
+          <Card.Content>
+            <View style={modernStyles.messageContent}>
+              <Icon2 name="clock-alert" size={24} color="#FF9800" />
+              <View style={modernStyles.warningTextContainer}>
+                <Text style={modernStyles.warningText}>
+                  This order is only valid within 30 minutes.
+                </Text>
+                <Text style={modernStyles.warningSubtext}>
+                  The price will change every 5 minutes.
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
 
-      <View style={styles.scrollDownMessage}>
-        <Text style={styles.scrollDownMessageText}>(Scroll down to Confirm & Pay)</Text>
-      </View>
-
-      <View style={[styles.horizontalRule, styles.horizontalRule1]}/>
-
-      <ScrollView ref={refScrollView} showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
-
-        <View style={styles.selectPaymentMethodSection}>
-
-          <RadioButton.Group onValueChange={x => {
-            log(`paymentChoice selected: ${x}`);
-            setPaymentChoice(x);
-          }} value={paymentChoice}>
-
-            <RadioButton.Item label="Bank transfer" value="solidi"
-              color={colors.standardButtonText}
-              style={paymentOptionDisabled('solidi') ? stylePaymentOptionButtonDisabled.container : stylePaymentOptionButton.container}
-              labelStyle={styles.buttonLabel}
-            />
-
-            <View style={styles.buttonDetail}>
-              <Text style={[styles.basicText, paymentOptionDisabled('solidi') ? stylePaymentOptionButtonAdditionalTextDisabled.text : stylePaymentOptionButtonAdditionalText.text]}>{`\u2022  `} Fast & Easy - No fee!</Text>
-              <Text style={[styles.basicText, paymentOptionDisabled('solidi') ? stylePaymentOptionButtonAdditionalTextDisabled.text : stylePaymentOptionButtonAdditionalText.text]}>{`\u2022  `} Usually processed in under a minute</Text>
-              {paymentOptionDisabled('solidi') &&
-                <Text style={styles.paymentOptionDisabledText}>{`\u2022  `} This payment option is inactive</Text>
-              }
+        {/* Payment Methods */}
+        <Card style={modernStyles.paymentMethodsCard}>
+          <Card.Content style={modernStyles.cardContent}>
+            <View style={modernStyles.cardHeader}>
+              <Icon2 name="credit-card" size={24} color="#007AFF" />
+              <Text style={modernStyles.cardTitle}>Payment Methods</Text>
             </View>
 
-            <RadioButton.Item label="Mobile bank app" value="openbank"
-              color={colors.standardButtonText}
-              disabled={paymentOptionDisabled('openbank')}
-              style={paymentOptionDisabled('openbank') ? stylePaymentOptionButtonDisabled.container : stylePaymentOptionButton.container}
-              labelStyle={styles.buttonLabel}
-            />
+            {/* Enhanced Payment Method Selection with Cards */}
+            <RadioButton.Group 
+              onValueChange={(value) => {
+                setPaymentChoice(value);
+              }} 
+              value={paymentChoice}
+            >
+              {/* Bank Transfer Option */}
+              <TouchableOpacity 
+                onPress={() => {
+                  if (!isLoading && !paymentOptionDisabled('solidi')) {
+                    setPaymentChoice('solidi');
+                  }
+                }}
+                disabled={isLoading || paymentOptionDisabled('solidi')}
+                activeOpacity={0.7}
+              >
+                <Card style={[
+                  modernStyles.paymentMethodCard,
+                  paymentChoice === 'solidi' && modernStyles.selectedPaymentCard,
+                  (isLoading || paymentOptionDisabled('solidi')) && modernStyles.disabledPaymentCard
+                ]}>
+                  <Card.Content style={modernStyles.paymentCardContent}>
+                    <View style={modernStyles.paymentMethodHeader}>
+                      <View style={modernStyles.paymentMethodIcon}>
+                        <Icon name="bank" size={24} color="#007AFF" />
+                      </View>
+                      <View style={modernStyles.paymentMethodInfo}>
+                        <Text style={modernStyles.paymentMethodTitle}>Bank Transfer</Text>
+                        <View style={modernStyles.feeBadge}>
+                          <Text style={modernStyles.feeBadgeText}>NO FEE</Text>
+                        </View>
+                      </View>
+                      <RadioButton 
+                        value="solidi"
+                        status={paymentChoice === 'solidi' ? 'checked' : 'unchecked'}
+                        color="#007AFF"
+                        disabled={isLoading || paymentOptionDisabled('solidi')}
+                      />
+                    </View>
+                    <View style={modernStyles.paymentMethodDetails}>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="clock-fast" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Usually processed in under a minute</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="shield-check" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Secure and reliable</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="star" size={16} color="#FFB300" />
+                        <Text style={modernStyles.featureText}>Most popular choice</Text>
+                      </View>
+                      {paymentOptionDisabled('solidi') && (
+                        <View style={modernStyles.featureRow}>
+                          <Icon name="alert-circle" size={16} color="#FF5722" />
+                          <Text style={modernStyles.disabledFeatureText}>This payment option is currently inactive</Text>
+                        </View>
+                      )}
+                      {isLoading && (
+                        <View style={modernStyles.featureRow}>
+                          <Icon name="loading" size={16} color="#666" />
+                          <Text style={modernStyles.disabledFeatureText}>Loading payment details...</Text>
+                        </View>
+                      )}
+                    </View>
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
 
-            <View style={styles.buttonDetail}>
-              <Text style={[styles.basicText, paymentOptionDisabled('openbank') ? stylePaymentOptionButtonAdditionalTextDisabled.text : stylePaymentOptionButtonAdditionalText.text]}>{`\u2022  `} Authorise the payment via your mobile banking app - No fee!</Text>
-              <Text style={[styles.basicText, paymentOptionDisabled('openbank') ? stylePaymentOptionButtonAdditionalTextDisabled.text : stylePaymentOptionButtonAdditionalText.text]}>{`\u2022  `} Usually processed in seconds</Text>
-              {paymentOptionDisabled('openbank') &&
-                <Text style={styles.paymentOptionDisabledText}>{`\u2022  `} This payment option is inactive</Text>
-              }
-            </View>
+              {/* Mobile Banking Option */}
+              <TouchableOpacity 
+                onPress={() => {
+                  if (!isLoading && !paymentOptionDisabled('openbank')) {
+                    setPaymentChoice('openbank');
+                  }
+                }}
+                disabled={isLoading || paymentOptionDisabled('openbank')}
+                activeOpacity={0.7}
+              >
+                <Card style={[
+                  modernStyles.paymentMethodCard,
+                  paymentChoice === 'openbank' && modernStyles.selectedPaymentCard,
+                  (isLoading || paymentOptionDisabled('openbank')) && modernStyles.disabledPaymentCard
+                ]}>
+                  <Card.Content style={modernStyles.paymentCardContent}>
+                    <View style={modernStyles.paymentMethodHeader}>
+                      <View style={modernStyles.paymentMethodIcon}>
+                        <Icon name="cellphone" size={24} color="#007AFF" />
+                      </View>
+                      <View style={modernStyles.paymentMethodInfo}>
+                        <Text style={modernStyles.paymentMethodTitle}>Mobile Bank App</Text>
+                        <View style={modernStyles.feeBadge}>
+                          <Text style={modernStyles.feeBadgeText}>NO FEE</Text>
+                        </View>
+                      </View>
+                      <RadioButton 
+                        value="openbank"
+                        status={paymentChoice === 'openbank' ? 'checked' : 'unchecked'}
+                        color="#007AFF"
+                        disabled={isLoading || paymentOptionDisabled('openbank')}
+                      />
+                    </View>
+                    <View style={modernStyles.paymentMethodDetails}>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="flash" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Usually processed in seconds</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="fingerprint" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Authorize via your mobile banking app</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="check-circle" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Quick and convenient</Text>
+                      </View>
+                      {paymentOptionDisabled('openbank') && (
+                        <View style={modernStyles.featureRow}>
+                          <Icon name="alert-circle" size={16} color="#FF5722" />
+                          <Text style={modernStyles.disabledFeatureText}>This payment option is currently inactive</Text>
+                        </View>
+                      )}
+                      {isLoading && (
+                        <View style={modernStyles.featureRow}>
+                          <Icon name="loading" size={16} color="#666" />
+                          <Text style={modernStyles.disabledFeatureText}>Loading payment details...</Text>
+                        </View>
+                      )}
+                    </View>
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
 
-            <RadioButton.Item label="Solidi balance" value="balance"
-              color={colors.standardButtonText}
-              disabled={paymentOptionDisabled('balance')}
-              style={paymentOptionDisabled('balance') ? stylePaymentOptionButtonDisabled.container : stylePaymentOptionButton.container}
-              labelStyle={styles.buttonLabel}
-            />
+              {/* Balance Option */}
+              <TouchableOpacity 
+                onPress={() => {
+                  if (!isLoading && !paymentOptionDisabled('balance')) {
+                    setPaymentChoice('balance');
+                  }
+                }}
+                disabled={isLoading || paymentOptionDisabled('balance')}
+                activeOpacity={0.7}
+              >
+                <Card style={[
+                  modernStyles.paymentMethodCard,
+                  paymentChoice === 'balance' && modernStyles.selectedPaymentCard,
+                  (isLoading || paymentOptionDisabled('balance')) && modernStyles.disabledPaymentCard
+                ]}>
+                  <Card.Content style={modernStyles.paymentCardContent}>
+                    <View style={modernStyles.paymentMethodHeader}>
+                      <View style={modernStyles.paymentMethodIcon}>
+                        <Icon name="wallet" size={24} color="#007AFF" />
+                      </View>
+                      <View style={modernStyles.paymentMethodInfo}>
+                        <Text style={modernStyles.paymentMethodTitle}>Solidi Balance</Text>
+                        <View style={modernStyles.feeBadge}>
+                          <Text style={modernStyles.feeBadgeText}>NO FEE</Text>
+                        </View>
+                      </View>
+                      <RadioButton 
+                        value="balance"
+                        status={paymentChoice === 'balance' ? 'checked' : 'unchecked'}
+                        color="#007AFF"
+                        disabled={isLoading || paymentOptionDisabled('balance')}
+                      />
+                    </View>
+                    <View style={modernStyles.paymentMethodDetails}>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="lightning-bolt" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Processed instantly</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="account-balance-wallet" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>{getBalanceDescriptionLine()}</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon name="security" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Pay from your secure balance</Text>
+                      </View>
+                      {balanceTooSmall() && (
+                        <View style={modernStyles.featureRow}>
+                          <Icon name="alert-circle" size={16} color="#FF5722" />
+                          <Text style={modernStyles.disabledFeatureText}>Balance is too low for this option</Text>
+                        </View>
+                      )}
+                      {paymentOptionDisabled('balance') && (
+                        <View style={modernStyles.featureRow}>
+                          <Icon name="alert-circle" size={16} color="#FF5722" />
+                          <Text style={modernStyles.disabledFeatureText}>This payment option is currently inactive</Text>
+                        </View>
+                      )}
+                      {isLoading && (
+                        <View style={modernStyles.featureRow}>
+                          <Icon name="loading" size={16} color="#666" />
+                          <Text style={modernStyles.disabledFeatureText}>Loading payment details...</Text>
+                        </View>
+                      )}
+                    </View>
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
+            </RadioButton.Group>
+          </Card.Content>
+        </Card>
 
-            <View style={styles.buttonDetail}>
-              <Text style={[styles.basicText, paymentOptionDisabled('balance') ? stylePaymentOptionButtonAdditionalTextDisabled.text : stylePaymentOptionButtonAdditionalText.text]}>{`\u2022  `} Pay from your Solidi balance - No fee!</Text>
-              <Text style={[styles.basicText, paymentOptionDisabled('balance') ? stylePaymentOptionButtonAdditionalTextDisabled.text : stylePaymentOptionButtonAdditionalText.text]}>{`\u2022  `} Processed instantly</Text>
-              <Text style={[styles.basicText, paymentOptionDisabled('balance') ? stylePaymentOptionButtonAdditionalTextDisabled.text : stylePaymentOptionButtonAdditionalText.text]}>{`\u2022  `} {getBalanceDescriptionLine()}</Text>
-              {balanceTooSmall() &&
-                <Text style={styles.paymentOptionDisabledText}>{`\u2022  `} Balance is too low for this option</Text>
-              }
-              {paymentOptionDisabled('balance') &&
-                <Text style={styles.paymentOptionDisabledText}>{`\u2022  `} This payment option is inactive</Text>
-              }
-            </View>
-
-          </RadioButton.Group>
-
+        {/* Terms and Conditions */}
+        <View style={modernStyles.termsSection}>
+          <TouchableOpacity 
+            onPress={readPaymentConditions}
+            style={modernStyles.termsButton}
+          >
+            <Icon2 name="file-document-outline" size={20} color="#007AFF" />
+            <Text style={modernStyles.termsText}>View payment conditions</Text>
+            <Icon2 name="chevron-right" size={20} color="#007AFF" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.conditionsButtonWrapper}>
-          <Button title="Our payment conditions" onPress={ readPaymentConditions }
-            styles={styleConditionButton}/>
-        </View>
+        {/* Error and Status Messages */}
+        {priceChangeMessage ? (
+          <Card style={[modernStyles.messageCard, modernStyles.warningCard]}>
+            <Card.Content>
+              <View style={modernStyles.messageContent}>
+                <Icon2 name="alert-circle" size={24} color="#FF9800" />
+                <Text style={modernStyles.warningText}>{priceChangeMessage}</Text>
+              </View>
+            </Card.Content>
+          </Card>
+        ) : null}
 
-        <View style={styles.horizontalRule}/>
+        {errorMessage ? (
+          <Card style={[modernStyles.messageCard, modernStyles.errorCard]}>
+            <Card.Content>
+              <View style={modernStyles.messageContent}>
+                <Icon2 name="alert-circle" size={24} color="#F44336" />
+                <Text style={modernStyles.errorText}>{errorMessage}</Text>
+              </View>
+            </Card.Content>
+          </Card>
+        ) : null}
 
-        <View style={[styles.heading, styles.heading2]}>
-          <Text style={styles.headingText}>Your order</Text>
-        </View>
-
-        <View style={styles.orderDetailsSection}>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>You buy</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{calculateVolumeBA()} {assetBA}</Text>
-          </View>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>You spend</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{calculateVolumeQA()} {assetQA}</Text>
-          </View>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>Fee</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{calculateFeeQA()} {assetQA}</Text>
-          </View>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>Total</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{calculateTotalQA()} {assetQA}</Text>
-          </View>
-
-        </View>
-
-        <View style={styles.horizontalRule}/>
-
-        <View style={styles.priceChangeMessage}>
-          <Text style={styles.priceChangeMessageText}>{priceChangeMessage}</Text>
-        </View>
-
-        <View style={styles.errorMessage}>
-          <Text style={styles.errorMessageText}>{errorMessage}</Text>
-        </View>
-
-        <View style={styles.confirmButtonWrapper}>
-          <StandardButton title={"Confirm & Pay"}
-            onPress={ confirmPaymentChoice }
+        {/* Confirm Button */}
+        <View style={modernStyles.buttonContainer}>
+          <Button
+            mode="contained"
+            onPress={confirmPaymentChoice}
             disabled={disableConfirmButton}
-          />
-          <View style={styles.sendOrderMessage}>
-            <Text style={styles.sendOrderMessageText}>{sendOrderMessage}</Text>
-          </View>
+            loading={disableConfirmButton && sendOrderMessage}
+            style={[
+              modernStyles.confirmButton,
+              disableConfirmButton && modernStyles.confirmButtonDisabled
+            ]}
+            contentStyle={modernStyles.confirmButtonContent}
+            labelStyle={modernStyles.confirmButtonText}
+            icon="check-circle"
+          >
+            {sendOrderMessage || "Confirm & Pay"}
+          </Button>
+          
+          {sendOrderMessage && !errorMessage ? (
+            <View style={modernStyles.loadingContainer}>
+              <ActivityIndicator size="small" color="#007AFF" />
+              <Text style={modernStyles.loadingText}>{sendOrderMessage}</Text>
+            </View>
+          ) : null}
         </View>
 
-      </ScrollView>
-
+      </KeyboardAwareScrollView>
     </View>
-
   )
 
 }
 
+// Modern Styles
+const modernStyles = StyleSheet.create({
+  header: {
+    backgroundColor: '#fff',
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 16,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  headerProgress: {
+    alignItems: 'center',
+  },
+  progressText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  
+  // Enhanced Payment Method Cards
+  paymentMethodCard: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    elevation: 2,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  selectedPaymentCard: {
+    borderColor: '#007AFF',
+    borderWidth: 2,
+    elevation: 4,
+    backgroundColor: '#f8fbff',
+  },
+  disabledPaymentCard: {
+    opacity: 0.6,
+    backgroundColor: '#f5f5f5',
+  },
+  paymentCardContent: {
+    padding: 16,
+  },
+  paymentMethodHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  paymentMethodIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f0f8ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  paymentMethodInfo: {
+    flex: 1,
+  },
+  paymentMethodTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  feeBadge: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  feeBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  paymentMethodDetails: {
+    marginTop: 8,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  featureText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+    flex: 1,
+  },
+  disabledFeatureText: {
+    fontSize: 14,
+    color: '#F44336',
+    marginLeft: 8,
+    flex: 1,
+    fontStyle: 'italic',
+  },
+  
+  // Order Summary Card
+  orderSummaryCard: {
+    margin: 16,
+    borderRadius: 12,
+    elevation: 3,
+  },
+  cardContent: {
+    padding: 20,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 12,
+  },
+  orderDetails: {
+    
+  },
+  orderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  orderLabel: {
+    fontSize: 16,
+    color: '#666',
+  },
+  orderValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  totalRow: {
+    paddingVertical: 12,
+  },
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
 
+  // Payment Methods Card
+  paymentMethodsCard: {
+    margin: 16,
+    marginTop: 8,
+    borderRadius: 12,
+    elevation: 3,
+  },
+  
+  // Simple working payment options
+  simplePaymentOption: {
+    borderRadius: 12,
+    marginVertical: 4,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  paymentOptionLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  paymentDescriptionContainer: {
+    paddingLeft: 56, // Align with RadioButton text
+    paddingRight: 16,
+    paddingBottom: 12,
+    marginTop: -8,
+  },
+  paymentDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+  },
+  disabledText: {
+    fontSize: 12,
+    color: '#F44336',
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+
+  // Terms Section
+  termsSection: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
+  termsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f8fbff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e3f2fd',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '500',
+    marginLeft: 12,
+  },
+
+  // Message Cards
+  messageCard: {
+    margin: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+  },
+  warningCard: {
+    backgroundColor: '#fff3e0',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
+  },
+  errorCard: {
+    backgroundColor: '#ffebee',
+    borderLeftWidth: 4,
+    borderLeftColor: '#F44336',
+  },
+  messageContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  warningTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#E65100',
+    fontWeight: '600',
+  },
+  warningSubtext: {
+    fontSize: 12,
+    color: '#F57F17',
+    marginTop: 2,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#C62828',
+    marginLeft: 12,
+  },
+
+  // Button Container
+  buttonContainer: {
+    margin: 16,
+    marginTop: 8,
+  },
+  confirmButton: {
+    borderRadius: 16,
+    elevation: 3,
+  },
+  confirmButtonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  confirmButtonContent: {
+    paddingVertical: 12,
+  },
+  confirmButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+  },
+});
+
+// Legacy styles (keeping for potential compatibility)
 let stylePaymentOptionButton = StyleSheet.create({
   container: {
     borderWidth: 1,
@@ -536,7 +1116,6 @@ let stylePaymentOptionButtonDisabled = StyleSheet.create({
   }
 });
 
-
 let stylePaymentOptionButtonAdditionalText = StyleSheet.create({
   text: {
     fontWeight: 'bold',
@@ -549,7 +1128,6 @@ let stylePaymentOptionButtonAdditionalTextDisabled = StyleSheet.create({
     color: colors.greyedOutIcon,
   }
 });
-
 
 let styleConditionButton = StyleSheet.create({
   view: {

@@ -1,6 +1,18 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { Linking, Text, View, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { 
+  Card, 
+  Text, 
+  Button, 
+  Surface, 
+  ActivityIndicator,
+  Chip,
+  Icon,
+  Divider
+} from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Other imports
 import _ from 'lodash';
@@ -9,10 +21,10 @@ import Big from 'big.js';
 // Internal imports
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
+import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
-import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons } from 'src/styles';
+import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons, formStyles as forms } from 'src/styles';
 
 // Logger
 import logger from 'src/util/logger';
@@ -125,73 +137,145 @@ let SaleSuccessful = () => {
 
 
   return (
-    <View style={styles.panelContainer}>
-    <View style={styles.panelSubContainer}>
+    <View style={modernStyles.panelContainer}>
+      <Surface style={modernStyles.headerSurface} elevation={2}>
+        <Icon2 name="check-circle" size={48} color="#4CAF50" style={modernStyles.successIcon} />
+        <Text style={modernStyles.headerTitle}>Sale successful!</Text>
+        <Text style={modernStyles.headerSubtitle}>Your transaction has been completed</Text>
+      </Surface>
 
-      <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Sale successful!</Text>
-      </View>
+      <KeyboardAwareScrollView 
+        style={modernStyles.scrollView}
+        contentContainerStyle={modernStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        
+        {/* Sale Summary Card */}
+        <Card style={modernStyles.summaryCard}>
+          <Card.Content>
+            <View style={modernStyles.summaryHeader}>
+              <Icon2 name="swap-horizontal" size={24} color="#333" />
+              <Text style={modernStyles.summaryTitle}>Transaction summary</Text>
+            </View>
+            
+            <View style={modernStyles.transactionDetails}>
+              <View style={modernStyles.detailRow}>
+                <Icon2 name="arrow-up-circle" size={20} color="#4CAF50" />
+                <Text style={modernStyles.detailLabel}>You sold</Text>
+                <Text style={modernStyles.detailValue}>{getVolumeBAStr()}</Text>
+              </View>
+              
+              <View style={modernStyles.detailRow}>
+                <Icon2 name="arrow-down-circle" size={20} color="#2196F3" />
+                <Text style={modernStyles.detailLabel}>You received</Text>
+                <Text style={modernStyles.detailValue}>{getTotalQAStr()}</Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
 
-      <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
+        {/* Payment Status Card */}
+        <Card style={modernStyles.statusCard}>
+          <Card.Content>
+            <View style={modernStyles.statusHeader}>
+              {pageName === 'balance' ? (
+                <>
+                  <Icon2 name="wallet" size={24} color="#4CAF50" />
+                  <Text style={modernStyles.statusTitle}>Credited to balance</Text>
+                  <Chip icon="check" style={modernStyles.instantChip}>INSTANT</Chip>
+                </>
+              ) : (
+                <>
+                  <Icon2 name="bank-transfer" size={24} color="#FF9800" />
+                  <Text style={modernStyles.statusTitle}>Payment processing</Text>
+                  <Chip icon="clock" style={modernStyles.processingChip}>8 HOURS</Chip>
+                </>
+              )}
+            </View>
+            
+            <View style={modernStyles.statusDetails}>
+              {pageName === 'balance' ? (
+                <View style={modernStyles.statusRow}>
+                  <Icon2 name="check-circle" size={16} color="#4CAF50" />
+                  <Text style={modernStyles.statusText}>Your Solidi account has been credited with {getTotalQAStr()}</Text>
+                </View>
+              ) : (
+                <View style={modernStyles.statusRow}>
+                  <Icon2 name="clock-outline" size={16} color="#FF9800" />
+                  <Text style={modernStyles.statusText}>Your payment of {getTotalQAStr()} should arrive within 8 hours</Text>
+                </View>
+              )}
+            </View>
+          </Card.Content>
+        </Card>
 
-      <View style={styles.infoSection}>
-
-        <View style={styles.infoItem}>
-          <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your sale of {getVolumeBAStr()} has been processed.</Text>
+        {/* Action Buttons */}
+        <View style={modernStyles.actionsContainer}>
+          <Button
+            mode="contained"
+            onPress={viewAssets}
+            style={modernStyles.primaryButton}
+            contentStyle={modernStyles.buttonContent}
+            labelStyle={modernStyles.buttonText}
+            icon="view-dashboard"
+          >
+            View your assets
+          </Button>
+          
+          <Button
+            mode="outlined"
+            onPress={sellAgain}
+            style={modernStyles.secondaryButton}
+            contentStyle={modernStyles.buttonContent}
+            labelStyle={modernStyles.secondaryButtonText}
+            icon="repeat"
+          >
+            Sell another asset
+          </Button>
+          
+          <Button
+            mode="outlined"
+            onPress={buyAgain}
+            style={modernStyles.secondaryButton}
+            contentStyle={modernStyles.buttonContent}
+            labelStyle={modernStyles.secondaryButtonText}
+            icon="plus-circle"
+          >
+            Buy an asset
+          </Button>
         </View>
 
-        { (pageName == 'balance') &&
+        {/* Trustpilot Review Card */}
+        <Card style={modernStyles.reviewCard}>
+          <Card.Content>
+            <View style={modernStyles.reviewHeader}>
+              <Icon2 name="star" size={24} color="#FFB300" />
+              <Text style={modernStyles.reviewTitle}>Please review us on Trustpilot!</Text>
+            </View>
+            
+            <Text style={modernStyles.reviewText}>
+              Every review helps build trust with our new customers. Tap below to review us. Thanks!
+            </Text>
+            
+            <Button
+              mode="outlined"
+              onPress={() => { 
+                import('react-native').then(RN => {
+                  RN.Linking.openURL('https://www.trustpilot.com/evaluate/solidi.co?stars=5');
+                });
+              }}
+              style={modernStyles.trustpilotButton}
+              contentStyle={modernStyles.buttonContent}
+              labelStyle={modernStyles.trustpilotButtonText}
+              icon="star-outline"
+            >
+              Review on Trustpilot
+            </Button>
+          </Card.Content>
+        </Card>
 
-          <View style={styles.infoItem}>
-            <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your Solidi account has been credited with {getTotalQAStr()}.</Text>
-          </View>
-
-        }
-
-        { (pageName == 'solidi') &&
-
-          <View style={styles.infoItem}>
-            <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Your payment of {getTotalQAStr()} should arrive within 8 hours.</Text>
-          </View>
-
-        }
-
-      </View>
-
-      <View style={styles.button}>
-        <StandardButton title="View your assets" onPress={ viewAssets } />
-      </View>
-
-      <View style={styles.button2}>
-        <StandardButton title="Sell another asset" onPress={ sellAgain } />
-      </View>
-
-      <View style={styles.button3}>
-        <StandardButton title="Buy an asset" onPress={ buyAgain } />
-      </View>
-
-      <View style={[styles.heading, styles.heading2]}>
-        <Text style={styles.headingText}>Please review us on Trustpilot!</Text>
-      </View>
-
-      <View style={styles.infoSection2}>
-
-        <View style={styles.infoItem}>
-          <Text style={[styles.basicText, styles.bold]}>Every review helps build trust with our new customers. Tap the Trustpilot logo below to review us. Thanks!</Text>
-        </View>
-
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <ImageButton imageName='trustpilot'
-          styles={styleTrustpilotButton}
-          onPress={ () => { Linking.openURL(trustpilotURL) } }
-        />
-      </View>
-
-      </ScrollView>
-
-    </View>
+      </KeyboardAwareScrollView>
     </View>
   )
 
@@ -206,6 +290,197 @@ let styleTrustpilotButton = StyleSheet.create({
     width: scaledWidth(300),
     height: scaledHeight(120),
 
+  },
+});
+
+// Modern styles matching ChooseHowToPay
+let modernStyles = StyleSheet.create({
+  panelContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  headerSurface: {
+    backgroundColor: 'white',
+    paddingHorizontal: scaledWidth(20),
+    paddingVertical: scaledHeight(30),
+    marginBottom: scaledHeight(10),
+    alignItems: 'center',
+  },
+  successIcon: {
+    marginBottom: scaledHeight(15),
+  },
+  headerTitle: {
+    fontSize: normaliseFont(24),
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: scaledHeight(5),
+  },
+  headerSubtitle: {
+    fontSize: normaliseFont(16),
+    color: '#666',
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: scaledWidth(20),
+    paddingBottom: scaledHeight(40),
+  },
+  summaryCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: scaledHeight(20),
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scaledHeight(20),
+  },
+  summaryTitle: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: scaledWidth(10),
+  },
+  transactionDetails: {
+    marginTop: scaledHeight(10),
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: scaledHeight(12),
+    paddingHorizontal: scaledWidth(15),
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginBottom: scaledHeight(10),
+  },
+  detailLabel: {
+    fontSize: normaliseFont(16),
+    color: '#666',
+    marginLeft: scaledWidth(10),
+    flex: 1,
+  },
+  detailValue: {
+    fontSize: normaliseFont(16),
+    fontWeight: 'bold',
+    color: '#333',
+    fontVariant: ['tabular-nums'],
+  },
+  statusCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: scaledHeight(20),
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scaledHeight(15),
+  },
+  statusTitle: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: scaledWidth(10),
+    flex: 1,
+  },
+  instantChip: {
+    backgroundColor: '#E8F5E8',
+  },
+  processingChip: {
+    backgroundColor: '#FFF3E0',
+  },
+  statusDetails: {
+    marginTop: scaledHeight(10),
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: scaledHeight(8),
+  },
+  statusText: {
+    fontSize: normaliseFont(14),
+    color: '#555',
+    marginLeft: scaledWidth(8),
+    flex: 1,
+  },
+  actionsContainer: {
+    marginVertical: scaledHeight(20),
+  },
+  primaryButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 25,
+    marginBottom: scaledHeight(15),
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  secondaryButton: {
+    borderColor: '#007AFF',
+    borderRadius: 25,
+    marginBottom: scaledHeight(15),
+  },
+  buttonContent: {
+    paddingVertical: scaledHeight(12),
+  },
+  buttonText: {
+    fontSize: normaliseFont(16),
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  secondaryButtonText: {
+    fontSize: normaliseFont(16),
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  reviewCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginTop: scaledHeight(20),
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scaledHeight(15),
+  },
+  reviewTitle: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: scaledWidth(10),
+  },
+  reviewText: {
+    fontSize: normaliseFont(14),
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: scaledHeight(20),
+  },
+  trustpilotButton: {
+    borderColor: '#FFB300',
+    borderRadius: 25,
+  },
+  trustpilotButtonText: {
+    fontSize: normaliseFont(16),
+    fontWeight: 'bold',
+    color: '#FFB300',
   },
 });
 

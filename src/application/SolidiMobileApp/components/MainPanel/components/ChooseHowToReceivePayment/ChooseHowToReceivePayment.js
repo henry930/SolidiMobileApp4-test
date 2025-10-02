@@ -1,7 +1,19 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Text, ScrollView, StyleSheet, View } from 'react-native';
-import { RadioButton } from 'react-native-paper';
+import { ScrollView, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { 
+  RadioButton, 
+  Card, 
+  Text, 
+  Button, 
+  Surface, 
+  ActivityIndicator,
+  Chip,
+  Icon,
+  Divider
+} from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Other imports
 import _ from 'lodash';
@@ -10,8 +22,8 @@ import Big from 'big.js';
 // Internal imports
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
+import { StandardButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Button, StandardButton, ImageButton } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -407,119 +419,231 @@ let ChooseHowToReceivePayment = () => {
 
 
   return (
-    <View style={styles.panelContainer}>
+    <View style={modernStyles.panelContainer}>
+      <Surface style={modernStyles.headerSurface} elevation={2}>
+        <Text style={modernStyles.headerTitle}>Choose how to be paid</Text>
+        <Text style={modernStyles.headerSubtitle}>Select your preferred payment method for receiving funds</Text>
+      </Surface>
 
-      <View style={[styles.heading, styles.heading1]}>
-        <Text style={styles.headingText}>Choose how to be paid</Text>
-      </View>
-
-      <View style={styles.scrollDownMessage}>
-        <Text style={styles.scrollDownMessageText}>(Scroll down to Confirm & Sell)</Text>
-      </View>
-
-      <View style={[styles.horizontalRule, styles.horizontalRule1]}/>
-
-      <ScrollView ref={refScrollView} showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }} >
-
-        <View style={styles.selectPaymentMethodSection}>
-
-          <RadioButton.Group onValueChange={x => {
-            log(`paymentChoice selected: ${x}`);
-            setPaymentChoice(x);
-          }} value={paymentChoice}>
-
-          <RadioButton.Item label="Paid directly from Solidi" value="solidi"
-            color={colors.standardButtonText}
-            style={styles.button}
-            labelStyle={styles.buttonLabel}
-          />
-
-          <View style={styles.buttonDetail}>
-            <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Paid to your bank account in 8 hours</Text>
-            { ! bankAccountDetailsAreEmpty() &&
-              <View>
-              <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Paying to: {getBankAccount().accountName}</Text>
-              <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Sort Code: {getBankAccount().sortCode}</Text>
-              <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Account Number: {getBankAccount().accountNumber}</Text>
+      <KeyboardAwareScrollView 
+        style={modernStyles.scrollView}
+        contentContainerStyle={modernStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        
+        {/* Order Summary Card - Moved to top */}
+        <Card style={modernStyles.orderSummaryCard}>
+          <Card.Content style={modernStyles.cardContent}>
+            <View style={modernStyles.cardHeader}>
+              <Icon2 name="receipt" size={24} color="#007AFF" />
+              <Text style={modernStyles.cardTitle}>Order Summary</Text>
+            </View>
+            
+            <View style={modernStyles.orderDetails}>
+              <View style={modernStyles.orderRow}>
+                <Text style={modernStyles.orderLabel}>You're selling</Text>
+                <Text style={modernStyles.orderValue}>{calculateVolumeBA()} {assetBA}</Text>
               </View>
-            }
-          </View>
+              
+              <View style={modernStyles.orderRow}>
+                <Text style={modernStyles.orderLabel}>You'll receive</Text>
+                <Text style={modernStyles.orderValue}>
+                  {appState.getFullDecimalValue({asset: assetQA, value: calculateVolumeQA(), functionName: 'ChooseHowToReceivePayment'})} {assetQA}
+                </Text>
+              </View>
+              
+              <View style={modernStyles.orderRow}>
+                <Text style={modernStyles.orderLabel}>Processing fee</Text>
+                <Text style={modernStyles.orderValue}>{calculateFeeQA()} {assetQA}</Text>
+              </View>
+              
+              <Divider style={{ marginVertical: 12 }} />
+              
+              <View style={[modernStyles.orderRow, modernStyles.totalRow]}>
+                <Text style={modernStyles.totalLabel}>Total amount</Text>
+                <Text style={modernStyles.totalValue}>{calculateTotalQA()} {assetQA}</Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
 
-          <View style={styles.spacer}/>
+        {/* Payment Methods */}
+        <Card style={modernStyles.paymentMethodsCard}>
+          <Card.Content style={modernStyles.cardContent}>
+            <View style={modernStyles.cardHeader}>
+              <Icon2 name="bank-transfer" size={24} color="#007AFF" />
+              <Text style={modernStyles.cardTitle}>How would you like to be paid?</Text>
+            </View>
 
-          <RadioButton.Item label="Paid to balance" value="balance"
-            color={colors.standardButtonText}
-            style={styles.button}
-            labelStyle={styles.buttonLabel}
-          />
+            {/* Payment Method Selection */}
+            <View style={modernStyles.paymentMethodsContainer}>
+              
+              {/* Bank Transfer Payment Option */}
+              <TouchableOpacity 
+                onPress={() => {
+                  log(`paymentChoice selected: solidi`);
+                  setPaymentChoice('solidi');
+                }}
+                activeOpacity={0.7}
+                style={[
+                  modernStyles.paymentMethodCard,
+                  paymentChoice === 'solidi' && modernStyles.selectedCard
+                ]}
+              >
+                <Card style={[
+                  modernStyles.card,
+                  paymentChoice === 'solidi' && modernStyles.cardSelected
+                ]}>
+                  <Card.Content style={modernStyles.cardContent}>
+                    <View style={modernStyles.paymentMethodHeader}>
+                      <View style={modernStyles.paymentMethodTitleContainer}>
+                        <Icon2 name="bank-transfer" size={24} color="#007AFF" />
+                        <Text style={modernStyles.paymentMethodTitle}>Bank Transfer</Text>
+                        <View style={modernStyles.feeBadge}>
+                          <Text style={modernStyles.feeBadgeText}>NO FEE</Text>
+                        </View>
+                      </View>
+                      <RadioButton 
+                        value="solidi"
+                        status={paymentChoice === 'solidi' ? 'checked' : 'unchecked'}
+                        color="#007AFF"
+                      />
+                    </View>
+                    <View style={modernStyles.paymentMethodDetails}>
+                      <View style={modernStyles.featureRow}>
+                        <Icon2 name="clock-fast" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Paid to your bank account in 8 hours</Text>
+                      </View>
+                      { ! bankAccountDetailsAreEmpty() && (
+                        <>
+                          <View style={modernStyles.featureRow}>
+                            <Icon2 name="bank" size={16} color="#4CAF50" />
+                            <Text style={modernStyles.featureText}>Paying to: {getBankAccount().accountName}</Text>
+                          </View>
+                          <View style={modernStyles.featureRow}>
+                            <Icon2 name="credit-card-outline" size={16} color="#4CAF50" />
+                            <Text style={modernStyles.featureText}>Sort Code: {getBankAccount().sortCode}</Text>
+                          </View>
+                          <View style={modernStyles.featureRow}>
+                            <Icon2 name="pound" size={16} color="#4CAF50" />
+                            <Text style={modernStyles.featureText}>Account: {getBankAccount().accountNumber}</Text>
+                          </View>
+                        </>
+                      )}
+                    </View>
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
 
-          <View style={styles.buttonDetail}>
-            <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Paid to your Solidi balance - No fee!</Text>
-            <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} Processed instantly</Text>
-            <Text style={[styles.basicText, styles.bold]}>{`\u2022  `} {getBalanceDescription()}</Text>
-          </View>
+              {/* Balance Payment Option */}
+              <TouchableOpacity 
+                onPress={() => {
+                  log(`paymentChoice selected: balance`);
+                  setPaymentChoice('balance');
+                }}
+                activeOpacity={0.7}
+                style={[
+                  modernStyles.paymentMethodCard,
+                  paymentChoice === 'balance' && modernStyles.selectedCard
+                ]}
+              >
+                <Card style={[
+                  modernStyles.card,
+                  paymentChoice === 'balance' && modernStyles.cardSelected
+                ]}>
+                  <Card.Content style={modernStyles.cardContent}>
+                    <View style={modernStyles.paymentMethodHeader}>
+                      <View style={modernStyles.paymentMethodTitleContainer}>
+                        <Icon2 name="wallet" size={24} color="#4CAF50" />
+                        <Text style={modernStyles.paymentMethodTitle}>Solidi Balance</Text>
+                        <View style={modernStyles.popularBadge}>
+                          <Text style={modernStyles.popularBadgeText}>INSTANT</Text>
+                        </View>
+                      </View>
+                      <RadioButton 
+                        value="balance"
+                        status={paymentChoice === 'balance' ? 'checked' : 'unchecked'}
+                        color="#007AFF"
+                      />
+                    </View>
+                    <View style={modernStyles.paymentMethodDetails}>
+                      <View style={modernStyles.featureRow}>
+                        <Icon2 name="flash" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Paid to your Solidi balance - No fee!</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon2 name="check-circle" size={16} color="#4CAF50" />
+                        <Text style={modernStyles.featureText}>Processed instantly</Text>
+                      </View>
+                      <View style={modernStyles.featureRow}>
+                        <Icon2 name="information" size={16} color="#666" />
+                        <Text style={modernStyles.featureText}>{getBalanceDescription()}</Text>
+                      </View>
+                    </View>
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
 
-          </RadioButton.Group>
+            </View>
+          </Card.Content>
+        </Card>
 
+        {/* Payment Conditions Button */}
+        <View style={modernStyles.conditionsContainer}>
+          <Button 
+            mode="text" 
+            onPress={readPaymentConditions}
+            icon="file-document-outline"
+            textColor="#007AFF"
+            style={modernStyles.conditionsButton}
+          >
+            Our payment conditions
+          </Button>
         </View>
 
-        <View style={styles.conditionsButtonWrapper}>
-          <Button title="Our payment conditions" onPress={ readPaymentConditions }
-            styles={styleConditionButton}/>
-        </View>
+        {/* Messages */}
+        {priceChangeMessage ? (
+          <Card style={modernStyles.messageCard}>
+            <Card.Content style={modernStyles.messageContent}>
+              <Icon2 name="alert-circle" size={20} color="#FF9800" />
+              <Text style={modernStyles.priceChangeText}>{priceChangeMessage}</Text>
+            </Card.Content>
+          </Card>
+        ) : null}
 
-        <View style={styles.horizontalRule}/>
+        {errorMessage ? (
+          <Card style={modernStyles.errorCard}>
+            <Card.Content style={modernStyles.messageContent}>
+              <Icon2 name="alert-circle-outline" size={20} color="#F44336" />
+              <Text style={modernStyles.errorText}>{errorMessage}</Text>
+            </Card.Content>
+          </Card>
+        ) : null}
 
-        <View style={[styles.heading, styles.heading2]}>
-          <Text style={styles.headingText}>Your order</Text>
-        </View>
-
-        <View style={styles.orderDetailsSection}>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>You sell</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{calculateVolumeBA()} {assetBA}</Text>
-          </View>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>You get</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{appState.getFullDecimalValue({asset: assetQA, value: calculateVolumeQA(), functionName: 'ChooseHowToReceivePayment'})} {assetQA}</Text>
-          </View>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>Fee</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{calculateFeeQA()} {assetQA}</Text>
-          </View>
-
-          <View style={styles.orderDetailsLine}>
-            <Text style={[styles.basicText, styles.bold]}>Total</Text>
-            <Text style={[styles.monospaceText, styles.bold]}>{calculateTotalQA()} {assetQA}</Text>
-          </View>
-
-        </View>
-
-        <View style={styles.horizontalRule}/>
-
-        <View style={styles.priceChangeMessage}>
-          <Text style={styles.priceChangeMessageText}>{priceChangeMessage}</Text>
-        </View>
-
-        <View style={styles.errorMessage}>
-          <Text style={styles.errorMessageText}>{errorMessage}</Text>
-        </View>
-
-        <View style={styles.confirmButtonWrapper}>
-          <StandardButton title="Confirm & Sell"
-            onPress={ confirmReceivePaymentChoice }
+        {/* Confirm Button */}
+        <View style={modernStyles.confirmButtonContainer}>
+          <Button
+            mode="contained"
+            onPress={confirmReceivePaymentChoice}
             disabled={disableConfirmButton}
-          />
-          <View style={styles.sendOrderMessage}>
-            <Text style={styles.sendOrderMessageText}>{sendOrderMessage}</Text>
-          </View>
+            style={[
+              modernStyles.confirmButton,
+              disableConfirmButton && modernStyles.disabledButton
+            ]}
+            contentStyle={modernStyles.confirmButtonContent}
+            labelStyle={modernStyles.confirmButtonText}
+            icon="check-circle"
+          >
+            Confirm & Sell
+          </Button>
+          
+          {sendOrderMessage ? (
+            <Text style={modernStyles.sendOrderText}>{sendOrderMessage}</Text>
+          ) : null}
         </View>
 
-      </ScrollView>
-
+      </KeyboardAwareScrollView>
     </View>
   )
 
@@ -643,6 +767,296 @@ let styles = StyleSheet.create({
   sendOrderMessageText: {
     fontSize: normaliseFont(14),
     color: 'red',
+  },
+});
+
+// Modern styles matching ChooseHowToPay
+let modernStyles = StyleSheet.create({
+  panelContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  headerSurface: {
+    backgroundColor: 'white',
+    paddingHorizontal: scaledWidth(20),
+    paddingVertical: scaledHeight(20),
+    marginBottom: scaledHeight(10),
+  },
+  headerTitle: {
+    fontSize: normaliseFont(24),
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: scaledHeight(5),
+  },
+  headerSubtitle: {
+    fontSize: normaliseFont(16),
+    color: '#666',
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: scaledWidth(20),
+    paddingBottom: scaledHeight(40),
+  },
+  
+  // Order Summary Card (at top)
+  orderSummaryCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginTop: scaledHeight(10),
+    marginBottom: scaledHeight(15),
+  },
+  
+  // Payment Methods Card
+  paymentMethodsCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: scaledHeight(15),
+  },
+  
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scaledHeight(20),
+  },
+  cardTitle: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: scaledWidth(10),
+  },
+  
+  // Order Summary Details (matching ChooseHowToPay)
+  orderDetails: {
+    marginTop: scaledHeight(10),
+  },
+  
+  paymentMethodsContainer: {
+    marginTop: scaledHeight(10),
+  },
+  paymentMethodCard: {
+    marginBottom: scaledHeight(15),
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardSelected: {
+    borderColor: '#007AFF',
+    borderWidth: 2,
+    elevation: 4,
+    shadowOpacity: 0.15,
+  },
+  selectedCard: {
+    transform: [{ scale: 1.02 }],
+  },
+  cardContent: {
+    padding: scaledWidth(20),
+  },
+  paymentMethodHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: scaledHeight(15),
+  },
+  paymentMethodTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  paymentMethodTitle: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: scaledWidth(10),
+    flex: 1,
+  },
+  feeBadge: {
+    backgroundColor: '#E8F5E8',
+    borderRadius: 12,
+    paddingHorizontal: scaledWidth(8),
+    paddingVertical: scaledHeight(4),
+  },
+  feeBadgeText: {
+    fontSize: normaliseFont(12),
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  popularBadge: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 12,
+    paddingHorizontal: scaledWidth(8),
+    paddingVertical: scaledHeight(4),
+  },
+  popularBadgeText: {
+    fontSize: normaliseFont(12),
+    fontWeight: 'bold',
+    color: '#2196F3',
+  },
+  paymentMethodDetails: {
+    marginTop: scaledHeight(10),
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scaledHeight(8),
+  },
+  featureText: {
+    fontSize: normaliseFont(14),
+    color: '#555',
+    marginLeft: scaledWidth(8),
+    flex: 1,
+  },
+  conditionsContainer: {
+    alignItems: 'center',
+    marginVertical: scaledHeight(20),
+  },
+  conditionsButton: {
+    borderColor: '#007AFF',
+  },
+  divider: {
+    backgroundColor: '#E0E0E0',
+    height: 1,
+    marginVertical: scaledHeight(20),
+  },
+  summaryCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: scaledHeight(20),
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scaledHeight(20),
+  },
+  summaryTitle: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: scaledWidth(10),
+  },
+  orderDetailsContainer: {
+    marginTop: scaledHeight(10),
+  },
+  orderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: scaledHeight(8),
+  },
+  orderLabel: {
+    fontSize: normaliseFont(16),
+    color: '#666',
+  },
+  orderValue: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: '#333',
+    fontVariant: ['tabular-nums'],
+  },
+  orderDivider: {
+    backgroundColor: '#E0E0E0',
+    height: 1,
+    marginVertical: scaledHeight(10),
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    paddingTop: scaledHeight(15),
+    marginTop: scaledHeight(10),
+  },
+  totalLabel: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  totalValue: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: '#007AFF',
+    fontVariant: ['tabular-nums'],
+  },
+  messageCard: {
+    backgroundColor: '#FFF8E1',
+    borderRadius: 8,
+    marginBottom: scaledHeight(15),
+  },
+  errorCard: {
+    backgroundColor: '#FFEBEE',
+    borderRadius: 8,
+    marginBottom: scaledHeight(15),
+  },
+  messageContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: scaledWidth(15),
+  },
+  priceChangeText: {
+    fontSize: normaliseFont(14),
+    color: '#FF9800',
+    marginLeft: scaledWidth(10),
+    flex: 1,
+  },
+  errorText: {
+    fontSize: normaliseFont(14),
+    color: '#F44336',
+    marginLeft: scaledWidth(10),
+    flex: 1,
+  },
+  confirmButtonContainer: {
+    marginTop: scaledHeight(20),
+    alignItems: 'center',
+  },
+  confirmButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 25,
+    paddingVertical: scaledHeight(5),
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    width: '100%',
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
+  },
+  confirmButtonContent: {
+    paddingVertical: scaledHeight(12),
+  },
+  confirmButtonText: {
+    fontSize: normaliseFont(18),
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  sendOrderText: {
+    fontSize: normaliseFont(14),
+    color: '#F44336',
+    marginTop: scaledHeight(10),
+    textAlign: 'center',
   },
 });
 

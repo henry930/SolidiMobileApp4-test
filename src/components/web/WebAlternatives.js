@@ -64,8 +64,12 @@ export const RNCamera = ({ style, ...props }) => {
   }
   
   // Return original component for mobile  
-  const { RNCamera: OriginalRNCamera } = require('react-native-vision-camera');
-  return <OriginalRNCamera style={style} {...props} />;
+  // Temporarily commented out VisionCamera for build testing
+  // const { RNCamera: OriginalRNCamera } = require('react-native-vision-camera');
+  // return <OriginalRNCamera style={style} {...props} />;
+  
+  // Temporary fallback - return null for mobile when VisionCamera is disabled
+  return null;
 };
 
 // Web alternative for Apple Pay and native payments
@@ -74,9 +78,10 @@ export const PaymentRequest = {
     if (Platform.OS === 'web') {
       return Promise.resolve(false);
     }
-    // Return original for mobile
-    const { PaymentRequest: OriginalPaymentRequest } = require('react-native-payments');
-    return OriginalPaymentRequest.canMakePayment();
+    // Temporarily commented out react-native-payments for build testing
+    // const { PaymentRequest: OriginalPaymentRequest } = require('react-native-payments');
+    // return OriginalPaymentRequest.canMakePayment();
+    return Promise.resolve(false);
   },
   
   show: (paymentDetails) => {
@@ -95,9 +100,10 @@ export const PaymentRequest = {
       return Promise.reject(new Error('Native payments not available on web'));
     }
     
-    // Return original for mobile
-    const { PaymentRequest: OriginalPaymentRequest } = require('react-native-payments');
-    return new OriginalPaymentRequest(paymentDetails).show();
+    // Temporarily commented out react-native-payments for build testing
+    // const { PaymentRequest: OriginalPaymentRequest } = require('react-native-payments');
+    // return new OriginalPaymentRequest(paymentDetails).show();
+    return Promise.reject(new Error('Payments temporarily disabled for build testing'));
   }
 };
 

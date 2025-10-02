@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { ScrollView, View, Alert, Platform } from 'react-native';
 
 // Apple Pay imports
-import { PaymentRequest, canMakePayments } from 'react-native-payments';
+// import { PaymentRequest, canMakePayments } from 'react-native-payments';
 
 // Material Design imports
 import {
@@ -183,11 +183,13 @@ let Wallet = () => {
       log('Checking Apple Pay availability...');
       
       // Check multiple Apple Pay conditions
-      const canPay = await canMakePayments();
+      // const canPay = await canMakePayments();
+      const canPay = false; // Apple Pay disabled
       log('Apple Pay canMakePayments result:', canPay);
       
       // Additional checks
-      const deviceSupport = await canMakePayments(['apple-pay']);
+      // const deviceSupport = await canMakePayments(['apple-pay']);
+      const deviceSupport = false; // Apple Pay disabled
       log('Apple Pay device support:', deviceSupport);
       
       if (!canPay) {
@@ -222,7 +224,9 @@ let Wallet = () => {
       // Step 4: Create payment request with simplified configuration
       log('Creating PaymentRequest for amount:', amount, 'currency:', currency);
       
-      const paymentRequest = new PaymentRequest(
+      // const paymentRequest = new PaymentRequest(
+      throw new Error('Apple Pay functionality disabled - react-native-payments removed');
+      /*
         [
           {
             supportedMethods: ['apple-pay'],
@@ -255,6 +259,15 @@ let Wallet = () => {
       // Step 5: Show Apple Pay payment sheet
       const paymentResponse = await paymentRequest.show();
       log('Payment sheet shown, response received');
+
+      // Step 6: Process the payment
+      await processApplePayPayment(currency, amount, paymentResponse);
+
+      // Step 7: Complete the payment
+      log('Completing payment...');
+      await paymentResponse.complete('success');
+      log('Payment completed successfully');
+      */
 
       // Step 6: Process the payment
       await processApplePayPayment(currency, amount, paymentResponse);

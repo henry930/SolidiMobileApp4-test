@@ -21,6 +21,21 @@ import { AppStateProvider } from '../data';
 import { theme } from '../../constants';
 import ErrorBoundary from '../../components/web/ErrorBoundary';
 
+// Disable Inspector completely in development
+if (__DEV__) {
+  console.disableYellowBox = true;
+  
+  // Additional Inspector disabling
+  try {
+    const {DevSettings} = require('react-native');
+    if (DevSettings && DevSettings.setIsShakeToShowDevMenuEnabled) {
+      DevSettings.setIsShakeToShowDevMenuEnabled(false);
+    }
+  } catch (e) {
+    // DevSettings not available
+  }
+}
+
 // Logger
 import logger from '../../util/logger';
 let logger2 = logger.extend('App');
