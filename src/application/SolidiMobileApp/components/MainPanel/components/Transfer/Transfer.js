@@ -87,6 +87,18 @@ let Transfer = () => {
   let [recipientAddress, setRecipientAddress] = useState('');
   let [errorMessage, setErrorMessage] = useState('');
   let [isLoading, setIsLoading] = useState(false);
+  let [componentError, setComponentError] = useState(null);
+
+  // Error boundary effect
+  useEffect(() => {
+    const handleError = (error) => {
+      log('Component error caught:', error);
+      setComponentError(error.message || 'An error occurred');
+    };
+    
+    // Reset component error when transfer type changes
+    setComponentError(null);
+  }, [transferType, selectedAsset]);
 
   // Function that derives dropdown properties from an asset list with safe fallbacks
   let deriveAssetItems = (assetList) => {
@@ -98,22 +110,57 @@ let Transfer = () => {
 
       return assetList.map((asset) => {
         try {
-          let assetIcon = appState?.getAssetIcon ? appState.getAssetIcon(asset) : null;
-          let info = appState?.getAssetInfo ? appState.getAssetInfo(asset) : null;
           let displayInfo = transferDataModel.getAssetDisplayInfo(asset);
+          let displayString = displayInfo.label;
           
-          let displayString = info?.displayString || displayInfo.label;
+          // Try to get asset icon from appState, but don't fail if it doesn't work
+          let assetIcon = null;
+          try {
+            if (appState?.getAssetIcon) {
+              assetIcon = appState.getAssetIcon(asset);
+            }
+          } catch (iconError) {
+            log('Error getting asset icon for', asset, ':', iconError);
+          }
+          
+          // Try to get additional info from appState
+          try {
+            if (appState?.getAssetInfo) {
+              let info = appState.getAssetInfo(asset);
+              if (info?.displayString) {
+                displayString = info.displayString;
+              }
+            }
+          } catch (infoError) {
+            log('Error getting asset info for', asset, ':', infoError);
+          }
           
           let assetItem = {
             label: displayString,
             value: asset,
-            icon: assetIcon ? () => <Image source={assetIcon} style={{
-                width: scaledWidth(27),
-                height: scaledHeight(27),
-                resizeMode: 'contain',
-              }}
-            /> : undefined,
           };
+          
+          // Only add icon if we successfully got one
+          if (assetIcon) {
+            assetItem.icon = () => {
+              try {
+                return (
+                  <Image 
+                    source={assetIcon} 
+                    style={{
+                      width: scaledWidth(27),
+                      height: scaledHeight(27),
+                      resizeMode: 'contain',
+                    }}
+                  />
+                );
+              } catch (renderError) {
+                log('Error rendering icon for', asset, ':', renderError);
+                return null;
+              }
+            };
+          }
+          
           return assetItem;
         } catch (error) {
           log('Error processing asset item:', asset, error);
@@ -177,10 +224,13 @@ let Transfer = () => {
     setup();
   }, []);
 
-  // Enhanced setup with better error handling
+  // Enhanced setup with better error handling and state management
   let setup = () => {
     try {
       log('Setting up Transfer component, transferType:', transferType);
+      
+      // Close dropdown during setup to prevent conflicts
+      setOpen(false);
       
       let newItems;
       if (transferType === 'send') {
@@ -189,7 +239,7 @@ let Transfer = () => {
         newItems = generateReceiveAssetItems();
       }
       
-      log('Generated items:', newItems.length);
+      log('Generated items:', newItems?.length || 0);
       
       if (!newItems || newItems.length === 0) {
         log('No items generated, using emergency fallback');
@@ -200,17 +250,34 @@ let Transfer = () => {
         ];
       }
       
+      // Clear any existing error messages
+      setErrorMessage('');
+      
+      // Update items first
       setItems(newItems);
       
-      // Ensure selected asset is valid
-      if (!selectedAsset || !newItems.some(item => item.value === selectedAsset)) {
-        log('Selected asset not in items, setting to first available');
-        setSelectedAsset(newItems[0]?.value || 'BTC');
-      }
+      // Then validate and update selected asset
+      setTimeout(() => {
+        try {
+          if (!selectedAsset || !newItems.some(item => item.value === selectedAsset)) {
+            log('Selected asset not in items, setting to first available');
+            const firstAsset = newItems[0]?.value || 'BTC';
+            setSelectedAsset(firstAsset);
+            log('Set selected asset to:', firstAsset);
+          } else {
+            log('Selected asset', selectedAsset, 'is valid');
+          }
+        } catch (validationError) {
+          log('Error validating selected asset:', validationError);
+          setSelectedAsset('BTC');
+        }
+      }, 100);
       
     } catch (error) {
       log('Setup error:', error);
       // Emergency fallback
+      setOpen(false);
+      setErrorMessage('');
       setItems([
         { label: 'Bitcoin (BTC)', value: 'BTC' },
         { label: 'Ethereum (ETH)', value: 'ETH' },
@@ -220,9 +287,22 @@ let Transfer = () => {
     }
   }
 
-  // Update items when transfer type changes
+  // Update items when transfer type changes with debounce
   useEffect(() => {
-    setup();
+    log('Transfer type changed to:', transferType);
+    
+    // Use timeout to debounce rapid changes
+    const timer = setTimeout(() => {
+      try {
+        setup();
+      } catch (error) {
+        log('Error in transfer type change effect:', error);
+      }
+    }, 150);
+    
+    return () => {
+      clearTimeout(timer);
+    };
   }, [transferType]);
 
   // Enhanced send transaction handler with validation
@@ -315,14 +395,42 @@ let Transfer = () => {
     }
   }
 
-  return (
-    <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
-      
-      <KeyboardAwareScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16 }}
-        keyboardShouldPersistTaps='handled'
-      >
+  // If there's a component error, show error screen
+  if (componentError) {
+    return (
+      <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+        <View style={{ padding: 20, justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+          <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center', color: '#F44336' }}>
+            Transfer Error
+          </Text>
+          <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
+            {componentError}
+          </Text>
+          <Button 
+            mode="contained" 
+            onPress={() => {
+              setComponentError(null);
+              setSelectedAsset('BTC');
+              setTransferType('send');
+              setup();
+            }}
+          >
+            Reset Transfer
+          </Button>
+        </View>
+      </View>
+    );
+  }
+
+  try {
+    return (
+      <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+        
+        <KeyboardAwareScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16 }}
+          keyboardShouldPersistTaps='handled'
+        >
         
         {/* Transfer Type Selector */}
         <SegmentedButtons
@@ -347,7 +455,7 @@ let Transfer = () => {
           style={{ marginBottom: 16 }}
         />
 
-        {/* Asset Selection */}
+        {/* Asset Selection with Enhanced Error Handling */}
         <View style={{ zIndex: 5000, elevation: 10 }}>
           <Card style={{ marginBottom: 16, elevation: 4 }}>
             <Card.Content style={{ padding: 20 }}>
@@ -355,23 +463,106 @@ let Transfer = () => {
                 Select Asset
               </Text>
               
-              <DropDownPicker
-                open={open}
-                value={selectedAsset}
-                items={items}
-                setOpen={setOpen}
-                setValue={setSelectedAsset}
-                setItems={setItems}
-                placeholder="Choose asset"
-                style={{ borderColor: materialTheme.colors.outline }}
-                dropDownContainerStyle={{ 
-                  borderColor: materialTheme.colors.outline,
-                  elevation: 10,
-                  zIndex: 5000
-                }}
-                zIndex={5000}
-                zIndexInverse={1000}
-              />
+              {(() => {
+                try {
+                  // Validate that we have valid items and selectedAsset
+                  if (!items || items.length === 0) {
+                    return (
+                      <View style={{ padding: 20, alignItems: 'center' }}>
+                        <Text variant="bodyMedium" style={{ color: '#666' }}>
+                          Loading assets...
+                        </Text>
+                      </View>
+                    );
+                  }
+                  
+                  if (!selectedAsset || !items.some(item => item.value === selectedAsset)) {
+                    return (
+                      <View style={{ padding: 20, alignItems: 'center' }}>
+                        <Text variant="bodyMedium" style={{ color: '#F44336', marginBottom: 16 }}>
+                          Asset selection error
+                        </Text>
+                        <Button mode="outlined" onPress={() => setup()}>
+                          Reload Assets
+                        </Button>
+                      </View>
+                    );
+                  }
+                  
+                  return (
+                    <DropDownPicker
+                      open={open}
+                      value={selectedAsset}
+                      items={items}
+                      setOpen={setOpen}
+                      setValue={(callback) => {
+                        try {
+                          log('DropDownPicker setValue called');
+                          if (typeof callback === 'function') {
+                            const newValue = callback(selectedAsset);
+                            log('Setting new asset value:', newValue);
+                            setSelectedAsset(newValue);
+                          } else {
+                            log('Setting asset value directly:', callback);
+                            setSelectedAsset(callback);
+                          }
+                          // Clear any errors when asset changes
+                          setErrorMessage('');
+                        } catch (error) {
+                          log('Error in setValue:', error);
+                          setErrorMessage('Error selecting asset');
+                        }
+                      }}
+                      setItems={setItems}
+                      placeholder="Choose asset"
+                      style={{ 
+                        borderColor: materialTheme?.colors?.outline || '#ccc',
+                        backgroundColor: 'white'
+                      }}
+                      dropDownContainerStyle={{ 
+                        borderColor: materialTheme?.colors?.outline || '#ccc',
+                        elevation: 10,
+                        zIndex: 5000,
+                        backgroundColor: 'white'
+                      }}
+                      textStyle={{
+                        fontSize: 16,
+                        color: '#333'
+                      }}
+                      labelStyle={{
+                        fontSize: 16,
+                        color: '#333'
+                      }}
+                      zIndex={5000}
+                      zIndexInverse={1000}
+                      listMode="SCROLLVIEW"
+                      scrollViewProps={{
+                        nestedScrollEnabled: true
+                      }}
+                      onSelectItem={(item) => {
+                        try {
+                          log('Asset selected:', item);
+                          setErrorMessage('');
+                        } catch (error) {
+                          log('Error in onSelectItem:', error);
+                        }
+                      }}
+                    />
+                  );
+                } catch (dropdownError) {
+                  log('Dropdown render error:', dropdownError);
+                  return (
+                    <View style={{ padding: 20, alignItems: 'center' }}>
+                      <Text variant="bodyMedium" style={{ color: '#F44336', marginBottom: 16 }}>
+                        Asset dropdown unavailable
+                      </Text>
+                      <Button mode="outlined" onPress={() => setup()}>
+                        Reset
+                      </Button>
+                    </View>
+                  );
+                }
+              })()}
             </Card.Content>
           </Card>
         </View>
@@ -581,6 +772,40 @@ let Transfer = () => {
       </KeyboardAwareScrollView>
     </View>
   );
+  
+  } catch (renderError) {
+    log('Transfer component render error:', renderError);
+    
+    // Return emergency fallback UI
+    return (
+      <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+        <View style={{ padding: 20, justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+          <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center', color: '#F44336' }}>
+            Transfer Unavailable
+          </Text>
+          <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
+            The transfer feature is temporarily unavailable. Please try again later.
+          </Text>
+          <Button 
+            mode="contained" 
+            onPress={() => {
+              try {
+                setComponentError(null);
+                setSelectedAsset('BTC');
+                setTransferType('send');
+                setErrorMessage('');
+                setup();
+              } catch (error) {
+                log('Error in retry:', error);
+              }
+            }}
+          >
+            Try Again
+          </Button>
+        </View>
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
