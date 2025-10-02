@@ -7,6 +7,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios --simulator='iPhone 11 Pro Max'",
     "start": "react-native start",
+    "restart": "./restart-dev.sh",
+    "restart:quick": "./quick-restart.sh",
     "web": "webpack serve --mode development",
     "web:build": "webpack --mode production",
     "web:dev": "webpack serve --mode development --open",

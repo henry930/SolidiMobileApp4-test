@@ -41,6 +41,24 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('Assets');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
+// Number formatting helper - 9 significant digits
+const formatTo9Digits = (value) => {
+  if (isNaN(value) || !isFinite(value)) return '0';
+  
+  const num = Number(value);
+  if (num === 0) return '0';
+  
+  if (Math.abs(num) >= 1) {
+    // For numbers >= 1, use toPrecision to get 9 significant digits
+    return num.toPrecision(9);
+  } else {
+    // For numbers < 1, use toFixed and remove trailing zeros
+    let formatted = num.toFixed(9);
+    formatted = formatted.replace(/\.?0+$/, '');
+    return formatted === '' ? '0' : formatted;
+  }
+};
+
 const Assets = () => {
   let appState = useContext(AppStateContext);
   
@@ -369,27 +387,23 @@ const Assets = () => {
   // Calculate total portfolio value using real ticker data
   const calculatePortfolioValue = () => {
     try {
-      let totalValue = new Big(0);
-      
-      assetData.forEach(asset => {
-        try {
-          const balance = new Big(asset.balance || 0);
-          const price = getAssetPrice(asset.asset);
-          const value = balance.times(price);
-          totalValue = totalValue.plus(value);
-        } catch (error) {
-          console.log(`❌ Assets: Error calculating value for ${asset.asset}:`, error);
+      const bigTotalValue = assets.reduce((total, asset) => {
+        if (!isNaN(asset.balance) && !isNaN(asset.ticker)) {
+          const assetValue = new Big(asset.balance).times(asset.ticker);
+          return total.plus(assetValue);
+        } else {
+          logger.debug('Invalid number in asset calculation:', asset);
+          return total;
         }
-      });
-      
-      return totalValue.toFixed(2);
-    } catch (error) {
-      console.log('❌ Assets: Error calculating portfolio value:', error);
-      return '0.00';
-    }
-  };
+      }, new Big(0));
 
-  const renderAssetItem = (asset, index) => {
+      const totalValue = bigTotalValue.toNumber();
+      return isFinite(totalValue) ? formatTo9Digits(totalValue) : '0';
+    } catch (error) {
+      logger.error('Error calculating portfolio value:', error);
+      return '0';
+    }
+  };  const renderAssetItem = (asset, index) => {
     try {
       console.log(`🎨 Rendering asset ${index}:`, asset);
       
@@ -493,11 +507,11 @@ const Assets = () => {
             </View>
             <View style={styles.assetValues}>
               <Text style={styles.assetBalance}>
-                {balance.toFixed(asset.asset === 'GBP' ? 2 : 8)}
+                {formatTo9Digits(balance)}
               </Text>
-              <Text style={styles.assetValue}>£{value.toFixed(2)}</Text>
+              <Text style={styles.assetValue}>£{formatTo9Digits(value)}</Text>
               <Text style={styles.assetPrice}>
-                @ £{price.toFixed(asset.asset === 'GBP' ? 2 : 2)} ({statusText})
+                @ £{formatTo9Digits(price)} ({statusText})
               </Text>
             </View>
           </View>
@@ -645,7 +659,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   portfolioSummary: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.primary,
     margin: 20,
     padding: 20,
     borderRadius: 12,
@@ -658,22 +672,22 @@ const styles = StyleSheet.create({
   },
   portfolioLabel: {
     fontSize: 16,
-    color: '#666',
+    color: '#ffffff',
     marginBottom: 8,
   },
   portfolioValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
     marginBottom: 4,
   },
   portfolioSubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#ffffff',
   },
   debugText: {
     fontSize: 10,
-    color: '#bbb',
+    color: '#ffffff80',
     marginTop: 2,
   },
   assetsList: {

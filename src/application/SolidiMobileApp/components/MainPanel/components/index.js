@@ -3,6 +3,7 @@ export {default as Trade} from './Trade/Trade';
 export {default as Send} from './Send/Send';
 export {default as Receive} from './Receive/Receive';
 export {default as History} from './History/History';
+export {HistoryDataModel, TransactionDataModel, OrderDataModel} from './History/HistoryDataModel';
 export {default as Assets} from './Assets/Assets';
 export {default as Explore} from './Explore/Explore';
 export {default as CryptoContent} from './CryptoContent/CryptoContent';
