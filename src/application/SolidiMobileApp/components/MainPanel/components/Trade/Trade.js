@@ -286,9 +286,16 @@ let Trade = () => {
   };
 
   let startTradeRequest = () => {
+    console.log('\n' + '🔀'.repeat(60));
+    console.log('🚨 START TRADE REQUEST CALLED! 🚨');
+    console.log(`📊 Trade Type: ${tradeType}`);
+    console.log('🔀'.repeat(60));
+    
     if (tradeType === 'buy') {
+      console.log('🟢 CALLING startBuyRequest()');
       return startBuyRequest();
     } else {
+      console.log('🔴 CALLING startSellRequest()');
       return startSellRequest();
     }
   };
@@ -317,8 +324,19 @@ let Trade = () => {
   };
 
   let startSellRequest = () => {
+    console.log('\n' + '🔶'.repeat(60));
+    console.log('🚨 SELL REQUEST STARTED! 🚨');
+    console.log(`📊 Trade Type: ${tradeType}`);
+    console.log(`📦 Volume BA: ${volumeBA}`);
+    console.log(`📦 Volume QA: ${volumeQA}`);
+    console.log(`🪙 Asset BA: ${assetBA}`);
+    console.log(`🪙 Asset QA: ${assetQA}`);
+    console.log(`🔐 Is Authenticated: ${appState.user.isAuthenticated}`);
+    console.log('🔶'.repeat(60));
+    
     // Validate input
     if (!volumeBA || parseFloat(volumeBA) <= 0) {
+      console.log('❌ SELL REQUEST FAILED: Invalid volume');
       setErrorMessage('Please enter a valid amount to sell.');
       return;
     }
@@ -332,7 +350,11 @@ let Trade = () => {
       activeOrder: true
     });
 
+    console.log('✅ SELL ORDER STORED IN PANELS.SELL');
+    console.log('🔄 NAVIGATING TO ChooseHowToReceivePayment');
+
     if (!appState.user.isAuthenticated) {
+      console.log('🔐 NOT AUTHENTICATED - REDIRECTING TO AUTH');
       return appState.authenticateUser();
     }
 

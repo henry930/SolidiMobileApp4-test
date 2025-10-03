@@ -253,9 +253,21 @@ export default class SolidiRestAPIClientLibrary {
         console.log('\n' + '🔐'.repeat(40));
         console.log('🚨 LOGIN API CALL DETECTED! 🚨');
         console.log(`📍 ENDPOINT: ${httpMethod} ${uri}`);
-        console.log('�'.repeat(40));
+        console.log('🔐'.repeat(40));
       }
-      // ===== SIMPLIFIED API LOGGING END =====
+      
+      // ===== SELL API SPECIFIC LOGGING =====
+      if (apiRoute.includes('sell')) {
+        console.log('\n' + '🔥'.repeat(60));
+        console.log('🚨 SELL API CALL DETECTED! 🚨');
+        console.log(`📍 ENDPOINT: ${httpMethod} ${uri}`);
+        console.log(`🔑 API Key: ${this.apiKey ? 'Present' : 'Missing'}`);
+        console.log(`🔐 API Secret: ${this.apiSecret ? 'Present' : 'Missing'}`);
+        console.log(`📦 POST Data: ${postData}`);
+        console.log(`🎯 Headers:`, headers);
+        console.log('🔥'.repeat(60));
+      }
+      // ===== SELL API SPECIFIC LOGGING END =====
 
       let response = await fetch(uri, options);
 
@@ -264,7 +276,17 @@ export default class SolidiRestAPIClientLibrary {
         console.log('\n' + '📡 LOGIN RESPONSE RECEIVED');
         console.log(`📊 STATUS: ${response.status} ${response.statusText}`);
       }
-      // ===== SIMPLIFIED RESPONSE LOGGING END =====
+      
+      // ===== SELL API RESPONSE LOGGING =====
+      if (apiRoute.includes('sell')) {
+        console.log('\n' + '📡'.repeat(60));
+        console.log('🚨 SELL API RESPONSE RECEIVED! 🚨');
+        console.log(`📊 STATUS: ${response.status} ${response.statusText}`);
+        console.log(`✅ Response OK: ${response.ok}`);
+        console.log(`🌐 Response Headers:`, Object.fromEntries(response.headers));
+        console.log('📡'.repeat(60));
+      }
+      // ===== SELL API RESPONSE LOGGING END =====
       if (! response.ok) {
         // Return 503 errors to caller.
         // We might want to return all non-[200-299] codes.
@@ -280,7 +302,16 @@ export default class SolidiRestAPIClientLibrary {
         console.log(responseData);
         console.log('-'.repeat(40));
       }
-      // ===== SIMPLIFIED RESPONSE BODY LOGGING END =====
+      
+      // ===== SELL API RESPONSE BODY LOGGING =====
+      if (apiRoute.includes('sell')) {
+        console.log('\n' + '💾'.repeat(60));
+        console.log('🚨 SELL API RESPONSE BODY! 🚨');
+        console.log('📄 Raw Response Body:');
+        console.log(responseData);
+        console.log('💾'.repeat(60));
+      }
+      // ===== SELL API RESPONSE BODY LOGGING END =====
       
       let responseDataStr = responseData;
       if (responseDataStr.length > 300) {
@@ -370,6 +401,18 @@ export default class SolidiRestAPIClientLibrary {
       //console.log(result.error);
       return {error: result.error};
     } catch(err) {
+      // ===== SELL API ERROR LOGGING =====
+      if (apiRoute.includes('sell')) {
+        console.log('\n' + '❌'.repeat(60));
+        console.log('🚨 SELL API ERROR CAUGHT! 🚨');
+        console.log(`💥 Error Name: ${err.name}`);
+        console.log(`💥 Error Message: ${err.message}`);
+        console.log(`💥 Error Stack: ${err.stack}`);
+        console.log(`⏰ Timeout: ${timeout}`);
+        console.log('❌'.repeat(60));
+      }
+      // ===== SELL API ERROR LOGGING END =====
+      
       if (err.name == 'AbortError') {
         let msg = `Aborted: ${uri}`;
         log(msg);
@@ -406,6 +449,98 @@ export default class SolidiRestAPIClientLibrary {
     // Example of creating a HMAC signature using the npm package 'crypto' (which doesn't work on React Native):
     // let signature = crypto.createHmac('sha256', base64Secret).update(dataToSign).digest().toString('base64');
     return signatureBase64;
+  }
+
+  // ===== TRADING API METHODS =====
+
+  async createBuyOrder(args, ...args2) {
+    this._checkArgs2(args2, 'createBuyOrder');
+    let expected = 'market, baseAssetVolume, quoteAssetVolume, orderType, paymentMethod, abortController'.split(', ');
+    this._checkExpectedArgs(args, expected, 'createBuyOrder');
+    
+    let {market, baseAssetVolume, quoteAssetVolume, orderType, paymentMethod, abortController} = args;
+    
+    // Default order type if not specified
+    if (!orderType) orderType = 'IMMEDIATE_OR_CANCEL';
+    
+    let params = {
+      market,
+      baseAssetVolume,
+      quoteAssetVolume,
+      orderType,
+      paymentMethod
+    };
+    
+    log(`Creating buy order: ${JSON.stringify(params)}`);
+    
+    return this.privateMethod({
+      httpMethod: 'POST',
+      apiRoute: 'buy',
+      params,
+      abortController
+    });
+  }
+
+  async createSellOrder(args, ...args2) {
+    this._checkArgs2(args2, 'createSellOrder');
+    let expected = 'market, baseAssetVolume, quoteAssetVolume, orderType, paymentMethod, abortController'.split(', ');
+    this._checkExpectedArgs(args, expected, 'createSellOrder');
+    
+    let {market, baseAssetVolume, quoteAssetVolume, orderType, paymentMethod, abortController} = args;
+    
+    // Default order type if not specified
+    if (!orderType) orderType = 'IMMEDIATE_OR_CANCEL';
+    
+    let params = {
+      market,
+      baseAssetVolume,
+      quoteAssetVolume,
+      orderType,
+      paymentMethod
+    };
+    
+    log(`Creating sell order: ${JSON.stringify(params)}`);
+    
+    return this.privateMethod({
+      httpMethod: 'POST',
+      apiRoute: 'sell',
+      params,
+      abortController
+    });
+  }
+
+  async getOrderStatus(args, ...args2) {
+    this._checkArgs2(args2, 'getOrderStatus');
+    let expected = 'orderID, abortController'.split(', ');
+    this._checkExpectedArgs(args, expected, 'getOrderStatus');
+    
+    let {orderID, abortController} = args;
+    
+    log(`Getting order status for orderID: ${orderID}`);
+    
+    return this.privateMethod({
+      httpMethod: 'POST',
+      apiRoute: `order_status/${orderID}`,
+      params: {},
+      abortController
+    });
+  }
+
+  async confirmOrderPayment(args, ...args2) {
+    this._checkArgs2(args2, 'confirmOrderPayment');
+    let expected = 'orderID, abortController'.split(', ');
+    this._checkExpectedArgs(args, expected, 'confirmOrderPayment');
+    
+    let {orderID, abortController} = args;
+    
+    log(`Confirming payment for orderID: ${orderID}`);
+    
+    return this.privateMethod({
+      httpMethod: 'POST',
+      apiRoute: `order/${orderID}/user_has_paid`,
+      params: {},
+      abortController
+    });
   }
 
 }

@@ -260,46 +260,114 @@ let ChooseHowToReceivePayment = () => {
 
 
   let confirmReceivePaymentChoice = async () => {
-    // Future: If there's no active SELL order, display an error message.
-    // - (The user can arrive to this page without an active order by pressing the Back button.)
-    log('confirmReceivePaymentChoice button clicked.');
-    setDisableConfirmButton(true);
-    setSendOrderMessage('Sending order...');
-    refScrollView.current.scrollToEnd();
-    // Save the fee and total in the appState.
-    let feeQA = calculateFeeQA();
-    let totalQA = calculateTotalQA();
-    _.assign(appState.panels.sell, {feeQA, totalQA});
-    // Get volumeBA.
-    volumeBA = calculateVolumeBA();
-    // Save volumeBA in the appState.
-    appState.panels.sell.volumeBA = volumeBA;
-    // Create the order object.
-    let sellOrder = {volumeQA: calculateVolumeQA(), volumeBA, assetQA, assetBA, paymentMethod: paymentChoice};
-    // Choose the receive-payment function.
-    // Note: These functions are currently identical, but may diverge in future. Keep them separate.
-    if (paymentChoice === 'solidi') {
-      // Choice: Make a direct payment to the customer's primary external fiat account.
-      // Note: In this case, the server will perform a withdrawal automatically after filling the order.
-      // We check if the user has supplied a default account at which they can receive a payment.
-      // If they haven't, stash the current state, and redirect them.
-      // Note: We're only handling GBP at the moment.
-      if (bankAccountDetailsAreEmpty()) {
-        let msg = `No default account found for ${assetQA}. Redirecting so that user can input account details.`;
-        log(msg);
-        appState.stashState({mainPanelState: appState.mainPanelState, pageName: paymentChoice});
-        return appState.changeState('BankAccounts');
+    try {
+      // Future: If there's no active SELL order, display an error message.
+      // - (The user can arrive to this page without an active order by pressing the Back button.)
+      
+      console.log('\n' + '🟠'.repeat(60));
+      console.log('🚨 CONFIRM RECEIVE PAYMENT CHOICE CLICKED! 🚨');
+      console.log(`📊 Payment Choice: ${paymentChoice}`);
+      console.log(`📦 Panels.sell.activeOrder: ${appState.panels.sell.activeOrder}`);
+      console.log(`🪙 Asset BA: ${assetBA}`);
+      console.log(`🪙 Asset QA: ${assetQA}`);
+      console.log(`📦 Volume BA: ${volumeBA}`);
+      console.log(`📦 Volume QA: ${volumeQA}`);
+      console.log('🟠'.repeat(60));
+      
+      log('confirmReceivePaymentChoice button clicked.');
+      setDisableConfirmButton(true);
+      setSendOrderMessage('Sending order...');
+      
+      console.log('🔄 Checking scroll view reference...');
+      if (refScrollView.current) {
+        console.log('✅ Scroll view exists - scrolling to end');
+        refScrollView.current.scrollToEnd();
       } else {
-        await receivePayment(sellOrder);
+        console.log('⚠️ Scroll view reference is null - skipping scroll');
       }
-    } else {
-      // Choice: Pay with balance.
-      await receivePaymentToBalance(sellOrder);
+      
+      console.log('🔄 Step 1: Calculating fees...');
+      // Save the fee and total in the appState.
+      let feeQA = calculateFeeQA();
+      console.log(`✅ Fee QA calculated: ${feeQA}`);
+      
+      console.log('🔄 Step 2: Calculating total...');
+      let totalQA = calculateTotalQA();
+      console.log(`✅ Total QA calculated: ${totalQA}`);
+      
+      console.log('🔄 Step 3: Assigning to panels.sell...');
+      _.assign(appState.panels.sell, {feeQA, totalQA});
+      console.log('✅ Assigned to panels.sell');
+      
+      console.log('🔄 Step 4: Calculating volume BA...');
+      // Get volumeBA.
+      volumeBA = calculateVolumeBA();
+      console.log(`✅ Volume BA calculated: ${volumeBA}`);
+      
+      console.log('🔄 Step 5: Saving volume BA...');
+      // Save volumeBA in the appState.
+      appState.panels.sell.volumeBA = volumeBA;
+      console.log('✅ Volume BA saved to panels.sell');
+      
+      console.log('🔄 Step 6: Calculating volume QA...');
+      let volumeQACalculated = calculateVolumeQA();
+      console.log(`✅ Volume QA calculated: ${volumeQACalculated}`);
+      
+      console.log('🔄 Step 7: Creating sell order object...');
+      // Create the order object.
+      let sellOrder = {volumeQA: volumeQACalculated, volumeBA, assetQA, assetBA, paymentMethod: paymentChoice};
+      
+      console.log('\n' + '📋'.repeat(60));
+      console.log('🚨 SELL ORDER OBJECT CREATED! 🚨');
+      console.log('📦 Sell Order:', sellOrder);
+      console.log('📋'.repeat(60));
+      
+      console.log('🔄 Step 8: Choosing payment method...');
+      // Choose the receive-payment function.
+      // Note: These functions are currently identical, but may diverge in future. Keep them separate.
+      if (paymentChoice === 'solidi') {
+        console.log('🏦 PAYMENT CHOICE: SOLIDI (External Account)');
+        // Choice: Make a direct payment to the customer's primary external fiat account.
+        // Note: In this case, the server will perform a withdrawal automatically after filling the order.
+        // We check if the user has supplied a default account at which they can receive a payment.
+        // If they haven't, stash the current state, and redirect them.
+        // Note: We're only handling GBP at the moment.
+        if (bankAccountDetailsAreEmpty()) {
+          let msg = `No default account found for ${assetQA}. Redirecting so that user can input account details.`;
+          log(msg);
+          console.log('🚫 NO BANK ACCOUNT - REDIRECTING TO BANK ACCOUNTS');
+          appState.stashState({mainPanelState: appState.mainPanelState, pageName: paymentChoice});
+          return appState.changeState('BankAccounts');
+        } else {
+          console.log('✅ BANK ACCOUNT EXISTS - CALLING receivePayment()');
+          await receivePayment(sellOrder);
+        }
+      } else {
+        console.log('💰 PAYMENT CHOICE: BALANCE');
+        console.log('🔄 Step 9: Calling receivePaymentToBalance...');
+        await receivePaymentToBalance(sellOrder);
+      }
+    } catch (error) {
+      console.log('\n' + '❌'.repeat(60));
+      console.log('🚨 ERROR IN confirmReceivePaymentChoice! 🚨');
+      console.log('💥 Error:', error);
+      console.log('💥 Error Message:', error.message);
+      console.log('💥 Error Stack:', error.stack);
+      console.log('❌'.repeat(60));
+      
+      // Re-enable the button and show error
+      setDisableConfirmButton(false);
+      setErrorMessage(`Error in sell order: ${error.message}`);
     }
   }
 
 
   let receivePayment = async (sellOrder) => {
+    console.log('\n' + '🔵'.repeat(60));
+    console.log('🚨 receivePayment() FUNCTION CALLED! 🚨');
+    console.log('📦 Sell Order to send:', sellOrder);
+    console.log('🔵'.repeat(60));
+    
     // We send the stored sell order.
     let output = await appState.sendSellOrder(sellOrder);
     if (appState.stateChangeIDHasChanged(stateChangeID, 'ChooseHowToReceivePayment')) return;
@@ -333,6 +401,11 @@ let ChooseHowToReceivePayment = () => {
 
 
   let receivePaymentToBalance = async (sellOrder) => {
+    console.log('\n' + '🟣'.repeat(60));
+    console.log('🚨 receivePaymentToBalance() FUNCTION CALLED! 🚨');
+    console.log('📦 Sell Order to send:', sellOrder);
+    console.log('🟣'.repeat(60));
+    
     // We send the stored sell order.
     let output = await appState.sendSellOrder(sellOrder);
     if (appState.stateChangeIDHasChanged(stateChangeID, 'ChooseHowToReceivePayment')) return;

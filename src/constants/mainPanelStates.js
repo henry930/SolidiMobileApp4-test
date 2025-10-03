@@ -7,6 +7,7 @@ export const mainPanelStates = [
   'CryptoContent',
   'Explore',
   'Transfer',
+
   'History',
   'Send',
   'Receive',

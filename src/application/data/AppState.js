@@ -2448,6 +2448,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let orderType = 'IMMEDIATE_OR_CANCEL';
       let msg = `Send order to server: [${market}] BUY ${volumeBA} ${assetBA} for ${volumeQA} ${assetQA} - ${orderType}`;
       log(msg);
+      
+      // Enhanced logging for buy order comparison
+      console.log('\n' + '🟢'.repeat(60));
+      console.log('🚨 BUY ORDER DEBUG - ENHANCED LOGGING 🚨');
+      console.log(`📊 Buy Order Parameters:`);
+      console.log(`   market: ${market}`);
+      console.log(`   baseAssetVolume: ${volumeBA}`);
+      console.log(`   quoteAssetVolume: ${volumeQA}`);
+      console.log(`   orderType: ${orderType}`);
+      console.log(`   paymentMethod: ${paymentMethod}`);
+      console.log(`🔍 Original buyOrder object:`, buyOrder);
+      console.log('🟢'.repeat(60));
+      
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
         apiRoute: 'buy',
@@ -2460,6 +2473,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         },
         functionName: 'sendBuyOrder',
       });
+      
+      // Enhanced response logging
+      console.log('\n' + '🌟'.repeat(60));
+      console.log('🚨 BUY ORDER RESPONSE - ENHANCED LOGGING 🚨');
+      console.log(`📥 Response data:`, data);
+      console.log('🌟'.repeat(60));
+      
       if (data == 'DisplayedError') return;
       //log(data)
       /*
@@ -2548,6 +2568,20 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let orderType = 'IMMEDIATE_OR_CANCEL';
       let msg = `Send order to server: [${market}] SELL ${volumeBA} ${assetBA} for ${volumeQA} ${assetQA} - ${orderType}`;
       log(msg);
+      
+      // Enhanced logging for sell order debugging
+      console.log('\n' + '🔴'.repeat(60));
+      console.log('🚨 SELL ORDER DEBUG - ENHANCED LOGGING 🚨');
+      console.log(`📊 Sell Order Parameters:`);
+      console.log(`   market: ${market}`);
+      console.log(`   baseAssetVolume: ${volumeBA}`);
+      console.log(`   quoteAssetVolume: ${volumeQA}`);
+      console.log(`   orderType: ${orderType}`);
+      console.log(`   paymentMethod: ${paymentMethod}`);
+      console.log(`🔍 Original sellOrder object:`, sellOrder);
+      console.log('🔴'.repeat(60));
+      
+      // Try the new format first (same as buy orders)
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
         apiRoute: 'sell',
@@ -2560,6 +2594,45 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         },
         functionName: 'sendSellOrder',
       });
+      
+      // Enhanced response logging
+      console.log('\n' + '📡'.repeat(60));
+      console.log('🚨 SELL ORDER RESPONSE (NEW FORMAT) - ENHANCED LOGGING 🚨');
+      console.log(`📥 Response data:`, data);
+      console.log('📡'.repeat(60));
+      
+      // If the new format fails, try the old format that was shown in API testing
+      if (data && data.error && data.error.includes('Could not execute SELL order')) {
+        console.log('\n' + '🔄'.repeat(60));
+        console.log('🚨 TRYING OLD FORMAT PARAMETERS FOR SELL ORDER 🚨');
+        
+        // Calculate price from volumes (price = quoteAssetVolume / baseAssetVolume)
+        let price = (parseFloat(volumeQA) / parseFloat(volumeBA)).toString();
+        let currency_pair = `${assetBA.toLowerCase()}_${assetQA.toLowerCase()}`;
+        
+        console.log(`📊 Old Format Parameters:`);
+        console.log(`   amount: ${volumeBA}`);
+        console.log(`   price: ${price}`);
+        console.log(`   currency_pair: ${currency_pair}`);
+        console.log('🔄'.repeat(60));
+        
+        data = await this.state.privateMethod({
+          httpMethod: 'POST',
+          apiRoute: 'sell',
+          params: {
+            amount: volumeBA,
+            price: price,
+            currency_pair: currency_pair,
+          },
+          functionName: 'sendSellOrder_oldFormat',
+        });
+        
+        console.log('\n' + '⚡'.repeat(60));
+        console.log('🚨 SELL ORDER RESPONSE (OLD FORMAT) - ENHANCED LOGGING 🚨');
+        console.log(`📥 Response data:`, data);
+        console.log('⚡'.repeat(60));
+      }
+      
       if (data == 'DisplayedError') return;
       //log(data)
       /*
@@ -2591,8 +2664,33 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.loadFees = async () => {
       // For now, we only load withdrawal fees.
-      let data = await this.state.privateMethod({apiRoute:'fee'});
-      if (data == 'DisplayedError') return;
+      // Fee API requires authentication, so use privateMethod
+      console.log('🔄 loadFees: Starting fee loading...');
+      console.log('🔍 loadFees: Calling privateMethod with apiRoute: fee');
+      
+      let response = await this.state.privateMethod({apiRoute:'fee'});
+      console.log('📨 loadFees: Raw response:', response);
+      
+      if (response == 'DisplayedError') {
+        console.log('❌ loadFees: Got DisplayedError from privateMethod');
+        return;
+      }
+      
+      if (!response) {
+        console.log('❌ loadFees: No response from privateMethod');
+        return;
+      }
+      
+      // Extract data from API response structure
+      // The response IS the data directly from privateMethod
+      let data = response;
+      console.log('📊 loadFees: Using response as data:', data);
+      
+      if (!data) {
+        console.error('loadFees: No data found in API response:', response);
+        return;
+      } 
+      
       /* Example data:
       {
         "GBP": {
@@ -2608,13 +2706,37 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Restructure data.
       let withdrawFees = {};
       for (let [asset, fees] of _.entries(data)) {
-        withdrawFees[asset] = {
-          low: fees.withdraw.lowFee,
-          medium: fees.withdraw.mediumFee,
-          high: fees.withdraw.highFee,
+        log(`Processing asset ${asset}:`, fees);
+        if (fees && fees.withdraw) {
+          let lowFee = fees.withdraw.lowFee;
+          let mediumFee = fees.withdraw.mediumFee;
+          let highFee = fees.withdraw.highFee;
+          
+          log(`${asset} raw fees - low: ${lowFee}, medium: ${mediumFee}, high: ${highFee}`);
+          
+          // Only include fees that are positive numbers
+          let assetFees = {};
+          if (parseFloat(lowFee) > 0) assetFees.low = lowFee;
+          if (parseFloat(mediumFee) > 0) assetFees.medium = mediumFee;
+          if (parseFloat(highFee) > 0) assetFees.high = highFee;
+          
+          log(`${asset} processed fees:`, assetFees);
+          
+          // Only add asset if it has at least one valid fee
+          if (Object.keys(assetFees).length > 0) {
+            withdrawFees[asset] = assetFees;
+          }
         }
       }
       let msg = "Withdrawal fee data loaded from server.";
+      
+      log("🔍 COMPARISON DEBUG:");
+      log("withdrawFees:", withdrawFees);
+      log("this.state.fees.withdraw:", this.state.fees.withdraw);
+      log("jd(withdrawFees):", jd(withdrawFees));
+      log("jd(this.state.fees.withdraw):", jd(this.state.fees.withdraw));
+      log("Are they equal?", jd(withdrawFees) === jd(this.state.fees.withdraw));
+      
       if (jd(withdrawFees) === jd(this.state.fees.withdraw)) {
         log(msg + " No change.");
       } else {

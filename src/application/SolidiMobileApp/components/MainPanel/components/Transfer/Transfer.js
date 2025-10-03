@@ -85,9 +85,14 @@ let Transfer = () => {
   // Send form state
   let [sendAmount, setSendAmount] = useState('');
   let [recipientAddress, setRecipientAddress] = useState('');
+  let [selectedPriority, setSelectedPriority] = useState('medium'); // Fee priority selection
   let [errorMessage, setErrorMessage] = useState('');
   let [isLoading, setIsLoading] = useState(false);
   let [componentError, setComponentError] = useState(null);
+
+  // Fee loading state
+  let [withdrawalFee, setWithdrawalFee] = useState('[loading]');
+  let [feesLoaded, setFeesLoaded] = useState(false);
 
   // Error boundary effect
   useEffect(() => {
@@ -99,6 +104,84 @@ let Transfer = () => {
     // Reset component error when transfer type changes
     setComponentError(null);
   }, [transferType, selectedAsset]);
+
+  // Fee loading effect
+  useEffect(() => {
+    const loadFees = async () => {
+      try {
+        if (!appState) {
+          log('AppState not available for fee loading');
+          return;
+        }
+        
+        log('🔄 Loading fees for asset:', selectedAsset, 'priority:', selectedPriority);
+        
+        // Load fees from API
+        await appState.loadFees();
+        
+        // Check if current priority is available, if not, switch to an available one
+        const currentPriorityAvailable = isPriorityAvailable(selectedPriority);
+        if (!currentPriorityAvailable) {
+          // Try to find an available priority in order: medium, high, low
+          const priorities = ['medium', 'high', 'low'];
+          let newPriority = null;
+          
+          for (const priority of priorities) {
+            if (isPriorityAvailable(priority)) {
+              newPriority = priority;
+              break;
+            }
+          }
+          
+          if (newPriority && newPriority !== selectedPriority) {
+            log(`Switching from unavailable priority ${selectedPriority} to ${newPriority}`);
+            setSelectedPriority(newPriority);
+            return; // useEffect will re-run with new priority
+          }
+        }
+        
+        // Get the specific fee for current asset and priority
+        const fee = appState.getFee({
+          feeType: 'withdraw',
+          asset: selectedAsset,
+          priority: selectedPriority
+        });
+        
+        log('💰 Got fee from API:', fee);
+        setWithdrawalFee(fee);
+        setFeesLoaded(true);
+        
+      } catch (error) {
+        log('❌ Error loading fees:', error);
+        setWithdrawalFee('[error]');
+      }
+    };
+    
+    // Load fees when component mounts or when asset/priority changes
+    loadFees();
+  }, [selectedAsset, selectedPriority, appState]);
+
+  // Helper function to check if a priority level is available for the current asset
+  const isPriorityAvailable = (priority) => {
+    if (!appState || !feesLoaded) return true; // Default to available while loading
+    
+    try {
+      const fee = appState.getFee({
+        feeType: 'withdraw',
+        asset: selectedAsset,
+        priority: priority
+      });
+      
+      // Fee is unavailable if it's '[loading]', '[error]', or a negative value
+      if (fee === '[loading]' || fee === '[error]') return false;
+      
+      const feeValue = parseFloat(fee);
+      return !isNaN(feeValue) && feeValue >= 0;
+    } catch (error) {
+      log('Error checking priority availability:', error);
+      return false;
+    }
+  };
 
   // Function that derives dropdown properties from an asset list with safe fallbacks
   let deriveAssetItems = (assetList) => {
@@ -329,6 +412,8 @@ let Transfer = () => {
         return;
       }
 
+      setIsLoading(true);
+
       log('Processing send:', {
         asset: selectedAsset,
         amount: sendAmount,
@@ -336,16 +421,40 @@ let Transfer = () => {
         capabilities: capabilities
       });
       
-      // Here you would integrate with the actual send functionality
-      alert(`Send ${sendAmount} ${selectedAsset} to ${recipientAddress.substring(0, 10)}...`);
+      // Call the actual withdraw API
+      const result = await appState.sendWithdraw({
+        asset: selectedAsset,
+        volume: sendAmount,
+        addressInfo: {
+          address: recipientAddress
+        },
+        priority: selectedPriority,
+        functionName: 'Transfer_handleSend'
+      });
       
-      // Clear form on successful send
-      setSendAmount('');
-      setRecipientAddress('');
+      log('Send result:', result);
+      
+      if (result?.error) {
+        setErrorMessage(`Send failed: ${result.error}`);
+        return;
+      }
+      
+      if (result?.id) {
+        // Success - show confirmation
+        alert(`✅ Withdrawal successful! Transaction ID: ${result.id}`);
+        
+        // Clear form on successful send
+        setSendAmount('');
+        setRecipientAddress('');
+      } else {
+        setErrorMessage('Unexpected response from server. Please check your transaction status.');
+      }
       
     } catch (error) {
       log('Send error:', error);
       setErrorMessage('Failed to process send transaction. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -585,6 +694,60 @@ let Transfer = () => {
                 style={{ marginBottom: 16 }}
               />
               
+              {/* Fee Display */}
+              <Surface style={{ 
+                padding: 12, 
+                borderRadius: 8, 
+                backgroundColor: '#f8f9fa',
+                marginBottom: 16,
+              }}>
+                <Text variant="bodyMedium" style={{ fontWeight: '500', marginBottom: 4 }}>
+                  Network Fee ({selectedPriority}):
+                </Text>
+                <Text variant="bodyLarge" style={{ 
+                  color: withdrawalFee === '[loading]' || withdrawalFee === '[error]' ? '#666' : '#1565C0', 
+                  fontWeight: '600',
+                  fontStyle: withdrawalFee === '[loading]' || withdrawalFee === '[error]' ? 'italic' : 'normal'
+                }}>
+                  {withdrawalFee === '[loading]' ? 'Loading fee...' : 
+                   withdrawalFee === '[error]' ? 'Fee unavailable' : 
+                   `${withdrawalFee} ${selectedAsset}`}
+                </Text>
+              </Surface>
+
+              {/* Priority Selector */}
+              <Text variant="bodyMedium" style={{ fontWeight: '500', marginBottom: 8 }}>
+                Transaction Priority:
+              </Text>
+              <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
+                {['low', 'medium', 'high'].map((priority) => {
+                  const isAvailable = isPriorityAvailable(priority);
+                  const isSelected = selectedPriority === priority;
+                  
+                  return (
+                    <Button
+                      key={priority}
+                      mode={isSelected ? 'contained' : 'outlined'}
+                      onPress={() => {
+                        if (isAvailable) {
+                          log('Priority changed to:', priority);
+                          setSelectedPriority(priority);
+                        }
+                      }}
+                      disabled={!isAvailable}
+                      style={{ 
+                        flex: 1,
+                        opacity: isAvailable ? 1 : 0.5
+                      }}
+                      compact
+                    >
+                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                      {!isAvailable && ' (N/A)'}
+                    </Button>
+                  );
+                })}
+              </View>
+              
               <TextInput
                 label="Recipient Address"
                 mode="outlined"
@@ -604,13 +767,15 @@ let Transfer = () => {
               <Button 
                 mode="contained" 
                 onPress={handleSend}
+                loading={isLoading}
+                disabled={isLoading || !sendAmount.trim() || !recipientAddress.trim()}
                 style={{ 
                   marginTop: 8,
                   backgroundColor: '#1565C0'
                 }}
                 contentStyle={{ paddingVertical: 8 }}
               >
-                Send {selectedAsset}
+                {isLoading ? 'Processing...' : `Send ${selectedAsset}`}
               </Button>
             </Card.Content>
           </Card>
