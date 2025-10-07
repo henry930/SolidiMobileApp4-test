@@ -13,6 +13,7 @@ export const colors = {
   lightgrey: 'rgb(204,204,204)',
   placeHolderTextColor: 'grey',
   warning: '#ff6b35', // Orange-red warning color
+  red: '#f44336', // Red color for destructive actions
   border: '#e0e0e0', // Light grey border color
   
   // Additional colors for Questionnaire component
@@ -23,6 +24,7 @@ export const colors = {
   gray: '#9e9e9e',
   darkGray: '#424242',
   lightGray: '#f5f5f5',
+  lightestGray: '#fafafa',
   mediumGray: '#757575',
   success: '#4caf50',
   successBackground: '#e8f5e8',

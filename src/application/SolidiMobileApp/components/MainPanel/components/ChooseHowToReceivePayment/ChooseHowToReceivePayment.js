@@ -369,7 +369,16 @@ let ChooseHowToReceivePayment = () => {
     console.log('🔵'.repeat(60));
     
     // We send the stored sell order.
+    console.log('🔄 CONSOLE: ===== SEND SELL ORDER API CALL (ChooseHowToReceivePayment.js) =====');
+    console.log('📤 CONSOLE: About to call appState.sendSellOrder...');
+    console.log('📤 CONSOLE: sellOrder:', sellOrder);
     let output = await appState.sendSellOrder(sellOrder);
+    console.log('📨 CONSOLE: ===== SEND SELL ORDER API RESPONSE (ChooseHowToReceivePayment.js) =====');
+    console.log('📨 CONSOLE: Raw sendSellOrder response:', output);
+    console.log('📨 CONSOLE: Response type:', typeof output);
+    console.log('📨 CONSOLE: Response JSON:', JSON.stringify(output, null, 2));
+    console.log('📨 CONSOLE: ===== END SEND SELL ORDER API RESPONSE (ChooseHowToReceivePayment.js) =====');
+    
     if (appState.stateChangeIDHasChanged(stateChangeID, 'ChooseHowToReceivePayment')) return;
     lj(output);
     appState.panels.sell.output = output;

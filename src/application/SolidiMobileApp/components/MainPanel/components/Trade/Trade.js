@@ -116,9 +116,11 @@ let Trade = () => {
     setup();
   }, []); // Pass empty array to only run once on mount.
 
-  // Auto-update receive amount when pay amount changes
+  // Auto-update receive amount when pay amount changes (with debouncing to avoid conflicts)
   useEffect(() => {
     const updateReceiveAmount = async () => {
+      // Only auto-calculate if the user is typing in the "Amount" field
+      // The "You receive" field now handles its own calculations in onChangeText
       if (tradeType === 'buy' && volumeQA && parseFloat(volumeQA) > 0) {
         // When buying: QA (fiat) amount changes -> update BA (crypto) amount
         await fetchBestPriceForQuoteAssetVolume();
@@ -128,8 +130,8 @@ let Trade = () => {
       }
     };
 
-    // Debounce the update to avoid too frequent API calls
-    const timeoutId = setTimeout(updateReceiveAmount, 500);
+    // Debounce the update to avoid too frequent API calls and conflicts with manual input
+    const timeoutId = setTimeout(updateReceiveAmount, 800); // Increased debounce time
     return () => clearTimeout(timeoutId);
   }, [volumeQA, volumeBA, tradeType]);
 
@@ -573,17 +575,35 @@ let Trade = () => {
                   />
                 </View>
 
-                {/* Amount Display (Auto-calculated) */}
+                {/* Amount Display (User can input both pay and receive amounts) */}
                 <TextInput
                   label="You receive"
                   value={tradeType === 'buy' ? volumeBA : volumeQA}
-                  editable={false}
+                  onChangeText={(value) => {
+                    if (tradeType === 'buy') {
+                      setVolumeBA(value);
+                      // Calculate corresponding fiat amount when crypto amount changes
+                      if (value && parseFloat(value) > 0) {
+                        fetchBestPriceForBaseAssetVolume();
+                      } else {
+                        setVolumeQA('0');
+                      }
+                    } else {
+                      setVolumeQA(value);
+                      // Calculate corresponding crypto amount when fiat amount changes
+                      if (value && parseFloat(value) > 0) {
+                        fetchBestPriceForQuoteAssetVolume();
+                      } else {
+                        setVolumeBA('0');
+                      }
+                    }
+                  }}
+                  keyboardType="numeric"
                   mode="outlined"
                   style={{ 
-                    backgroundColor: materialTheme.colors.surfaceVariant,
+                    backgroundColor: materialTheme.colors.surface,
                     marginBottom: 8
                   }}
-                  right={<TextInput.Icon icon="calculator" />}
                 />
 
                 {/* Balance Display */}

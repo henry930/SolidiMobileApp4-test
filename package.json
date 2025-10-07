@@ -24,6 +24,7 @@
     "big.js": "6.2.1",
     "buffer": "6.0.3",
     "crypto-js": "4.2.0",
+    "deprecated-react-native-prop-types": "^5.0.0",
     "file-saver": "^2.0.5",
     "jsqr": "^1.4.0",
     "localforage": "^1.10.0",

@@ -279,7 +279,17 @@ let ChooseHowToPay = () => {
 
 
   let payDirectly = async ({buyOrder, selectedPaymentChoice}) => {
+    console.log('🔄 CONSOLE: ===== SEND BUY ORDER API CALL (ChooseHowToPay.js) =====');
+    console.log('📤 CONSOLE: About to call appState.sendBuyOrder...');
+    console.log('📤 CONSOLE: buyOrder:', buyOrder);
+    console.log('📤 CONSOLE: selectedPaymentChoice:', selectedPaymentChoice);
     let output = await appState.sendBuyOrder(buyOrder);
+    console.log('📨 CONSOLE: ===== SEND BUY ORDER API RESPONSE (ChooseHowToPay.js) =====');
+    console.log('📨 CONSOLE: Raw sendBuyOrder response:', output);
+    console.log('📨 CONSOLE: Response type:', typeof output);
+    console.log('📨 CONSOLE: Response JSON:', JSON.stringify(output, null, 2));
+    console.log('📨 CONSOLE: ===== END SEND BUY ORDER API RESPONSE (ChooseHowToPay.js) =====');
+    
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     lj(output);
     appState.panels.buy.output = output;

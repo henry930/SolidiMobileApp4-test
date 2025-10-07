@@ -15,14 +15,9 @@ let AddressBookPicker = ({
   label = "Select from Address Book",
   placeholder = "Choose a saved address..."
 }) => {
-  console.log('🏠 AddressBookPicker: ===== COMPONENT MOUNTING =====');
-  console.log('🏠 AddressBookPicker: Component rendering with selectedAsset:', selectedAsset);
-  console.log('🏠 AddressBookPicker: Props received:', { selectedAsset, label, placeholder });
-  
   // Get app state for API access
   let appState = useContext(AppStateContext);
-  console.log('🏠 AddressBookPicker: AppState from context:', !!appState);
-  console.log('🏠 AddressBookPicker: AppState object:', appState ? 'exists' : 'null');
+  let stateChangeID = appState?.stateChangeID || 0;
   
   // Component state
   let [open, setOpen] = useState(false);
@@ -32,102 +27,82 @@ let AddressBookPicker = ({
   let [loading, setLoading] = useState(false);
   let [error, setError] = useState(null);
 
-  // Function to load addresses from API
-  let loadAddressesFromAPI = async (asset) => {
-    console.log('🏠 AddressBookPicker: ===== loadAddressesFromAPI CALLED =====');
-    console.log('🏠 AddressBookPicker: loadAddressesFromAPI called with asset:', asset);
-    console.log('🏠 AddressBookPicker: Checking prerequisites...');
+  // Helper function to transform address data
+  let transformAddressData = (addressData, asset) => {
+    if (!addressData || !Array.isArray(addressData)) {
+      return [];
+    }
     
+    return addressData.map((addr, index) => {
+      // Parse the address JSON string to get the actual wallet address
+      let addressInfo = {};
+      try {
+        if (typeof addr.address === 'string') {
+          addressInfo = JSON.parse(addr.address);
+        } else {
+          addressInfo = addr.address || {};
+        }
+      } catch (e) {
+        addressInfo = { address: addr.address };
+      }
+      
+      return {
+        id: addr.uuid || `${asset.toLowerCase()}_${index}`,
+        label: addr.name || `${asset} Address ${index + 1}`,
+        address: addressInfo.address || addr.address,
+        description: `${addr.name} (${addr.type})`,
+        rawData: addr
+      };
+    });
+  };
+
+  // Function to load addresses from cache or API
+  let loadAddressesFromAPI = async (asset) => {
     if (!appState) {
-      console.warn('🏠 AddressBookPicker: ❌ EARLY EXIT - No appState available');
-      console.log('🏠 AddressBookPicker: appState is:', appState);
       setError('App state not available');
       return [];
     }
-    console.log('🏠 AddressBookPicker: ✅ AppState check passed');
-
-    if (!appState.state) {
-      console.warn('🏠 AddressBookPicker: ❌ EARLY EXIT - No appState.state available');
-      console.log('🏠 AddressBookPicker: appState.state is:', appState.state);
-      setError('App state.state not available');
-      return [];
-    }
-    console.log('🏠 AddressBookPicker: ✅ AppState.state check passed');
-
-    if (!appState.state.apiClient) {
-      console.warn('🏠 AddressBookPicker: ❌ EARLY EXIT - No API client available');
-      console.log('🏠 AddressBookPicker: appState.state.apiClient is:', appState.state.apiClient);
-      setError('API client not available');
-      return [];
-    }
-    console.log('🏠 AddressBookPicker: ✅ API client check passed');
-    console.log('🏠 AddressBookPicker: All prerequisites met, proceeding with API call...');
 
     try {
       setLoading(true);
       setError(null);
-      console.log('🏠 AddressBookPicker: Loading addresses for asset:', asset);
-      console.log('🏠 AddressBookPicker: API endpoint:', `addressBook/${asset}`);
       
-      // Call the address book API
-      let result = await appState.state.apiClient.privateMethod({
-        httpMethod: 'GET',
-        apiRoute: `addressBook/${asset}`,
-        params: {}
-      });
+      // First try to get cached addresses
+      let cachedAddresses = appState.getAddressBook ? appState.getAddressBook(asset) : [];
       
-      console.log('🏠 AddressBookPicker: ===== ADDRESS BOOK API RESPONSE START =====');
-      console.log('🏠 AddressBookPicker: Raw API Response:', result);
-      console.log('🏠 AddressBookPicker: Response Type:', typeof result);
-      console.log('🏠 AddressBookPicker: Response Keys:', result ? Object.keys(result) : 'null');
-      
-      if (result) {
-        console.log('🏠 AddressBookPicker: Response Success:', result.success);
-        console.log('🏠 AddressBookPicker: Response Data:', result.data);
-        console.log('🏠 AddressBookPicker: Response Error:', result.error);
-        console.log('🏠 AddressBookPicker: Response Status:', result.status);
-        console.log('🏠 AddressBookPicker: Response Message:', result.message);
-        
-        if (result.data) {
-          console.log('🏠 AddressBookPicker: Data Type:', typeof result.data);
-          console.log('🏠 AddressBookPicker: Data Keys:', Object.keys(result.data));
-          console.log('🏠 AddressBookPicker: Addresses Array:', result.data.addresses);
-          console.log('🏠 AddressBookPicker: Addresses Count:', Array.isArray(result.data.addresses) ? result.data.addresses.length : 'Not an array');
-          
-          if (Array.isArray(result.data.addresses)) {
-            result.data.addresses.forEach((addr, index) => {
-              console.log(`🏠 AddressBookPicker: Address ${index + 1}:`, addr);
-            });
-          }
-        }
+      if (cachedAddresses && cachedAddresses.length > 0) {
+        let transformedAddresses = transformAddressData(cachedAddresses, asset);
+        return transformedAddresses;
       }
-      console.log('🏠 AddressBookPicker: ===== ADDRESS BOOK API RESPONSE END =====');
       
-      // Transform API result to our format
-      let transformedAddresses = [];
-      if (result && result.data && Array.isArray(result.data.addresses)) {
-        transformedAddresses = result.data.addresses.map((addr, index) => ({
-          id: `${asset.toLowerCase()}_${index}`,
-          label: addr.label || `${asset} Address ${index + 1}`,
-          address: addr.address,
-          description: addr.description || `Saved ${asset} address`
-        }));
-        console.log('🏠 AddressBookPicker: Successfully transformed', transformedAddresses.length, 'addresses');
+      // If no cached data, load from API
+      let result = null;
+      
+      if (appState.loadAddressBook) {
+        // Use the cached version from AppState
+        result = await appState.loadAddressBook(asset);
       } else {
-        console.log('🏠 AddressBookPicker: No addresses found in API response');
-        if (result && !result.data) {
-          console.log('🏠 AddressBookPicker: No data field in response');
+        // Fallback to direct API call
+        if (!appState.apiClient) {
+          setError('API client not available');
+          return [];
         }
-        if (result && result.data && !Array.isArray(result.data.addresses)) {
-          console.log('🏠 AddressBookPicker: Addresses field is not an array:', typeof result.data.addresses);
+        
+        result = await appState.apiClient.privateMethod({
+          httpMethod: 'GET',
+          apiRoute: `addressBook/${asset}`,
+          params: {}
+        });
+        
+        if (result && result.error === null && result.data) {
+          result = result.data;
         }
       }
       
-      console.log('🏠 AddressBookPicker: Final transformed addresses:', transformedAddresses);
+      let transformedAddresses = transformAddressData(result, asset);
       return transformedAddresses;
       
     } catch (error) {
-      console.error('🏠 AddressBookPicker: Error loading addresses:', error);
       setError(`Failed to load ${selectedAsset} addresses`);
       return [];
     } finally {
@@ -137,44 +112,36 @@ let AddressBookPicker = ({
 
   // Load addresses when selectedAsset changes
   useEffect(() => {
-    console.log('🏠 AddressBookPicker: ===== TRANSFER PAGE RENDER TRIGGER =====');
-    console.log('🏠 AddressBookPicker: useEffect triggered for asset:', selectedAsset);
-    console.log('🏠 AddressBookPicker: AppState available:', !!appState);
-    console.log('🏠 AddressBookPicker: API Client available:', !!(appState?.state?.apiClient));
-    
-    // Force load addresses regardless of state
-    console.log('🏠 AddressBookPicker: About to load address book data from API...');
-    
     let loadAddresses = async () => {
-      console.log('🏠 AddressBookPicker: Starting address book API call for', selectedAsset);
       let addressesForAsset = await loadAddressesFromAPI(selectedAsset);
-      console.log('🏠 AddressBookPicker: Address book API call completed for', selectedAsset);
-      console.log('🏠 AddressBookPicker: Setting addresses state with', addressesForAsset.length, 'addresses');
       setAddresses(addressesForAsset);
-      console.log('🏠 AddressBookPicker: Addresses state updated for Transfer page');
     };
     
     loadAddresses();
-    console.log('🏠 AddressBookPicker: ===== TRANSFER PAGE RENDER TRIGGER END =====');
   }, [selectedAsset]); // Remove appState dependency to ensure it always runs
+
+  // Refresh addresses when appState changes (e.g., after adding new address)
+  useEffect(() => {
+    if (stateChangeID > 0) {
+      let loadAddresses = async () => {
+        let addressesForAsset = await loadAddressesFromAPI(selectedAsset);
+        setAddresses(addressesForAsset);
+      };
+      
+      loadAddresses();
+    }
+  }, [stateChangeID, selectedAsset]);
 
   // Force initial load on mount regardless of appState
   useEffect(() => {
-    console.log('🏠 AddressBookPicker: ===== COMPONENT MOUNTED - FORCING INITIAL LOAD =====');
-    console.log('🏠 AddressBookPicker: Component mounted with selectedAsset:', selectedAsset);
-    console.log('🏠 AddressBookPicker: Forcing initial BTC address book load...');
-    
     // Add a small delay to ensure appState is available
     const timer = setTimeout(() => {
-      console.log('🏠 AddressBookPicker: Timer triggered - loading initial addresses');
       loadAddressesFromAPI(selectedAsset).then(addressesForAsset => {
-        console.log('🏠 AddressBookPicker: Initial load completed with', addressesForAsset.length, 'addresses');
         setAddresses(addressesForAsset);
       });
     }, 100);
     
     return () => {
-      console.log('🏠 AddressBookPicker: Component unmounting');
       clearTimeout(timer);
     };
   }, []); // Only run on mount
@@ -216,7 +183,6 @@ let AddressBookPicker = ({
     });
     
   } catch (error) {
-    console.error('🏠 AddressBookPicker: Error creating dropdown items:', error);
     dropdownItems = [
       {
         label: "Error loading addresses",
@@ -226,42 +192,45 @@ let AddressBookPicker = ({
       }
     ];
   }
-  
-  console.log('🏠 AddressBookPicker: Dropdown items created:', dropdownItems.length, 'items');
 
   // Update the items state when dropdownItems change
   useEffect(() => {
     try {
-      console.log('🏠 AddressBookPicker: Updating items state with', dropdownItems.length, 'items');
-      setItems(dropdownItems);
+      // Ensure all items have the required structure for DropDownPicker
+      const validatedItems = dropdownItems.map((item, index) => ({
+        label: item.label || `Item ${index + 1}`,
+        value: item.value !== undefined ? item.value : `item_${index}`,
+        key: item.key || `key_${index}`,
+        disabled: item.disabled || false
+      }));
+      
+      setItems(validatedItems);
     } catch (error) {
-      console.error('🏠 AddressBookPicker: Error updating items state:', error);
-      setItems([{label: "Error", value: null, disabled: true, key: 'error'}]);
+      setItems([{
+        label: "Error loading items", 
+        value: null, 
+        disabled: true, 
+        key: 'error_fallback'
+      }]);
     }
   }, [selectedAsset, addressesForAsset.length]);
 
   let handleValueChange = (selectedValue) => {
     try {
-      console.log('🏠 AddressBookPicker: Value changed to:', selectedValue);
       setValue(selectedValue);
       if (selectedValue && onAddressSelect) {
         // Find the full address details
         let selectedAddress = addressesForAsset.find(addr => addr.address === selectedValue);
-        console.log('🏠 AddressBookPicker: Selected address details:', selectedAddress);
         onAddressSelect(selectedValue, selectedAddress);
       }
     } catch (error) {
-      console.error('🏠 AddressBookPicker: Error in handleValueChange:', error);
+      // Handle error silently
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={{color: '#ff0000', fontSize: 12}}>DEBUG: AddressBookPicker component loaded</Text>
-      <Text style={{color: '#0000ff', fontSize: 12}}>Asset: {selectedAsset}, Addresses: {addressesForAsset.length}</Text>
-      <Text style={{color: '#008000', fontSize: 12}}>Items in dropdown: {items.length}</Text>
-      <Text style={{color: '#800080', fontSize: 12}}>Loading: {loading ? 'true' : 'false'}, Error: {error || 'none'}</Text>
       
       {loading && (
         <View style={[styles.dropdown, {justifyContent: 'center', alignItems: 'center'}]}>
@@ -276,11 +245,11 @@ let AddressBookPicker = ({
       )}
       
       {!loading && !error && items.length > 0 ? (
-        <View style={{zIndex: 3000, elevation: 3000}}>
+        <View style={{zIndex: 4000, elevation: 4000}}>
           <DropDownPicker
             open={open}
             value={value}
-            items={items}
+            items={items.length > 0 ? items : [{label: "No items", value: null, disabled: true, key: 'empty'}]}
             setOpen={setOpen}
             setValue={setValue}
             setItems={setItems}
@@ -291,12 +260,21 @@ let AddressBookPicker = ({
             textStyle={styles.dropdownText}
             placeholderStyle={styles.placeholderText}
             disabled={addressesForAsset.length === 0}
-            zIndex={3000}
+            zIndex={4000}
             zIndexInverse={1000}
             listMode="SCROLLVIEW"
             scrollViewProps={{
               nestedScrollEnabled: true,
+              showsVerticalScrollIndicator: true,
+              showsHorizontalScrollIndicator: false,
+              bounces: true,
+              contentContainerStyle: { 
+                paddingVertical: 5
+              }
             }}
+            maxHeight={250}
+            autoScroll={true}
+            closeAfterSelecting={true}
           />
         </View>
       ) : !loading && !error && (
@@ -335,42 +313,43 @@ let AddressBookPicker = ({
 let styles = StyleSheet.create({
   container: {
     marginBottom: 16,
-    zIndex: 3000,
-    backgroundColor: '#f0f0f0', // Temporary debug background
-    padding: 8,
-    borderRadius: 4
+    zIndex: 4000,
+    elevation: 4000
   },
   label: {
     fontSize: normaliseFont(14),
     fontWeight: '600',
-    color: '#000', // Temporary solid color
+    color: colors.darkGray,
     marginBottom: 8
   },
   dropdown: {
-    backgroundColor: '#ffffff', // Temporary solid white
-    borderColor: '#cccccc', // Temporary solid border
-    borderWidth: 2, // Make border more visible
+    backgroundColor: colors.white,
+    borderColor: colors.lightGray,
+    borderWidth: 1,
     borderRadius: 4,
-    minHeight: 48
+    minHeight: 48,
+    zIndex: 4000
   },
   dropdownContainer: {
-    backgroundColor: '#ffffff', // Temporary solid white
-    borderColor: '#cccccc', // Temporary solid border
-    borderWidth: 2, // Make border more visible
+    backgroundColor: colors.white,
+    borderColor: colors.lightGray,
+    borderWidth: 1,
     borderRadius: 4,
-    elevation: 5,
+    elevation: 10,
+    zIndex: 4000,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    maxHeight: 250
   },
   dropdownText: {
     fontSize: normaliseFont(14),
-    color: '#000' // Temporary solid color
+    color: colors.darkGray
   },
   placeholderText: {
     fontSize: normaliseFont(14),
-    color: '#666666' // Temporary solid color
+    color: colors.mediumGray
   },
   helperText: {
     fontSize: normaliseFont(12),

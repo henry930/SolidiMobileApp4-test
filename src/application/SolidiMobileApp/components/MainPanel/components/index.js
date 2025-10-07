@@ -50,6 +50,7 @@ export {default as NavigationDebug} from './NavigationDebug/NavigationDebug';
 export {default as Questionnaire} from './Questionnaire/Questionnaire';
 export {default as AccountReview} from './Questionnaires/AccountReview';
 export {default as SelfCategorisation} from './Questionnaires/SelfCategorisation';
-export {default as AddressBook} from './AddressBook/AddressBook';
+export {default as AddressBook} from './AddressBook';
 export {default as Wallet} from './Wallet/Wallet';
+export {default as DepositInstructions} from './DepositInstructions';
 

@@ -586,8 +586,17 @@ let Send = () => {
     // Store the withdraw details in the global appState.
     // These will be loaded later by the SendSuccessful page.
     _.assign(appState.panels.send, {asset:assetSA, volume:total, addressProperties, priority});
+    
     // Send the withdraw request to the server.
+    console.log('🔄 CONSOLE: ===== SEND WITHDRAW API CALL (Send.js) =====');
+    console.log('📤 CONSOLE: About to call appState.sendWithdraw from Send component...');
+    console.log('📤 CONSOLE: API parameters:', {asset:assetSA, volume:total, addressInfo:addressProperties, priority, functionName:'startSendRequest'});
     let result = await appState.sendWithdraw({asset:assetSA, volume:total, addressInfo:addressProperties, priority, functionName:'startSendRequest'});
+    console.log('📨 CONSOLE: ===== SEND WITHDRAW API RESPONSE (Send.js) =====');
+    console.log('📨 CONSOLE: Raw sendWithdraw response:', result);
+    console.log('📨 CONSOLE: Response type:', typeof result);
+    console.log('📨 CONSOLE: Response JSON:', JSON.stringify(result, null, 2));
+    console.log('📨 CONSOLE: ===== END SEND WITHDRAW API RESPONSE (Send.js) =====');
     if (result == 'DisplayedError') return;
     // Check to see if the server returned an error.
     // Stop and display the error message if so.

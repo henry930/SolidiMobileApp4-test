@@ -65,10 +65,45 @@ let Login = () => {
     try {
       await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      
+      // Load last used email from keychain for convenience
+      await loadStoredEmail();
+      
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Login.setup: Error = ${err}`;
       console.log(msg);
+    }
+  }
+
+  // Load stored email for convenience (not password for security)
+  let loadStoredEmail = async () => {
+    try {
+      // Get app tier and name from constants or reasonable defaults
+      let appTier = 'prod'; // Default to prod if not available
+      let appName = 'SolidiMobileApp';
+      let emailStorageKey = `LAST_EMAIL_${appTier}_${appName}`;
+      let credentials = await Keychain.getInternetCredentials(emailStorageKey);
+      if (credentials && credentials.username) {
+        setEmail(credentials.username);
+        log(`Loaded stored email: ${credentials.username}`);
+      }
+    } catch (err) {
+      log(`Could not load stored email: ${err.message}`);
+    }
+  }
+
+  // Store email for future convenience (not password for security)
+  let storeEmail = async (emailToStore) => {
+    try {
+      // Get app tier and name from constants or reasonable defaults
+      let appTier = 'prod'; // Default to prod if not available
+      let appName = 'SolidiMobileApp';
+      let emailStorageKey = `LAST_EMAIL_${appTier}_${appName}`;
+      await Keychain.setInternetCredentials(emailStorageKey, emailToStore, 'placeholder');
+      log(`Stored email for convenience: ${emailToStore}`);
+    } catch (err) {
+      log(`Could not store email: ${err.message}`);
     }
   }
 
@@ -121,6 +156,10 @@ let Login = () => {
         setDisableLoginButton(false);
         return;
       }
+      
+      // Store email for convenience on successful login (but not password for security)
+      await storeEmail(email);
+      
       // Redirect to profile page on successful login.
       appState.changeState('PersonalDetails');
     } catch(err) {

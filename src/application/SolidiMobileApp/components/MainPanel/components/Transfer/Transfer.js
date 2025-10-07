@@ -48,6 +48,7 @@ import {
   SegmentedButtons,
   Surface,
   HelperText,
+  IconButton,
 } from 'react-native-paper';
 
 // Other imports
@@ -58,7 +59,7 @@ import AppStateContext from 'src/application/data';
 import { colors, sharedStyles, sharedColors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { TransferUtils, transferDataModel } from './TransferDataModel';
-import { AddressBookPicker } from 'src/components/atomic';
+import { AddressBookPicker, AddressBookModal } from 'src/components/atomic';
 
 // Logger
 import logger from 'src/util/logger';
@@ -87,8 +88,9 @@ let Transfer = () => {
 
   // Send form state
   let [sendAmount, setSendAmount] = useState('0.001'); // Pre-filled with your test amount
-  let [recipientAddress, setRecipientAddress] = useState('tb1qumc274tp6vjd6mvldcjavjjqd2xzak00eh4ell'); // Pre-filled with your test address
-  let [selectedPriority, setSelectedPriority] = useState('medium'); // Fee priority selection
+  let [recipientAddress, setRecipientAddress] = useState(''); // Display address from address book selection
+  let [recipientAddressUUID, setRecipientAddressUUID] = useState(''); // UUID from address book for API calls
+  let [selectedPriority, setSelectedPriority] = useState('medium'); // Fee priority selection (API uses: low, medium, high)
   let [errorMessage, setErrorMessage] = useState('');
   let [isLoading, setIsLoading] = useState(false);
   let [componentError, setComponentError] = useState(null);
@@ -96,6 +98,14 @@ let Transfer = () => {
   // Fee loading state
   let [withdrawalFee, setWithdrawalFee] = useState('[loading]');
   let [feesLoaded, setFeesLoaded] = useState(false);
+
+  // Page initialization state
+  let [isInitializing, setIsInitializing] = useState(true);
+  let [initializationError, setInitializationError] = useState(null);
+  let [addressBookLoaded, setAddressBookLoaded] = useState(false);
+
+  // Address book modal state
+  let [showAddressBookModal, setShowAddressBookModal] = useState(false);
 
   // Error boundary effect
   useEffect(() => {
@@ -108,28 +118,114 @@ let Transfer = () => {
     setComponentError(null);
   }, [transferType, selectedAsset]);
 
+  // Page initialization effect - check authentication and pre-load data
+  useEffect(() => {
+    const initializePage = async () => {
+      try {
+        log('🚀 Transfer page initialization starting...');
+        setIsInitializing(true);
+        setInitializationError(null);
+
+        // Step 1: Check if AppState is available
+        if (!appState) {
+          log('❌ AppState not available, waiting...');
+          setInitializationError('Loading application state...');
+          return;
+        }
+
+        // Step 2: Check authentication status
+        if (appState.state && appState.state.mainPanelState) {
+          const authState = appState.state.mainPanelState;
+          log('🔐 Current auth state:', authState);
+          
+          if (authState === 'AuthSetup' || authState === 'Login' || authState === 'Register') {
+            log('❌ Not authenticated, redirecting to login');
+            setInitializationError('Authentication required');
+            appState.changeState({mainPanelState: 'Login'});
+            return;
+          }
+          
+          if (authState === 'RequestFailed') {
+            log('❌ System in error state');
+            setInitializationError('System error. Please try refreshing the app.');
+            return;
+          }
+          
+          if (authState === 'Maintenance') {
+            log('❌ System in maintenance mode');
+            setInitializationError('System is under maintenance. Please try again later.');
+            return;
+          }
+        }
+
+        // Step 3: Pre-load fees
+        log('💰 Pre-loading fees...');
+        console.log('🔄 CONSOLE: ===== LOADING FEES API CALL =====');
+        if (appState.loadFees) {
+          console.log('📤 CONSOLE: About to call appState.loadFees()...');
+          const feesResult = await appState.loadFees();
+          console.log('📨 CONSOLE: ===== FEES API RESPONSE =====');
+          console.log('📨 CONSOLE: Raw fees response:', feesResult);
+          console.log('📨 CONSOLE: Response type:', typeof feesResult);
+          console.log('📨 CONSOLE: Response JSON:', JSON.stringify(feesResult, null, 2));
+          console.log('📨 CONSOLE: ===== END FEES API RESPONSE =====');
+          
+          setFeesLoaded(true);
+          log('✅ Fees loaded successfully');
+          console.log('✅ CONSOLE: Fees loaded successfully');
+        } else {
+          log('❌ loadFees method not available');
+          console.log('❌ CONSOLE: loadFees method not available');
+          setInitializationError('Fee loading not available');
+          return;
+        }
+
+        // Step 4: Pre-load address book for current asset
+        log('📖 Pre-loading address book for asset:', selectedAsset);
+        console.log('🔄 CONSOLE: ===== LOADING ADDRESS BOOK API CALL =====');
+        console.log('📤 CONSOLE: About to call appState.loadAddressBook with asset:', selectedAsset);
+        if (appState.loadAddressBook) {
+          const addressBookResult = await appState.loadAddressBook(selectedAsset);
+          console.log('📨 CONSOLE: ===== ADDRESS BOOK API RESPONSE =====');
+          console.log('📨 CONSOLE: Raw address book response:', addressBookResult);
+          console.log('📨 CONSOLE: Response type:', typeof addressBookResult);
+          console.log('📨 CONSOLE: Response JSON:', JSON.stringify(addressBookResult, null, 2));
+          console.log('📨 CONSOLE: ===== END ADDRESS BOOK API RESPONSE =====');
+          
+          setAddressBookLoaded(true);
+          log('✅ Address book loaded successfully');
+          console.log('✅ CONSOLE: Address book loaded successfully');
+        } else {
+          log('⚠️ loadAddressBook method not available, continuing without address book');
+          console.log('⚠️ CONSOLE: loadAddressBook method not available, continuing without address book');
+          setAddressBookLoaded(true); // Allow page to load even without address book
+        }
+
+        // Step 5: Page ready
+        log('🎉 Transfer page initialization complete');
+        setIsInitializing(false);
+
+      } catch (error) {
+        log('❌ Error during page initialization:', error);
+        setInitializationError(`Initialization failed: ${error.message}`);
+        setIsInitializing(false);
+      }
+    };
+
+    // Only initialize once when appState becomes available
+    if (appState && isInitializing && !initializationError) {
+      initializePage();
+    }
+  }, [appState, selectedAsset]); // Re-run if appState becomes available or asset changes
+
   // Track selectedAsset changes for AddressBookPicker
   useEffect(() => {
-    console.log('🎯 Transfer: ===== ASSET CHANGED - WILL TRIGGER ADDRESS BOOK RELOAD =====');
-    console.log('🎯 Transfer: Selected asset changed to:', selectedAsset);
-    console.log('🎯 Transfer: This will trigger AddressBookPicker to reload with new asset');
-    console.log('🎯 Transfer: Expected API call: GET /addressBook/' + selectedAsset);
-    
-    if (selectedAsset === 'BTC') {
-      console.log('🎯 Transfer: 🚀 BTC IS DEFAULT - ADDRESS BOOK SHOULD LOAD AUTOMATICALLY 🚀');
-      console.log('🎯 Transfer: Watch for BTC address book API response logs below...');
-    }
-    
-    console.log('🎯 Transfer: ===== ASSET CHANGE TRIGGER END =====');
+    // This effect will trigger when selectedAsset changes
   }, [selectedAsset]);
 
   // Force initial BTC load when Transfer component mounts
   useEffect(() => {
-    console.log('🎯 Transfer: ===== TRANSFER COMPONENT MOUNTED =====');
-    console.log('🎯 Transfer: Default selectedAsset on mount:', selectedAsset);
-    console.log('🎯 Transfer: Transfer type on mount:', transferType);
-    console.log('🎯 Transfer: Should load BTC address book automatically');
-    console.log('🎯 Transfer: ===== TRANSFER COMPONENT MOUNT END =====');
+    // Component mounted
   }, []);
 
   // Fee loading effect
@@ -155,24 +251,43 @@ let Transfer = () => {
         setFeesLoaded(false);
         
         // Load fees from API
-        await appState.loadFees();
+        console.log('🔄 CONSOLE: ===== LOADING FEES API CALL (Fee Effect) =====');
+        console.log('📤 CONSOLE: About to call appState.loadFees() for fee calculation...');
+        const loadFeesResult = await appState.loadFees();
+        console.log('📨 CONSOLE: ===== FEES LOADING API RESPONSE =====');
+        console.log('📨 CONSOLE: Raw loadFees response:', loadFeesResult);
+        console.log('📨 CONSOLE: Response type:', typeof loadFeesResult);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(loadFeesResult, null, 2));
+        console.log('📨 CONSOLE: ===== END FEES LOADING API RESPONSE =====');
         
         // Mark fees as loaded
         setFeesLoaded(true);
         
         // Get the specific fee for current asset and priority
+        console.log('🔄 CONSOLE: ===== GETTING SPECIFIC FEE =====');
+        console.log('📤 CONSOLE: About to call appState.getFee with:', {
+          feeType: 'withdraw',
+          asset: selectedAsset,
+          priority: selectedPriority
+        });
         const fee = appState.getFee({
           feeType: 'withdraw',
           asset: selectedAsset,
           priority: selectedPriority
         });
+        console.log('📨 CONSOLE: ===== GET FEE RESPONSE =====');
+        console.log('📨 CONSOLE: Raw getFee response:', fee);
+        console.log('📨 CONSOLE: Response type:', typeof fee);
+        console.log('� CONSOLE: Response JSON:', JSON.stringify(fee, null, 2));
+        console.log('📨 CONSOLE: ===== END GET FEE RESPONSE =====');
         
         log('💰 Got fee from API:', fee);
+        console.log('�💰 CONSOLE: Got fee from API:', fee);
         
         // If current priority is not available, try to find an available one
         if (fee === '[loading]' || (typeof fee === 'string' && parseFloat(fee) < 0)) {
           log('🔄 Current priority unavailable, looking for alternatives...');
-          const priorities = ['medium', 'high', 'low'];
+          const priorities = ['medium', 'high', 'low']; // API uses: low, medium, high
           let foundValidFee = null;
           let foundValidPriority = null;
           
@@ -255,24 +370,44 @@ let Transfer = () => {
           let assetIcon = null;
           try {
             if (appState?.getAssetIcon) {
+              console.log('🔄 CONSOLE: ===== GETTING ASSET ICON =====');
+              console.log('📤 CONSOLE: About to call appState.getAssetIcon for asset:', asset);
               let iconResult = appState.getAssetIcon(asset);
+              console.log('📨 CONSOLE: ===== ASSET ICON API RESPONSE =====');
+              console.log('📨 CONSOLE: Raw getAssetIcon response:', iconResult);
+              console.log('📨 CONSOLE: Response type:', typeof iconResult);
+              console.log('📨 CONSOLE: Response JSON:', JSON.stringify(iconResult, null, 2));
+              console.log('📨 CONSOLE: ===== END ASSET ICON API RESPONSE =====');
+              
               // Only use icon if it's a proper image source (object), not a string
               if (iconResult && typeof iconResult === 'object') {
                 assetIcon = iconResult;
+                console.log('✅ CONSOLE: Using asset icon for', asset);
               } else {
                 log('Skipping invalid icon for', asset, '- got:', typeof iconResult, iconResult);
+                console.log('⚠️ CONSOLE: Skipping invalid icon for', asset, '- got:', typeof iconResult, iconResult);
               }
             }
           } catch (iconError) {
             log('Error getting asset icon for', asset, ':', iconError);
+            console.log('❌ CONSOLE: Error getting asset icon for', asset, ':', iconError);
           }
           
           // Try to get additional info from appState
           try {
             if (appState?.getAssetInfo) {
+              console.log('🔄 CONSOLE: ===== GETTING ASSET INFO =====');
+              console.log('📤 CONSOLE: About to call appState.getAssetInfo for asset:', asset);
               let info = appState.getAssetInfo(asset);
+              console.log('📨 CONSOLE: ===== ASSET INFO API RESPONSE =====');
+              console.log('📨 CONSOLE: Raw getAssetInfo response:', info);
+              console.log('📨 CONSOLE: Response type:', typeof info);
+              console.log('📨 CONSOLE: Response JSON:', JSON.stringify(info, null, 2));
+              console.log('📨 CONSOLE: ===== END ASSET INFO API RESPONSE =====');
+              
               if (info?.displayString) {
                 displayString = info.displayString;
+                console.log('✅ CONSOLE: Using displayString from asset info:', displayString);
               }
             }
           } catch (infoError) {
@@ -309,9 +444,20 @@ let Transfer = () => {
     try {
       // Try to get assets from appState first
       if (appState?.getAssets) {
+        console.log('🔄 CONSOLE: ===== GETTING WITHDRAWAL ASSETS =====');
+        console.log('📤 CONSOLE: About to call appState.getAssets({withdrawalEnabled: true})...');
         let withdrawalAssets = appState.getAssets({withdrawalEnabled: true});
+        console.log('📨 CONSOLE: ===== WITHDRAWAL ASSETS API RESPONSE =====');
+        console.log('📨 CONSOLE: Raw getAssets (withdrawal) response:', withdrawalAssets);
+        console.log('📨 CONSOLE: Response type:', typeof withdrawalAssets);
+        console.log('📨 CONSOLE: Response is array:', Array.isArray(withdrawalAssets));
+        console.log('📨 CONSOLE: Response length:', withdrawalAssets?.length);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(withdrawalAssets, null, 2));
+        console.log('📨 CONSOLE: ===== END WITHDRAWAL ASSETS API RESPONSE =====');
+        
         if (withdrawalAssets && withdrawalAssets.length > 0) {
           log('Using appState withdrawal assets:', withdrawalAssets);
+          console.log('✅ CONSOLE: Using appState withdrawal assets:', withdrawalAssets);
           return deriveAssetItems(withdrawalAssets);
         }
       }
@@ -329,9 +475,20 @@ let Transfer = () => {
     try {
       // Try to get assets from appState first
       if (appState?.getAssets) {
+        console.log('🔄 CONSOLE: ===== GETTING DEPOSIT ASSETS =====');
+        console.log('📤 CONSOLE: About to call appState.getAssets({depositEnabled: true})...');
         let depositAssets = appState.getAssets({depositEnabled: true});
+        console.log('📨 CONSOLE: ===== DEPOSIT ASSETS API RESPONSE =====');
+        console.log('📨 CONSOLE: Raw getAssets (deposit) response:', depositAssets);
+        console.log('📨 CONSOLE: Response type:', typeof depositAssets);
+        console.log('📨 CONSOLE: Response is array:', Array.isArray(depositAssets));
+        console.log('📨 CONSOLE: Response length:', depositAssets?.length);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(depositAssets, null, 2));
+        console.log('📨 CONSOLE: ===== END DEPOSIT ASSETS API RESPONSE =====');
+        
         if (depositAssets && depositAssets.length > 0) {
           log('Using appState deposit assets:', depositAssets);
+          console.log('✅ CONSOLE: Using appState deposit assets:', depositAssets);
           return deriveAssetItems(depositAssets);
         }
       }
@@ -433,6 +590,15 @@ let Transfer = () => {
 
   // Enhanced send transaction handler with validation
   let handleSend = async () => {
+    console.log('🚀 CONSOLE: ===== SEND BUTTON CLICKED =====');
+    console.log('🚀 CONSOLE: handleSend function starting...');
+    console.log('🚀 CONSOLE: ===== TRANSFER FORM VALUES DEBUG =====');
+    console.log('🚀 CONSOLE: - Selected Asset:', selectedAsset);
+    console.log('🚀 CONSOLE: - Send Amount:', sendAmount, '(type:', typeof sendAmount + ')');
+    console.log('🚀 CONSOLE: - Recipient Address:', recipientAddress);
+    console.log('🚀 CONSOLE: - Selected Priority:', selectedPriority);
+    console.log('🚀 CONSOLE: - Transfer Type:', transferType);
+    console.log('🚀 CONSOLE: ===== END TRANSFER FORM VALUES DEBUG =====');
     try {
       log('🚀 handleSend: Starting send transaction');
       console.log('🚀 CONSOLE: handleSend starting - please check this appears in your logs!');
@@ -447,9 +613,11 @@ let Transfer = () => {
       setErrorMessage('');
       
       // Validate amount using data model
+      console.log('📊 CONSOLE: ===== STEP 1: AMOUNT VALIDATION =====');
       log('📊 handleSend: Validating amount:', sendAmount, 'for asset:', selectedAsset);
       console.log('📊 CONSOLE: Validating amount:', sendAmount, 'for asset:', selectedAsset);
       const validation = TransferUtils.validateAmount(selectedAsset, sendAmount);
+      console.log('📊 CONSOLE: Validation result:', validation);
       if (!validation.valid) {
         log('❌ handleSend: Amount validation failed:', validation.error);
         console.log('❌ CONSOLE: Amount validation failed:', validation.error);
@@ -459,66 +627,96 @@ let Transfer = () => {
       log('✅ handleSend: Amount validation passed');
       console.log('✅ CONSOLE: Amount validation passed');
       
+      console.log('📍 CONSOLE: ===== STEP 2: ADDRESS VALIDATION =====');
       if (!recipientAddress.trim()) {
         log('❌ handleSend: No recipient address provided');
-        setErrorMessage('Please enter recipient address');
+        console.log('❌ CONSOLE: No recipient address provided');
+        setErrorMessage('Please select an address from your Address Book');
         return;
       }
-      log('✅ handleSend: Recipient address provided:', recipientAddress);
+      
+      // Require address book selection (UUID must be present)
+      if (!recipientAddressUUID) {
+        log('❌ handleSend: Address book selection required - no UUID provided');
+        console.log('❌ CONSOLE: Address book selection required - no UUID provided');
+        setErrorMessage('Please select an address from your Address Book. Manual address entry is not allowed.');
+        return;
+      }
+      
+      log('✅ handleSend: Valid address book selection with UUID:', recipientAddressUUID);
+      console.log('✅ CONSOLE: Valid address book selection with UUID:', recipientAddressUUID);
+      console.log('✅ CONSOLE: Display address:', recipientAddress);
 
       // Get asset capabilities for additional validation
+      console.log('🔍 CONSOLE: ===== STEP 3: ASSET CAPABILITIES CHECK =====');
       log('🔍 handleSend: Checking asset capabilities for:', selectedAsset);
       const capabilities = transferDataModel.getAssetCapabilities(selectedAsset);
       log('📋 handleSend: Asset capabilities:', capabilities);
+      console.log('📋 CONSOLE: Asset capabilities:', capabilities);
       
       if (!capabilities.withdrawalEnabled) {
         log('❌ handleSend: Withdrawals not enabled for asset:', selectedAsset);
+        console.log('❌ CONSOLE: Withdrawals not enabled for asset:', selectedAsset);
         setErrorMessage(`${selectedAsset} withdrawals are not currently available`);
         return;
       }
       log('✅ handleSend: Withdrawals enabled for asset');
+      console.log('✅ CONSOLE: Withdrawals enabled for asset');
 
       // Check AppState availability
+      console.log('🔍 CONSOLE: ===== STEP 4: APPSTATE CHECK =====');
       if (!appState) {
         log('❌ handleSend: AppState not available');
+        console.log('❌ CONSOLE: AppState not available');
         setErrorMessage('Application state not available. Please try again.');
         return;
       }
       log('✅ handleSend: AppState is available');
+      console.log('✅ CONSOLE: AppState is available');
 
       // Check authentication state
+      console.log('🔐 CONSOLE: ===== STEP 5: AUTHENTICATION CHECK =====');
       if (appState.state && appState.state.mainPanelState) {
         const authState = appState.state.mainPanelState;
         log('🔐 handleSend: Current auth state:', authState);
+        console.log('🔐 CONSOLE: Current auth state:', authState);
         
         if (authState === 'AuthSetup' || authState === 'Login' || authState === 'Register') {
           log('❌ handleSend: Not authenticated');
+          console.log('❌ CONSOLE: Not authenticated');
           setErrorMessage('Please log in before making transactions.');
           return;
         }
         
         if (authState === 'RequestFailed') {
           log('❌ handleSend: Previous request failed, system in error state');
+          console.log('❌ CONSOLE: Previous request failed, system in error state');
           setErrorMessage('System is in error state. Please refresh and try again.');
           return;
         }
         
         if (authState === 'Maintenance') {
           log('❌ handleSend: System in maintenance mode');
+          console.log('❌ CONSOLE: System in maintenance mode');
           setErrorMessage('System is under maintenance. Please try again later.');
           return;
         }
       }
+      console.log('✅ CONSOLE: Authentication check passed');
 
       // Check sendWithdraw method availability
+      console.log('🔍 CONSOLE: ===== STEP 6: SENDWITHDRAW METHOD CHECK =====');
       if (!appState.sendWithdraw) {
         log('❌ handleSend: sendWithdraw method not available on appState');
+        console.log('❌ CONSOLE: sendWithdraw method not available on appState');
         setErrorMessage('Send functionality not available. Please try again.');
         return;
       }
       log('✅ handleSend: sendWithdraw method is available');
+      console.log('✅ CONSOLE: sendWithdraw method is available');
 
       setIsLoading(true);
+      console.log('🔄 CONSOLE: ===== STEP 7: CALLING API =====');
 
       log('📤 handleSend: Preparing API call with parameters:', {
         asset: selectedAsset,
@@ -527,14 +725,25 @@ let Transfer = () => {
         priority: selectedPriority,
         functionName: 'Transfer_handleSend'
       });
-      
-      // Call the actual withdraw API
-      log('🔄 handleSend: Calling appState.sendWithdraw...');
-      console.log('🔄 CONSOLE: About to call sendWithdraw API...');
-      console.log('📋 CONSOLE: Final API parameters:', {
+      console.log('📤 CONSOLE: Preparing API call with parameters:', {
         asset: selectedAsset,
         volume: sendAmount,
         address: recipientAddress,
+        priority: selectedPriority,
+        functionName: 'Transfer_handleSend'
+      });
+      
+      console.log('🔄 CONSOLE: About to call sendWithdraw API...');
+      console.log('� CONSOLE: Using recipient address UUID:', recipientAddressUUID);
+      console.log('� CONSOLE: Display address:', recipientAddress);
+      
+      
+      log('📍 handleSend: Using address book UUID for API call:', recipientAddressUUID);
+      
+      console.log('📋 CONSOLE: Final API parameters:', {
+        asset: selectedAsset,
+        volume: sendAmount,
+        address: recipientAddressUUID, // Always use UUID from address book
         priority: selectedPriority,
         functionName: 'Transfer_handleSend'
       });
@@ -542,51 +751,119 @@ let Transfer = () => {
       const result = await appState.sendWithdraw({
         asset: selectedAsset,
         volume: sendAmount,
-        address: recipientAddress,
+        address: recipientAddressUUID, // Always use UUID from address book
         priority: selectedPriority,
         functionName: 'Transfer_handleSend'
       });
       
+      console.log('📨 CONSOLE: ===== STEP 8: API RESPONSE RECEIVED =====');
+      
+      console.log('📨 CONSOLE: ===== DETAILED TRANSFER API RESPONSE ANALYSIS =====');
       log('📨 handleSend: Raw API response:', result);
       console.log('📨 CONSOLE: Raw API response:', result);
       console.log('📨 CONSOLE: Response type:', typeof result);
+      console.log('📨 CONSOLE: Response is null:', result === null);
+      console.log('📨 CONSOLE: Response is undefined:', result === undefined);
       console.log('📨 CONSOLE: Response JSON:', JSON.stringify(result, null, 2));
       log('📊 handleSend: Response type:', typeof result);
       log('📊 handleSend: Response keys:', result ? Object.keys(result) : 'null/undefined');
       
+      // Log the exact response for debugging
+      if (result && typeof result === 'object') {
+        console.log('🔍 CONSOLE: Detailed response analysis:');
+        console.log('🔍 CONSOLE: Response keys:', Object.keys(result));
+        console.log('🔍 CONSOLE: Has error property:', 'error' in result);
+        console.log('🔍 CONSOLE: Has id property:', 'id' in result);
+        console.log('🔍 CONSOLE: Has data property:', 'data' in result);
+        console.log('🔍 CONSOLE: Error value:', result.error);
+        console.log('🔍 CONSOLE: Error type:', typeof result.error);
+        console.log('🔍 CONSOLE: Error is null:', result.error === null);
+        console.log('🔍 CONSOLE: Error is undefined:', result.error === undefined);
+        console.log('🔍 CONSOLE: Error stringified:', JSON.stringify(result.error));
+        
+        if (result.error && typeof result.error === 'string') {
+          console.log('🔍 CONSOLE: Error string length:', result.error.length);
+          console.log('🔍 CONSOLE: Error lowercase:', result.error.toLowerCase());
+          console.log('🔍 CONSOLE: Contains "successfully":', result.error.toLowerCase().includes('successfully'));
+          console.log('🔍 CONSOLE: Contains "queued":', result.error.toLowerCase().includes('queued'));
+          console.log('🔍 CONSOLE: Contains "withdrawal":', result.error.toLowerCase().includes('withdrawal'));
+        }
+        
+        console.log('🔍 CONSOLE: ID value:', result.id);
+        console.log('🔍 CONSOLE: Data value:', result.data);
+      }
+      console.log('📨 CONSOLE: ===== END DETAILED TRANSFER RESPONSE ANALYSIS =====');
+      
+      console.log('🔍 CONSOLE: ===== STEP 9: RESPONSE PROCESSING =====');
       if (result === 'DisplayedError') {
         log('❌ handleSend: Got DisplayedError from API');
+        console.log('❌ CONSOLE: Got DisplayedError from API');
         setErrorMessage('Transaction failed. Please check your inputs and try again.');
         return;
       }
       
       if (!result) {
         log('❌ handleSend: No response from API');
+        console.log('❌ CONSOLE: No response from API');
         setErrorMessage('No response from server. Please try again.');
         return;
       }
       
-      if (result?.error) {
-        log('❌ handleSend: API returned error:', result.error);
-        log('❌ handleSend: Full error object:', JSON.stringify(result, null, 2));
-        setErrorMessage(`Send failed: ${result.error}`);
+      // SIMPLIFIED LOGIC: Only check for clear success indicators
+      // 1. sendWithdraw converts success messages to success=true format
+      if (result?.success === true) {
+        log('✅ handleSend: sendWithdraw converted success response');
+        console.log('✅ CONSOLE: sendWithdraw converted success response');
+        
+        let successMessage = result?.message || 'Withdrawal successful!';
+        console.log('✅ CONSOLE: Success message:', successMessage);
+        
+        // Success - show confirmation
+        alert(`✅ ${successMessage}`);
+        
+        // Clear form on successful send
+        setSendAmount('');
+        setRecipientAddress('');
+        setRecipientAddressUUID('');
+        setErrorMessage('');
+        setIsLoading(false);
         return;
       }
       
-      if (result?.id) {
+      // 2. Legacy success: responses with ID and no error field
+      if (result?.id && !result?.error) {
         log('✅ handleSend: Transaction successful with ID:', result.id);
+        console.log('✅ CONSOLE: Transaction successful with ID:', result.id);
         // Success - show confirmation
         alert(`✅ Withdrawal successful! Transaction ID: ${result.id}`);
         
         // Clear form on successful send
         setSendAmount('');
         setRecipientAddress('');
-      } else {
-        log('⚠️ handleSend: Unexpected response format:', result);
-        setErrorMessage('Unexpected response from server. Please check your transaction status.');
+        setRecipientAddressUUID('');
+        setErrorMessage('');
+        setIsLoading(false);
+        return;
       }
       
+      // 3. Anything else with an error field is treated as an error
+      if (result?.error) {
+        log('❌ handleSend: API returned error:', result.error);
+        console.log('❌ CONSOLE: API returned error:', result.error);
+        log('❌ handleSend: Full error object:', JSON.stringify(result, null, 2));
+        console.log('❌ CONSOLE: Full error object:', JSON.stringify(result, null, 2));
+        setErrorMessage(typeof result.error === 'string' ? result.error : 'Send failed');
+        return;
+      }
+      
+      // 4. Fallback for truly unexpected response format
+      log('⚠️ handleSend: Unexpected response format:', result);
+      console.log('⚠️ CONSOLE: Unexpected response format:', result);
+      console.log('⚠️ CONSOLE: Response does not match any expected success patterns');
+      setErrorMessage('Unexpected response from server. Please check your transaction status.');
+      
     } catch (error) {
+      console.log('💥 CONSOLE: ===== EXCEPTION CAUGHT =====');
       log('💥 handleSend: Exception caught:', error);
       console.log('💥 CONSOLE: Exception caught in handleSend:', error);
       log('💥 handleSend: Error message:', error.message);
@@ -594,31 +871,43 @@ let Transfer = () => {
       log('💥 handleSend: Error stack:', error.stack);
       console.log('💥 CONSOLE: Error stack:', error.stack);
       log('💥 handleSend: Error name:', error.name);
+      console.log('💥 CONSOLE: Error name:', error.name);
       log('💥 handleSend: Error toString:', error.toString());
+      console.log('💥 CONSOLE: Error toString:', error.toString());
       
       // Show detailed error message to user
       let errorMsg = `Failed to process send transaction: ${error.message || 'Unknown error'}`;
       if (error.message && error.message.includes('privateMethod')) {
         errorMsg += '\n\nThis appears to be an API authentication or connection issue.';
       }
+      console.log('💥 CONSOLE: Final error message to user:', errorMsg);
       
       setErrorMessage(errorMsg);
     } finally {
+      console.log('🏁 CONSOLE: ===== CLEANUP =====');
       log('🏁 handleSend: Cleaning up, setting isLoading to false');
+      console.log('🏁 CONSOLE: Setting isLoading to false');
       setIsLoading(false);
     }
-  }
+  };
 
   // Handle address book selection
   let handleAddressSelection = (address, addressDetails) => {
     log('🏠 handleAddressSelection: Address selected from book:', address);
     log('🏠 handleAddressSelection: Address details:', addressDetails);
     
+    // Set the display address (wallet address)
     setRecipientAddress(address);
+    
+    // Extract and set the UUID for API calls
+    let addressUUID = addressDetails?.id || addressDetails?.rawData?.uuid;
+    log('🏠 handleAddressSelection: Extracted UUID:', addressUUID);
+    setRecipientAddressUUID(addressUUID || '');
+    
     setErrorMessage(''); // Clear any existing error messages
     
     if (addressDetails) {
-      log(`📝 Address selected: ${addressDetails.label} - ${address}`);
+      log(`📝 Address selected: ${addressDetails.label} - ${address} (UUID: ${addressUUID})`);
     }
   };
 
@@ -696,6 +985,51 @@ let Transfer = () => {
   }
 
   try {
+    // Show loading screen while initializing
+    if (isInitializing) {
+      return (
+        <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+          <View style={{ padding: 20, justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+            <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center' }}>
+              Loading Transfer
+            </Text>
+            <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
+              Checking authentication and loading data...
+            </Text>
+            <Button mode="contained" loading disabled>
+              Please wait
+            </Button>
+          </View>
+        </View>
+      );
+    }
+
+    // Show error screen if initialization failed
+    if (initializationError) {
+      return (
+        <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+          <View style={{ padding: 20, justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+            <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center', color: '#F44336' }}>
+              Transfer Unavailable
+            </Text>
+            <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
+              {initializationError}
+            </Text>
+            <Button 
+              mode="contained" 
+              onPress={() => {
+                setInitializationError(null);
+                setIsInitializing(true);
+              }}
+            >
+              Try Again
+            </Button>
+          </View>
+        </View>
+      );
+    }
+
+    // Main Transfer page content
     return (
       <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
         
@@ -847,12 +1181,8 @@ let Transfer = () => {
           console.log('🎯 Transfer: transferType === "send":', transferType === 'send');
           return transferType === 'send';
         })() && (
-          <Card style={{ marginBottom: 16, elevation: 1, zIndex: 100 }}>
-            <Card.Content style={{ padding: 20 }}>
-              {(() => {
-                console.log('🎯 Transfer: Rendering Send Form - AddressBookPicker should appear below');
-                return null;
-              })()}
+          <Card style={{ marginBottom: 16, elevation: 1, zIndex: 50 }}>
+            <Card.Content style={{ padding: 20, zIndex: 50 }}>
               <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600' }}>
                 Send {selectedAsset}
               </Text>
@@ -875,7 +1205,7 @@ let Transfer = () => {
                 marginBottom: 16,
               }}>
                 <Text variant="bodyMedium" style={{ fontWeight: '500', marginBottom: 4 }}>
-                  Network Fee ({selectedPriority}):
+                  Network Fee ({selectedPriority.charAt(0).toUpperCase() + selectedPriority.slice(1)}):
                 </Text>
                 <Text variant="bodyLarge" style={{ 
                   color: withdrawalFee === '[loading]' || withdrawalFee === '[error]' ? '#666' : '#1565C0', 
@@ -897,6 +1227,9 @@ let Transfer = () => {
                   const isAvailable = isPriorityAvailable(priority);
                   const isSelected = selectedPriority === priority;
                   
+                  // Display labels (medium is shown as Medium, others capitalized normally)
+                  const displayLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
+                  
                   return (
                     <Button
                       key={priority}
@@ -914,50 +1247,81 @@ let Transfer = () => {
                       }}
                       compact
                     >
-                      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                      {displayLabel}
                       {!isAvailable && ' (N/A)'}
                     </Button>
                   );
                 })}
               </View>
               
-              {/* Address Book Section with Asset Context */}
-              <View style={{ marginVertical: 8, padding: 8, backgroundColor: '#f0f8ff', borderRadius: 4 }}>
-                <Text style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>
-                  📋 {selectedAsset === 'BTC' ? '🚀 AUTO-LOADING BTC ADDRESS BOOK' : `Loading Address Book for ${selectedAsset}`} (Check console for API response)
-                </Text>
-                {(() => {
-                  console.log('🎯 Transfer: About to render AddressBookPicker with asset:', selectedAsset);
-                  console.log('🎯 Transfer: AddressBookPicker component exists:', !!AddressBookPicker);
-                  if (selectedAsset === 'BTC') {
-                    console.log('🎯 Transfer: 🚀 RENDERING AddressBookPicker FOR BTC - SHOULD AUTO-LOAD ADDRESSES 🚀');
-                  }
-                  return (
-                    <AddressBookPicker
-                      selectedAsset={selectedAsset}
-                      onAddressSelect={(address, details) => {
-                        console.log('🎯 Transfer: Address selected from AddressBookPicker:', address);
-                        console.log('🎯 Transfer: Address details:', details);
-                        handleAddressSelection(address, details);
-                      }}
-                      label="Choose from Address Book"
-                      placeholder="Select a saved address..."
-                    />
-                  );
-                })()}
+              {/* Address Book Section */}
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginVertical: 8, zIndex: 4000, elevation: 4000 }}>
+                <View style={{ flex: 1, zIndex: 4000, elevation: 4000 }}>
+                  <AddressBookPicker
+                    selectedAsset={selectedAsset}
+                    onAddressSelect={(address, details) => {
+                      handleAddressSelection(address, details);
+                    }}
+                    label="Choose from Address Book"
+                    placeholder="Select a saved address..."
+                  />
+                </View>
+                <IconButton
+                  icon="plus"
+                  size={20}
+                  mode="contained"
+                  onPress={() => {
+                    setShowAddressBookModal(true);
+                  }}
+                  style={{ 
+                    marginLeft: 8,
+                    marginTop: 22, // Align with the dropdown input
+                    backgroundColor: '#1565C0',
+                    height: 40,
+                    width: 40
+                  }}
+                  iconColor="white"
+                />
               </View>
               
-              <TextInput
-                label="Recipient Address"
-                mode="outlined"
-                value={recipientAddress}
-                onChangeText={setRecipientAddress}
-                placeholder={selectedAsset === 'BTC' ? 
-                  'tb1qumc274tp6vjd6mvldcjavjjqd2xzak00eh4ell' : 
-                  `Enter ${selectedAsset} address`}
-                style={{ marginBottom: 16 }}
-                multiline={selectedAsset === 'BTC' || selectedAsset === 'ETH'}
-              />
+              {/* Read-only display of selected address */}
+              <View style={{ marginBottom: 16 }}>
+                <Text variant="titleSmall" style={{ marginBottom: 8, fontWeight: 'bold' }}>
+                  Selected Recipient Address
+                </Text>
+                {recipientAddress ? (
+                  <View style={{
+                    borderWidth: 1,
+                    borderColor: '#E0E0E0',
+                    borderRadius: 4,
+                    padding: 12,
+                    backgroundColor: '#F5F5F5',
+                    minHeight: 48
+                  }}>
+                    <Text variant="bodyMedium" style={{ color: '#666666' }}>
+                      {recipientAddress}
+                    </Text>
+                    {recipientAddressUUID && (
+                      <Text variant="bodySmall" style={{ color: '#4CAF50', marginTop: 4 }}>
+                        ✓ From Address Book
+                      </Text>
+                    )}
+                  </View>
+                ) : (
+                  <View style={{
+                    borderWidth: 1,
+                    borderColor: '#E0E0E0',
+                    borderRadius: 4,
+                    padding: 12,
+                    backgroundColor: '#FAFAFA',
+                    minHeight: 48
+                  }}>
+                    <Text variant="bodyMedium" style={{ color: '#999999', fontStyle: 'italic' }}>
+                      Please select an address from your Address Book above
+                    </Text>
+                  </View>
+                )}
+              </View>
               
               {errorMessage ? (
                 <HelperText type="error" visible={!!errorMessage} style={{ marginBottom: 16 }}>
@@ -1136,6 +1500,29 @@ let Transfer = () => {
         )}
 
       </KeyboardAwareScrollView>
+
+      {/* Address Book Modal */}
+      <AddressBookModal
+        visible={showAddressBookModal}
+        onClose={() => setShowAddressBookModal(false)}
+        selectedAsset={selectedAsset}
+        onAddressAdded={async (newAddress) => {
+          log('New address added:', newAddress);
+          // Force refresh the address book picker
+          if (appState && appState.loadAddressBook) {
+            try {
+              // Add a small delay to ensure API completion
+              setTimeout(async () => {
+                await appState.loadAddressBook();
+                // Trigger a state change to refresh components
+                triggerRender(renderCount + 1);
+              }, 500);
+            } catch (error) {
+              log('Error refreshing address book after add:', error);
+            }
+          }
+        }}
+      />
     </View>
   );
   

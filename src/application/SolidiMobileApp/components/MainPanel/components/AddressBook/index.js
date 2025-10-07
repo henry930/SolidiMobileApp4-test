@@ -1,3 +1,3 @@
-import AddressBook from './AddressBook';
+import AddressBookManagement from './AddressBookManagement';
 
-export default AddressBook;
+export default AddressBookManagement;

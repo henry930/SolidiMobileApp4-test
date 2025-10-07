@@ -166,10 +166,10 @@ const styleBackButton = {
     iconSize: scaledWidth(27),
     iconColor: colors.greyedOutIcon,
   },
-  text: [
+  text: StyleSheet.flatten([
     text.bold,
     { fontSize: normaliseFont(18) }
-  ],
+  ]),
   view: {}
 };
 
@@ -179,10 +179,10 @@ const styleSettingsButton = {
     iconColor: colors.greyedOutIcon,
   },
   view: {},
-  text: [
+  text: StyleSheet.flatten([
     text.bold,
     { color: 'black' }
-  ]
+  ])
 };
 
 const styleSettingsButtonSelected = {
@@ -190,12 +190,12 @@ const styleSettingsButtonSelected = {
     iconSize: scaledWidth(27),
     iconColor: colors.selectedIcon,
   },
-  view: [
+  view: StyleSheet.flatten([
     layout.fullSize
-  ],
-  text: [
+  ]),
+  text: StyleSheet.flatten([
     text.bold
-  ]
+  ])
 };
 
 

@@ -1,5 +1,5 @@
 // React imports
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Text, TextInput, StyleSheet, View, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { RadioButton, Title } from 'react-native-paper';
@@ -15,7 +15,7 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('AddressBook');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
-let AddressBook = () => {
+let AddressBook = (props) => {
   // Get app state for API access
   let appState = useContext(AppStateContext);
   
@@ -28,7 +28,11 @@ let AddressBook = () => {
     asset: '',
     withdrawAddress: '',
     destinationType: '',
-    exchangeName: ''
+    exchangeName: '',
+    // GBP-specific fields
+    accountName: '',
+    sortCode: '',
+    accountNumber: ''
   });
   let [errorMessage, setErrorMessage] = useState('');
   let [showAssetDropdown, setShowAssetDropdown] = useState(false);
@@ -38,6 +42,32 @@ let AddressBook = () => {
   let [isSubmitting, setIsSubmitting] = useState(false);
   let [submitError, setSubmitError] = useState('');
   let [submitStatus, setSubmitStatus] = useState(''); // New status message
+
+  // Render trigger for state updates
+  let [renderCount, setRenderCount] = useState(0);
+  let triggerRender = (newRenderCount) => setRenderCount(newRenderCount);
+
+  // State change tracking
+  let [stateChangeID, setStateChangeID] = useState(appState.stateChangeID);
+
+  // Setup effect - Initialize API client and other required setup
+  useEffect(() => {
+    console.log('🔧 AddressBook: Component mounted, calling setup...');
+    setup();
+  }, []); // Pass empty array so that this only runs once on mount.
+
+  let setup = async () => {
+    try {
+      console.log('🔧 AddressBook: Calling appState.generalSetup...');
+      await appState.generalSetup({caller: 'AddressBook'});
+      console.log('✅ AddressBook: generalSetup completed successfully');
+      if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      triggerRender(renderCount + 1);
+    } catch (err) {
+      let msg = `AddressBook.setup: Error = ${err}`;
+      console.log('❌ AddressBook setup error:', msg);
+    }
+  };
 
   // Step configuration
   const steps = [
@@ -54,8 +84,9 @@ let AddressBook = () => {
     { id: 'btc', label: 'Bitcoin (BTC)' },
     { id: 'eth', label: 'Ethereum (ETH)' },
     { id: 'usdt', label: 'Tether (USDT)' },
-    { id: 'usdc', label: 'USD Coin (USDC)' },
-    { id: 'bnb', label: 'Binance Coin (BNB)' }
+    { id: 'usdc', label:'USD Coin (USDC)' },
+    { id: 'bnb', label: 'Binance Coin (BNB)' },
+    { id: 'gbp', label: 'British Pound (GBP)' }
   ];
 
   // Handle input changes
@@ -111,14 +142,53 @@ let AddressBook = () => {
         }
         break;
       case 3:
-        console.log('🔍 AddressBook: Validating step 3 - asset:', formData.asset, 'address:', formData.withdrawAddress);
+        console.log('🔍 AddressBook: Validating step 3 - asset:', formData.asset);
         if (!formData.asset) {
           setErrorMessage('Please select an asset to withdraw.');
           return false;
         }
-        if (!formData.withdrawAddress) {
-          setErrorMessage('Please enter the withdraw address.');
-          return false;
+        
+        if (formData.asset === 'gbp') {
+          // Validate GBP bank details
+          console.log('🔍 AddressBook: Validating GBP bank details:', {
+            accountName: formData.accountName,
+            sortCode: formData.sortCode,
+            accountNumber: formData.accountNumber
+          });
+          
+          if (!formData.accountName) {
+            setErrorMessage('Please enter the account holder name.');
+            return false;
+          }
+          if (!formData.sortCode) {
+            setErrorMessage('Please enter the sort code.');
+            return false;
+          }
+          if (!formData.accountNumber) {
+            setErrorMessage('Please enter the account number.');
+            return false;
+          }
+          
+          // Validate sort code format (should be 6 digits, can have dashes)
+          const sortCodeRegex = /^\d{2}-?\d{2}-?\d{2}$/;
+          if (!sortCodeRegex.test(formData.sortCode)) {
+            setErrorMessage('Sort code must be in format 12-34-56 or 123456.');
+            return false;
+          }
+          
+          // Validate account number (should be 6-12 digits)
+          const accountNumberRegex = /^\d{6,12}$/;
+          if (!accountNumberRegex.test(formData.accountNumber)) {
+            setErrorMessage('Account number must be 6-12 digits.');
+            return false;
+          }
+        } else {
+          // Validate crypto address
+          console.log('🔍 AddressBook: Validating crypto address:', formData.withdrawAddress);
+          if (!formData.withdrawAddress) {
+            setErrorMessage('Please enter the withdraw address.');
+            return false;
+          }
         }
         break;
       case 4:
@@ -187,7 +257,7 @@ let AddressBook = () => {
     }
     console.log('✅ AddressBook: AppState available');
     
-    if (!appState.state.apiClient) {
+    if (!appState.apiClient) {
       console.log('❌ AddressBook: No API client available');
       setSubmitError('API client not available');
       return;
@@ -202,46 +272,86 @@ let AddressBook = () => {
       
       log('Address book entry being submitted:', formData);
       
-      // Transform form data to API format
-      setSubmitStatus('🔄 Preparing API data...');
-      let apiPayload = {
-        name: `${formData.firstName} ${formData.lastName}`.trim() || formData.recipient,
-        asset: formData.asset.toUpperCase(),
-        network: formData.asset.toUpperCase(),
-        address: {
-          firstname: formData.firstName || null,
-          lastname: formData.lastName || null,
-          business: formData.exchangeName || null,
-          address: formData.withdrawAddress,
-          dtag: null,
-          vasp: null
-        },
-        thirdparty: formData.destinationType === 'thirdParty'
-      };
-      
       // Determine address type based on destination
       let addressType = 'CRYPTO_UNHOSTED'; // Default
-      if (formData.destinationType === 'exchange') {
+      if (formData.destinationType === 'hosted_wallet') {
+        addressType = 'CRYPTO_HOSTED';
+      } else if (formData.destinationType === 'exchange') {
         addressType = 'CRYPTO_HOSTED';
       } else if (formData.destinationType === 'thirdParty') {
         addressType = 'CRYPTO_UNHOSTED';
+      }
+      
+      // Transform form data to API format (matching test-addressbook.js structure)
+      setSubmitStatus('🔄 Preparing API data...');
+      
+      let apiPayload;
+      if (formData.asset === 'gbp') {
+        // For GBP, use bank account details directly (not nested in address object)
+        apiPayload = {
+          name: `${formData.firstName} ${formData.lastName}`.trim() || formData.recipient,
+          asset: formData.asset.toUpperCase(),
+          network: formData.asset.toUpperCase(),
+          accountName: formData.accountName,
+          sortCode: formData.sortCode.replace(/-/g, ''), // Remove dashes from sort code
+          accountNumber: formData.accountNumber,
+          thirdparty: formData.destinationType === 'thirdParty'
+        };
+      } else {
+        // For crypto assets, use nested address object structure
+        let addressObject = {
+          firstname: (formData.firstName && formData.firstName.trim()) ? formData.firstName.trim() : null,
+          lastname: (formData.lastName && formData.lastName.trim()) ? formData.lastName.trim() : null,
+          business: (formData.exchangeName && formData.exchangeName.trim()) ? formData.exchangeName.trim() : null,
+          address: formData.withdrawAddress,
+          dtag: null,
+          vasp: null
+        };
+        
+        apiPayload = {
+          name: `${formData.firstName} ${formData.lastName}`.trim() || formData.recipient,
+          asset: formData.asset.toUpperCase(),
+          network: formData.asset.toUpperCase(),
+          address: addressObject,
+          thirdparty: formData.destinationType === 'thirdParty'
+        };
       }
       
       console.log('📝 AddressBook: API payload prepared:', apiPayload);
       console.log('📝 AddressBook: Address type:', addressType);
       log('API payload prepared:', apiPayload);
       
-      // Make API call
+      // Make API call using the same pattern as AddressBookManagement
       setSubmitStatus('🌐 Sending to server...');
       console.log('🌐 AddressBook: Making API call...');
       console.log('🌐 AddressBook: API Route:', `addressBook/${formData.asset.toUpperCase()}/${addressType}`);
       console.log('🌐 AddressBook: HTTP Method: POST');
       console.log('🌐 AddressBook: API Payload:', JSON.stringify(apiPayload, null, 2));
       
-      let result = await appState.state.apiClient.privateMethod({
+      // Special logging for GBP requests
+      if (formData.asset === 'gbp') {
+        console.log('🏦 GBP-SPECIFIC DEBUG:');
+        console.log('🏦 Asset:', formData.asset);
+        console.log('🏦 Network:', formData.asset.toUpperCase());
+        console.log('🏦 Address Type:', addressType);
+        console.log('🏦 Bank Details (Direct Payload):');
+        console.log('🏦   - Account Name:', apiPayload.accountName);
+        console.log('🏦   - Sort Code (no dashes):', apiPayload.sortCode);
+        console.log('🏦   - Account Number:', apiPayload.accountNumber);
+        console.log('🏦   - Name:', apiPayload.name);
+        console.log('🏦   - Third Party:', apiPayload.thirdparty);
+        console.log('🏦 Full Route:', `addressBook/${formData.asset.toUpperCase()}/${addressType}`);
+        console.log('🏦 NEW GBP Payload Structure:', JSON.stringify(apiPayload, null, 2));
+      }
+      
+      // Create abort controller for this request
+      const abortController = appState.createAbortController({tag: 'addAddress'});
+      
+      let result = await appState.apiClient.privateMethod({
         httpMethod: 'POST',
         apiRoute: `addressBook/${formData.asset.toUpperCase()}/${addressType}`,
-        params: apiPayload
+        params: apiPayload,
+        abortController
       });
       
       setSubmitStatus('📥 Processing response...');
@@ -261,7 +371,19 @@ let AddressBook = () => {
       console.log('✅ AddressBook: API call completed');
       log('Address book API response:', result);
       
-      if (result && result.success !== false) {
+      // Check for success - API should return success:true OR no error property
+      const isSuccess = result && (result.success === true || (!result.error && !result.message));
+      const hasError = result && (result.error || result.message);
+      
+      console.log('🔍 AddressBook: Success Analysis:');
+      console.log('🔍   - Has result:', !!result);
+      console.log('🔍   - result.success:', result?.success);
+      console.log('🔍   - result.error:', result?.error);
+      console.log('🔍   - result.message:', result?.message);
+      console.log('🔍   - isSuccess:', isSuccess);
+      console.log('🔍   - hasError:', hasError);
+      
+      if (isSuccess && !hasError) {
         setSubmitStatus('✅ Address saved successfully!');
         console.log('✅ AddressBook: SUCCESS - API returned positive response');
         console.log('✅ AddressBook: Success criteria met - showing success alert');
@@ -270,14 +392,29 @@ let AddressBook = () => {
         setSubmitError('');
         console.log('✅ AddressBook: About to show success Alert');
         
+        // Create appropriate success message based on asset type
+        let successMessage;
+        if (formData.asset === 'gbp') {
+          successMessage = `${formData.firstName} ${formData.lastName}'s ${formData.asset.toUpperCase()} bank account has been successfully added to your address book.\n\nAccount: ${formData.accountName}\nSort Code: ${formData.sortCode}\nAccount Number: ${formData.accountNumber}`;
+        } else {
+          successMessage = `${formData.firstName} ${formData.lastName}'s ${formData.asset.toUpperCase()} address has been successfully added to your address book.\n\nAddress: ${formData.withdrawAddress.substring(0, 20)}...`;
+        }
+        
         Alert.alert(
           'Address Added Successfully! ✅',
-          `${formData.firstName} ${formData.lastName}'s ${formData.asset.toUpperCase()} address has been successfully added to your address book.\n\nAddress: ${formData.withdrawAddress.substring(0, 20)}...`,
+          successMessage,
           [{ 
             text: 'OK', 
             onPress: () => {
               console.log('✅ AddressBook: User pressed OK on success alert - resetting form...');
-              // Reset form or navigate back
+              
+              // Clear address book cache for this asset to force refresh
+              if (appState.clearAddressBookCache && typeof appState.clearAddressBookCache === 'function') {
+                console.log('🧹 AddressBook: Clearing address book cache for', formData.asset);
+                appState.clearAddressBookCache(formData.asset.toUpperCase());
+              }
+              
+              // Reset form but DON'T navigate away for debugging
               setCurrentStep(1);
               setFormData({
                 recipient: '',
@@ -286,19 +423,35 @@ let AddressBook = () => {
                 asset: '',
                 withdrawAddress: '',
                 destinationType: '',
-                exchangeName: ''
+                exchangeName: '',
+                // Reset GBP-specific fields
+                accountName: '',
+                sortCode: '',
+                accountNumber: ''
               });
               setSubmitStatus('');
-              console.log('✅ AddressBook: Form reset completed');
+              console.log('✅ AddressBook: Form reset completed - staying on page for debugging');
+              
+              // Call the onAddressAdded callback if provided
+              if (props && props.onAddressAdded) {
+                console.log('✅ AddressBook: Calling onAddressAdded callback');
+                props.onAddressAdded();
+              }
             }
           }]
         );
         console.log('✅ AddressBook: Success Alert displayed');
       } else {
         setSubmitStatus('❌ Failed to save address');
-        console.log('❌ AddressBook: FAILURE - API returned negative response');
+        console.log('❌ AddressBook: FAILURE - API returned error response');
         console.log('❌ AddressBook: Response indicates failure, throwing error');
-        let errorDetails = result?.error?.message || result?.message || 'Failed to add address';
+        
+        // Extract error message from various possible locations
+        let errorDetails = result?.error || result?.message || 'Failed to add address';
+        if (typeof errorDetails === 'string' && errorDetails.startsWith('Error: ')) {
+          errorDetails = errorDetails.substring(7); // Remove "Error: " prefix
+        }
+        
         console.log('❌ AddressBook: Error details:', errorDetails);
         throw new Error(errorDetails);
       }
@@ -415,26 +568,72 @@ let AddressBook = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Withdraw Address */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Withdraw Address</Text>
-              <View style={styles.addressInputContainer}>
-                <TextInput
-                  style={[styles.textInput, styles.addressInput]}
-                  placeholder="Enter wallet address or scan QR code"
-                  value={formData.withdrawAddress}
-                  onChangeText={(value) => handleInputChange('withdrawAddress', value)}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                <TouchableOpacity 
-                  style={styles.qrButton}
-                  onPress={() => setShowQRScanner(true)}
-                >
-                  <Text style={styles.qrButtonText}>📷 QR</Text>
-                </TouchableOpacity>
+            {/* Conditional Address/Bank Details Section */}
+            {formData.asset === 'gbp' ? (
+              // GBP Bank Details Form
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Account Name</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter account holder name"
+                    value={formData.accountName}
+                    onChangeText={(value) => handleInputChange('accountName', value)}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Sort Code</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="12-34-56"
+                    value={formData.sortCode}
+                    onChangeText={(value) => handleInputChange('sortCode', value)}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="numeric"
+                    maxLength={8}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Account Number</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter bank account number"
+                    value={formData.accountNumber}
+                    onChangeText={(value) => handleInputChange('accountNumber', value)}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="numeric"
+                    maxLength={12}
+                  />
+                </View>
+              </>
+            ) : (
+              // Crypto Address Form
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Withdraw Address</Text>
+                <View style={styles.addressInputContainer}>
+                  <TextInput
+                    style={[styles.textInput, styles.addressInput]}
+                    placeholder="Enter wallet address or scan QR code"
+                    value={formData.withdrawAddress}
+                    onChangeText={(value) => handleInputChange('withdrawAddress', value)}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity 
+                    style={styles.qrButton}
+                    onPress={() => setShowQRScanner(true)}
+                  >
+                    <Text style={styles.qrButtonText}>📷 QR</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
             {/* Asset Dropdown Modal */}
             <Modal

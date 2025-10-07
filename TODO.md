@@ -19,6 +19,14 @@
 - [x] Wallet icon not found, please update it. 
 - [x] Legend text should be aligned with other question text. 
 - [x] Assets page, there is apiErrors doesn't exist Assets.js (480:67)
+- [x] In trade page, either Amount input box or You receive box change, will have the calcuation by the live exchange rate to update the other box value. 
+- [x] In Transfer page, address book "+" button, pop the address book page add tab (Do you have the one iPhone features, page pull up from bottom?)
+- [x] If the app has no credentials / authenticated, any page redirect to the login page
+- [x] save the credentials to its cahce, so that even the app reopen, no need to be login again. 
+- [x] Address book list should auto changed according to asset type selected.
+
+
+
 
 ## Latest Updates - September 30, 2025
 - **Title Field Fixed**: Resolved disabled appearance by adding fallback text "Select Title" when field is empty

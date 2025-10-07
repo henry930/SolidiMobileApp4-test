@@ -540,6 +540,16 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // This needs to occur on every page.
       this.state.androidBackButtonHandler = BackHandler.addEventListener("hardwareBackPress", this.state.androidBackButtonAction);
       // Create public API client.
+      console.log('🔍 APPSTATE: Checking API client creation...');
+      console.log('🔍 APPSTATE: this.state.apiClient exists:', !!this.state.apiClient);
+      console.log('🔍 APPSTATE: this.state.apiClient type:', typeof this.state.apiClient);
+      if (this.state.apiClient) {
+        console.log('🔍 APPSTATE: API client keys:', Object.keys(this.state.apiClient));
+        console.log('🔍 APPSTATE: API client domain:', this.state.apiClient.domain);
+        console.log('🔍 APPSTATE: API client apiKey:', this.state.apiClient.apiKey);
+        console.log('🔍 APPSTATE: API client apiSecret:', this.state.apiClient.apiSecret);
+      }
+      
       if (! this.state.apiClient) {
         let {userAgent, domain} = this.state;
         
@@ -548,9 +558,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log(`🌐 Domain: ${domain}`);
         // ===== SIMPLIFIED APPSTATE API CLIENT CREATION END =====
         
-        this.state.apiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
+        const newApiClient = new SolidiRestAPIClientLibrary({userAgent, apiKey:'', apiSecret:'', domain});
         
-        console.log('✅ API CLIENT CREATED SUCCESSFULLY!');
+        // Update state properly to trigger React re-renders
+        this.setState({ apiClient: newApiClient });
+        
+        console.log('✅ API CLIENT CREATED SUCCESSFULLY AND STATE UPDATED!');
+      } else {
+        console.log('⚠️ APPSTATE: API client already exists, skipping creation');
       }
       // Create CoinGecko API client for live crypto data
       if (! this.state.coinGeckoAPI) {
@@ -958,9 +973,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       //data = {'error': 503}; // dev
       if (_.has(data, 'error')) {
         let error = data.error;
-        if (error == 'cannot_parse_data') {
-          this.state.switchToErrorState({message: jd(data)});
-          return 'DisplayedError';
+        
+        // NEW LOGIC: If top-level error is null, treat as success (skip all error processing)
+        if (error === null) {
+          console.log(`✅ [PUBLIC API] Top-level error is null - treating as success for ${apiRoute}`);
+          // Skip all error processing and continue with normal flow
+        } else if (error == 'cannot_parse_data') {
+          // Return the raw data instead of switching to error state
+          console.log(`⚠️ [PUBLIC API] Cannot parse data for ${apiRoute}:`, jd(data));
+          return data;
         } else if (error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
           this.state.stashCurrentState();
@@ -986,28 +1007,29 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           this.state.changeState('Maintenance');
           return 'DisplayedError'; // Indicate we have handled the 503 return code.
         } else {
-          // For any other errors, switch to an error description page.
-          let msg = `Error in ${functionName}: publicMethod (apiRoute=${apiRoute}, params=${misc.jd(params)}):`;
-          if (! _.isString(error)) error = JSON.stringify(error);
-          // For some common errors, add extra information / suggestions.
-          if (error === 'API-Key is missing') {
-            error += '\nProbable cause = using "appState.publicMethod" instead of "appState.privateMethod".';
-          }
-          msg += "\nError = " + String(error);
-          this.state.switchToErrorState({message: msg});
-          return 'DisplayedError';
+          // Return the raw data instead of switching to error state
+          // Let the calling function handle the error appropriately
+          console.log(`⚠️ [PUBLIC API] API error for ${apiRoute}:`, error);
+          console.log(`⚠️ [PUBLIC API] Full response data:`, data);
+          return data;
         }
-        return;
+        
+        // Only return here if error is not null (meaning it's an actual error)
+        if (error !== null) {
+          return;
+        }
       }
       try {
         if (keyNames.length > 0) {
           misc.confirmExactKeys('data', data, keyNames, functionName);
         }
       } catch(err) {
-        let msg = `Error in ${functionName}.publicMethod (apiRoute=${apiRoute}):`;
-        msg += ' ' + String(err);
-        this.state.switchToErrorState({message: msg});
-        return 'DisplayedError';
+        // Log the validation error but return the data instead of switching to error state
+        console.log(`⚠️ [PUBLIC API] Key validation error for ${apiRoute}:`, String(err));
+        console.log(`⚠️ [PUBLIC API] Expected keys:`, keyNames);
+        console.log(`⚠️ [PUBLIC API] Actual data:`, data);
+        // Return the data so calling function can handle it appropriately
+        return data;
       }
       return data;
     }
@@ -1043,9 +1065,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log(`📊 [API RESPONSE DATA]`, data);
       if (_.has(data, 'error')) {
         let error = data.error;
-        if (error == 'cannot_parse_data') {
-          this.state.switchToErrorState({message: jd(data)});
-          return 'DisplayedError';
+        
+        // NEW LOGIC: If top-level error is null, treat as success (skip all error processing)
+        if (error === null) {
+          console.log(`✅ [PRIVATE API] Top-level error is null - treating as success for ${apiRoute}`);
+          // Skip all error processing and continue with normal flow
+        } else if (error == 'cannot_parse_data') {
+          // Return the raw data instead of switching to error state
+          console.log(`⚠️ [PRIVATE API] Cannot parse data for ${apiRoute}:`, jd(data));
+          return data;
         } else if (error == 'timeout') {
           // Future: If we already have a stashed state, this could cause a problem.
           this.state.stashCurrentState();
@@ -1075,26 +1103,29 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           this.state.changeState('Maintenance');
           return 'DisplayedError'; // Indicate we have handled the 503 return code.
         } else {
-          // For any other errors, switch to an error description page.
-          let paramsStr = misc.jd(params);
-          let paramsStr2 = paramsStr.length > 400 ? paramsStr : paramsStr.substring(1, 400) + ' ... ';
-          let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}, params=${paramsStr2}):`;
-          if (! _.isString(error)) error = JSON.stringify(error);
-          msg += ' Error = ' + String(error);
-          this.state.switchToErrorState({message: msg});
-          return 'DisplayedError';
+          // Return the raw data instead of switching to error state
+          // Let the calling function handle the error appropriately
+          console.log(`⚠️ [PRIVATE API] API error for ${apiRoute}:`, error);
+          console.log(`⚠️ [PRIVATE API] Full response data:`, data);
+          return data;
         }
-        return;
+        
+        // Only return here if error is not null (meaning it's an actual error)
+        if (error !== null) {
+          return;
+        }
       }
       try {
         if (keyNames.length > 0) {
           misc.confirmExactKeys('data', data, keyNames, functionName);
         }
       } catch(err) {
-        let msg = `Error in ${functionName}.privateMethod (apiRoute=${apiRoute}):`;
-        msg += ' ' + String(err);
-        this.state.switchToErrorState({message: msg});
-        return 'DisplayedError';
+        // Log the validation error but return the data instead of switching to error state
+        console.log(`⚠️ [PRIVATE API] Key validation error for ${apiRoute}:`, String(err));
+        console.log(`⚠️ [PRIVATE API] Expected keys:`, keyNames);
+        console.log(`⚠️ [PRIVATE API] Actual data:`, data);
+        // Return the data so calling function can handle it appropriately
+        return data;
       }
       return data;
     }
@@ -1122,14 +1153,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log(msg);
       }
 
-      // 🔑 AUTO-LOGIN: In development mode, try to auto-login with stored credentials
-      if (autoLoginWithStoredCredentials && (appTier === 'dev' || appTier === 'stage') && this.state.user.apiCredentialsFound && !this.state.user.isAuthenticated) {
-        log("🔑 Development mode: Attempting auto-login with stored credentials");
+      // 🔑 AUTO-LOGIN: Try to auto-login with stored credentials for all environments
+      if (autoLoginWithStoredCredentials && this.state.user.apiCredentialsFound && !this.state.user.isAuthenticated) {
+        log("🔑 Attempting auto-login with stored credentials");
         try {
           let autoLoginSuccess = await this.autoLoginWithStoredCredentials();
           if (autoLoginSuccess) {
-            log("🔑 Auto-login successful! Going to Transfer page");
-            return this.state.changeState('Transfer');
+            log("🔑 Auto-login successful! User is now authenticated");
+            // Don't change state here - let the normal flow continue to check PIN
+            // This allows the app to proceed with authentication flow properly
           } else {
             log("🔑 Auto-login failed, continuing with normal flow");
           }
@@ -2831,34 +2863,122 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log(`🔄 CONSOLE: sendWithdraw starting - ${volume} ${asset} to ${address} with priority ${priority}`);
       
       try {
+        // Prepare parameters according to API documentation
+        const params = {
+          volume: volume,
+          address: address,
+          priority: priority
+        };
+
+        // Asset-specific parameter handling for GBP
+        if (asset === 'GBP') {
+          // For GBP withdrawals, use account_id instead of address
+          params.account_id = address;
+          delete params.address;
+          delete params.priority; // GBP doesn't use priority
+        }
+        
         log('🔍 sendWithdraw: Calling privateMethod with params:', {
           httpMethod: 'POST',
           apiRoute: `withdraw/${asset}`,
-          params: { volume, address, priority },
+          params: params,
           functionName
         });
         console.log('🔍 CONSOLE: About to call privateMethod for withdraw API');
+        console.log('🌐 CONSOLE: ===== API ENDPOINT DEBUG =====');
+        console.log('🌐 CONSOLE: API Method: POST');
+        console.log('🌐 CONSOLE: API Endpoint: withdraw/' + asset);
+        console.log('🌐 CONSOLE: Full API URL: https://t2.solidi.co/api2/v1/withdraw/' + asset);
+        console.log('📋 CONSOLE: Final API parameters:', JSON.stringify(params, null, 2));
+        console.log('🔧 CONSOLE: Asset type:', asset);
+        console.log('🔧 CONSOLE: Volume:', volume);
+        console.log('🔧 CONSOLE: Address:', address);
+        console.log('🔧 CONSOLE: Priority:', priority);
+        console.log('🔧 CONSOLE: Function name:', functionName);
+        console.log('🌐 CONSOLE: ===== END API ENDPOINT DEBUG =====');
         
         let data = await this.state.privateMethod({
           httpMethod: 'POST',
           apiRoute: `withdraw/${asset}`,
-          params: {
-            volume,
-            address,
-            priority,
-          },
+          params: params,
           functionName,
         });
         
         log('📨 sendWithdraw: Raw response from privateMethod:', data);
+        console.log('📨 CONSOLE: ===== API WITHDRAW RESPONSE DEBUG =====');
         console.log('📨 CONSOLE: Raw response from privateMethod:', data);
+        console.log('📨 CONSOLE: Response type:', typeof data);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(data, null, 2));
+        console.log('📊 CONSOLE: Response keys:', data ? Object.keys(data) : 'null/undefined');
+        if (data && typeof data === 'object') {
+          console.log('🔍 CONSOLE: Response properties:');
+          console.log('🔍 CONSOLE: - Has error:', 'error' in data, '| Value:', data.error);
+          console.log('🔍 CONSOLE: - Has id:', 'id' in data, '| Value:', data.id);
+          console.log('🔍 CONSOLE: - Has data:', 'data' in data, '| Value:', data.data);
+          console.log('🔍 CONSOLE: - Has success:', 'success' in data, '| Value:', data.success);
+          console.log('🔍 CONSOLE: - Has message:', 'message' in data, '| Value:', data.message);
+        }
+        console.log('📨 CONSOLE: ===== END API RESPONSE DEBUG =====');
         log('📊 sendWithdraw: Response type:', typeof data);
         log('📊 sendWithdraw: Response stringified:', JSON.stringify(data, null, 2));
         
-        /* Example data:
+        // COMPREHENSIVE HANDLING FOR WITHDRAW API SUCCESS MESSAGES
+        // The withdraw API can return success messages in various formats
+        if (data && typeof data === 'object') {
+          
+          // 1. Check for success messages in the "error" field (common withdraw API behavior)
+          if (data.error && typeof data.error === 'string') {
+            let errorMessage = data.error.toLowerCase();
+            
+            // Comprehensive success message detection
+            let isSuccessMessage = errorMessage.includes('successfully') || 
+                                 errorMessage.includes('queued') ||
+                                 errorMessage.includes('withdrawal') ||
+                                 errorMessage.includes('processed') ||
+                                 errorMessage.includes('submitted') ||
+                                 errorMessage.includes('completed') ||
+                                 errorMessage.includes('confirmed') ||
+                                 errorMessage.includes('sent') ||
+                                 (errorMessage.includes('request') && errorMessage.includes('accepted'));
+            
+            if (isSuccessMessage) {
+              console.log('✅ sendWithdraw: Detected success message in error field:', data.error);
+              log('✅ sendWithdraw: Converting success message to proper success format:', data.error);
+              // Convert to a proper success response format
+              return {
+                success: true,
+                message: data.error,
+                id: data.id, // Include ID if present
+                originalResponse: data
+              };
+            }
+          }
+          
+          // 2. Check for responses with ID and no error (classic success format)
+          if (data.id && !data.error) {
+            console.log('✅ sendWithdraw: Classic success response with ID:', data.id);
+            log('✅ sendWithdraw: Classic success response with ID:', data.id);
+            // This is already a valid success format, but ensure consistency
+            return {
+              success: true,
+              message: `Withdrawal successful! Transaction ID: ${data.id}`,
+              id: data.id,
+              originalResponse: data
+            };
+          }
+          
+          // 3. Check for explicit success field
+          if (data.success === true) {
+            console.log('✅ sendWithdraw: Explicit success response');
+            log('✅ sendWithdraw: Explicit success response');
+            return data; // Already in correct format
+          }
+        }
+        
+        /* Example successful response:
           {"id": 9094}
         */
-        /* Example error:
+        /* Example error response:
         {
           "error": "ValidationError: Amount (0.00000000) is zero."
         }
@@ -2866,7 +2986,21 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         return data;
       } catch (error) {
         log('❌ sendWithdraw: Exception during API call:', error);
+        console.log('❌ CONSOLE: ===== API ERROR DEBUG =====');
         console.log('❌ CONSOLE: Exception in sendWithdraw:', error);
+        console.log('❌ CONSOLE: Error type:', typeof error);
+        console.log('❌ CONSOLE: Error name:', error.name);
+        console.log('❌ CONSOLE: Error message:', error.message);
+        if (error.response) {
+          console.log('❌ CONSOLE: Error response:', error.response);
+          console.log('❌ CONSOLE: Error response data:', error.response.data);
+          console.log('❌ CONSOLE: Error response status:', error.response.status);
+        }
+        if (error.request) {
+          console.log('❌ CONSOLE: Error request:', error.request);
+        }
+        console.log('❌ CONSOLE: Error stack:', error.stack);
+        console.log('❌ CONSOLE: ===== END API ERROR DEBUG =====');
         log('❌ sendWithdraw: Error message:', error.message);
         console.log('❌ CONSOLE: Error message:', error.message);
         log('❌ sendWithdraw: Error stack:', error.stack);
@@ -2937,6 +3071,124 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.getTransactions = () => {
       return this.state.apiData.transaction;
+    }
+
+
+    this.loadAddressBook = async (asset) => {
+      let fName = 'loadAddressBook';
+      console.log(`📍 ${fName}: Starting for asset:`, asset);
+      
+      try {
+        // Validate asset parameter
+        if (!asset || typeof asset !== 'string') {
+          console.log(`❌ ${fName}: Invalid asset parameter:`, asset);
+          return [];
+        }
+        
+        console.log(`🌐 ${fName}: Loading fresh data from API for ${asset}`);
+        
+        // Call API with proper error handling and timeout
+        let data = await this.state.apiClient.privateMethod({
+          httpMethod: 'POST',
+          apiRoute: `addressBook/${asset.toUpperCase()}`,
+          params: {},
+          abortController: this.createAbortController({tag: `addressBook-${asset}`})
+        });
+        
+        console.log(`� ${fName}: Raw API response:`, data);
+        
+        // Handle API response
+        if (data === 'DisplayedError') {
+          console.log(`❌ ${fName}: API returned DisplayedError`);
+          return [];
+        }
+        
+        if (!data) {
+          console.log(`⚠️ ${fName}: API returned no data`);
+          return [];
+        }
+        
+        // Process successful response
+        let addressList = [];
+        if (Array.isArray(data)) {
+          addressList = data;
+        } else if (data.data && Array.isArray(data.data)) {
+          addressList = data.data;
+        } else if (data.addresses && Array.isArray(data.addresses)) {
+          addressList = data.addresses;
+        } else {
+          console.log(`⚠️ ${fName}: Unexpected response format:`, data);
+          addressList = [];
+        }
+        
+        
+        console.log(`✅ ${fName}: Successfully loaded ${addressList.length} addresses for ${asset}`);
+        return addressList;
+        
+      } catch (error) {
+        console.log(`❌ ${fName}: Exception caught:`, error);
+        console.log(`❌ ${fName}: Error message:`, error.message);
+        
+        return [];
+      }
+    }
+
+
+    this.getAddressBook = (asset) => {
+      // Get cached address book for an asset
+      console.log('📍 getAddressBook: Called for asset:', asset);
+      
+      if (!asset || typeof asset !== 'string') {
+        return [];
+      }
+      
+      const cacheKey = `addressBook_${asset.toUpperCase()}`;
+      const cacheData = this.state.apiData[cacheKey];
+      
+      if (cacheData && cacheData.data) {
+        console.log(`✅ getAddressBook: Found cached data for ${asset} (${cacheData.data.length} addresses)`);
+        return cacheData.data;
+      }
+      
+      console.log(`⚠️ getAddressBook: No cached data for ${asset}`);
+      return [];
+    }
+
+
+    this.getCachedAddressBookAssets = () => {
+      // Get list of assets that have cached address book data
+      console.log('📍 getCachedAddressBookAssets: Called');
+      
+      const assets = [];
+      Object.keys(this.state.apiData).forEach(key => {
+        if (key.startsWith('addressBook_') && this.state.apiData[key].data) {
+          const asset = key.replace('addressBook_', '');
+          assets.push(asset);
+        }
+      });
+      
+      console.log(`✅ getCachedAddressBookAssets: Found cached data for assets:`, assets);
+      return assets;
+    }
+
+
+    this.clearAddressBookCache = (asset = null) => {
+      // Clear address book cache for specific asset or all assets
+      console.log('📍 clearAddressBookCache: Called for asset:', asset);
+      
+      if (asset) {
+        const cacheKey = `addressBook_${asset.toUpperCase()}`;
+        delete this.state.apiData[cacheKey];
+        console.log(`✅ clearAddressBookCache: Cleared cache for ${asset}`);
+      } else {
+        // Clear all address book caches
+        Object.keys(this.state.apiData).forEach(key => {
+          if (key.startsWith('addressBook_')) {
+            delete this.state.apiData[key];
+          }
+        });
+        console.log(`✅ clearAddressBookCache: Cleared all address book caches`);
+      }
     }
 
 
@@ -3246,6 +3498,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       getOrder: this.getOrder,
       loadTransactions: this.loadTransactions,
       getTransactions: this.getTransactions,
+      loadAddressBook: this.loadAddressBook,
+      getAddressBook: this.getAddressBook,
+      getCachedAddressBookAssets: this.getCachedAddressBookAssets,
+      clearAddressBookCache: this.clearAddressBookCache,
       fetchIdentityVerificationDetails: this.fetchIdentityVerificationDetails,
       uploadDocument: this.uploadDocument,
       resetPassword: this.resetPassword,
@@ -3277,6 +3533,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         ticker: {},
         transaction: [],
         historic_prices: {"BTC/GBPX":{"1D":[1,20]}},
+        address_book: {}, // Cache for address book data by asset
       },
       prevAPIData: {
         ticker: {},

@@ -33,6 +33,8 @@ const config = {
         keep_fnames: true,
       },
     },
+    // Disable Hermes to avoid dSYM issues
+    hermesCommand: false,
   },
   resolver: {
     assetExts: assetExts.filter(ext => ext !== 'svg'),

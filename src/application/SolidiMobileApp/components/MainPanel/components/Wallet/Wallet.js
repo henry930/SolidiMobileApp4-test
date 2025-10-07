@@ -1,6 +1,7 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { ScrollView, View, Alert, Platform, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Alert, Platform, TouchableOpacity, Modal, TextInput, Dimensions } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Apple Pay imports
 // import { PaymentRequest, canMakePayments } from 'react-native-payments';
@@ -28,7 +29,7 @@ import AppStateContext from 'src/application/data';
 import { colors, sharedStyles, layoutStyles, cardStyles } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Title } from 'src/components/shared';
-import { StandardButton } from 'src/components/atomic';
+import { StandardButton, AddressBookPicker } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Create local references for commonly used styles
@@ -149,6 +150,15 @@ let Wallet = () => {
   let [isLoading, setIsLoading] = useState(true);
   let [depositAmount, setDepositAmount] = useState('');
   let [withdrawAmount, setWithdrawAmount] = useState('');
+  let [selectedBalanceTab, setSelectedBalanceTab] = useState('crypto'); // 'crypto' or 'fiat'
+  
+  // Withdraw modal state
+  let [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  let [withdrawCurrency, setWithdrawCurrency] = useState('');
+  let [withdrawToAddress, setWithdrawToAddress] = useState('');
+  let [withdrawAmountInput, setWithdrawAmountInput] = useState('');
+  let [isWithdrawing, setIsWithdrawing] = useState(false);
+  
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
@@ -162,11 +172,54 @@ let Wallet = () => {
 
   let setup = async () => {
     try {
-      await appState.generalSetup({caller: 'Wallet'});
+      console.log('🔄 CONSOLE: ===== GENERAL SETUP API CALL =====');
+      console.log('📤 CONSOLE: About to call appState.generalSetup({caller: "Wallet"})...');
+      const generalSetupResult = await appState.generalSetup({caller: 'Wallet'});
+      console.log('📨 CONSOLE: ===== GENERAL SETUP API RESPONSE =====');
+      console.log('📨 CONSOLE: Raw generalSetup response:', generalSetupResult);
+      console.log('📨 CONSOLE: Response type:', typeof generalSetupResult);
+      console.log('📨 CONSOLE: Response JSON:', JSON.stringify(generalSetupResult, null, 2));
+      console.log('📨 CONSOLE: ===== END GENERAL SETUP API RESPONSE =====');
+      
+      // Load ticker data first for exchange rates
+      try {
+        console.log('💱 Wallet: Loading ticker data...');
+        console.log('🔄 CONSOLE: ===== LOAD TICKER API CALL =====');
+        console.log('📤 CONSOLE: About to call appState.loadTicker()...');
+        const loadTickerResult = await appState.loadTicker();
+        console.log('📨 CONSOLE: ===== LOAD TICKER API RESPONSE =====');
+        console.log('📨 CONSOLE: Raw loadTicker response:', loadTickerResult);
+        console.log('📨 CONSOLE: Response type:', typeof loadTickerResult);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(loadTickerResult, null, 2));
+        console.log('📨 CONSOLE: ===== END LOAD TICKER API RESPONSE =====');
+        
+        let currentTickerData = appState.apiData?.ticker || {};
+        console.log('💱 Wallet: Ticker data loaded:', currentTickerData);
+        console.log('💱 CONSOLE: Final ticker data in appState:', currentTickerData);
+        setTickerData(currentTickerData);
+      } catch (error) {
+        log('Wallet: Error loading ticker:', error);
+      }
       
       // Load user balances
       try {
-        await appState.loadBalances();
+        console.log('🏦 Wallet: Loading balances from API...');
+        console.log('🔄 CONSOLE: ===== LOAD BALANCES API CALL =====');
+        console.log('📤 CONSOLE: About to call appState.loadBalances()...');
+        let balanceResult = await appState.loadBalances();
+        console.log('📨 CONSOLE: ===== LOAD BALANCES API RESPONSE =====');
+        console.log('📨 CONSOLE: Raw loadBalances response:', balanceResult);
+        console.log('📨 CONSOLE: Response type:', typeof balanceResult);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(balanceResult, null, 2));
+        console.log('📨 CONSOLE: ===== END LOAD BALANCES API RESPONSE =====');
+        
+        console.log('🏦 Wallet: Balance API result:', balanceResult);
+        console.log('🏦 Wallet: Balance data in appState:', appState.apiData?.balance);
+        console.log('🏦 CONSOLE: Final balance data in appState:', appState.apiData?.balance);
+        
+        // Calculate total portfolio value after loading balances
+        let balanceData = getBalanceData();
+        await calculateTotalPortfolioValue(balanceData);
       } catch (error) {
         log('Wallet: Error loading balances:', error);
       }
@@ -182,22 +235,44 @@ let Wallet = () => {
     }
   };
 
-  // Get balance data with fallback values
+  // Get balance data from real API
   let getBalanceData = () => {
-    let balanceData = appState.apiData?.balances || {};
+    let balanceData = appState.apiData?.balance || {};
+    console.log('🏦 Wallet: Raw balance data from API:', balanceData);
     
-    // Mock data for development/demo purposes
-    if (_.isEmpty(balanceData)) {
-      return {
-        GBP: { available: 1250.75, reserved: 50.25, total: 1301.00 },
-        BTC: { available: 0.05432100, reserved: 0.00000000, total: 0.05432100 },
-        ETH: { available: 1.25431000, reserved: 0.00000000, total: 1.25431000 },
-        EUR: { available: 850.50, reserved: 0.00, total: 850.50 },
-        USD: { available: 1050.25, reserved: 25.75, total: 1076.00 }
+    // Transform API balance data to match UI expectations
+    let transformedData = {};
+    
+    // Get asset info for all available assets
+    let availableAssets = ['GBP', 'BTC', 'ETH', 'EUR', 'USD'];
+    
+    availableAssets.forEach(asset => {
+      let balance = balanceData[asset] || 0;
+      let balanceNumber = 0;
+      
+      console.log(`🏦 Processing ${asset}: raw balance = ${balance} (type: ${typeof balance})`);
+      
+      try {
+        balanceNumber = parseFloat(balance) || 0;
+        console.log(`🏦 ${asset}: parsed balance = ${balanceNumber}`);
+      } catch (error) {
+        log(`Error parsing balance for ${asset}:`, error);
+        balanceNumber = 0;
+      }
+      
+      // For now, treat all balance as available (no reserved amounts from API)
+      // This can be enhanced when API provides detailed balance breakdown
+      transformedData[asset] = {
+        available: balanceNumber,
+        reserved: 0,
+        total: balanceNumber
       };
-    }
+      
+      console.log(`🏦 ${asset}: final transformed data =`, transformedData[asset]);
+    });
     
-    return balanceData;
+    console.log('🏦 Wallet: Transformed balance data for UI:', transformedData);
+    return transformedData;
   };
 
   // Format currency display
@@ -230,6 +305,79 @@ let Wallet = () => {
       ETH: 'Ξ'
     };
     return symbols[currency] || currency;
+  };
+
+  // Get currency icon (using same mapping as AddressBook)
+  let getCurrencyIcon = (currency) => {
+    const iconMap = {
+      'BTC': 'bitcoin',
+      'ETH': 'ethereum', 
+      'GBP': 'currency-gbp',
+      'USD': 'currency-usd',
+      'EUR': 'currency-eur',
+      'LTC': 'litecoin',
+      'BCH': 'bitcoin',
+      'XRP': 'ripple'
+    };
+    return iconMap[currency] || 'currency-btc';
+  };
+
+  // Calculate total portfolio value in GBP using ticker rates
+  let [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
+  let [isCalculatingTotal, setIsCalculatingTotal] = useState(false);
+  let [tickerData, setTickerData] = useState({});
+
+  let calculateTotalPortfolioValue = async (balanceData) => {
+    if (isCalculatingTotal) return;
+    
+    setIsCalculatingTotal(true);
+    let totalInGBP = 0;
+    
+    try {
+      console.log('📊 Calculating total portfolio value using ticker rates...');
+      
+      // Load latest ticker data for exchange rates
+      await appState.loadTicker();
+      let currentTickerData = appState.apiData?.ticker || {};
+      console.log('📊 Ticker data:', currentTickerData);
+      setTickerData(currentTickerData); // Store ticker data for list rendering
+      
+      for (let [currency, balanceInfo] of Object.entries(balanceData)) {
+        let balance = balanceInfo.total || 0;
+        
+        if (balance <= 0) continue;
+        
+        if (currency === 'GBP') {
+          // GBP is base currency
+          totalInGBP += balance;
+          console.log(`📊 ${currency}: ${balance} (base currency)`);
+        } else {
+          try {
+            // Get exchange rate from ticker data
+            let market = `${currency}/GBP`;
+            let rateData = currentTickerData[market];
+            
+            if (rateData && rateData.price) {
+              let rate = parseFloat(rateData.price) || 0;
+              let gbpValue = balance * rate;
+              totalInGBP += gbpValue;
+              console.log(`📊 ${currency}: ${balance} × £${rate} = £${gbpValue.toFixed(2)}`);
+            } else {
+              console.log(`📊 ${currency}: No ticker rate available for ${market}`);
+            }
+          } catch (error) {
+            console.log(`📊 Error getting rate for ${currency}:`, error);
+          }
+        }
+      }
+      
+      console.log(`📊 Total portfolio value: £${totalInGBP.toFixed(2)}`);
+      setTotalPortfolioValue(totalInGBP);
+    } catch (error) {
+      console.log('📊 Error calculating total portfolio value:', error);
+    } finally {
+      setIsCalculatingTotal(false);
+    }
   };
 
   // Handle deposit action
@@ -555,10 +703,20 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       // Ensure deposit details are loaded for the currency
       if (currency === 'GBP') {
         try {
-          await appState.loadDepositDetailsForAsset('GBP');
+          console.log('🔄 CONSOLE: ===== LOAD DEPOSIT DETAILS API CALL =====');
+          console.log('📤 CONSOLE: About to call appState.loadDepositDetailsForAsset("GBP")...');
+          const depositDetailsResult = await appState.loadDepositDetailsForAsset('GBP');
+          console.log('📨 CONSOLE: ===== LOAD DEPOSIT DETAILS API RESPONSE =====');
+          console.log('📨 CONSOLE: Raw loadDepositDetailsForAsset response:', depositDetailsResult);
+          console.log('📨 CONSOLE: Response type:', typeof depositDetailsResult);
+          console.log('📨 CONSOLE: Response JSON:', JSON.stringify(depositDetailsResult, null, 2));
+          console.log('📨 CONSOLE: ===== END LOAD DEPOSIT DETAILS API RESPONSE =====');
+          
           log('Deposit details loaded for GBP');
+          console.log('✅ CONSOLE: Deposit details loaded for GBP');
         } catch (error) {
           log('Note: Could not load deposit details from server, will use fallback values');
+          console.log('⚠️ CONSOLE: Could not load deposit details from server, will use fallback values:', error);
         }
       }
 
@@ -599,17 +757,11 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
   // Handle withdrawal
   let handleWithdraw = (currency) => {
     if (['BTC', 'ETH'].includes(currency)) {
-      Alert.alert(
-        'Crypto Withdrawal',
-        `To withdraw ${currency}, please use the Send feature.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Go to Send', 
-            onPress: () => appState.changeState('Send')
-          }
-        ]
-      );
+      // Open withdraw modal for crypto currencies
+      setWithdrawCurrency(currency);
+      setWithdrawToAddress('');
+      setWithdrawAmountInput('');
+      setShowWithdrawModal(true);
       return;
     }
 
@@ -650,82 +802,260 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     );
   };
 
-  // Render balance card for each currency
-  let renderBalanceCard = (currency, balanceInfo) => {
-    let { available, reserved, total } = balanceInfo;
-    let symbol = getCurrencySymbol(currency);
+  // Handle crypto withdrawal with address book UUID
+  let handleCryptoWithdraw = async () => {
+    if (!withdrawToAddress || !withdrawAmountInput) {
+      Alert.alert('Error', 'Please select an address and enter an amount');
+      return;
+    }
+
+    if (!appState.apiClient) {
+      Alert.alert('Error', 'API client not available');
+      return;
+    }
+
+    try {
+      setIsWithdrawing(true);
+      
+      console.log('🏦 Starting crypto withdrawal...');
+      console.log('🏦 Currency:', withdrawCurrency);
+      console.log('🏦 Address UUID:', withdrawToAddress);
+      console.log('🏦 Amount:', withdrawAmountInput);
+
+      console.log('🔄 CONSOLE: ===== CRYPTO WITHDRAW API CALL =====');
+      console.log('📤 CONSOLE: About to call appState.apiClient.privateMethod for withdraw...');
+      console.log('📤 CONSOLE: API parameters:', {
+        httpMethod: 'POST',
+        apiRoute: 'withdraw',
+        params: {
+          address: withdrawToAddress, // This is the UUID from address book
+          volume: withdrawAmountInput,
+          priority: 'normal'
+        }
+      });
+
+      // Call withdraw API using address book UUID
+      let result = await appState.apiClient.privateMethod({
+        httpMethod: 'POST',
+        apiRoute: 'withdraw',
+        params: {
+          address: withdrawToAddress, // This is the UUID from address book
+          volume: withdrawAmountInput,
+          priority: 'normal' // Can be 'low', 'normal', or 'high'
+        }
+      });
+
+      console.log('📨 CONSOLE: ===== CRYPTO WITHDRAW API RESPONSE =====');
+      console.log('📨 CONSOLE: Raw privateMethod (withdraw) response:', result);
+      console.log('📨 CONSOLE: Response type:', typeof result);
+      console.log('📨 CONSOLE: Response is null:', result === null);
+      console.log('📨 CONSOLE: Response is undefined:', result === undefined);
+      console.log('📨 CONSOLE: Response JSON:', JSON.stringify(result, null, 2));
+      console.log('📨 CONSOLE: ===== END CRYPTO WITHDRAW API RESPONSE =====');
+      
+      console.log('🏦 Withdraw API result:', result);
+      console.log('🏦 ===== DETAILED API RESPONSE ANALYSIS =====');
+      console.log('🏦 Response type:', typeof result);
+      console.log('🏦 Response is null:', result === null);
+      console.log('🏦 Response is undefined:', result === undefined);
+      console.log('🏦 Response stringified:', JSON.stringify(result, null, 2));
+      
+      if (result && typeof result === 'object') {
+        console.log('🏦 Response keys:', Object.keys(result));
+        console.log('🏦 Has error property:', 'error' in result);
+        console.log('🏦 Error value:', result.error);
+        console.log('🏦 Error type:', typeof result.error);
+        console.log('🏦 Error is null:', result.error === null);
+        console.log('🏦 Error is undefined:', result.error === undefined);
+        console.log('🏦 Error stringified:', JSON.stringify(result.error));
+        
+        if (result.error && typeof result.error === 'string') {
+          console.log('🏦 Error string length:', result.error.length);
+          console.log('🏦 Error lowercase:', result.error.toLowerCase());
+          console.log('🏦 Contains "successfully":', result.error.toLowerCase().includes('successfully'));
+          console.log('🏦 Contains "queued":', result.error.toLowerCase().includes('queued'));
+          console.log('🏦 Contains "withdrawal":', result.error.toLowerCase().includes('withdrawal'));
+        }
+        
+        console.log('🏦 Has id property:', 'id' in result);
+        console.log('🏦 ID value:', result.id);
+        console.log('🏦 Has data property:', 'data' in result);
+        console.log('🏦 Data value:', result.data);
+      }
+      console.log('🏦 ===== END DETAILED RESPONSE ANALYSIS =====');
+
+      // Check for success conditions
+      let isSuccess = false;
+      let successMessage = '';
+
+      if (result && result.error === null) {
+        // Top-level error is null - this indicates success
+        isSuccess = true;
+        console.log('🏦 Top-level error is null - treating as success');
+        
+        // Check for success message in data.error
+        if (result?.data?.error && typeof result.data.error === 'string') {
+          console.log('🏦 Using success message from data.error:', result.data.error);
+          successMessage = `Your ${withdrawCurrency} withdrawal of ${withdrawAmountInput} - ${result.data.error}`;
+        } else if (result?.id) {
+          console.log('🏦 Using transaction ID for success message:', result.id);
+          successMessage = `Your ${withdrawCurrency} withdrawal of ${withdrawAmountInput} has been initiated. Transaction ID: ${result.id}`;
+        } else {
+          successMessage = `Your ${withdrawCurrency} withdrawal of ${withdrawAmountInput} has been initiated.`;
+        }
+      }
+
+      if (isSuccess) {
+        Alert.alert(
+          'Withdrawal Initiated',
+          successMessage,
+          [{ text: 'OK', onPress: () => setShowWithdrawModal(false) }]
+        );
+        
+        // Refresh balances
+        await setup();
+      } else {
+        // Handle actual errors (when top-level error is not null)
+        let errorMsg = result?.error || 'Unknown error occurred';
+        console.log('🏦 Withdrawal failed with error (top-level error not null):', errorMsg);
+        console.log('🏦 Full error response:', JSON.stringify(result, null, 2));
+        Alert.alert('Withdrawal Failed', errorMsg);
+      }
+    } catch (error) {
+      console.error('🏦 Withdraw error:', error);
+      Alert.alert('Withdrawal Failed', 'An error occurred while processing your withdrawal');
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+  // Calculate GBP value for any currency using ticker rates
+  let calculateGBPValue = (currency, amount, tickerData) => {
+    console.log(`💱 calculateGBPValue: ${currency}, amount: ${amount}`);
+    console.log(`💱 tickerData available:`, Object.keys(tickerData || {}));
+    console.log(`💱 Full tickerData:`, JSON.stringify(tickerData, null, 2));
+    
+    if (currency === 'GBP') {
+      return amount; // Already in GBP
+    }
+    
+    // Check if amount is valid
+    if (!amount || amount <= 0) {
+      console.log(`💱 Invalid amount for ${currency}: ${amount}`);
+      return 0;
+    }
+    
+    let market = `${currency}/GBP`;
+    let rateData = tickerData[market];
+    
+    console.log(`💱 Looking for market: ${market}`);
+    console.log(`💱 Rate data found:`, rateData);
+    
+    if (rateData && rateData.price) {
+      let rate = parseFloat(rateData.price) || 0;
+      let gbpValue = amount * rate;
+      console.log(`💱 ${currency}: ${amount} × £${rate} = £${gbpValue.toFixed(2)}`);
+      return gbpValue;
+    } else {
+      console.log(`💱 No valid rate found for ${market}. Using fallback rates...`);
+      
+      // Fallback rates for testing (remove in production)
+      let fallbackRates = {
+        'BTC/GBP': 31712.51,
+        'ETH/GBP': 2324.00,
+        'EUR/GBP': 0.85,
+        'USD/GBP': 0.80
+      };
+      
+      let fallbackRate = fallbackRates[market];
+      if (fallbackRate) {
+        let gbpValue = amount * fallbackRate;
+        console.log(`💱 ${currency}: ${amount} × £${fallbackRate} (fallback) = £${gbpValue.toFixed(2)}`);
+        return gbpValue;
+      }
+    }
+    
+    console.log(`💱 No rate available for ${market} - returning 0`);
+    return 0; // No rate available
+  };
+
+  // Render balance list item for each currency
+  let renderBalanceListItem = (currency, balanceInfo, tickerData) => {
+    let { total } = balanceInfo;
+    let icon = getCurrencyIcon(currency);
     let isCrypto = ['BTC', 'ETH'].includes(currency);
     
+    console.log(`🎨 Rendering ${currency}: balanceInfo =`, balanceInfo);
+    console.log(`🎨 ${currency}: total = ${total} (type: ${typeof total})`);
+    console.log(`🎨 ${currency}: tickerData keys =`, Object.keys(tickerData || {}));
+    
+    // Calculate GBP value for this specific currency
+    let gbpValue = calculateGBPValue(currency, total, tickerData || {});
+    console.log(`🎨 ${currency}: calculated GBP value = ${gbpValue}`);
+    
+    // For display: always show GBP value on the right
+    let displayValue = `£${formatCurrency(gbpValue.toString(), 'GBP')}`;
+    console.log(`🎨 ${currency}: final display value = ${displayValue}`);
+    
+    // Show original amount in description for reference
+    let description = '';
+    if (currency === 'GBP') {
+      description = 'Base currency';
+    } else {
+      // Show original amount for all non-GBP currencies
+      if (isCrypto) {
+        description = `${formatCurrency(total, currency)} ${currency}`;
+      } else {
+        description = `${getCurrencySymbol(currency)}${formatCurrency(total, currency)}`;
+      }
+    }
+    
+    // Get icon color exactly like AddressBook
+    let getAssetColor = (assetType) => {
+      switch (assetType) {
+        case 'BTC': return '#f7931a';
+        case 'ETH': return '#627eea';
+        case 'GBP': return '#009639';
+        default: return '#999999'; // mediumGray equivalent
+      }
+    };
+    
     return (
-      <Card key={currency} style={{ marginBottom: 12 }}>
-        <Card.Content style={{ padding: 16 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Avatar.Text 
-                size={40} 
-                label={currency} 
-                style={{ 
-                  backgroundColor: isCrypto ? theme.colors.primary : theme.colors.secondary,
-                  marginRight: 12 
-                }}
-              />
-              <View>
-                <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
-                  {currency}
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  {isCrypto ? 'Cryptocurrency' : 'Fiat Currency'}
-                </Text>
-              </View>
-            </View>
-            <Text variant="headlineSmall" style={{ fontWeight: 'bold', color: theme.colors.primary }}>
-              {symbol}{formatCurrency(total, currency)}
+      <List.Item
+        key={currency}
+        title={currency}
+        description={description}
+        left={props => (
+          <View style={{ 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: theme.colors.surfaceVariant,
+            marginRight: 12
+          }}>
+            <Icon name={icon} size={24} color={getAssetColor(currency)} />
+          </View>
+        )}
+        right={props => (
+          <View style={{ justifyContent: 'center' }}>
+            <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.primary }}>
+              {displayValue}
             </Text>
           </View>
-
-          <Divider style={{ marginVertical: 8 }} />
-
-          <View style={{ marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-              <Text variant="bodyMedium">Available</Text>
-              <Text variant="bodyMedium" style={{ fontWeight: '500' }}>
-                {symbol}{formatCurrency(available, currency)}
-              </Text>
-            </View>
-            {reserved > 0 && (
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Reserved
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  {symbol}{formatCurrency(reserved, currency)}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button
-              mode="contained"
-              onPress={() => handleDeposit(currency)}
-              style={{ flex: 1 }}
-              icon="plus"
-            >
-              Deposit
-            </Button>
-            <Button
-              mode="outlined"
-              onPress={() => handleWithdraw(currency)}
-              style={{ flex: 1 }}
-              icon="minus"
-              disabled={available <= 0}
-            >
-              Withdraw
-            </Button>
-          </View>
-        </Card.Content>
-      </Card>
+        )}
+        style={{ paddingVertical: 8 }}
+      />
     );
+  };
+
+  // Filter balances by type
+  let getFilteredBalances = (balanceData, type) => {
+    return Object.entries(balanceData).filter(([currency]) => {
+      let isCrypto = ['BTC', 'ETH'].includes(currency);
+      return type === 'crypto' ? isCrypto : !isCrypto;
+    });
   };
 
   let balanceData = getBalanceData();
@@ -758,39 +1088,118 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
         {/* Wallet Overview Card */}
         <Card style={{ marginBottom: 20 }}>
           <Card.Content style={{ padding: 20 }}>
-            <Text variant="titleLarge" style={{ fontWeight: 'bold', marginBottom: 8 }}>
+            <Text variant="titleLarge" style={{ fontWeight: 'bold', marginBottom: 16 }}>
               Your Wallet
             </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 16 }}>
-              Manage your deposits, withdrawals, and view your balances across all currencies.
-            </Text>
             
-            {/* Quick Stats */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 8 }}>
-              <View style={{ alignItems: 'center' }}>
-                <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.primary }}>
-                  {Object.keys(balanceData).length}
-                </Text>
-                <Text variant="bodySmall">Currencies</Text>
-              </View>
-              <View style={{ alignItems: 'center' }}>
-                <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.secondary }}>
-                  {Object.values(balanceData).filter(b => b.total > 0).length}
-                </Text>
-                <Text variant="bodySmall">Active</Text>
-              </View>
+            {/* Total Portfolio Value */}
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4 }}>
+                Total Portfolio Value
+              </Text>
+              <Text variant="headlineMedium" style={{ fontWeight: 'bold', color: theme.colors.primary }}>
+                {isCalculatingTotal ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <ProgressBar indeterminate style={{ width: 100, marginRight: 8 }} />
+                    <Text>Calculating...</Text>
+                  </View>
+                ) : (
+                  `£${formatCurrency(totalPortfolioValue.toString(), 'GBP')}`
+                )}
+              </Text>
+            </View>
+            
+            {/* Action Buttons */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <Button
+                mode="contained"
+                onPress={() => {
+                  // Navigate to DepositInstructions page
+                  appState.changeState('DepositInstructions');
+                }}
+                style={{ flex: 1 }}
+                icon="plus"
+              >
+                Deposit
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  Alert.alert(
+                    'Select Currency',
+                    'Choose which currency to withdraw:',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'GBP', onPress: () => handleWithdraw('GBP') },
+                      { text: 'EUR', onPress: () => handleWithdraw('EUR') },
+                      { text: 'USD', onPress: () => handleWithdraw('USD') },
+                      { text: 'BTC', onPress: () => handleWithdraw('BTC') },
+                      { text: 'ETH', onPress: () => handleWithdraw('ETH') }
+                    ]
+                  );
+                }}
+                style={{ flex: 1 }}
+                icon="minus"
+              >
+                Withdraw
+              </Button>
             </View>
           </Card.Content>
         </Card>
 
-        {/* Balance Cards */}
-        <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 12, paddingHorizontal: 4 }}>
-          Your Balances
-        </Text>
-        
-        {Object.entries(balanceData).map(([currency, balanceInfo]) => 
-          renderBalanceCard(currency, balanceInfo)
-        )}
+        {/* Balance Cards with Tabs */}
+        <Card style={{ marginBottom: 12 }}>
+          <Card.Content style={{ padding: 0 }}>
+            <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
+              <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+                Your Balances
+              </Text>
+            </View>
+            
+            {/* Tab Navigation */}
+            <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8 }}>
+              <Button
+                mode={selectedBalanceTab === 'crypto' ? 'contained' : 'outlined'}
+                onPress={() => setSelectedBalanceTab('crypto')}
+                style={{ 
+                  flex: 1, 
+                  marginRight: 8,
+                  borderRadius: 20
+                }}
+                compact
+              >
+                Crypto
+              </Button>
+              <Button
+                mode={selectedBalanceTab === 'fiat' ? 'contained' : 'outlined'}
+                onPress={() => setSelectedBalanceTab('fiat')}
+                style={{ 
+                  flex: 1,
+                  borderRadius: 20
+                }}
+                compact
+              >
+                Fiat
+              </Button>
+            </View>
+            
+            <Divider />
+            
+            {/* Balance List */}
+            <View>
+              {getFilteredBalances(balanceData, selectedBalanceTab).map(([currency, balanceInfo]) => 
+                renderBalanceListItem(currency, balanceInfo, tickerData)
+              )}
+              {getFilteredBalances(balanceData, selectedBalanceTab).length === 0 && (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Text style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
+                    No {selectedBalanceTab} balances to display
+                  </Text>
+                </View>
+              )}
+            </View>
+          </Card.Content>
+        </Card>
 
         {/* Quick Actions */}
         <Card style={{ marginTop: 12 }}>
@@ -864,6 +1273,120 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
           </View>
         </Surface>
       </ScrollView>
+
+      {/* Withdraw Modal */}
+      <Modal
+        visible={showWithdrawModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowWithdrawModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            borderRadius: 12,
+            padding: 20,
+            width: '100%',
+            maxWidth: 400,
+            maxHeight: '80%'
+          }}>
+            <Text variant="titleLarge" style={{ fontWeight: 'bold', marginBottom: 20, textAlign: 'center' }}>
+              Withdraw {withdrawCurrency}
+            </Text>
+
+            {/* Address Selection */}
+            <View style={{ marginBottom: 20 }}>
+              <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                Select Destination Address
+              </Text>
+              <AddressBookPicker
+                selectedAsset={withdrawCurrency}
+                onAddressSelect={(address, selectedAddressData) => {
+                  console.log('🏦 Selected address:', address);
+                  console.log('🏦 Selected address data:', selectedAddressData);
+                  // Use the UUID from the address data for the API call
+                  let addressUUID = selectedAddressData?.id || selectedAddressData?.rawData?.uuid;
+                  console.log('🏦 Address UUID for API:', addressUUID);
+                  setWithdrawToAddress(addressUUID);
+                }}
+                label="Choose from Address Book"
+                placeholder="Select a saved address..."
+              />
+              {withdrawToAddress ? (
+                <Text variant="bodySmall" style={{ marginTop: 8, color: theme.colors.primary }}>
+                  ✓ Address selected
+                </Text>
+              ) : null}
+            </View>
+
+            {/* Amount Input */}
+            <View style={{ marginBottom: 20 }}>
+              <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                Amount to Withdraw
+              </Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: theme.colors.outline,
+                  borderRadius: 8,
+                  padding: 12,
+                  fontSize: 16
+                }}
+                placeholder={`Enter ${withdrawCurrency} amount`}
+                value={withdrawAmountInput}
+                onChangeText={setWithdrawAmountInput}
+                keyboardType="numeric"
+                autoCapitalize="none"
+              />
+            </View>
+
+            {/* Action Buttons */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: 8,
+                  backgroundColor: theme.colors.surfaceVariant,
+                  marginRight: 10
+                }}
+                onPress={() => setShowWithdrawModal(false)}
+                disabled={isWithdrawing}
+              >
+                <Text style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: 8,
+                  backgroundColor: isWithdrawing ? theme.colors.surfaceVariant : theme.colors.primary,
+                  marginLeft: 10
+                }}
+                onPress={handleCryptoWithdraw}
+                disabled={isWithdrawing || !withdrawToAddress || !withdrawAmountInput}
+              >
+                <Text style={{ 
+                  textAlign: 'center', 
+                  color: isWithdrawing ? theme.colors.onSurfaceVariant : theme.colors.onPrimary,
+                  fontWeight: 'bold'
+                }}>
+                  {isWithdrawing ? 'Processing...' : 'Withdraw'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

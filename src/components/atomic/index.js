@@ -7,6 +7,7 @@ import Spinner from './Spinner';
 import PriceGraph from './PriceGraph';
 import QRScanner from '../QRScanner/QRScanner';
 import AddressBookPicker from './AddressBookPicker';
+import AddressBookModal from './AddressBookModal';
 
 export {
   Button,
@@ -17,4 +18,5 @@ export {
   PriceGraph,
   QRScanner,
   AddressBookPicker,
+  AddressBookModal,
 };
