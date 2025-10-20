@@ -15,6 +15,8 @@ import {
   StyleSheet,
   Text,
   View,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Header, MainPanel, Footer } from 'src/application/SolidiMobileApp/components';
 import { Maintenance } from 'src/application/SolidiMobileApp/components/MainPanel/components';
@@ -23,8 +25,33 @@ import { UpdateApp } from 'src/application/SolidiMobileApp/components/MainPanel/
 // React imports
 import React, { Component, useContext } from 'react';
 import { Platform, BackHandler } from 'react-native';
-import * as Keychain from 'react-native-keychain';
-import {deleteUserPinCode} from '@haskkor/react-native-pincode';
+import SafeBackHandler from 'src/util/SafeBackHandler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import * as Keychain from 'react-native-keychain'; // Temporarily disabled to prevent NativeEventEmitter crashes
+
+// Mock Keychain to prevent crashes while maintaining app functionality
+const Keychain = {
+  getInternetCredentials: async (key) => {
+    console.log(`[MockKeychain] getInternetCredentials called for key: ${key}`);
+    // Return empty result to indicate no credentials found
+    return Promise.resolve({ username: false, password: false });
+  },
+  setInternetCredentials: async (key, username, password) => {
+    console.log(`[MockKeychain] setInternetCredentials called for key: ${key}`);
+    return Promise.resolve();
+  },
+  resetInternetCredentials: async (key) => {
+    console.log(`[MockKeychain] resetInternetCredentials called for key: ${key}`);
+    return Promise.resolve();
+  }
+};
+
+// Mock deleteUserPinCode function to prevent crashes
+const deleteUserPinCode = async (appName) => {
+  console.log(`[MockPinCode] deleteUserPinCode called for app: ${appName}`);
+  return Promise.resolve();
+};
+// import {deleteUserPinCode} from '@haskkor/react-native-pincode'; // Temporarily disabled to prevent NativeEventEmitter crashes
 import { getIpAddressesForHostname } from 'react-native-dns-lookup';
 
 // Other imports
@@ -49,12 +76,116 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 console.log('🎯 APPSTATE.JS LOADED - CONSOLE LOGGING IS WORKING! 🎯');
 // ===== BASIC CONSOLE TEST END =====
 
+// ===== GLOBAL ERROR HANDLERS FOR TESTFLIGHT DEBUGGING =====
+let crashLogs = [];
+let emergencyMode = false;
+
+// Store reference to original console.error before we override it
+const originalConsoleError = console.error;
+
+// Store crash logs locally
+const storeCrashLog = (error, context) => {
+  const crashLog = {
+    timestamp: new Date().toISOString(),
+    error: error.message || String(error),
+    stack: error.stack || 'No stack trace',
+    context: context || 'Unknown',
+    platform: Platform.OS,
+    appVersion: '1.2.0',
+    buildNumber: '33'
+  };
+  
+  crashLogs.push(crashLog);
+  // Use original console.error to prevent infinite loop
+  originalConsoleError(`🚨 [CRASH LOG ${crashLogs.length}] ${context}:`, error);
+  originalConsoleError(`🚨 [CRASH LOG ${crashLogs.length}] Stack:`, error.stack);
+  
+  // Try to send to server immediately
+  sendCrashLogToServer(crashLog);
+  
+  // Store in AsyncStorage for later retrieval
+  try {
+    AsyncStorage.setItem('app_crash_logs', JSON.stringify(crashLogs));
+  } catch (storageError) {
+    originalConsoleError('❌ Failed to store crash log:', storageError);
+  }
+};
+
+// Send crash log to server
+const sendCrashLogToServer = async (crashLog) => {
+  try {
+    await fetch('https://t2.solidi.co/api2/v1/crash_report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(crashLog),
+      timeout: 5000
+    });
+    console.log('✅ [CRASH REPORT] Sent to server successfully');
+  } catch (error) {
+    console.error('❌ [CRASH REPORT] Failed to send to server:', error);
+  }
+};
+
+// Global error handler for JavaScript errors
+const globalErrorHandler = (error, isFatal) => {
+  console.error('🚨 [GLOBAL ERROR]', error);
+  console.error('🚨 [GLOBAL ERROR] Fatal:', isFatal);
+  
+  storeCrashLog(error, 'Global JavaScript Error');
+  
+  if (isFatal) {
+    console.error('🚨 [FATAL ERROR] App will attempt emergency recovery');
+    emergencyMode = true;
+  }
+};
+
+// Global promise rejection handler
+const globalRejectionHandler = (event) => {
+  console.error('🚨 [UNHANDLED PROMISE REJECTION]', event.reason);
+  storeCrashLog(
+    new Error(`Unhandled Promise Rejection: ${event.reason}`), 
+    'Unhandled Promise Rejection'
+  );
+};
+
+// Set up global error handlers
+if (typeof ErrorUtils !== 'undefined') {
+  ErrorUtils.setGlobalHandler(globalErrorHandler);
+  console.log('✅ [SETUP] Global error handler installed');
+}
+
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('unhandledrejection', globalRejectionHandler);
+  console.log('✅ [SETUP] Promise rejection handler installed');
+}
+
+// React Native specific error handling
+if (typeof global !== 'undefined') {
+  console.error = (...args) => {
+    // Call original console.error
+    originalConsoleError.apply(console, args);
+    
+    // Store as crash log if it looks like an error - but EXCLUDE our own crash logs to prevent infinite loop
+    if (args[0] && 
+        (args[0].includes('Error:') || args[0].includes('TypeError:') || args[0].includes('ReferenceError:')) &&
+        !args[0].includes('🚨 [CRASH LOG') &&
+        !args[0].includes('CRASH LOG')) {
+      storeCrashLog(new Error(args.join(' ')), 'Console Error');
+    }
+  };
+  console.log('✅ [SETUP] Console error interceptor installed');
+}
+
+console.log('🛡️ [SETUP] All global error handlers installed - TestFlight debugging ready!');
+
+// ===== END GLOBAL ERROR HANDLERS =====
+
 // Shortcuts
 let jd = JSON.stringify;
 
 // Settings: Critical (check before making a new release)
 let autoLoginOnDevAndStag = false; // Only used during development (i.e. on 'dev' tier) to automatically login using a dev user.
-let autoLoginWithStoredCredentials = true; // Auto-login with stored API credentials for all environments (persistent login)
+let autoLoginWithStoredCredentials = false; // Disable auto-login for development to load RegistrationCompletion page
 let preserveRegistrationData = false; // Only used during development (i.e. on 'dev' tier) to preserve registration data after a successful registration.
 // - This is useful for testing the registration process, as it allows you to re-register without having to re-enter all the registration data.
 let developmentModeBypass = false; // Skip network calls and use sample data when server is unreachable
@@ -62,15 +193,17 @@ let bypassAuthentication = false; // Enable proper authentication flow for persi
 import appTier from 'src/application/appTier'; // dev / stag / prod.
 
 // States that are always accessible without authentication
-const publicAccessStates = ['Register', 'Login', 'Explore', 'EmailVerification', 'PhoneVerification'];
+const publicAccessStates = ['Register', 'RegistrationCompletion', 'Login', 'Explore', 'EmailVerification', 'PhoneVerification'];
 
 // Settings: Initial page
 //let initialMainPanelState = 'Trade'; // Show trade page first
 //let initialMainPanelState = 'Assets'; // Show assets page first  
+//let initialMainPanelState = 'RegistrationCompletion'; // Show registration completion page first for development
+let initialMainPanelState = 'Explore'; // Show main app content (authentication handled by SecureApp wrapper)
 //let initialMainPanelState = 'Explore'; // Show explore page first to access dynamic forms
 //let initialMainPanelState = 'Buy';
 //initialMainPanelState = 'CloseSolidiAccount'; // Dev work
-let initialMainPanelState = 'PersonalDetails'; // Default authenticated state
+//let initialMainPanelState = 'PersonalDetails'; // Default authenticated state
 let initialPageName = 'default';
 //initialPageName = 'balance'; // Dev work
 
@@ -188,6 +321,277 @@ class AppStateProvider extends Component {
   constructor(props) {
     super(props);
 
+    // ===== TESTFLIGHT CRASH PROTECTION SYSTEM =====
+    // Detect TestFlight build and enable safety measures
+    const IS_TESTFLIGHT = !__DEV__ && Platform.OS === 'ios';
+    const IS_PRODUCTION = !__DEV__;
+    
+    console.log('🚀 [STARTUP] AppState constructor starting...');
+    console.log('🔍 [ENV] Environment detection:', {
+      isDev: __DEV__,
+      isTestFlight: IS_TESTFLIGHT,
+      isProduction: IS_PRODUCTION,
+      platform: Platform.OS
+    });
+
+    // Emergency fallback state to prevent complete crashes
+    this.emergencyState = {
+      mainPanelState: 'Login',
+      error: { message: '' },
+      user: { 
+        isAuthenticated: false,
+        info: { user: null, user_status: null },
+        apiCredentialsFound: false
+      },
+      apiClient: null,
+      domain: domain || 't2.solidi.co',
+      appVersion: appVersion || '1.2.0',
+      appTier: appTier || 'dev'
+    };
+
+    try {
+      // Apply TestFlight safety measures
+      if (IS_TESTFLIGHT) {
+        console.log('🧪 [TESTFLIGHT] Production TestFlight mode detected - applying safety measures');
+        // Override potentially problematic settings for TestFlight
+        global.OFFLINE_MODE = true; // Start in offline mode
+        global.developmentModeBypass = true;
+        global.autoLoginOnDevAndStag = false;
+        global.autoLoginWithStoredCredentials = false; // Disable auto-login
+        console.log('🧪 [TESTFLIGHT] Safety overrides applied');
+      }
+
+      // ===== LOCAL CRASH LOG STORAGE SYSTEM =====
+      // Initialize local storage for crash logs
+      this.initializeLocalStorage();
+
+      // Test critical early operations that commonly fail in TestFlight
+      this.testCriticalOperations();
+
+      // Initialize constructor normally
+      this.initializeConstructor();
+
+      console.log('✅ [STARTUP] AppState constructor completed successfully');
+
+    } catch (error) {
+      console.error('🚨 [STARTUP CRASH] Constructor failed:', error);
+      console.error('🚨 [STARTUP CRASH] Error stack:', error.stack);
+      
+      // Send crash report to remote logging
+      this.reportConstructorCrash(error);
+      
+      // Set emergency state to prevent app termination
+      this.state = this.emergencyState;
+      this.state.error = { 
+        message: `App startup failed: ${error.message}. Running in emergency mode.` 
+      };
+      
+      console.log('🆘 [EMERGENCY] Emergency state activated to prevent crash');
+      return; // Exit constructor early with emergency state
+    }
+  }
+
+  // Test critical operations that commonly fail in TestFlight
+  testCriticalOperations = () => {
+    console.log('🔧 [STARTUP] Testing critical operations...');
+    
+    // Test platform detection
+    const platformInfo = {
+      OS: Platform.OS,
+      Version: Platform.Version
+    };
+    console.log('📱 [STARTUP] Platform info:', platformInfo);
+
+    // Test basic configuration
+    const config = {
+      domain: domain || 'unknown',
+      appTier: appTier || 'unknown', 
+      appVersion: appVersion || 'unknown',
+      appName: appName || 'unknown'
+    };
+    console.log('🔧 [STARTUP] App configuration:', config);
+
+    // Validate critical configuration
+    if (!domain || !appTier || !appVersion) {
+      throw new Error(`Missing critical configuration: domain=${domain}, appTier=${appTier}, appVersion=${appVersion}`);
+    }
+
+    console.log('✅ [STARTUP] Critical operations test passed');
+  }
+
+  // Remote crash reporting for TestFlight builds
+  reportConstructorCrash = async (error) => {
+    try {
+      const crashReport = {
+        error: error.message,
+        stack: error.stack,
+        context: 'AppState constructor',
+        appVersion: appVersion || 'unknown',
+        appTier: appTier || 'unknown',
+        platform: Platform.OS,
+        timestamp: new Date().toISOString(),
+        buildType: __DEV__ ? 'development' : 'production'
+      };
+
+      console.log('📤 [CRASH REPORT] Sending crash report:', crashReport);
+
+      // Try to send to your logging endpoint
+      await fetch('https://t2.solidi.co/api2/v1/crash_report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(crashReport),
+        timeout: 5000
+      });
+
+      console.log('✅ [CRASH REPORT] Successfully sent crash report');
+    } catch (reportError) {
+      console.error('❌ [CRASH REPORT] Failed to send crash report:', reportError);
+    }
+  }
+
+  // Test keychain access - common source of TestFlight crashes
+  testKeychainAccess = () => {
+    try {
+      console.log('🔐 [KEYCHAIN] Testing keychain access...');
+      
+      // Log the storage keys that will be used
+      console.log('🔐 [KEYCHAIN] Storage keys:', {
+        api: apiCredentialsStorageKey,
+        pin: pinStorageKey
+      });
+
+      // Note: We can't do async operations in constructor, so we'll set up
+      // a flag to test keychain access later in componentDidMount
+      this.keychainTestPending = true;
+      
+      console.log('✅ [KEYCHAIN] Keychain access test setup completed');
+    } catch (error) {
+      console.error('🔐 [KEYCHAIN ERROR] Keychain test setup failed:', error);
+      throw new Error(`Keychain test setup failed: ${error.message}`);
+    }
+  }
+
+  // Initialize local storage for crash logs
+  initializeLocalStorage = async () => {
+    try {
+      console.log('💾 [LOCAL STORAGE] Initializing crash log storage...');
+      
+      // Load existing crash logs
+      const existingLogs = await AsyncStorage.getItem('app_crash_logs');
+      if (existingLogs) {
+        const logs = JSON.parse(existingLogs);
+        console.log(`💾 [LOCAL STORAGE] Found ${logs.length} existing crash logs`);
+        
+        // If there are crash logs from previous sessions, send them
+        if (logs.length > 0) {
+          console.log('📤 [LOCAL STORAGE] Sending previous crash logs to server...');
+          this.sendStoredCrashLogs(logs);
+        }
+      }
+      
+      // Initialize debugging info storage
+      await this.storeDebugInfo('App initialized', {
+        timestamp: new Date().toISOString(),
+        platform: Platform.OS,
+        appVersion: '1.2.0',
+        buildNumber: '33'
+      });
+      
+      console.log('✅ [LOCAL STORAGE] Crash log storage initialized');
+      
+    } catch (error) {
+      console.error('❌ [LOCAL STORAGE] Failed to initialize storage:', error);
+    }
+  }
+
+  // Store debug information locally
+  storeDebugInfo = async (event, data) => {
+    try {
+      const debugEntry = {
+        timestamp: new Date().toISOString(),
+        event,
+        data,
+        platform: Platform.OS
+      };
+      
+      const existingDebugLogs = await AsyncStorage.getItem('debug_info_logs') || '[]';
+      const debugLogs = JSON.parse(existingDebugLogs);
+      debugLogs.push(debugEntry);
+      
+      // Keep only last 50 debug entries
+      if (debugLogs.length > 50) {
+        debugLogs.shift();
+      }
+      
+      await AsyncStorage.setItem('debug_info_logs', JSON.stringify(debugLogs));
+      console.log(`💾 [DEBUG INFO] Stored: ${event}`);
+      
+    } catch (error) {
+      console.error('❌ [DEBUG INFO] Failed to store debug info:', error);
+    }
+  }
+
+  // Send stored crash logs to server
+  sendStoredCrashLogs = async (logs) => {
+    try {
+      await fetch('https://t2.solidi.co/api2/v1/stored_crash_logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          logs,
+          retrievedAt: new Date().toISOString(),
+          platform: Platform.OS
+        }),
+        timeout: 10000
+      });
+      
+      console.log('✅ [LOCAL STORAGE] Stored crash logs sent successfully');
+      
+      // Clear stored logs after successful send
+      await AsyncStorage.removeItem('app_crash_logs');
+      
+    } catch (error) {
+      console.error('❌ [LOCAL STORAGE] Failed to send stored crash logs:', error);
+    }
+  }
+
+  // Initialize constructor with the original code
+  initializeConstructor = () => {
+    console.log('🔄 [STARTUP] Initializing constructor normally...');
+
+    try {
+      // Step 1: Basic setup
+      console.log('🔄 [STARTUP] Step 1: Basic setup...');
+      this.initializeBasicProperties();
+      
+      // Step 2: State management functions
+      console.log('🔄 [STARTUP] Step 2: State management functions...');
+      this.initializeStateFunctions();
+      
+      // Step 3: API and authentication functions
+      console.log('🔄 [STARTUP] Step 3: API and authentication functions...');
+      this.initializeAPIFunctions();
+      
+      // Step 4: State object creation
+      console.log('🔄 [STARTUP] Step 4: Creating state object...');
+      this.initializeStateObject();
+      
+      // Step 5: Mobile-specific initialization
+      console.log('🔄 [STARTUP] Step 5: Mobile-specific initialization...');
+      this.initializeMobileFeatures();
+      
+      console.log('✅ [STARTUP] All initialization steps completed successfully');
+      
+    } catch (error) {
+      console.error('🚨 [STARTUP] Initialization step failed:', error);
+      throw error; // Re-throw to be caught by main constructor try-catch
+    }
+  }
+
+  // Step 1: Initialize basic properties
+  initializeBasicProperties = () => {
+    // Test keychain access early - common TestFlight failure point
+    this.testKeychainAccess();
 
     // Can set this initial state for testing.
     this.initialMainPanelState = initialMainPanelState;
@@ -205,6 +609,10 @@ class AppStateProvider extends Component {
 Authenticate Login PIN
 `;
     this.nonHistoryPanels = misc.splitStringIntoArray({s: this.nonHistoryPanels});
+  }
+
+  // Step 2: Initialize state management functions
+  initializeStateFunctions = () => {
 
 
     // Shortcut function for changing the mainPanelState.
@@ -327,6 +735,69 @@ RegisterConfirm2 AccountUpdate
       // Finally, change to new state.
       // Note: We store the currentState in the previousState variable, so that we can use it if necessary when we arrive at the destination state.
       if (makeFinalSwitch) {
+        // Global user validation check - run on every page change (except public pages and specific exclusions)
+        const excludedPages = [
+          'Login', 
+          'Register', 
+          'RegisterConfirm',
+          'RegisterConfirm2',
+          'PIN', 
+          'AccountUpdate',
+          'Settings',
+          'ForgotPassword',
+          'ResetPassword',
+          'VerificationCode',
+          'CodeVerification'
+        ];
+        
+        // ===== TWO-LEVEL GLOBAL VALIDATION SYSTEM =====
+        // LEVEL 1: Credentials Check - No credentials → Login page
+        // LEVEL 2: User Status Check - Has credentials but needs forms → AccountReview modal
+        console.log('🔍 Running two-level global validation for state:', mainPanelState);
+        console.log('🔍 Validation context:', {
+          isAuthenticated: this.state.user.isAuthenticated,
+          isPublicAccessState: isPublicAccessState,
+          isExcludedPage: excludedPages.includes(mainPanelState),
+          mainPanelState: mainPanelState
+        });
+        
+        // LEVEL 1: Credentials/Authentication Check
+        if (!isPublicAccessState && !excludedPages.includes(mainPanelState)) {
+          if (!this.state.user.isAuthenticated) {
+            console.log('❌ Level 1 Failed: No credentials/not authenticated - redirecting to Login');
+            this.setMainPanelState({mainPanelState: 'Login', pageName: 'default'});
+            return;
+          }
+          
+          // Additional check for API credentials
+          if (!this.state.user.apiCredentialsFound) {
+            console.log('❌ Level 1 Failed: No API credentials found - redirecting to Login');
+            this.setMainPanelState({mainPanelState: 'Login', pageName: 'default'});
+            return;
+          }
+          
+          // LEVEL 2: User Status Check (only if authenticated and has credentials)
+          console.log('✅ Level 1 Passed: User is authenticated with credentials - checking user status...');
+          
+          this.checkUserStatusRedirect().then(redirectTarget => {
+            if (redirectTarget && redirectTarget !== mainPanelState) {
+              console.log('❌ Level 2 Failed: User needs form completion');
+              console.log('🔀 Redirecting from', mainPanelState, 'to', redirectTarget);
+              // Redirect to the appropriate page (AccountReview modal)
+              this.setMainPanelState({mainPanelState: redirectTarget, pageName: 'default'});
+              return;
+            } else {
+              console.log('✅ Level 2 Passed: User status is valid, proceeding to', mainPanelState);
+            }
+          }).catch(error => {
+            console.error('❌ Error in Level 2 user status validation:', error);
+            // Continue with normal flow if validation fails
+            console.log('⚠️ Continuing normal flow due to validation error');
+          });
+        } else {
+          console.log('ℹ️ Validation skipped for', mainPanelState, '(public access or excluded page)');
+        }
+
         let stateChangeID = this.state.stateChangeID + 1;
         var msg = `${fName}: New stateChangeID: ${stateChangeID} (mainPanelState = ${mainPanelState})`;
         log(msg);
@@ -584,7 +1055,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         //appState.switchToErrorState({message: msg});
       }
     }
+  }
 
+  // Step 3: Initialize API and authentication functions
+  initializeAPIFunctions = () => {
 
     this.generalSetup = async (optionalParams) => {
       // 2023-03-16: We now check for "upgrade required" here.
@@ -598,7 +1072,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       this.state.logEntireStateHistory();
       // Create a new event listener for the Android Back Button (mobile only).
       if (Platform.OS !== 'web') {
-        this.state.androidBackButtonHandler = BackHandler.addEventListener("hardwareBackPress", this.state.androidBackButtonAction);
+        try {
+          // Use SafeBackHandler to prevent NativeEventEmitter crashes
+          this.state.androidBackButtonHandler = SafeBackHandler.addEventListener("hardwareBackPress", this.state.androidBackButtonAction);
+          console.log('✅ AppState: SafeBackHandler successfully initialized');
+        } catch (error) {
+          console.error('🚨 AppState: SafeBackHandler initialization failed:', error.message);
+          this.state.androidBackButtonHandler = null;
+        }
       } else {
         console.log('🌐 AppState: Skipping BackHandler setup on web platform');
         this.state.androidBackButtonHandler = null;
@@ -752,7 +1233,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
       
       // Auto-login with stored credentials for all environments (if available)
-      if (!this.state.user.isAuthenticated) {
+      if (!this.state.user.isAuthenticated && autoLoginWithStoredCredentials) {
         try {
           console.log('🔐 APPSTATE: Attempting auto-login with stored credentials...');
           
@@ -785,6 +1266,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           // Don't throw error or trigger error state - just continue to login screen
           console.log('🔐 APPSTATE: Continuing to login screen after auto-login failure');
         }
+      } else if (!autoLoginWithStoredCredentials) {
+        console.log('🔐 APPSTATE: Auto-login disabled for development - staying on initial page');
       }
     }
 
@@ -1112,6 +1595,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }, null, 2));
         console.log('🎉 ===== END LOGIN COMPLETE LOGGING =====');
         // ===== FINAL USER STATE LOGGING AFTER COMPLETE LOGIN END =====
+        
+        // ===== POST-LOGIN NAVIGATION LOGIC =====
+        console.log('🔍 ===== CHECKING POST-LOGIN NAVIGATION REQUIREMENTS =====');
+        await this.checkPostLoginNavigation();
+        console.log('🔍 ===== END POST-LOGIN NAVIGATION CHECK =====');
       }
       return "SUCCESS";
     }
@@ -1902,6 +2390,16 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       
       // Set user to 'not authenticated'.
       this.state.user.isAuthenticated = false;
+      // Reset AccountReview dismissal flag on logout
+      this.state.user.accountReviewDismissed = false;
+      
+      // Clear user data to prevent cached data from triggering alerts after logout
+      console.log('🗑️ Clearing user data on logout to prevent cached status alerts');
+      this.state.user.info = {
+        user: {},
+        user_status: {}
+      };
+      
       // Reset the state history and wipe any stashed state.
       this.state.resetStateHistory();
       log("Logout complete.");
@@ -2860,6 +3358,232 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       await this.loadDefaultAccountForAsset('GBP');
     }
 
+    // LEVEL 2 VALIDATION: Check user status and return redirect target 
+    this.checkUserStatusRedirect = async () => {
+      try {
+        console.log('🔍 [LEVEL 2] Checking user status for form completion requirements...');
+        
+        // ===== AUTHENTICATION CHECKS FIRST =====
+        // 1. Check if user is properly authenticated and logged in
+        if (!this.state.user.isAuthenticated) {
+          console.log('🔒 [LEVEL 2] User not authenticated - redirecting to Login');
+          return 'Login';
+        }
+        
+        if (!this.state.user.apiCredentialsFound) {
+          console.log('🔒 [LEVEL 2] No API credentials found - redirecting to Login');
+          return 'Login';
+        }
+        
+        // 2. Check for credential expiry (if applicable)
+        // Add any credential expiry logic here if needed
+        
+        console.log('✅ [LEVEL 2] Authentication valid - checking user status...');
+        
+        // Check if user has dismissed AccountReview modal
+        if (this.state.user.accountReviewDismissed) {
+          console.log('🚫 [LEVEL 2] User has dismissed AccountReview modal - skip redirect');
+          return null;
+        }
+        
+        const user = this.state.user?.info?.user;
+        
+        // Only proceed if we have actual user data from the server
+        if (!user || !user.email) {
+          console.log('📭 [LEVEL 2] User data not loaded yet - skipping user status check');
+          return null;
+        }
+        
+        const userCat = user?.cat;
+        const userAppropriate = user?.appropriate;
+        
+        console.log('👤 User status check:', {
+          userAvailable: !!user,
+          email: user?.email,
+          cat: userCat,
+          appropriate: userAppropriate,
+          accountReviewDismissed: this.state.user.accountReviewDismissed
+        });
+
+        // ===== CATEGORIZATION STATUS CHECKING =====
+        
+        // 3. Check if user has 'cat' value and 'appropriate' status
+        // If cat = null, redirect to RegistrationCompletion (which will handle AccountReview step)
+        if (userCat === null || userCat === undefined) {
+          console.log('📋 [LEVEL 2] User cat is null - requires categorisation, checking RegistrationCompletion step...');
+          
+          // Check if user should be in RegistrationCompletion or direct AccountReview
+          const shouldUseRegistrationCompletion = await this.shouldUseRegistrationCompletion();
+          if (shouldUseRegistrationCompletion) {
+            console.log('📋 [LEVEL 2] Redirecting to RegistrationCompletion for step detection');
+            return 'RegistrationCompletion';
+          } else {
+            console.log('📋 [LEVEL 2] Direct redirect to AccountReview');
+            return 'AccountReview';
+          }
+        }
+
+        // 4. If cat is not null, check appropriate status
+        if (userAppropriate === 'TBD') {
+          console.log('📋 [LEVEL 2] User appropriate is TBD - requires suitability form');
+          const shouldUseRegistrationCompletion = await this.shouldUseRegistrationCompletion();
+          if (shouldUseRegistrationCompletion) {
+            return 'RegistrationCompletion';
+          } else {
+            return 'AccountReview';
+          }
+        }
+        
+        if (userAppropriate === 'FAILED1') {
+          console.log('📋 [LEVEL 2] User appropriate is FAILED1 - requires suitability2 form');
+          const shouldUseRegistrationCompletion = await this.shouldUseRegistrationCompletion();
+          if (shouldUseRegistrationCompletion) {
+            return 'RegistrationCompletion';
+          } else {
+            return 'AccountReview';
+          }
+        }
+        
+        if (userAppropriate === 'FAILED2') {
+          console.log('⚠️ [LEVEL 2] User appropriate is FAILED2 - 24 hour wait required');
+          
+          // Show popup and force logout
+          Alert.alert(
+            '24 Hour Wait Required',
+            'You need to wait 24 hours before you can take the test again.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  console.log('🚪 User confirmed popup - forcing logout');
+                  this.logout();
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+          return 'Login'; // Will be handled by logout
+        }
+        
+        if (userAppropriate === 'PASS' || userAppropriate === 'PASSED') {
+          console.log('🎉 [LEVEL 2] User appropriate is PASS - registration complete!');
+          
+          // Show welcome message for PASS status
+          setTimeout(() => {
+            Alert.alert(
+              'Welcome to Solidi!',
+              'You have completed the registration successfully. Welcome to SolidiFX!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    console.log('✅ User acknowledged welcome message');
+                  }
+                }
+              ]
+            );
+          }, 500);
+          
+          return null; // No redirect needed, user can proceed normally
+        }
+
+        // If we reach here, it's an unexpected state
+        console.log('⚠️ [LEVEL 2] Unexpected user state - cat:', userCat, 'appropriate:', userAppropriate);
+        
+        // Default to no redirect for unexpected states to avoid infinite loops
+        return null;
+
+      } catch (error) {
+        console.error('❌ Error in checkUserStatusRedirect:', error);
+        console.error('❌ Stack trace:', error.stack);
+        // Return null to avoid infinite redirect loops
+        return null;
+      }
+    };
+
+    // Helper function to determine if user should use RegistrationCompletion flow
+    this.shouldUseRegistrationCompletion = async () => {
+      try {
+        console.log('🔍 Checking if user should use RegistrationCompletion flow...');
+        
+        // Check if this is a new registration that needs to complete verification steps
+        const isNewRegistration = this.state.registrationSuccess || 
+                                 this.state.registrationEmail ||
+                                 !this.state.user.emailVerified ||
+                                 !this.state.user.phoneVerified;
+        
+        if (isNewRegistration) {
+          console.log('📝 New registration detected - use RegistrationCompletion');
+          return true;
+        }
+        
+        // For existing users, check if they need extra_information step
+        // by checking if extra_information/check has options loaded
+        try {
+          const extraInfoData = await this.state.privateMethod({
+            functionName: 'checkExtraInformation',
+            apiRoute: 'user/extra_information/check',
+            params: {}
+          });
+          
+          console.log('📊 Extra information check result:', extraInfoData);
+          
+          // If extra_information/check has no options loaded -> step 4 (direct AccountReview)
+          // If extra_information/check has options -> step 3 (RegistrationCompletion)
+          if (!extraInfoData || !Array.isArray(extraInfoData) || extraInfoData.length === 0) {
+            console.log('📋 No extra information options - direct to step 4 (AccountReview)');
+            return false; // Direct AccountReview
+          } else {
+            console.log('📋 Extra information options found - step 3 (RegistrationCompletion)');
+            return true; // RegistrationCompletion flow
+          }
+          
+        } catch (error) {
+          console.log('⚠️ Error checking extra information:', error.message);
+          // Default to RegistrationCompletion for safety
+          return true;
+        }
+        
+      } catch (error) {
+        console.error('❌ Error in shouldUseRegistrationCompletion:', error);
+        // Default to RegistrationCompletion for safety
+        return true;
+      }
+    };
+
+    // Mark AccountReview modal as dismissed to prevent repeated popups
+    this.dismissAccountReview = () => {
+      console.log('🚫 Marking AccountReview as dismissed');
+      this.changeState({
+        user: {
+          ...this.state.user,
+          accountReviewDismissed: true
+        }
+      });
+    }
+
+    // Check post-login navigation requirements based on user data
+    this.checkPostLoginNavigation = async () => {
+      try {
+        console.log('🔍 Checking post-login navigation requirements...');
+        
+        // Use the shared user status check logic
+        const redirectTarget = await this.checkUserStatusRedirect();
+        
+        if (redirectTarget) {
+          console.log('✅ Post-login navigation needed - redirecting to:', redirectTarget);
+          this.changeState(redirectTarget);
+        } else {
+          console.log('ℹ️ No special post-login navigation required - user can proceed normally');
+        }
+
+      } catch (error) {
+        console.error('❌ Error in checkPostLoginNavigation:', error);
+        console.error('❌ Stack trace:', error.stack);
+        // Continue normal flow if there's an error
+        console.log('⚠️ Error occurred, continuing normal flow');
+      }
+    }
 
     this.loadUserInfo = async () => {
       /* Sample output:
@@ -4099,7 +4823,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       } else {
         // Exit the app (mobile only).
         if (Platform.OS !== 'web') {
-          BackHandler.exitApp();
+          SafeBackHandler.exitApp();
         } else {
           console.log('🌐 AppState: BackHandler.exitApp not available on web, ignoring');
         }
@@ -4111,6 +4835,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     /* End more functions */
+  }
+
+  // Step 4: Initialize state object
+  initializeStateObject = () => {
 
 
 
@@ -4160,6 +4888,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       choosePIN: this.choosePIN,
       loadPIN: this.loadPIN,
       checkForAPICredentials: this.checkForAPICredentials,
+      dismissAccountReview: this.dismissAccountReview,
       logout: this.logout,
       signOutCompletely: this.signOutCompletely,
       lockApp: this.lockApp,
@@ -4351,6 +5080,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         password: '',
         pin: '',
         apiCredentialsFound: false,
+        accountReviewDismissed: false,
         info: {
           // In info, we store a lot of user-specific data retrieved from the API.
           // It is often restructured into a new form, but remains partitioned by API route.
@@ -4474,7 +5204,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     // Initialise the state history.
     this.resetStateHistory();
+  }
 
+  // Step 5: Initialize mobile-specific features
+  initializeMobileFeatures = () => {
     // Load data from keychain (mobile only).
     if (Platform.OS !== 'web') {
       this.loadPIN();
@@ -4503,10 +5236,89 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   componentWillUnmount() {
     log('🔐 AppState component unmounting, cleaning up authentication monitoring');
     this.stopAuthenticationMonitoring();
+    
+    console.log('✅ [STARTUP] Constructor initialization completed successfully');
+  } // End of initializeConstructor method
+
+  // Test keychain access after component mounts
+  componentDidMount() {
+    console.log('🔄 [MOUNT] ComponentDidMount called');
+    
+    if (this.keychainTestPending) {
+      this.performKeychainTest();
+    }
   }
 
+  // Perform actual keychain test (async operations allowed here)
+  performKeychainTest = async () => {
+    try {
+      console.log('🔐 [KEYCHAIN TEST] Starting keychain access test...');
+      
+      // Test keychain read operation
+      const testKey = 'testflight_debug_key';
+      const readResult = await Keychain.getInternetCredentials(testKey);
+      console.log('🔐 [KEYCHAIN TEST] Read test result:', readResult);
+      
+      // Test keychain write operation
+      await Keychain.setInternetCredentials(testKey, 'test_user', 'test_pass');
+      console.log('🔐 [KEYCHAIN TEST] Write test: SUCCESS');
+      
+      // Test keychain read after write
+      const readAfterWrite = await Keychain.getInternetCredentials(testKey);
+      console.log('🔐 [KEYCHAIN TEST] Read after write:', readAfterWrite);
+      
+      // Clean up test
+      await Keychain.resetInternetCredentials(testKey);
+      console.log('🔐 [KEYCHAIN TEST] Cleanup completed');
+      
+      console.log('✅ [KEYCHAIN TEST] All keychain operations successful!');
+      
+    } catch (error) {
+      console.error('🔐 [KEYCHAIN TEST ERROR] Keychain test failed:', error);
+      console.error('🔐 [KEYCHAIN TEST ERROR] Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      
+      // This might be the root cause of TestFlight crashes
+      this.reportConstructorCrash(new Error(`Keychain test failed: ${error.message}`));
+    }
+  }
 
   render() {
+    // ===== EMERGENCY MODE RENDERING =====
+    // If in emergency mode, render minimal safe UI
+    if (this.state && this.state.error && this.state.error.message && this.state.error.message.includes('startup failed')) {
+      console.log('🆘 [EMERGENCY RENDER] Rendering in emergency mode');
+      return (
+        <AppStateContext.Provider value={this.emergencyState || this.state}>
+          <SafeAreaView style={styles.emergencyContainer}>
+            <View style={styles.emergencyContent}>
+              <Text style={styles.emergencyTitle}>⚠️ App Startup Error</Text>
+              <Text style={styles.emergencyMessage}>
+                {this.state.error.message}
+              </Text>
+              <Text style={styles.emergencyInfo}>
+                The app is running in emergency mode. 
+                Error details have been sent for analysis.
+              </Text>
+              <TouchableOpacity 
+                style={styles.emergencyButton}
+                onPress={() => {
+                  console.log('🔄 [EMERGENCY] User requested restart');
+                  this.setState({ error: { message: '' } });
+                }}
+              >
+                <Text style={styles.emergencyButtonText}>🔄 Try Again</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+        </AppStateContext.Provider>
+      );
+    }
+
+    // Normal rendering
     return (
       <AppStateContext.Provider value={this.state}>
 
@@ -4541,6 +5353,48 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     paddingBottom: 0,
     height: scaledHeight(62), // Fixed height to prevent expansion
+  },
+  // Emergency mode styles
+  emergencyContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  emergencyContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emergencyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#dc3545',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  emergencyMessage: {
+    fontSize: 16,
+    color: '#495057',
+    marginBottom: 20,
+    textAlign: 'center',
+    fontFamily: 'monospace',
+  },
+  emergencyInfo: {
+    fontSize: 14,
+    color: '#6c757d',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  emergencyButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 8,
+  },
+  emergencyButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 })
 

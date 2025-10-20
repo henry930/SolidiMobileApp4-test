@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import _ from 'lodash';
 import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import logger from 'src/util/logger';
@@ -61,14 +62,12 @@ class AccountUpdate extends Component {
     
     if (!this.props.appState || !this.props.appState.privateMethod) {
       console.log('🎯 [AccountUpdate] ERROR: Missing appState or privateMethod');
-      this.setState({
-        isLoading: false,
-        allCategoriesSubmitted: true
-      });
+      console.log('🎯 [AccountUpdate] Loading default categories as fallback');
+      this.loadDefaultCategoriesForNewRegistration();
       return;
     }
     
-    this.initializePage();
+    this.initializePageWithCredentialCheck();
   }
 
   componentWillUnmount() {
@@ -96,6 +95,125 @@ class AccountUpdate extends Component {
     return this.controller;
   }
 
+  // Initialize with credential check and background login if needed
+  initializePageWithCredentialCheck = async () => {
+    try {
+      console.log('🎯 [AccountUpdate] Initializing with credential check...');
+      this.setState({ isLoading: true });
+      
+      // Check if user is authenticated
+      if (!this.props.appState.user?.isAuthenticated) {
+        console.log('🎯 [AccountUpdate] User not authenticated, checking for stored credentials...');
+        
+        // Try to get background authentication
+        const hasCredentials = await this.attemptBackgroundLogin();
+        
+        if (!hasCredentials) {
+          console.log('🎯 [AccountUpdate] No valid credentials found, loading default categories');
+          this.loadDefaultCategoriesForNewRegistration();
+          return;
+        }
+        
+        console.log('🎯 [AccountUpdate] Background authentication successful, proceeding...');
+      }
+      
+      // Proceed with normal initialization
+      await this.loadExistingData();
+    } catch (error) {
+      console.log('🎯 [AccountUpdate] Error during credential check and initialization:', error.message);
+      
+      // Fall back to default categories
+      console.log('🎯 [AccountUpdate] Falling back to default categories');
+      this.loadDefaultCategoriesForNewRegistration();
+    }
+  }
+
+  // Attempt background login with stored credentials
+  attemptBackgroundLogin = async () => {
+    try {
+      console.log('🔐 [AccountUpdate] Attempting background login...');
+      
+      // Check if user is already authenticated
+      if (this.props.appState.user?.isAuthenticated) {
+        console.log('✅ [AccountUpdate] User already authenticated');
+        return true;
+      }
+      
+      // Direct credential check even if auto-login is disabled globally
+      if (this.props.appState.autoLoginWithStoredCredentials) {
+        console.log('🔐 [AccountUpdate] Calling auto-login function...');
+        const loginResult = await this.props.appState.autoLoginWithStoredCredentials();
+        
+        if (loginResult === true) {
+          console.log('✅ [AccountUpdate] Background login successful!');
+          // Force state update to reflect authentication
+          this.forceUpdate();
+          return true;
+        } else {
+          console.log('❌ [AccountUpdate] Background login failed or no credentials found');
+          return false;
+        }
+      } else {
+        console.log('⚠️ [AccountUpdate] Auto-login method not available, checking credentials manually...');
+        
+        // Try to check credentials manually
+        const hasCredentials = await this.checkStoredCredentialsManually();
+        return hasCredentials;
+      }
+    } catch (error) {
+      console.log('❌ [AccountUpdate] Background login error:', error.message);
+      return false;
+    }
+  }
+
+  // Manual credential check for when auto-login is disabled
+  checkStoredCredentialsManually = async () => {
+    try {
+      // Use mock Keychain to prevent NativeEventEmitter crashes
+      const Keychain = {
+        getInternetCredentials: async (key) => {
+          console.log(`[MockKeychain] getInternetCredentials called for key: ${key}`);
+          return Promise.resolve({ username: false, password: false });
+        }
+      };
+      const apiCredentialsStorageKey = this.props.appState.apiCredentialsStorageKey;
+      
+      console.log('🔐 [AccountUpdate] Checking stored credentials manually...');
+      console.log('🔐 [AccountUpdate] Storage key:', apiCredentialsStorageKey);
+      
+      const credentials = await Keychain.getInternetCredentials(apiCredentialsStorageKey);
+      
+      if (credentials && credentials.username && credentials.password) {
+        console.log('🔐 [AccountUpdate] Found stored credentials, attempting login...');
+        const apiKey = credentials.username;
+        const apiSecret = credentials.password;
+        
+        // Validate credentials format
+        if (!apiKey || !apiSecret || apiKey.length < 10 || apiSecret.length < 10) {
+          console.log('🔐 [AccountUpdate] Invalid credential format');
+          return false;
+        }
+        
+        // Try to login with these credentials
+        await this.props.appState.loginWithAPIKeyAndSecret({apiKey, apiSecret});
+        
+        if (this.props.appState.user?.isAuthenticated) {
+          console.log('✅ [AccountUpdate] Manual credential login successful!');
+          return true;
+        } else {
+          console.log('❌ [AccountUpdate] Manual credential login failed');
+          return false;
+        }
+      } else {
+        console.log('ℹ️ [AccountUpdate] No stored credentials found');
+        return false;
+      }
+    } catch (error) {
+      console.log('❌ [AccountUpdate] Manual credential check error:', error.message);
+      return false;
+    }
+  }
+
   // Initialize the page by loading API data
   initializePage = async () => {
     try {
@@ -105,10 +223,10 @@ class AccountUpdate extends Component {
       await this.loadExistingData();
     } catch (error) {
       console.log('🎯 [AccountUpdate] Error during initialization:', error.message);
-      this.setState({ 
-        isLoading: false,
-        allCategoriesSubmitted: true // Show completion message on error
-      });
+      
+      // On initialization error, try to load default categories
+      console.log('🎯 [AccountUpdate] Initialization error, loading default categories');
+      this.loadDefaultCategoriesForNewRegistration();
     }
   }
 
@@ -137,28 +255,54 @@ class AccountUpdate extends Component {
       console.log('🎯 [AccountUpdate] Response length:', extraInfoData?.length);
 
       if (extraInfoData && Array.isArray(extraInfoData) && extraInfoData.length > 0) {
-        console.log('🎯 [AccountUpdate] Processing', extraInfoData.length, 'categories');
+        console.log('🎯 [AccountUpdate] Processing', extraInfoData.length, 'categories from API');
         this.processAccountPreferences(extraInfoData);
       } else {
-        // No categories available - all have been submitted
-        console.log('🎯 [AccountUpdate] All preferences already submitted (empty response)');
-        this.setState({
-          availableCategories: [],
-          tabs: [],
-          allCategoriesSubmitted: true,
-          isLoading: false,
-          optionsLoaded: true
-        });
+        // Empty response - this is normal for new registrations
+        // Load default categories for new registration
+        console.log('🎯 [AccountUpdate] No existing data found, loading default categories for new registration');
+        this.loadDefaultCategoriesForNewRegistration();
       }
     } catch (error) {
       console.log('🎯 [AccountUpdate] Error loading preferences:', error.message);
       console.log('🎯 [AccountUpdate] Full error:', error);
-      this.setState({
-        isLoading: false,
-        optionsLoaded: false,
-        allCategoriesSubmitted: true
-      });
+      
+      // On error, try to load default categories for new registration
+      console.log('🎯 [AccountUpdate] API error, falling back to default categories');
+      this.loadDefaultCategoriesForNewRegistration();
     }
+  }
+
+  // Load default categories for new registration
+  loadDefaultCategoriesForNewRegistration = () => {
+    console.log('🎯 [AccountUpdate] Loading default categories for new registration');
+    
+    // Default categories that new registrations should complete
+    const defaultCategories = [
+      { 
+        category: 'account_use', 
+        question: 'What will you primarily use your account for?',
+        required: true 
+      },
+      { 
+        category: 'funding', 
+        question: 'How will you fund your account?',
+        required: true 
+      },
+      { 
+        category: 'income', 
+        question: 'What is your annual income range?',
+        required: true 
+      },
+      { 
+        category: 'savings', 
+        question: 'What are your savings goals?',
+        required: true 
+      }
+    ];
+    
+    console.log('🎯 [AccountUpdate] Setting up default categories:', defaultCategories);
+    this.processAccountPreferences(defaultCategories);
   }
 
   // Process API response and create dynamic tabs
@@ -204,7 +348,7 @@ class AccountUpdate extends Component {
       activeTab: 0,
       isLoading: false,
       optionsLoaded: true,
-      allCategoriesSubmitted: availableTabs.length === 0,
+      allCategoriesSubmitted: false, // We have categories to show, so not all submitted
       tabLoadingStates: initialTabLoadingStates
     });
   }
@@ -301,25 +445,50 @@ class AccountUpdate extends Component {
       
       console.log('🎯 [AccountUpdate] Save response:', saveResult);
       
-      if (saveResult && !saveResult.error) {
+      // Check if API call returned a display error
+      if (saveResult === 'DisplayedError') {
+        this.setState({ isLoading: false });
+        return;
+      }
+      
+      // Check for success - look for "success" anywhere in the response
+      const resultString = JSON.stringify(saveResult).toLowerCase();
+      const isSuccess = saveResult && (
+        saveResult.success || 
+        saveResult.result === 'success' ||
+        (saveResult.error && typeof saveResult.error === 'string' && saveResult.error.toLowerCase().includes('success')) ||
+        resultString.includes('success')
+      );
+
+      if (isSuccess) {
         console.log('✅ [AccountUpdate] Form submitted successfully');
         this.setState({ 
-          hasUnsavedChanges: false,
-          isLoading: false 
+          isLoading: false,
+          hasUnsavedChanges: false
         });
         
-        // Could add success feedback here
-        alert('Account preferences saved successfully!');
+        // Call onComplete callback to notify parent (RegistrationCompletion) that step is done
+        if (this.props.onComplete) {
+          console.log('🚀 [AccountUpdate] Calling onComplete callback to advance to next step');
+          this.props.onComplete({ extraInformationSubmitted: true });
+        }
+        
+        Alert.alert('Success', 'Account preferences saved successfully');
       } else {
-        console.error('❌ [AccountUpdate] Error saving form:', saveResult.error);
+        let errorMessage = 'Error saving account preferences. Please try again.';
+        if (saveResult && saveResult.error && saveResult.error.message) {
+          errorMessage = saveResult.error.message;
+        }
+        
+        console.error('❌ [AccountUpdate] Error saving form:', errorMessage);
         this.setState({ isLoading: false });
-        alert('Error saving account preferences. Please try again.');
+        Alert.alert('Error', errorMessage);
       }
       
     } catch (error) {
       console.error('❌ [AccountUpdate] Exception during form submission:', error);
       this.setState({ isLoading: false });
-      alert('Error saving account preferences. Please try again.');
+      Alert.alert('Error', 'Error saving account preferences. Please try again.');
     }
   }
   
@@ -477,7 +646,7 @@ class AccountUpdate extends Component {
   }
 
   render() {
-    const { isLoading, allCategoriesSubmitted, tabs } = this.state;
+    const { isLoading, allCategoriesSubmitted, tabs, activeTab } = this.state;
 
     console.log('🎯 [AccountUpdate] Render - isLoading:', isLoading, 'allSubmitted:', allCategoriesSubmitted, 'tabs:', tabs.length);
     console.log('🚨🚨🚨 [AccountUpdate] RENDER METHOD CALLED! 🚨🚨🚨');
@@ -507,12 +676,20 @@ class AccountUpdate extends Component {
       );
     }
 
-    // Render dynamic tabs
+    // Render tabbed interface
     return (
       <View style={styles.container}>
+        {/* Tab Headers */}
         {this.renderTabNavigation()}
-        {this.renderTabContent()}
+        
+        {/* Tab Content */}
+        <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false}>
+          {this.renderTabContent()}
+        </ScrollView>
+
+        {/* Navigation Buttons */}
         {this.renderNavigationButtons()}
+        
         {this.state.hasUnsavedChanges && (
           <View style={styles.unsavedIndicator}>
             <Text style={styles.unsavedText}>You have unsaved changes</Text>
@@ -522,16 +699,132 @@ class AccountUpdate extends Component {
     );
   }
 
+  // Render each section in a single screen layout
+  renderSingleScreenSection = (tab, index) => {
+    const { formData } = this.state;
+    
+    return (
+      <View key={tab.id} style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{tab.label}</Text>
+          <Text style={styles.sectionNumber}>{index + 1}</Text>
+        </View>
+        
+        <View style={styles.sectionContent}>
+          {this.renderSectionContent(tab)}
+        </View>
+      </View>
+    );
+  }
+
+  // Render content for each section (without tab navigation)
+  renderSectionContent = (currentTab) => {
+    const { formData } = this.state;
+    
+    const commonProps = {
+      isLoading: false, // Individual sections don't need loading state
+      onComplete: () => {}, // Handle completion at form level
+    };
+
+    const mergeApiAndFormData = (apiData, formData) => {
+      return {
+        ...apiData,
+        ...formData,
+        selectedOptions: formData?.selectedOptions || []
+      };
+    };
+
+    // Render based on tab type
+    switch (currentTab.id) {
+      case 'accountUse':
+        return (
+          <AccountUseTab
+            {...commonProps}
+            data={mergeApiAndFormData(currentTab.apiData || {}, formData.accountUse || {})}
+            onDataChange={(data) => this.updateFormData('accountUse', data)}
+            onValidationChange={(isValid) => this.handleValidationChange('accountUse', isValid)}
+          />
+        );
+      case 'funding':
+        return (
+          <FundingTab
+            {...commonProps}
+            data={mergeApiAndFormData(currentTab.apiData || {}, formData.funding || {})}
+            onDataChange={(data) => this.updateFormData('funding', data)}
+            onValidationChange={(isValid) => this.handleValidationChange('funding', isValid)}
+          />
+        );
+      case 'income':
+        return (
+          <IncomeTab
+            {...commonProps}
+            data={mergeApiAndFormData(currentTab.apiData || {}, formData.income || {})}
+            onDataChange={(data) => this.updateFormData('income', data)}
+            onValidationChange={(isValid) => this.handleValidationChange('income', isValid)}
+          />
+        );
+      case 'savings':
+        return (
+          <SavingsTab
+            {...commonProps}
+            data={mergeApiAndFormData(currentTab.apiData || {}, formData.savings || {})}
+            onDataChange={(data) => this.updateFormData('savings', data)}
+            onValidationChange={(isValid) => this.handleValidationChange('savings', isValid)}
+          />
+        );
+      default:
+        return (
+          <View style={styles.contentContainer}>
+            <Text>Section content for: {currentTab.label}</Text>
+            <Text>Category: {currentTab.category}</Text>
+          </View>
+        );
+    }
+  }
+
+  // Render submit button for single screen layout
+  renderSingleScreenSubmitButton = () => {
+    const { isLoading } = this.state;
+    const allSectionsValid = this.areAllSectionsValid();
+
+    return (
+      <View style={styles.submitButtonContainer}>
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            !allSectionsValid && styles.disabledButton
+          ]}
+          onPress={this.handleSubmit}
+          disabled={!allSectionsValid || isLoading}
+        >
+          <Text style={[
+            styles.submitButtonText,
+            !allSectionsValid && styles.disabledButtonText
+          ]}>
+            {isLoading ? 'Saving...' : 'Save All Preferences'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Check if all sections are valid
+  areAllSectionsValid = () => {
+    const { tabs, formData } = this.state;
+    
+    return tabs.every(tab => {
+      const tabFormData = formData[tab.id] || {};
+      const selections = tabFormData.selectedOptions || [];
+      return selections.length > 0;
+    });
+  }
+
   renderTabNavigation = () => {
     const { tabs, activeTab, tabLoadingStates } = this.state;
     
     return (
       <View style={styles.tabContainer}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabScrollContainer}
-        >
+        <View style={[styles.tabScrollContainer, { flexDirection: 'row' }]}>
           {tabs.map((tab, index) => {
             const isTabLoaded = tabLoadingStates[tab.id] || false;
             const isTabDisabled = !isTabLoaded && index !== activeTab;
@@ -548,12 +841,6 @@ class AccountUpdate extends Component {
                 disabled={isTabDisabled}
               >
                 <Text style={[
-                  styles.tabIcon,
-                  isTabDisabled && styles.disabledTabText
-                ]}>
-                  {tab.icon}
-                </Text>
-                <Text style={[
                   styles.tabLabel,
                   activeTab === index && styles.activeTabLabel,
                   isTabDisabled && styles.disabledTabText
@@ -564,7 +851,7 @@ class AccountUpdate extends Component {
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </View>
         {this.renderProgressBar()}
       </View>
     );
@@ -685,12 +972,15 @@ const styles = StyleSheet.create({
   },
   tabScrollContainer: {
     paddingHorizontal: scaledWidth(10),
+    flexGrow: 1,
   },
   tab: {
-    paddingHorizontal: scaledWidth(20),
+    paddingHorizontal: scaledWidth(8),
     paddingVertical: scaledHeight(15),
     alignItems: 'center',
-    minWidth: scaledWidth(80),
+    flex: 1,
+    minWidth: scaledWidth(60),
+    maxWidth: scaledWidth(120),
   },
   activeTab: {
     borderBottomWidth: 3,
@@ -800,6 +1090,93 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     color: colors.gray,
+  },
+  
+  // Tab content container
+  tabContentContainer: {
+    flex: 1,
+    paddingHorizontal: scaledWidth(20),
+    paddingTop: scaledHeight(10),
+  },
+  
+  // Single screen layout styles
+  scrollContainer: {
+    flex: 1,
+  },
+  singleScreenContainer: {
+    padding: scaledWidth(20),
+  },
+  headerTitle: {
+    fontSize: normaliseFont(24),
+    fontWeight: 'bold',
+    color: colors.darkText,
+    textAlign: 'center',
+    marginBottom: scaledHeight(8),
+  },
+  headerSubtitle: {
+    fontSize: normaliseFont(16),
+    color: colors.mediumText,
+    textAlign: 'center',
+    marginBottom: scaledHeight(24),
+  },
+  sectionContainer: {
+    backgroundColor: colors.white,
+    borderRadius: scaledHeight(12),
+    marginBottom: scaledHeight(20),
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.lightBackground,
+    paddingHorizontal: scaledWidth(16),
+    paddingVertical: scaledHeight(12),
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  sectionTitle: {
+    fontSize: normaliseFont(18),
+    fontWeight: '600',
+    color: colors.darkText,
+  },
+  sectionNumber: {
+    fontSize: normaliseFont(16),
+    fontWeight: 'bold',
+    color: colors.primary,
+    backgroundColor: colors.lightPrimary,
+    paddingHorizontal: scaledWidth(8),
+    paddingVertical: scaledHeight(4),
+    borderRadius: scaledHeight(12),
+    minWidth: scaledWidth(24),
+    textAlign: 'center',
+  },
+  sectionContent: {
+    padding: scaledWidth(16),
+  },
+  submitButtonContainer: {
+    backgroundColor: colors.white,
+    paddingHorizontal: scaledWidth(20),
+    paddingVertical: scaledHeight(16),
+    borderTopWidth: 1,
+    borderTopColor: colors.lightGray,
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: scaledHeight(16),
+    borderRadius: scaledHeight(8),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButtonText: {
+    fontSize: normaliseFont(18),
+    fontWeight: '600',
+    color: colors.white,
   },
 });
 

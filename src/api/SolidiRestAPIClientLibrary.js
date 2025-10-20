@@ -246,10 +246,10 @@ export default class SolidiRestAPIClientLibrary {
     };
     // Add in basic authentication headers
     // As of:2024/04/22 these are not used (API skips the Basic Auth block)
-    let basicAuthEnabled = 0;
+    let basicAuthEnabled = 1;
     // Quick hack check on domain names - we shouldn't do this long term.
     if (basicAuthEnabled && this.domain!='www.solidi.co' && this.domain!='api.solidi.co') {
-        let authstr = '<basicauth_username>:<password>';
+        let authstr = 'dev: ';
         let authbuf = Buffer.from(authstr);
         let digest = authbuf.toString('base64');
         headers['Authorization'] = 'Basic '+digest;

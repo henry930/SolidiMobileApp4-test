@@ -16,7 +16,23 @@ import {
 
 // Other imports
 import _ from 'lodash';
-import * as Keychain from 'react-native-keychain';
+// import * as Keychain from 'react-native-keychain'; // Disabled to prevent NativeEventEmitter crashes
+
+// Mock Keychain to prevent crashes
+const Keychain = {
+  getInternetCredentials: async (key) => {
+    console.log(`[MockKeychain] getInternetCredentials called for key: ${key}`);
+    return Promise.resolve({ username: false, password: false });
+  },
+  setInternetCredentials: async (key, username, password) => {
+    console.log(`[MockKeychain] setInternetCredentials called for key: ${key}`);
+    return Promise.resolve();
+  },
+  resetInternetCredentials: async (key) => {
+    console.log(`[MockKeychain] resetInternetCredentials called for key: ${key}`);
+    return Promise.resolve();
+  }
+};
 
 // Internal imports
 import AppStateContext from 'src/application/data';

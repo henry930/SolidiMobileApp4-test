@@ -1,32 +1,14 @@
-// React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Platform, Alert } from 'react-native';
-
-// Material Design imports
-import {
-  Card,
-  Text,
-  TextInput,
-  Button,
-  useTheme,
-  Title,
-} from 'react-native-paper';
-
-// Other imports
+import { StyleSheet, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Card, Text, TextInput, Button, useTheme, Title } from 'react-native-paper';
 import _ from 'lodash';
-
-// Import logger functionality
 import logger from 'src/util/logger';
 let logger2 = logger.extend('EmailVerification');
 let { log, jd } = logger.getShortcuts(logger2);
-
-// Import miscellaneous functionality
 import misc from 'src/util/misc';
-
-// Import app context
 import AppStateContext from 'src/application/data';
 
-export default function EmailVerification() {
+export default function EmailVerification({ onComplete }) {
   const appState = useContext(AppStateContext);
   const [verificationCode, setVerificationCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -38,7 +20,6 @@ export default function EmailVerification() {
 
   useEffect(() => {
     log('Email verification page mounted');
-    // Auto-focus on verification code input
     setTimeout(() => {
       if (verificationInput.current) {
         verificationInput.current.focus();
@@ -50,18 +31,16 @@ export default function EmailVerification() {
 
   const handleVerificationCodeChange = (code) => {
     setVerificationCode(code);
-    
-    // Auto-submit when 6 digits are entered (but add a small delay)
     if (code.length === 6) {
       setTimeout(() => {
         handleVerifyEmail();
-      }, 500); // 500ms delay to allow user to see the button
+      }, 500);
     }
   };
 
   const handleVerifyEmail = async () => {
-    if (!verificationCode || verificationCode.length < 4) {
-      Alert.alert('Invalid Code', 'Please enter at least a 4-digit verification code');
+    if (!verificationCode) {
+      Alert.alert('Invalid Code', 'Please enter again');
       return;
     }
 
@@ -71,38 +50,49 @@ export default function EmailVerification() {
     try {
       log(`Verifying email with code: ${verificationCode}`);
       
-      // Call email verification API
       const result = await appState.publicMethod({
         functionName: 'verifyEmail',
         apiRoute: `confirm_email_and_send_mobile_code/${registrationEmail}/${verificationCode}`,
         params: {}
       });
 
-      if (result && !result.error) {
+      log('📧 [EmailVerification] API response:', result);
+
+      if (result === 'DisplayedError') {
+        setUploadMessage('');
+        setIsVerifying(false);
+        return;
+      }
+
+      // Check for success - same logic as PhoneVerification
+      const resultString = JSON.stringify(result).toLowerCase();
+      const isSuccess = result && (
+        result.success || 
+        result.result === 'success' ||
+        (result.error && typeof result.error === 'string' && result.error.toLowerCase().includes('success')) ||
+        resultString.includes('success')
+      );
+
+      if (isSuccess) {
         log('✅ Email verification successful');
         setUploadMessage('Email verified successfully!');
+        appState.emailVerified = true;
         
-        Alert.alert('Email Verified', 'Your email has been successfully verified!', [
-          {
-            text: 'Continue',
-            onPress: () => {
-              // Redirect to phone verification
-              appState.setMainPanelState({
-                mainPanelState: 'PhoneVerification',
-                pageName: 'default'
-              });
-            }
-          }
-        ]);
+        if (onComplete) {
+          onComplete({ emailVerified: true });
+        } else {
+          appState.setMainPanelState({
+            mainPanelState: 'PhoneVerification',
+            pageName: 'default'
+          });
+        }
       } else {
-        log(`❌ Email verification failed: ${result.error}`);
+        log('❌ Email verification failed - no success indicator found');
         setUploadMessage('');
-        Alert.alert('Verification Failed', result.error || 'Invalid verification code');
       }
     } catch (error) {
       log(`❌ Email verification error: ${error.message}`);
       setUploadMessage('');
-      Alert.alert('Error', 'Failed to verify email. Please try again.');
     } finally {
       setIsVerifying(false);
     }
@@ -113,25 +103,28 @@ export default function EmailVerification() {
     setResendTimer(60);
     
     try {
-      // Resend verification email
       const result = await appState.publicMethod({
         functionName: 'resendEmailVerification',
         apiRoute: 'resend_email_verification',
-        params: {
-          email: registrationEmail
-        }
+        params: { email: registrationEmail }
       });
 
-      if (result && !result.error) {
+      // Use same success detection pattern as PhoneVerification
+      const resultString = JSON.stringify(result).toLowerCase();
+      const resendSuccess = result && (
+        result.success || 
+        result.result === 'success' ||
+        (result.error && typeof result.error === 'string' && result.error.toLowerCase().includes('success')) ||
+        resultString.includes('success')
+      );
+
+      if (resendSuccess) {
         Alert.alert('Code Sent', 'A new verification code has been sent to your email');
-      } else {
-        Alert.alert('Error', 'Failed to resend verification code');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to resend verification code');
+      // No error alert since success might be in error field
     }
 
-    // Start countdown timer
     const timer = setInterval(() => {
       setResendTimer(prevTimer => {
         const newTimer = prevTimer - 1;
@@ -148,44 +141,41 @@ export default function EmailVerification() {
   const materialTheme = useTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: materialTheme.colors.background }}>
-      <Title style={styles.title}>Verify Your Email</Title>
-      
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }}>
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text style={styles.subtitle}>
-              We've sent a 6-digit verification code to:
-            </Text>
-            <Text style={styles.email}>{registrationEmail}</Text>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Verification Code</Text>
-              <TextInput
-                ref={verificationInput}
-                mode="outlined"
-                value={verificationCode}
-                onChangeText={handleVerificationCodeChange}
-                placeholder="Enter 6-digit code"
-                keyboardType="numeric"
-                maxLength={6}
-                autoCapitalize="none"
-                autoCorrect={false}
-                disabled={isVerifying}
-                style={styles.input}
-              />
-            </View>
-
-            {uploadMessage ? (
-              <Text style={styles.uploadMessage}>{uploadMessage}</Text>
-            ) : null}
-
-            {verificationCode.length > 0 && (
-              <Text style={styles.codeInfo}>
-                Code length: {verificationCode.length}/6 {verificationCode.length >= 4 ? '✓ Ready to verify' : '- Enter at least 4 digits'}
-              </Text>
-            )}
-
+    <ScrollView 
+      style={{ flex: 1, backgroundColor: materialTheme.colors.background }}
+      contentContainerStyle={styles.container}
+    >
+      <Card style={styles.card}>
+        <Card.Content>
+          <Title style={styles.title}>Verify Your Email</Title>
+          <Text style={styles.description}>
+            Enter the verification code sent to: {registrationEmail}
+          </Text>
+          
+          <View style={styles.inputContainer}>
+            <TextInput
+              ref={verificationInput}
+              mode="outlined"
+              label="Verification Code"
+              value={verificationCode}
+              onChangeText={handleVerificationCodeChange}
+              keyboardType="numeric"
+              maxLength={6}
+              autoCapitalize="none"
+              autoCorrect={false}
+              disabled={isVerifying}
+              style={styles.input}
+              dense={false}
+              contentStyle={styles.inputContent}
+              outlineStyle={styles.inputOutline}
+              theme={{
+                colors: {
+                  primary: '#2196F3',
+                  onSurfaceVariant: '#666',
+                }
+              }}
+            />
+            
             <Button
               mode="contained"
               onPress={handleVerifyEmail}
@@ -194,99 +184,102 @@ export default function EmailVerification() {
             >
               {isVerifying ? 'Verifying...' : 'Verify Email'}
             </Button>
+          </View>
 
+          {uploadMessage ? (
+            <Text style={styles.statusMessage}>{uploadMessage}</Text>
+          ) : null}
+
+          <View style={styles.resendContainer}>
             <TouchableOpacity
-              style={styles.resendButton}
               onPress={handleResendCode}
               disabled={resendDisabled}
+              style={[styles.resendButton, resendDisabled && styles.disabledButton]}
             >
-              <Text style={[styles.resendButtonText, resendDisabled && styles.resendButtonTextDisabled]}>
+              <Text style={[styles.resendText, resendDisabled && styles.disabledText]}>
                 {resendDisabled ? `Resend in ${resendTimer}s` : 'Resend Code'}
               </Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => {
-                appState.setMainPanelState({
-                  mainPanelState: 'Register',
-                  pageName: 'default'
-                });
-              }}
-            >
-              <Text style={styles.backButtonText}>← Back to Registration</Text>
-            </TouchableOpacity>
-          </Card.Content>
-        </Card>
-      </ScrollView>
-    </View>
+          </View>
+        </Card.Content>
+      </Card>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 20,
+  container: {
+    flexGrow: 1,
+    padding: 20,
+    justifyContent: 'center',
   },
   card: {
     marginVertical: 10,
+    elevation: 4,
   },
-  subtitle: {
-    fontSize: 16,
+  title: {
     textAlign: 'center',
-    marginBottom: 5,
+    marginBottom: 10,
   },
-  email: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  description: {
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
+    color: '#666',
   },
   inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     marginBottom: 20,
   },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
   input: {
-    textAlign: 'center',
-    fontSize: 18,
-    letterSpacing: 2,
+    flex: 1,
+    height: 56,
   },
-  uploadMessage: {
+  inputContent: {
     textAlign: 'center',
-    marginVertical: 10,
-    fontSize: 14,
+    fontSize: 20,
+    letterSpacing: 4,
+    fontWeight: '600',
+    color: '#333',
   },
-  codeInfo: {
-    textAlign: 'center',
-    marginVertical: 5,
-    fontSize: 12,
-    opacity: 0.7,
+  inputOutline: {
+    borderWidth: 2,
+    borderRadius: 8,
   },
   verifyButton: {
-    marginVertical: 15,
+    minWidth: 120,
+    height: 56,
+    justifyContent: 'center',
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statusMessage: {
+    textAlign: 'center',
+    marginVertical: 10,
+    color: '#2196F3',
+    fontWeight: '500',
+  },
+  resendContainer: {
+    alignItems: 'center',
+    marginTop: 20,
   },
   resendButton: {
-    alignItems: 'center',
-    marginBottom: 30,
+    padding: 12,
   },
-  resendButtonText: {
+  resendText: {
+    color: '#2196F3',
     fontSize: 16,
-    textDecorationLine: 'underline',
+    fontWeight: '500',
   },
-  resendButtonTextDisabled: {
-    textDecorationLine: 'none',
+  disabledButton: {
     opacity: 0.5,
   },
-  backButton: {
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 16,
+  disabledText: {
+    color: '#999',
   },
 });

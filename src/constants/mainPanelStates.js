@@ -37,7 +37,9 @@ export const mainPanelStates = [
   'Maintenance',
   'SendSuccessful',
   'Authenticate',
+  // 'BiometricAuth', // Removed - now handled by SecureApp wrapper
   'Register',
+  'RegistrationCompletion',
   'EmailVerification',
   'PhoneVerification',
   'SupportTools',

@@ -37,7 +37,7 @@ export const WebDocumentPicker = {
           const results = await Promise.all(files.map(async (file) => {
             // Convert file to base64 if needed
             const arrayBuffer = await file.arrayBuffer();
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+            const base64 = Buffer.from(arrayBuffer).toString('base64');
             
             return {
               uri: URL.createObjectURL(file),

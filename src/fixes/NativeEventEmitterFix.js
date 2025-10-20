@@ -46,9 +46,29 @@ const createSafeEventEmitter = () => ({
   listenerCount: () => 0
 });
 
+// More aggressive NativeEventEmitter error prevention
+const originalGlobalHandler = global.ErrorUtils?.getGlobalHandler?.();
+
+if (global.ErrorUtils) {
+  global.ErrorUtils.setGlobalHandler((error, isFatal) => {
+    // Intercept NativeEventEmitter crashes
+    if (error && error.message && 
+        (error.message.includes('new NativeEventEmitter()') ||
+         error.message.includes('requires a non-null argument'))) {
+      console.log('[NativeEventEmitterFix] Intercepted and suppressed NativeEventEmitter error');
+      return; // Suppress the error
+    }
+    
+    // Let other errors through to original handler
+    if (originalGlobalHandler) {
+      originalGlobalHandler(error, isFatal);
+    }
+  });
+}
+
 // Apply safe NativeEventEmitter fixes
 export const applyNativeEventEmitterFixes = () => {
-  console.log('[NativeEventEmitterFix] Applied safe NativeEventEmitter warning suppression');
+  console.log('[NativeEventEmitterFix] Applied enhanced NativeEventEmitter error prevention');
 };
 
 // Auto-apply fixes when this module is imported

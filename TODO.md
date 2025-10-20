@@ -36,9 +36,7 @@
   - **Auto-Login**: Automatically logs users back in using stored keychain credentials
   - **Enhanced Security**: Validates credential format and handles expired/invalid credentials
   - **User Choice**: Logout dialog offers both regular logout and complete sign out options
-- Set the index page to login page if unauthenticated, otherwise, set to the Trade page
-- In Deposit page, the list of bank, using icon instead of the whole row list. Also, use Grid list, 6 items per row. 
-
+- Use iOS PIN system on the app, when open the app or too long idle. 
 
 ## Latest Updates - October 8, 2025
 - **Transfer Address Book Modal**: Replaced dropdown with slide-up modal (`AddressBookSelectionModal`) for better mobile UX, matching the add address modal behavior

@@ -1,210 +1,279 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
+import _ from 'lodash';
 import AppStateContext from 'src/application/data';
-import DynamicQuestionnaireForm from 'src/components/Questionnaire/DynamicQuestionnaireForm';
+import { DynamicQuestionnaireForm } from 'src/components/Questionnaire';
 
-const AccountReview = ({ navigation }) => {
+const AccountReview = ({ navigation, onComplete }) => {
   const appState = useContext(AppStateContext);
-  const [formData, setFormData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [formId, setFormId] = useState(null);
+  const [shouldBlock, setShouldBlock] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Form UUID for Self Categorisation
-  const SELF_CATEGORISATION_UUID = '12312cc5-a949-49ed-977e-c81fecc2476f';
-
-  // Load form data on component mount
-  useEffect(() => {
-    loadCategorisationForm();
-  }, []);
-
-  const loadCategorisationForm = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('=== AccountReview Component Debug ===');
-      console.log('Loading form with UUID:', SELF_CATEGORISATION_UUID);
-      console.log('Using complete hard-coded form data for testing');
-      console.log('Form will have 3 pages: intro, investortype, complete');
-      
-      // Complete Self Categorisation form data with all pages
-      const hardCodedFormData = {
-        "formtitle": "Self Categorisation",
-        "formintro": "",
-        "formid": "customer-categorisation",
-        "uuid": "12312cc5-a949-49ed-977e-c81fecc2476f",
-        "js": "finprom-categorisation.js",
-        "submittext": "Submit",
-        "submiturl": "/submitquestions",
-        "startpage": "intro",
-        "pages": [
-          {
-            "pageid": "intro",
-            "nextbutton": "Continue",
-            "prevbutton": null,
-            "nextpage": "investortype",
-            "questions": [
-              {
-                "type": "legend",
-                "id": "intro_text",
-                "label": "The UK Financial Conduct Authority (FCA) requires that we ask you some additional questions to better understand your financial circumstances and serve you.\n\nThe FCA prescribes three investor categories. Most customers will fit into the Restricted Investor category - please don't let the name put you off - this category is sufficient for most customers.\n\nThe questions are about your current circumstances so you can disregard anything you have told us previously.\n\nThis categorisation is entirely self declared - Solidi will not be asking for proof / documentation of these statements.",
-                "prepend-icon": "",
-                "placeholder": "",
-                "guidance": "",
-                "answer": ""
-              }
-            ]
-          },
-          {
-            "pageid": "investortype",
-            "nextbutton": "Continue",
-            "nextpage": "complete",
-            "questions": [
-              {
-                "type": "legend",
-                "id": "investor_title",
-                "label": "Which type of investor are you?",
-                "prepend-icon": "",
-                "placeholder": "",
-                "guidance": "Please choose the investor type which best describes you.",
-                "answer": ""
-              },
-              {
-                "type": "legend",
-                "id": "investor_subtitle",
-                "label": "The UK Financial Conduct Authority (FCA) divide investors into three categories. Please choose the investor type which best describes you.",
-                "prepend-icon": "",
-                "placeholder": "",
-                "guidance": "",
-                "answer": ""
-              },
-              {
-                "type": "radio",
-                "id": "investor_category",
-                "label": "",
-                "values": [
-                  {
-                    "id": "restricted",
-                    "text": "Restricted investor - You've invested less than 10% of your net worth in high risk assets (such as Crypto) over the last 12 months, and you intend to limit such investments to less than 10% in the year ahead."
-                  },
-                  {
-                    "id": "hnw",
-                    "text": "High-Net-Worth investor - You've an annual income of at least £100,000 or assets of at least £250,000."
-                  },
-                  {
-                    "id": "certified",
-                    "text": "Certified-Sophisticated investor - You're received a certificate in the last three years from an authorised firm confirming that you understand the risks of crypto investing."
-                  },
-                  {
-                    "id": "none",
-                    "text": "None of the above - If none of the above apply then unfortunately the FCA will not allow us to provide you with an account."
-                  }
-                ],
-                "answer": ""
-              }
-            ]
-          },
-          {
-            "pageid": "complete",
-            "nextbutton": "Submit Categorisation",
-            "nextpage": null,
-            "questions": [
-              {
-                "type": "legend",
-                "id": "complete_title",
-                "label": "Categorisation Complete",
-                "prepend-icon": "",
-                "placeholder": "",
-                "guidance": "",
-                "answer": ""
-              },
-              {
-                "type": "legend",
-                "id": "complete_text",
-                "label": "Thank you for completing the self-categorisation questionnaire. Please review your selections and click Submit to finalize your investor categorisation.\n\nThis information helps us ensure we provide appropriate investment services in compliance with FCA regulations.",
-                "prepend-icon": "",
-                "placeholder": "",
-                "guidance": "",
-                "answer": ""
-              },
-              {
-                "type": "textarea",
-                "id": "additional_comments",
-                "label": "Additional Comments (Optional)",
-                "prepend-icon": "",
-                "placeholder": "Any additional information you'd like to provide...",
-                "guidance": "Please provide any additional comments or information that may be relevant to your investor categorisation.",
-                "answer": ""
-              }
-            ]
-          }
-        ]
-      };
-      
-      console.log('Hard-coded form data loaded successfully');
-      console.log('Form pages:', hardCodedFormData.pages.length);
-      console.log('Page IDs:', hardCodedFormData.pages.map(p => p.pageid));
-      setFormData(hardCodedFormData);
-      
-    } catch (err) {
-      console.error('Error loading categorisation form:', err);
-      setError(err.message || 'Failed to load form');
-      Alert.alert('Error', 'Failed to load categorisation form. Please try again.');
-    } finally {
-      setLoading(false);
+  // Determine which form to load based on user status
+  const getFormIdForUser = () => {
+    // Try multiple sources for user data
+    const userInfo = appState?.userInfo || appState?.user?.info?.user;
+    
+    // First check if userInfo exists at all
+    if (!userInfo) {
+      console.log('=== AccountReview: userInfo not available yet ===');
+      console.log('Available appState properties:', Object.keys(appState || {}));
+      console.log('appState.userInfo:', appState?.userInfo);
+      console.log('appState.user:', appState?.user);
+      console.log('appState.user.info:', appState?.user?.info);
+      console.log('appState.user.info.user:', appState?.user?.info?.user);
+      return null; // Still loading
     }
+    
+    const cat = userInfo?.cat;
+    const appropriate = userInfo?.appropriate;
+    const lastcat = userInfo?.lastcat;
+    
+    console.log('=== AccountReview Component - Dynamic Form Selection ===');
+    console.log('User cat:', cat, '(type:', typeof cat, ')');
+    console.log('User appropriate:', appropriate, '(type:', typeof appropriate, ')');
+    console.log('User lastcat:', lastcat, '(type:', typeof lastcat, ')');
+    console.log('Full userInfo:', JSON.stringify(userInfo, null, 2));
+    
+    // ===== DYNAMIC FORM LOADING BASED ON CAT AND APPROPRIATE VALUES =====
+    
+    // 1. If cat = null, load finprom-categorisation.json
+    if (cat === null || cat === undefined) {
+      console.log('✅ Cat is null/undefined - loading finprom-categorisation');
+      return 'finprom-categorisation';
+    }
+    
+    // 2. If cat is not null, check appropriate value
+    if (appropriate === 'TBD') {
+      console.log('✅ Appropriate is TBD - loading finprom-suitability');
+      return 'finprom-suitability';
+    }
+    
+    if (appropriate === 'FAILED1') {
+      console.log('✅ Appropriate is FAILED1 - loading finprom-suitability2');
+      return 'finprom-suitability2';
+    }
+    
+    if (appropriate === 'FAILED2') {
+      console.log('⚠️ Appropriate is FAILED2 - checking lastcat timing for 24-hour rule');
+      
+      if (lastcat) {
+        const lastCatDate = new Date(lastcat);
+        const now = new Date();
+        const hoursDiff = (now - lastCatDate) / (1000 * 60 * 60);
+        
+        console.log('⏰ Hours since lastcat:', hoursDiff);
+        
+        if (hoursDiff >= 24) {
+          console.log('✅ 24+ hours passed - loading finprom-suitability');
+          return 'finprom-suitability';
+        } else {
+          console.log('❌ Less than 24 hours - blocking access');
+          const hoursRemaining = Math.ceil(24 - hoursDiff);
+          Alert.alert(
+            'Wait Required',
+            `You need to wait ${hoursRemaining} more hours before you can take the assessment again.`,
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  if (navigation && navigation.goBack) {
+                    navigation.goBack();
+                  } else {
+                    // Fallback redirect to main app if navigation not available
+                    appState.setMainPanelState({
+                      mainPanelState: 'Assets',
+                      pageName: 'default'
+                    });
+                  }
+                }
+              }
+            ]
+          );
+          return null; // Block access
+        }
+      } else {
+        // No lastcat date, allow suitability
+        console.log('⚠️ No lastcat date but FAILED2 status - loading finprom-suitability');
+        return 'finprom-suitability';
+      }
+    }
+    
+    if (appropriate === 'PASS' || appropriate === 'PASSED') {
+      console.log('🎉 Appropriate is PASS/PASSED - user has completed assessment successfully');
+      console.log('✅ Showing registration completion message');
+      setTimeout(() => {
+        Alert.alert(
+          'Registration Complete!',
+          'You have completed the registration successfully. Welcome to SolidiFX!',
+          [
+            {
+              text: 'Continue to App',
+              onPress: () => {
+                if (navigation && navigation.goBack) {
+                  navigation.goBack();
+                } else {
+                  // Redirect to main app
+                  appState.setMainPanelState({
+                    mainPanelState: 'Assets',
+                    pageName: 'default'
+                  });
+                }
+              }
+            }
+          ]
+        );
+      }, 100);
+      
+      return null; // Don't render form while showing completion
+    }
+    
+    // If we reach here, it's an unexpected state - default to suitability form
+    console.log('⚠️ Unexpected state - cat:', cat, 'appropriate:', appropriate, '- defaulting to finprom-suitability');
+    return 'finprom-suitability';
   };
 
-  const handleFormSubmit = (submissionData) => {
-    console.log('Account Review Form Submitted:', submissionData);
-    // Handle form submission - could save to appState, send to API, etc.
-    // For now, just navigate back
-    navigation.goBack();
-  };
+  useEffect(() => {
+    const setupAndDetermineForm = async () => {
+      try {
+        // Ensure user data is loaded
+        const userInfo = appState?.userInfo || appState?.user?.info?.user;
+        if (!userInfo) {
+          console.log('AccountReview: User data not loaded, triggering load...');
+          if (appState?.loadUserInfo) {
+            await appState.loadUserInfo();
+          }
+          if (appState?.loadUserStatus) {
+            await appState.loadUserStatus();
+          }
+        }
+        
+        const determinedFormId = getFormIdForUser();
+        if (determinedFormId) {
+          console.log('AccountReview: Setting formId to:', determinedFormId);
+          setFormId(determinedFormId);
+          setIsLoading(false);
+        } else if (determinedFormId === null) {
+          // Still loading user data
+          console.log('AccountReview: User data still loading...');
+          setIsLoading(true);
+        } else {
+          // Block access (e.g., waiting period)
+          console.log('AccountReview: Blocking access');
+          setShouldBlock(true);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('AccountReview setup error:', error);
+        setIsLoading(false);
+      }
+    };
 
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
+    setupAndDetermineForm();
+  }, [appState?.userInfo, appState?.user?.info?.user]);
 
+  // Debug formId changes
+  useEffect(() => {
+    console.log('🔄 [AccountReview] FormID changed to:', formId);
+    if (formId === 'finprom-suitability') {
+      console.log('✅ [AccountReview] Successfully changed to finprom-suitability form!');
+    }
+  }, [formId]);
+  
   // Show loading state
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Loading categorisation form...</Text>
-      </View>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <View style={[styles.container, styles.centerContent]}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-        <Text style={styles.retryText} onPress={loadCategorisationForm}>
-          Tap to retry
-        </Text>
-      </View>
-    );
-  }
-
-  // Show form if data is loaded
-  if (formData) {
+  if (isLoading) {
+    console.log('AccountReview: Rendering loading state');
     return (
       <View style={styles.container}>
-        <DynamicQuestionnaireForm
-          formData={formData}
-          onSubmit={handleFormSubmit}
-          onBack={handleGoBack}
-        />
+        <View style={styles.loadingContainer}>
+          {/* You can add a loading spinner here */}
+        </View>
       </View>
     );
   }
+  
+  // Don't render anything if access is blocked
+  if (shouldBlock) {
+    return null;
+  }
 
-  // Fallback empty state
+  // Don't render until formId is determined
+  if (!formId) {
+    return null;
+  }
+  
   return (
-    <View style={[styles.container, styles.centerContent]}>
-      <Text style={styles.errorText}>No form data available</Text>
+    <View style={styles.container}>
+      <DynamicQuestionnaireForm
+        key={formId} // Force remount when formId changes
+        formId={formId}
+        onBack={() => navigation.goBack()}
+        onSubmit={(result) => {
+          console.log('📋 [AccountReview] Form submission result:', { formId, result });
+          
+          // Check for success - either uploadSuccess OR error.message contains 'success'
+          const isSuccess = result && (
+            result.uploadSuccess === true ||
+            (result.uploadResult && result.uploadResult.error && result.uploadResult.error.message && 
+             (result.uploadResult.error.message.toLowerCase().includes('success') || 
+              result.uploadResult.error.message.toLowerCase().includes('successful')))
+          );
+
+          // Check if this was finprom-categorisation form and if it was successful
+          if (formId === 'finprom-categorisation' && isSuccess) {
+            console.log('✅ [AccountReview] finprom-categorisation completed successfully - auto-loading finprom-suitability');
+            console.log('🔄 [AccountReview] Current formId:', formId);
+            console.log('🔄 [AccountReview] Result object:', JSON.stringify(result, null, 2));
+            
+            // Automatically load finprom-suitability form
+            console.log('🔄 [AccountReview] About to change formId to finprom-suitability...');
+            console.log('🔄 [AccountReview] Current state before change:', { 
+              currentFormId: formId, 
+              isLoading, 
+              shouldBlock 
+            });
+            
+            setTimeout(() => {
+              console.log('🔄 [AccountReview] Executing formId change to finprom-suitability');
+              setFormId('finprom-suitability');
+              setIsLoading(false);
+              console.log('🔄 [AccountReview] State change completed');
+            }, 100); // Reduced delay for faster transition
+            
+            return; // Don't call onComplete yet
+          }
+          
+          // Check if this was finprom-suitability form and if it was successful
+          if (formId === 'finprom-suitability' && isSuccess) {
+            console.log('✅ [AccountReview] finprom-suitability completed successfully - showing completion message');
+            
+            // Show completion message and redirect to login
+            Alert.alert(
+              'Registration Process Completed',
+              'Your registration process has been completed successfully. You can login after 15 minutes.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    console.log('🚪 [AccountReview] Redirecting to login page');
+                    appState.setMainPanelState({
+                      mainPanelState: 'Login',
+                      pageName: 'default'
+                    });
+                  }
+                }
+              ]
+            );
+            return;
+          }
+          
+          // Default behavior for other forms or completion callback
+          if (onComplete) {
+            onComplete({ accountReviewCompleted: true, formId, result });
+          }
+        }}
+      />
     </View>
   );
 };

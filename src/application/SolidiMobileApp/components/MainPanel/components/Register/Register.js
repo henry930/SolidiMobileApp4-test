@@ -303,9 +303,9 @@ const Register = () => {
                 setUploadMessage('');
                 setDisableRegisterButton(false);
                 
-                // Redirect to email verification page
+                // Redirect to registration completion page
                 appState.setMainPanelState({
-                  mainPanelState: 'EmailVerification',
+                  mainPanelState: 'RegistrationCompletion',
                   pageName: 'default'
                 });
               }

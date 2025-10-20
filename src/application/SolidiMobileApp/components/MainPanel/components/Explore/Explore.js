@@ -13,7 +13,7 @@ let logger2 = logger.extend('Explore');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
 let Explore = () => {
-  console.log('🔍 Explore component rendering...');
+  // console.log('🔍 Explore component rendering...');
   let appState = useContext(AppStateContext);
   
   return (
@@ -38,14 +38,30 @@ let Explore = () => {
           elevation: 3
         }}>
           <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 12 }}>
-            Questionnaires
+            📋 Finprom Categorisation Form
           </Text>
           <Text style={{ color: '#666', lineHeight: 22, marginBottom: 16 }}>
-            Select and complete any available questionnaire or form.
+            Complete the finprom categorisation form using local JSON data from src/assets/json/finprom-categorisation.json
           </Text>
-          <Text style={{ color: '#888', fontStyle: 'italic' }}>
-            Component simplified for debugging - no react-native-paper dependencies
-          </Text>
+          <TouchableOpacity 
+            style={{
+              backgroundColor: '#17a2b8',
+              padding: 12,
+              borderRadius: 6,
+              alignItems: 'center'
+            }}
+            onPress={() => {
+              console.log('🎯 Navigating to AccountReview...');
+              appState.setMainPanelState({
+                mainPanelState: 'AccountReview',
+                pageName: 'default'
+              });
+            }}
+          >
+            <Text style={{ color: 'white', fontWeight: '600' }}>
+              Open Categorisation Form
+            </Text>
+          </TouchableOpacity>
         </View>
         
         <View style={{ 

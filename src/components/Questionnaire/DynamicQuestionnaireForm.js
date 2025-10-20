@@ -2,73 +2,309 @@
 // This shows how to enhance your existing component for API-driven forms
 
 import React, { useState, useEffect, useContext } from 'react';
-import { StyleSheet, View, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, Alert, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { Text, Card, Button, TextInput, RadioButton, ActivityIndicator } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { Buffer } from 'buffer';
 
 // Internal imports
-import { colors, sharedStyles, sharedColors } from 'src/constants';
-import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import AppStateContext from 'src/application/data';
+import { colors, sharedStyles, sharedColors } from '../../constants';
+import { scaledWidth, scaledHeight, normaliseFont } from '../../util/dimensions';
+import AppStateContext from '../../application/data';
+import localFormService from '../../api/LocalFormService';
+
+// Simple and reliable HTML renderer for React Native
+const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
+  if (!htmlString) return null;
+  
+  // console.log('🎨 Rendering HTML:', htmlString.substring(0, 100) + (htmlString.length > 100 ? '...' : ''));
+  
+  // If no HTML tags, return simple text
+  if (!htmlString.includes('<')) {
+    return <Text style={baseStyle}>{htmlString}</Text>;
+  }
+
+  // Parse simple HTML tags and render them properly
+  const parseAndRenderHtml = (html) => {
+    // Handle line breaks first
+    const parts = html.split(/<br\s*\/?>/i);
+    const elements = [];
+    
+    parts.forEach((part, partIndex) => {
+      if (part.trim()) {
+        // Check for heading tags
+        if (part.match(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/i)) {
+          const match = part.match(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/i);
+          const level = parseInt(match[1]);
+          const content = match[2].replace(/<[^>]*>/g, ''); // Remove any other tags
+          
+          let headingStyle = { ...baseStyle };
+          switch (level) {
+            case 1:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 20, 
+                fontWeight: 'normal', 
+                marginVertical: 6, 
+                color: '#333333',
+                lineHeight: 26,
+                textAlign: 'justify'
+              };
+              break;
+            case 2:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 18, 
+                fontWeight: 'normal', 
+                marginVertical: 5, 
+                color: '#333333',
+                lineHeight: 24,
+                textAlign: 'justify'
+              };
+              break;
+            case 3:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 16, 
+                fontWeight: 'normal', 
+                marginVertical: 4, 
+                color: '#333333',
+                lineHeight: 22,
+                textAlign: 'justify'
+              };
+              break;
+            case 4:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 16, 
+                fontWeight: 'normal', 
+                marginVertical: 4, 
+                color: '#333333',
+                lineHeight: 22,
+                textAlign: 'justify'
+              };
+              break;
+            case 5:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 16, 
+                fontWeight: 'normal', 
+                marginVertical: 4, 
+                color: '#333333',
+                lineHeight: 22,
+                textAlign: 'justify'
+              };
+              break;
+            case 6:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 14, 
+                fontWeight: 'normal', 
+                marginVertical: 3, 
+                color: '#333333',
+                lineHeight: 20,
+                textAlign: 'justify'
+              };
+              break;
+              break;
+            case 2:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 17, 
+                fontWeight: '400', 
+                marginVertical: 3, 
+                color: '#334155',
+                lineHeight: 19
+              };
+              break;
+            case 3:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 16, 
+                fontWeight: 'normal', 
+                marginVertical: 2, 
+                color: '#374151',
+                lineHeight: 18,
+                textAlign: 'justify'
+              };
+              break;
+            case 4:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 15, 
+                fontWeight: 'normal', 
+                marginVertical: 2, 
+                color: '#475569',
+                lineHeight: 17,
+                textAlign: 'justify'
+              };
+              break;
+            case 5:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 14, 
+                fontWeight: 'normal', 
+                marginVertical: 2, 
+                color: '#64748b',
+                lineHeight: 16,
+                textAlign: 'justify'
+              };
+              break;
+            case 6:
+              headingStyle = { 
+                ...baseStyle, 
+                fontSize: 13, 
+                fontWeight: 'normal', 
+                marginVertical: 1, 
+                color: '#6b7280',
+                lineHeight: 15,
+                textAlign: 'justify'
+              };
+              break;
+          }
+          
+          elements.push(
+            <Text key={`heading-${partIndex}`} style={headingStyle}>
+              {content}
+            </Text>
+          );
+        } else {
+          // Handle other formatting tags
+          let processedText = part;
+          const textElements = [];
+          
+          // Split by bold tags
+          const boldParts = processedText.split(/(<b[^>]*>.*?<\/b>|<strong[^>]*>.*?<\/strong>)/i);
+          
+          boldParts.forEach((boldPart, boldIndex) => {
+            if (boldPart.match(/<(b|strong)[^>]*>(.*?)<\/(b|strong)>/i)) {
+              const boldMatch = boldPart.match(/<(b|strong)[^>]*>(.*?)<\/(b|strong)>/i);
+              const boldContent = boldMatch[2];
+              textElements.push(
+                <Text key={`bold-${partIndex}-${boldIndex}`} style={{ 
+                  ...baseStyle, 
+                  fontWeight: 'normal', 
+                  color: '#333333',
+                  textAlign: 'justify'
+                }}>
+                  {boldContent}
+                </Text>
+              );
+            } else if (boldPart.trim()) {
+              // Clean up any remaining HTML tags and entities
+              const cleanText = boldPart
+                .replace(/<[^>]*>/g, '') // Remove HTML tags
+                .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+                .replace(/&amp;/g, '&') // Replace &amp; with &
+                .replace(/&lt;/g, '<') // Replace &lt; with <
+                .replace(/&gt;/g, '>'); // Replace &gt; with >
+              
+              if (cleanText.trim()) {
+                textElements.push(
+                  <Text key={`text-${partIndex}-${boldIndex}`} style={{
+                    ...baseStyle,
+                    color: '#333333',
+                    lineHeight: 22,
+                    textAlign: 'justify'
+                  }}>
+                    {cleanText}
+                  </Text>
+                );
+              }
+            }
+          });
+          
+          if (textElements.length > 0) {
+            elements.push(
+              <View key={`paragraph-${partIndex}`} style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {textElements}
+              </View>
+            );
+          }
+        }
+      }
+      
+      // Add smaller line break if not the last part
+      if (partIndex < parts.length - 1) {
+        elements.push(
+          <View key={`br-${partIndex}`} style={{ height: 4 }} />
+        );
+      }
+    });
+    
+    return elements;
+  };
+
+  try {
+    const renderedElements = parseAndRenderHtml(htmlString);
+    console.log('✅ HTML parsed successfully, elements:', renderedElements.length);
+    
+    return (
+      <View>
+        {renderedElements}
+      </View>
+    );
+  } catch (error) {
+    console.error('❌ HTML parsing error:', error);
+    // Fallback to simple text without HTML tags
+    const cleanText = htmlString
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
+    
+    return <Text style={baseStyle}>{cleanText}</Text>;
+  }
+};
 
 const DynamicQuestionnaireForm = ({ 
-  // NEW: Either provide formData directly OR an API endpoint
-  formData = null,           // Static form data (your current approach)
-  apiEndpoint = null,        // Dynamic API endpoint
-  formId = null,             // Form ID to fetch from API
+  formId = null,             // Form ID to load from local JSON files (e.g., 'finprom-categorisation')
   onSubmit, 
   onBack 
 }) => {
+  const { width } = useWindowDimensions();
   const appState = useContext(AppStateContext);
   const [answers, setAnswers] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
+  const [navigationHistory, setNavigationHistory] = useState([]); // Track conditional navigation history
   
-  // NEW: State for dynamic loading
-  const [dynamicFormData, setDynamicFormData] = useState(null);
+  // State for dynamic loading
+  const [activeFormData, setActiveFormData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // NEW: Effect to load form data from API if needed
+  // Load form data from local JSON files
   useEffect(() => {
-    if (apiEndpoint || formId) {
-      loadFormFromAPI();
-    } else if (formData) {
-      setDynamicFormData(formData);
+    if (formId) {
+      console.log('🔄 [DynamicQuestionnaireForm] Loading form:', formId);
+      // Reset form state when formId changes
+      setAnswers({});
+      setCurrentPage(0);
+      setNavigationHistory([]);
+      setActiveFormData(null);
+      setError(null);
+      
+      loadFormFromLocal();
     }
-  }, [apiEndpoint, formId]);
+  }, [formId]);
 
-  // NEW: Function to load form definition from API
-  const loadFormFromAPI = async () => {
+  // Load form definition from local JSON files
+  const loadFormFromLocal = async () => {
+    console.log('🔄 [DynamicQuestionnaireForm] loadFormFromLocal called for:', formId);
     setIsLoading(true);
     setError(null);
     
     try {
-      // Construct URL based on what's provided
-      let url;
-      if (apiEndpoint) {
-        url = apiEndpoint;
-      } else if (formId) {
-        url = `/api/questionnaires/${formId}`;
-      }
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch form: ${response.status}`);
-      }
-
-      const formDefinition = await response.json();
-      setDynamicFormData(formDefinition);
-      
+      const formDefinition = await localFormService.getFormById(formId);
+      console.log('✅ [DynamicQuestionnaireForm] Form loaded successfully:', formDefinition?.formtitle || formId);
+      setActiveFormData(formDefinition);
     } catch (err) {
-      console.error('Error loading form:', err);
+      console.error('❌ [DynamicQuestionnaireForm] Error loading local form:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Use dynamicFormData if available, fallback to static formData
-  const activeFormData = dynamicFormData || formData;
 
   // Handle answer changes
   const handleAnswerChange = (questionId, value) => {
@@ -89,113 +325,110 @@ const DynamicQuestionnaireForm = ({
     }
   };
 
+  // Check if a page has any renderable questions
+  const checkPageHasRenderableQuestions = (pageIndex) => {
+    if (!activeFormData?.pages || pageIndex >= activeFormData.pages.length) {
+      return false;
+    }
+    
+    const pageQuestions = activeFormData.pages[pageIndex]?.questions || [];
+    const renderableQuestions = pageQuestions.filter(q => 
+      q.type !== 'legend' && q.type !== undefined
+    );
+    
+    return renderableQuestions.length > 0;
+  };
+
   // Handle form submission
   const handleSubmit = async () => {
-    const activeFormData = getActiveFormData();
-    const submissionData = {
-      formId: activeFormData.formid,
-      uuid: activeFormData.uuid,
-      answers: answers
-    };
-
-    // Create the answered form JSON
-    const answeredFormJSON = createAnsweredFormJSON();
-
-    // Print the revised JSON to console
-    console.log('='.repeat(80));
-    console.log('📋 FORM SUBMISSION - REVISED JSON');
-    console.log('='.repeat(80));
-    console.log(JSON.stringify(answeredFormJSON, null, 2));
-    console.log('='.repeat(80));
-
-    // Upload the revised JSON to /private_upload/ using AppState
-    let uploadSuccess = false;
     try {
-      console.log('📤 Uploading revised JSON to /private_upload/...');
+      // 1. Create a deep copy of the form structure
+      const submissionData = JSON.parse(JSON.stringify(activeFormData));
       
-      // Convert form answers to the expected format
-      const submitData = {
-        formData: answeredFormJSON,
-        formType: 'self_categorisation',
-        uuid: activeFormData.uuid,
-        answers: answers
-      };
+      // 2. Get documentType based on formId
+      const documentType = formId === 'finprom-categorisation' ? 'categorisation' : 'appropriateness';
       
-      // Use AppState privateMethod for proper API authentication and routing
-      console.log('� Using AppState.privateMethod for upload...');
-      const uploadResult = await appState.privateMethod({
-        apiRoute: 'private_upload',
-        params: submitData,
-        functionName: 'uploadQuestionnaireJSON',
-        httpMethod: 'POST'
+      // 3. Fill answers into form structure
+      Object.keys(answers).forEach(answerKey => {
+        const answerValue = answers[answerKey];
+        
+        if (submissionData.pages) {
+          for (let pageIndex = 0; pageIndex < submissionData.pages.length; pageIndex++) {
+            const page = submissionData.pages[pageIndex];
+            
+            if (page.questions) {
+              for (let questionIndex = 0; questionIndex < page.questions.length; questionIndex++) {
+                const question = page.questions[questionIndex];
+                
+                if (question.id === answerKey) {
+                  submissionData.pages[pageIndex].questions[questionIndex].answer = answerValue;
+                  break;
+                }
+              }
+            }
+          }
+        }
       });
 
-      console.log('✅ Successfully uploaded revised JSON to /private_upload/');
-      console.log('📥 Upload response body:', JSON.stringify(uploadResult, null, 2));
+      // 4. Convert to base64
+      const jsonString = JSON.stringify(submissionData, null, 2);
+      const base64Data = Buffer.from(jsonString, 'utf-8').toString('base64');
       
-      // Test upload success
-      if (uploadResult && (uploadResult.result === 'success' || uploadResult.success || uploadResult.error === null)) {
-        uploadSuccess = true;
-        console.log('🎉 UPLOAD TEST PASSED: Server confirmed successful submission');
-      } else {
-        console.log('⚠️ UPLOAD TEST WARNING: Uncertain success status from server');
-        uploadSuccess = false;
-      }
+      // 5. Upload
+      const uploadResult = await appState.uploadDocument({
+        documentType: documentType,
+        documentCategory: documentType,
+        fileData: base64Data,
+        fileExtension: '.json'
+      });
 
-    } catch (uploadError) {
-      console.error('❌ UPLOAD TEST FAILED:', uploadError.message);
-      console.error('📋 Full error details:', uploadError);
-      uploadSuccess = false;
-    }
+      // 6. Show success and call callback
+      Alert.alert(
+        'Thank you!', 
+        `Thank you for your evaluation. You may login after 15 mins. You can use the app if you pass.`,
+        [
+          {
+            text: 'OK',
+            onPress: async () => {
+              if (onSubmit) {
+                onSubmit({ uploadResult, uploadSuccess: true });
+              }
+              
+              // Logout automatically and redirect to login page
+              try {
+                console.log('🚪 Automatically logging out user after form submission');
+                await appState.logout(false); // Regular logout - preserves credentials for re-login
+                appState.changeState('Login');
+                console.log('✅ Successfully logged out and redirected to login');
+              } catch (error) {
+                console.error('❌ Error during automatic logout:', error);
+                // Even if logout fails, still try to go to login
+                appState.changeState('Login');
+              }
+            }
+          }
+        ]
+      );
 
-    // Log final upload test result
-    console.log('='.repeat(50));
-    console.log(`🔍 UPLOAD TEST RESULT: ${uploadSuccess ? 'SUCCESS ✅' : 'FAILED ❌'}`);
-    console.log('='.repeat(50));
-
-    // NEW: If form has a submiturl, post to API
-    if (activeFormData.submiturl) {
-      try {
-        const response = await fetch(activeFormData.submiturl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+    } catch (error) {
+      Alert.alert(
+        'Submission Error', 
+        `Failed to submit form: ${error.message}`,
+        [
+          {
+            text: 'Retry',
+            onPress: () => handleSubmit()
           },
-          body: JSON.stringify(submissionData)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to submit form');
-        }
-
-        const result = await response.json();
-        console.log('✅ Form submitted successfully to API');
-        
-        if (onSubmit) {
-          onSubmit({ 
-            ...submissionData, 
-            serverResponse: result, 
-            filledFormJSON: answeredFormJSON,
-            uploadSuccess: uploadSuccess
-          });
-        }
-      } catch (err) {
-        console.error('❌ Failed to submit form:', err.message);
-      }
-    } else {
-      console.log('✅ Form completed (no submit URL provided)');
-      
-      if (onSubmit) {
-        onSubmit({ 
-          ...submissionData, 
-          filledFormJSON: answeredFormJSON,
-          uploadSuccess: uploadSuccess
-        });
-      }
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          }
+        ]
+      );
     }
   };
 
-  // NEW: Render loading state
+  // Render loading state
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
@@ -205,12 +438,12 @@ const DynamicQuestionnaireForm = ({
     );
   }
 
-  // NEW: Render error state
+  // Render error state
   if (error) {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>Error loading form: {error}</Text>
-        <Button mode="outlined" onPress={loadFormFromAPI} style={styles.retryButton}>
+        <Button mode="outlined" onPress={loadFormFromLocal} style={styles.retryButton}>
           Retry
         </Button>
       </View>
@@ -226,18 +459,27 @@ const DynamicQuestionnaireForm = ({
     );
   }
 
-  // Helper functions (must be defined before JSX)
+  // Helper functions
   const renderQuestion = (question, index, allQuestions) => {
-    const questionKey = `${currentPage}_${question.id}`;
+    const questionKey = `form_page_${currentPage}_q_${question.id || 'unknown'}_idx_${index}`;
     const currentAnswer = answers[question.id] || question.answer || '';
+
+    const updateAnswer = (value) => {
+      setAnswers(prev => ({
+        ...prev,
+        [question.id]: value
+      }));
+    };
 
     switch (question.type) {
       case 'legend':
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            <Text style={styles.legendText}>{question.label}</Text>
+            {renderHtmlText(question.label, styles.legendText, width)}
             {question.guidance ? (
-              <Text style={styles.questionGuidance}>{question.guidance}</Text>
+              <View style={{ marginTop: 8 }}>
+                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+              </View>
             ) : null}
           </View>
         );
@@ -245,19 +487,25 @@ const DynamicQuestionnaireForm = ({
       case 'text':
       case 'email':
       case 'password':
+      case 'number':
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            <Text style={styles.questionLabel}>{question.label}</Text>
+            {renderHtmlText(question.label, styles.questionLabel, width)}
             {question.guidance ? (
-              <Text style={styles.questionGuidance}>{question.guidance}</Text>
+              <View style={{ marginTop: 8 }}>
+                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+              </View>
             ) : null}
             <TextInput
               style={styles.textInput}
               value={currentAnswer}
               placeholder={question.placeholder || ''}
               secureTextEntry={question.type === 'password'}
-              keyboardType={question.type === 'email' ? 'email-address' : 'default'}
-              onChangeText={(text) => updateAnswer(question.id, text)}
+              keyboardType={
+                question.type === 'email' ? 'email-address' : 
+                question.type === 'number' ? 'numeric' : 'default'
+              }
+              onChangeText={updateAnswer}
               mode="outlined"
             />
           </View>
@@ -266,15 +514,17 @@ const DynamicQuestionnaireForm = ({
       case 'textarea':
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            <Text style={styles.questionLabel}>{question.label}</Text>
+            {renderHtmlText(question.label, styles.questionLabel, width)}
             {question.guidance ? (
-              <Text style={styles.questionGuidance}>{question.guidance}</Text>
+              <View style={{ marginTop: 8 }}>
+                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+              </View>
             ) : null}
             <TextInput
               style={styles.textInput}
               value={currentAnswer}
               placeholder={question.placeholder || ''}
-              onChangeText={(text) => updateAnswer(question.id, text)}
+              onChangeText={updateAnswer}
               mode="outlined"
               multiline
               numberOfLines={4}
@@ -285,34 +535,34 @@ const DynamicQuestionnaireForm = ({
       case 'radio':
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            <Text style={styles.questionLabel}>{question.label}</Text>
+            {renderHtmlText(question.label, styles.questionLabel, width)}
             {question.guidance ? (
-              <Text style={styles.questionGuidance}>{question.guidance}</Text>
+              <View style={{ marginTop: 8 }}>
+                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+              </View>
             ) : null}
             <View style={styles.radioGroupContainer}>
               {question.values?.map((option, optionIndex) => (
                 <TouchableOpacity 
-                  key={`${questionKey}_${option.id}`}
+                  key={`${questionKey}_option_${optionIndex}`}
                   style={[
                     styles.radioOptionContainer,
                     currentAnswer === option.id && styles.radioOptionSelected
                   ]}
-                  onPress={() => updateAnswer(question.id, option.id)}
+                  onPress={() => updateAnswer(option.id)}
                   activeOpacity={0.7}
                 >
                   <RadioButton
                     value={option.id}
                     status={currentAnswer === option.id ? 'checked' : 'unchecked'}
-                    onPress={() => updateAnswer(question.id, option.id)}
+                    onPress={() => updateAnswer(option.id)}
                     color="#1976D2"
                     uncheckedColor="#757575"
                   />
-                  <Text style={[
+                  {renderHtmlText(option.text, [
                     styles.radioLabel,
                     currentAnswer === option.id && styles.radioLabelSelected
-                  ]}>
-                    {option.text}
-                  </Text>
+                  ], width)}
                 </TouchableOpacity>
               ))}
             </View>
@@ -320,7 +570,6 @@ const DynamicQuestionnaireForm = ({
         );
 
       default:
-        console.warn('Unknown question type:', question.type);
         return (
           <View key={questionKey} style={styles.questionContainer}>
             <Text style={styles.questionLabel}>
@@ -331,56 +580,7 @@ const DynamicQuestionnaireForm = ({
     }
   };
 
-  const updateAnswer = (questionId, value) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: value
-    }));
-  };
-
-  const getActiveFormData = () => {
-    // Return formData prop if available, otherwise return dynamicFormData from state
-    return formData || dynamicFormData;
-  };
-
-  // Function to create a copy of the form JSON with filled answers
-  const createAnsweredFormJSON = () => {
-    const activeFormData = getActiveFormData();
-    if (!activeFormData) return null;
-
-    // Create a deep copy of the form data
-    const answeredForm = JSON.parse(JSON.stringify(activeFormData));
-
-    // Helper function to recursively fill answers in questions
-    const fillAnswersInQuestions = (questions) => {
-      if (!Array.isArray(questions)) return;
-      
-      questions.forEach(question => {
-        if (question.id && answers[question.id] !== undefined) {
-          question.answer = answers[question.id];
-        }
-      });
-    };
-
-    // Fill answers in top-level questions
-    if (answeredForm.questions) {
-      fillAnswersInQuestions(answeredForm.questions);
-    }
-
-    // Fill answers in page-based questions
-    if (answeredForm.pages) {
-      answeredForm.pages.forEach(page => {
-        if (page.questions) {
-          fillAnswersInQuestions(page.questions);
-        }
-      });
-    }
-
-    return answeredForm;
-  };
-
   const isLastPage = () => {
-    const activeFormData = getActiveFormData();
     if (activeFormData?.pages) {
       return currentPage >= activeFormData.pages.length - 1;
     }
@@ -388,8 +588,79 @@ const DynamicQuestionnaireForm = ({
   };
 
   const handleNext = () => {
-    const activeFormData = getActiveFormData();
     if (activeFormData?.pages && currentPage < activeFormData.pages.length - 1) {
+      // Check if current page has accountpurpose question and handle conditional navigation
+      const currentPageData = activeFormData.pages[currentPage];
+      const accountPurposeQuestion = currentPageData?.questions?.find(q => q.id === 'accountpurpose');
+      
+      if (accountPurposeQuestion && answers.accountpurpose) {
+        // Find the page that matches the selected radio value
+        const selectedValue = answers.accountpurpose;
+        const targetPageIndex = activeFormData.pages.findIndex(page => page.pageid === selectedValue);
+        
+        if (targetPageIndex !== -1 && targetPageIndex !== currentPage) {
+          console.log(`🎯 Conditional navigation: accountpurpose="${selectedValue}" → page "${activeFormData.pages[targetPageIndex].pageid}"`);
+          
+          // Record this conditional navigation in history
+          setNavigationHistory(prev => [...prev, {
+            from: currentPage,
+            to: targetPageIndex,
+            type: 'conditional',
+            trigger: 'accountpurpose'
+          }]);
+          
+          setCurrentPage(targetPageIndex);
+          return;
+        } else if (targetPageIndex === -1) {
+          // No matching pageid found, prompt user to submit
+          Alert.alert(
+            'Submit Form',
+            'No additional questions found for your selection. Would you like to submit the form now?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {
+                text: 'Submit',
+                onPress: handleSubmit,
+              },
+            ]
+          );
+          return;
+        }
+      }
+
+      // Check if current page's nextpage is "submitToServer" - meaning end of pageid flow
+      if (currentPageData?.nextpage === 'submitToServer') {
+        console.log('📝 Reached end of pageid flow, checking for general questions...');
+        
+        // Look for any pages that aren't part of specific pageid flows
+        // For this form, all pages have pageids, so we submit when reaching submitToServer
+        Alert.alert(
+          'Complete Form',
+          'You have completed all questions for your selection. Would you like to submit the form now?',
+          [
+            {
+              text: 'Go Back',
+              style: 'cancel',
+              onPress: () => handlePrevious()
+            },
+            {
+              text: 'Submit',
+              onPress: handleSubmit,
+            },
+          ]
+        );
+        return;
+      }
+      
+      // Default navigation: go to next page
+      setNavigationHistory(prev => [...prev, {
+        from: currentPage,
+        to: currentPage + 1,
+        type: 'sequential'
+      }]);
       setCurrentPage(currentPage + 1);
     } else {
       handleSubmit();
@@ -397,31 +668,56 @@ const DynamicQuestionnaireForm = ({
   };
 
   const handlePrevious = () => {
-    if (currentPage > 0) {
+    if (navigationHistory.length > 0) {
+      // Find the most recent navigation entry that brought us to the current page
+      const lastNavigation = navigationHistory
+        .slice()
+        .reverse()
+        .find(nav => nav.to === currentPage);
+      
+      if (lastNavigation) {
+        // Go back to where we came from
+        console.log(`🔙 Going back: page ${currentPage} → page ${lastNavigation.from} (${lastNavigation.type} navigation)`);
+        
+        // Remove this navigation from history since we're undoing it
+        setNavigationHistory(prev => {
+          const newHistory = [...prev];
+          const index = newHistory.lastIndexOf(lastNavigation);
+          if (index > -1) {
+            newHistory.splice(index, 1);
+          }
+          return newHistory;
+        });
+        
+        setCurrentPage(lastNavigation.from);
+      } else if (currentPage > 0) {
+        // Fallback to sequential previous page if no history found
+        setCurrentPage(currentPage - 1);
+      }
+    } else if (currentPage > 0) {
+      // No navigation history, use sequential navigation
       setCurrentPage(currentPage - 1);
     }
   };
 
-  // Your existing rendering logic remains the same!
   const currentQuestions = getCurrentQuestions();
 
   return (
-    <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollViewContent}
-        showsVerticalScrollIndicator={false}
-      >
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={false}
+        >
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
-            <Text variant="headlineSmall" style={styles.formTitle}>
-              {activeFormData.formtitle}
-            </Text>
+            {renderHtmlText(activeFormData.formtitle, [styles.formTitle, { fontSize: 20 }], width)}
             
             {activeFormData.formintro && (
-              <Text variant="bodyMedium" style={styles.formIntro}>
-                {activeFormData.formintro}
-              </Text>
+              <View style={{ marginTop: 8 }}>
+                {renderHtmlText(activeFormData.formintro, styles.formIntro, width)}
+              </View>
             )}
 
             {/* Page indicator for multi-page forms */}
@@ -463,133 +759,165 @@ const DynamicQuestionnaireForm = ({
         </Button>
       </View>
     </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f8fafc',
+  },
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
     padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#d32f2f',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  retryButton: {
-    marginTop: 16,
-  },
-  contentContainer: {
-    flex: 1,
   },
   scrollView: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
   scrollViewContent: {
-    flexGrow: 1,
+    paddingBottom: 20,
   },
   card: {
-    margin: 16,
-    elevation: 4,
+    margin: 0,
+    elevation: 0,
+    backgroundColor: 'white',
+    borderRadius: 0,
+  },
+  cardContent: {
+    padding: 20,
   },
   formTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#1976D2',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#333333',
+    lineHeight: 30,
+  },
+  formIntro: {
+    fontSize: 16,
+    marginBottom: 20,
+    lineHeight: 22,
+    color: '#333333',
+    textAlign: 'justify',
   },
   pageIndicator: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+    color: '#666666',
     textAlign: 'center',
-  },
-  navigationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  navButton: {
-    minWidth: 100,
+    marginBottom: 20,
   },
   questionContainer: {
-    marginBottom: 20,
+    marginBottom: 25,
+    backgroundColor: '#ffffff',
   },
   questionLabel: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
+    marginBottom: 10,
+    color: '#333333',
+    lineHeight: 22,
+    textAlign: 'justify',
+  },
+  legendText: {
+    fontSize: 16,
+    fontWeight: 'normal',
+    marginBottom: 10,
+    color: '#333333',
+    lineHeight: 22,
+    textAlign: 'justify',
   },
   questionGuidance: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 12,
+    fontSize: 13,
+    color: '#6b7280',
+    marginBottom: 8,
+    lineHeight: 18,
     fontStyle: 'italic',
+    backgroundColor: '#f9fafb',
+    padding: 8,
+    borderRadius: 6,
+    borderLeftWidth: 2,
+    borderLeftColor: '#9ca3af',
   },
   textInput: {
-    marginBottom: 8,
+    marginTop: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
   },
   radioGroupContainer: {
     marginTop: 8,
   },
   radioOptionContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 8,
+    paddingLeft: 12,
+    paddingRight: 12,
+    marginVertical: 3,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f9fa',
+    minHeight: 50,
+    overflow: 'hidden',
   },
   radioOptionSelected: {
-    borderColor: '#1976D2',
-    backgroundColor: '#f3f8ff',
-  },
-  radioContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196f3',
+    borderWidth: 1,
   },
   radioLabel: {
+    fontSize: 14,
+    marginLeft: 8,
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 22,
+    color: '#333333',
+    lineHeight: 20,
+    textAlign: 'left',
+    flexShrink: 1,
+    maxWidth: '72%',
+    width: '72%',
   },
   radioLabelSelected: {
-    color: '#1976D2',
+    fontWeight: 'normal',
+    color: '#333333',
+  },
+  navigationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  navButton: {
+    flex: 1,
+    marginHorizontal: 6,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#64748b',
     fontWeight: '500',
   },
-  legendText: {
+  errorText: {
     fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
+    color: '#dc2626',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: '500',
+  },
+  retryButton: {
+    marginTop: 16,
+    borderRadius: 12,
   },
 });
 

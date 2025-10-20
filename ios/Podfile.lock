@@ -911,6 +911,8 @@ PODS:
   - React-Mapbuffer (0.73.11):
     - glog
     - React-debug
+  - react-native-biometrics (3.0.1):
+    - React-Core
   - react-native-document-picker (9.3.1):
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -918,6 +920,8 @@ PODS:
   - react-native-image-picker (7.1.2):
     - glog
     - RCT-Folly (= 2022.05.16.00)
+    - React-Core
+  - react-native-render-html (6.3.4):
     - React-Core
   - react-native-safe-area-context (4.5.0):
     - RCT-Folly
@@ -1168,8 +1172,10 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector-modern`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
+  - react-native-biometrics (from `../node_modules/react-native-biometrics`)
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
+  - react-native-render-html (from `../node_modules/react-native-render-html`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-webview (from `../node_modules/react-native-webview`)
@@ -1273,10 +1279,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/logger"
   React-Mapbuffer:
     :path: "../node_modules/react-native/ReactCommon"
+  react-native-biometrics:
+    :path: "../node_modules/react-native-biometrics"
   react-native-document-picker:
     :path: "../node_modules/react-native-document-picker"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
+  react-native-render-html:
+    :path: "../node_modules/react-native-render-html"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-splash-screen:
@@ -1383,8 +1393,10 @@ SPEC CHECKSUMS:
   React-jsinspector: a98428936fb888cc15d857226a26d9ac0a668a0e
   React-logger: 6e4873d1f9c54cca30f6c91a6617f8c91b75ba4c
   React-Mapbuffer: 57bf49a458398d329dad2bf8bc660e3e35b96989
+  react-native-biometrics: 43ed5b828646a7862dbc7945556446be00798e7d
   react-native-document-picker: 4425fea5360a9e3ec5f268681194bf88ae67ec65
   react-native-image-picker: 16b817ac5df3f835fc9d187349e7d9ce8836a260
+  react-native-render-html: 5afc4751f1a98621b3009432ef84c47019dcb2bd
   react-native-safe-area-context: 863c9695a24b9e6bb6c412f1c8ddb4dfc3ae3862
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-webview: ad6d2b40f0113adb5a1491e6b6c9d676532d36c7

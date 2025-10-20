@@ -86,20 +86,20 @@ const renderHtmlText = (htmlString) => {
 
 // Available forms - add new forms here as needed
 const availableForms = {
-  'account-purpose-questionnaire': () => require('../../../../../../../json/account-purpose-questionnaire.json'),
-  'business-account-application-form': () => require('../../../../../../../json/business-account-application-form.json'),
-  'business-account-application-review': () => require('../../../../../../../json/business-account-application-review.json'),
-  'cryptobasket-limits-form': () => require('../../../../../../../json/cryptobasket-limits-form.json'),
-  'enhanced-due-diligence-form': () => require('../../../../../../../json/enhanced-due-diligence-form.json'),
-  'enhanced-due-diligence-review-form': () => require('../../../../../../../json/enhanced-due-diligence-review-form.json'),
-  'finprom-categorisation': () => require('../../../../../../../json/finprom-categorisation.json'),
-  'finprom-suitability': () => require('../../../../../../../json/finprom-suitability.json'),
-  'finprom-suitability2': () => require('../../../../../../../json/finprom-suitability2.json'),
-  'professional-tier-application-form': () => require('../../../../../../../json/professional-tier-application-form.json'),
-  'professional-tier-application-review-form': () => require('../../../../../../../json/professional-tier-application-review-form.json'),
-  'transaction-monitor-withdraw-questions': () => require('../../../../../../../json/transaction-monitor-withdraw-questions.json'),
-  'travel-rule-deposit-questions': () => require('../../../../../../../json/travel-rule-deposit-questions.json'),
-  'travel-rule-withdraw-questions': () => require('../../../../../../../json/travel-rule-withdraw-questions.json'),
+  'account-purpose-questionnaire': () => require('../../../../../../assets/json/account-purpose-questionnaire.json'),
+  'business-account-application-form': () => require('../../../../../../assets/json/business-account-application-form.json'),
+  'business-account-application-review': () => require('../../../../../../assets/json/business-account-application-review.json'),
+  'cryptobasket-limits-form': () => require('../../../../../../assets/json/cryptobasket-limits-form.json'),
+  'enhanced-due-diligence-form': () => require('../../../../../../assets/json/enhanced-due-diligence-form.json'),
+  'enhanced-due-diligence-review-form': () => require('../../../../../../assets/json/enhanced-due-diligence-review-form.json'),
+  'finprom-categorisation': () => require('../../../../../../assets/json/finprom-categorisation.json'),
+  'finprom-suitability': () => require('../../../../../../assets/json/finprom-suitability.json'),
+  'finprom-suitability2': () => require('../../../../../../assets/json/finprom-suitability2.json'),
+  'professional-tier-application-form': () => require('../../../../../../assets/json/professional-tier-application-form.json'),
+  'professional-tier-application-review-form': () => require('../../../../../../assets/json/professional-tier-application-review-form.json'),
+  'transaction-monitor-withdraw-questions': () => require('../../../../../../assets/json/transaction-monitor-withdraw-questions.json'),
+  'travel-rule-deposit-questions': () => require('../../../../../../assets/json/travel-rule-deposit-questions.json'),
+  'travel-rule-withdraw-questions': () => require('../../../../../../assets/json/travel-rule-withdraw-questions.json'),
 };
 
 let Questionnaire = () => {
@@ -1044,6 +1044,16 @@ let Questionnaire = () => {
         return null;
     }
   };
+
+  // EMERGENCY: Disable all debug logs and return early to stop infinite loop
+  console.log('🚨 [EMERGENCY] Questionnaire.js render called - returning null to stop infinite loop');
+  return (
+    <View style={styles.panelContainer}>
+      <Text style={{fontSize: 20, textAlign: 'center', margin: 20, color: 'red'}}>
+        ⚠️ Questionnaire temporarily disabled to fix infinite loop
+      </Text>
+    </View>
+  );
 
   // DISABLED DEBUG LOGS FOR CATEGORISATION TESTING
   // console.log('=== MAIN RENDER DEBUG ===');

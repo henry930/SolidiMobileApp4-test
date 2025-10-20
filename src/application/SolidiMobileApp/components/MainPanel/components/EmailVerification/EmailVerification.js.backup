@@ -1,0 +1,267 @@
+// React imports
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Platform, Alert } from 'react-native';
+
+// Material Design imports
+import {
+  Card,
+  Text,
+  TextInput,
+  Button,
+  useTheme,
+  Title,
+} from 'react-native-paper';
+
+// Other imports
+import _ from 'lodash';
+
+// Import logger functionality
+import logger from 'src/util/logger';
+let logger2 = logger.extend('EmailVerification');
+let { log, jd } = logger.getShortcuts(logger2);
+
+// Import miscellaneous functionality
+import misc from 'src/util/misc';
+
+// Import app context
+import AppStateContext from 'src/application/data';
+
+export default function EmailVerification({ onComplete }) {
+  const appState = useContext(AppStateContext);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [uploadMessage, setUploadMessage] = useState('');
+
+  const registrationEmail = appState.registrationEmail || '';
+
+  useEffect(() => {
+    log('Email verification page mounted');
+    // Auto-focus on verification code input
+    setTimeout(() => {
+      if (verificationInput.current) {
+        verificationInput.current.focus();
+      }
+    }, 500);
+  }, []);
+
+  const verificationInput = useRef();
+
+  const handleVerificationCodeChange = (code) => {
+    setVerificationCode(code);
+    
+    // Auto-submit when 6 digits are entered (but add a small delay)
+    if (code.length === 6) {
+      setTimeout(() => {
+        handleVerifyEmail();
+      }, 500); // 500ms delay to allow user to see the button
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!verificationCode || verificationCode.length < 4) {
+      Alert.alert('Invalid Code', 'Please enter at least a 4-digit verification code');
+      return;
+    }
+
+    setIsVerifying(true);
+    setUploadMessage('Verifying your email...');
+
+    try {
+      log(`Verifying email with code: ${verificationCode}`);
+      
+      // Call email verification API
+      const result = await appState.publicMethod({
+        functionName: 'verifyEmail',
+        apiRoute: `confirm_email_and_send_mobile_code/${registrationEmail}/${verificationCode}`,
+        params: {}
+      });
+
+      log('📧 [EmailVerification] API response:', result);
+
+      // Check if API call returned a display error
+      if (result === 'DisplayedError') {
+        setUploadMessage('');
+        setIsVerifying(false);
+        return;
+      }
+
+      // Check for success - assume success unless error message exists without success keywords
+      const isSuccess = result && (
+        result.success || 
+        !(result.error && result.error.message && 
+          !result.error.message.toLowerCase().includes('success') && 
+          !result.error.message.toLowerCase().includes('successful'))
+      );
+
+      if (isSuccess) {
+        log('✅ Email verification successful');
+        setUploadMessage('Email verified successfully!');
+        
+        // Mark email as verified for completion tracking
+        appState.emailVerified = true;
+        
+        // Auto-proceed to next step without popup
+        if (onComplete) {
+          onComplete({ emailVerified: true });
+        } else {
+          // Default behavior - redirect to phone verification
+          appState.setMainPanelState({
+            mainPanelState: 'PhoneVerification',
+            pageName: 'default'
+          });
+        }
+      } else {
+        log('✅ Email verification successful');
+        setUploadMessage('Email verified successfully!');
+        
+        // Mark email as verified for completion tracking
+        appState.emailVerified = true;
+        
+        // Auto-proceed to next step without popup
+        if (onComplete) {
+          onComplete({ emailVerified: true });
+        } else {
+          // Default behavior - redirect to phone verification
+          appState.setMainPanelState({
+            mainPanelState: 'PhoneVerification',
+            pageName: 'default'
+          });
+        }
+      }
+    } catch (error) {
+      log(`❌ Email verification error: ${error.message}`);
+      setUploadMessage('');
+      Alert.alert('Error', 'Failed to verify email. Please try again.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setResendDisabled(true);
+    setResendTimer(60);
+    
+    try {
+      // Resend verification email
+      const result = await appState.publicMethod({
+        functionName: 'resendEmailVerification',
+        apiRoute: 'resend_email_verification',
+        params: {
+          email: registrationEmail
+        }
+      });
+
+      // Check for success - assume success unless error message exists without success keywords
+      const resendSuccess = result && (
+        result.success || 
+        !(result.error && result.error.message && 
+          !result.error.message.toLowerCase().includes('success') && 
+          !result.error.message.toLowerCase().includes('successful'))
+      );
+
+      if (resendSuccess) {
+        Alert.alert('Code Sent', 'A new verification code has been sent to your email');
+      } else {
+        Alert.alert('Error', 'Failed to resend verification code');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to resend verification code');
+    }
+
+    // Start countdown timer
+    const timer = setInterval(() => {
+      setResendTimer(prevTimer => {
+        const newTimer = prevTimer - 1;
+        if (newTimer <= 0) {
+          clearInterval(timer);
+          setResendDisabled(false);
+          return 0;
+        }
+        return newTimer;
+      });
+    }, 1000);
+  };
+
+  const materialTheme = useTheme();
+
+  return (
+    <View style={{ flex: 1, backgroundColor: materialTheme.colors.background, padding: 20 }}>
+      <Card style={styles.card}>
+        <Card.Content>
+          <View style={styles.inputContainer}>
+            <TextInput
+              ref={verificationInput}
+              mode="outlined"
+              label="Verification Code"
+              value={verificationCode}
+              onChangeText={handleVerificationCodeChange}
+              keyboardType="numeric"
+              maxLength={6}
+              autoCapitalize="none"
+              autoCorrect={false}
+              disabled={isVerifying}
+              style={styles.input}
+              dense={false}
+              contentStyle={styles.inputContent}
+              outlineStyle={styles.inputOutline}
+              theme={{
+                colors: {
+                  primary: '#2196F3',
+                  onSurfaceVariant: '#666',
+                }
+              }}
+            />
+            
+            <Button
+              mode="contained"
+              onPress={handleVerifyEmail}
+              disabled={isVerifying || verificationCode.length === 0}
+              style={styles.verifyButton}
+            >
+              {isVerifying ? 'Verifying...' : 'Verify'}
+            </Button>
+          </View>
+        </Card.Content>
+      </Card>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    marginVertical: 10,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  input: {
+    flex: 1,
+    height: 56, // Material Design standard height
+  },
+  inputContent: {
+    textAlign: 'center',
+    fontSize: 20,
+    letterSpacing: 4,
+    fontWeight: '600',
+    color: '#333',
+  },
+  inputOutline: {
+    borderWidth: 2,
+    borderRadius: 8,
+  },
+  verifyButton: {
+    minWidth: 120,
+    height: 56, // Match input height
+    justifyContent: 'center',
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+});

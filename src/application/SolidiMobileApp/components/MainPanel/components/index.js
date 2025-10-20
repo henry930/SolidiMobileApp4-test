@@ -34,7 +34,9 @@ export {default as Error} from './Error/Error';
 export {default as Maintenance} from './Maintenance/Maintenance';
 export {default as SendSuccessful} from './SendSuccessful/SendSuccessful';
 export {default as Authenticate} from './Authenticate/Authenticate';
+// export {default as BiometricAuth} from './BiometricAuth/BiometricAuth'; // Removed - causes NativeEventEmitter crashes
 export {default as Register} from './Register/Register';
+export {default as RegistrationCompletion} from './RegistrationCompletion/RegistrationCompletion';
 export {default as EmailVerification} from './EmailVerification/EmailVerification';
 export {default as PhoneVerification} from './PhoneVerification/PhoneVerification';
 export {default as SupportTools} from './SupportTools/SupportTools';

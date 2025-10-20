@@ -1,11 +1,10 @@
 {
         "formtitle":"Crypto Suitability Assessment",
         "formintro":"",
-        "formid": "crypto-appropriateness-assessment2",
-        "uuid": "e822a3cb-7a94-47da-ae5f-7984efd642a5",
+        "formid": "crypto-appropriateness-assessment",
+        "uuid": "f47fa99b-728c-4305-a6f9-3fece7f6c80d",
         "submittext": "I'm ready, lets go!",
         "submiturl": "/submitquestions",
-        "startpage2": "question1",
         "startpage": "intro",
         "startpage2": "review",
         "pages": [
@@ -48,7 +47,7 @@
           ,{
             "type": "legend",
             "id":  "question",
-            "label": "<h5>Can you sell your crypto assets whenever you want?</h5>",
+            "label": "<h5>How risky is investing in crypto? (as determined by the regulator)</h5>",
             "prepend-icon": "",
             "placeholder": "",
             "guidance": "",  
@@ -61,15 +60,15 @@
             "values": [
               {
                 "id": "one",
-                "text": "<b>Yes</b> - there will always be a buyer at a good price regardless of market volatility.<br>&nbsp;"
+                "text": "<b>Low Risk</b><br>Similiar risks (and returns) to saving money in a bank account<br>&nbsp;"
               }
               , {
                 "id": "two",
-                "text": "<b>Yes</b> - but like stocks and shares I can only sell when the markets are open.<br>&nbsp;"
+                "text": "<b>Medium Risk</b><br>Similiar risks (and returns) to investing in companies listed in a recognised stock market<br>&nbsp;"
               }
               , {
                 "id": "three",
-                "text": "<b>No</b> - like any asset (including stocks, shares etc) there may not always be a buyer prepared to purchase, particularly if prices are going down.<br>&nbsp;"
+                "text": "<b>High Risk</b><br>Similiar risks (and returns) to investing in unlisted stocks and shares<br>&nbsp;"
               }
             ],
             "guidance": "",
@@ -100,7 +99,7 @@
           ,{
             "type": "legend",
             "id":  "question",
-            "label": "<h5>What is the maximum percentage of your net assets that the regulator recommends you should you allocate to high risk investments such as crypto?</h5>",
+            "label": "<h5>What protections does crypto investing come with?</h5>",
             "prepend-icon": "",
             "placeholder": "",
             "guidance": "",  
@@ -113,15 +112,15 @@
             "values": [
               {
                 "id": "one",
-                "text": "<b>10%</b> - The regulator recommends a maximum of 10% of your net worth be invested in high risk investments.<br>&nbsp;"
+                "text": "<b>Financial Services Compensation Scheme (FSCS)</b><br>Crypto investments are protected by the Financial Services Compensation Scheme<br>&nbsp;"
               }
               , {
                 "id": "two",
-                "text": "<b>50%</b> - The regulator recommends up to 50% in crypto.<br>&nbsp;"
+                "text": "<b>Financial Ombudsman Service (FOS)</b><br>Crypto is not protected by the FSCS but I can complain to the Financial Ombudsman Service if something goes wrong<br>&nbsp;"
               }
               , {
                 "id": "three",
-                "text": "<b>100%</b> - The regulator makes no recommendations so I can put as much as I want into crypto.<br>&nbsp;"
+                "text": "<b>Neither</b><br>Crypto has neither FSCS or FOS coverage, but I can withdraw my crypto to my own Phone / Hardware wallet where I can keep it safe<br>&nbsp;"
               }
             ],
             "guidance": "",
@@ -152,7 +151,7 @@
           ,{
             "type": "legend",
             "id":  "question",
-            "label": "<h5>What is your overall risk appettite?</h5>",
+            "label": "<h5>What can happen to the price of crypto?</h5>",
             "prepend-icon": "",
             "placeholder": "",
             "guidance": "",  
@@ -165,15 +164,15 @@
             "values": [
               {
                 "id": "one",
-                "text": "I am risk adverse, I prefer cash savings with guaranteed, albeit modest returns.<br>&nbsp;"
+                "text": "<b>Rapidly up and down</b><br>The price of crypto can go rapidly down as well as up with potential for signficant loses and gains.<br>&nbsp;"
               }
               , {
                 "id": "two",
-                "text": "I am confortable with a small amounts of risk. Crypto is not that risky so it suits my limited risk appettite.<br>&nbsp;"
+                "text": "<b>Prices increase rapidly</b><br>I can expect the price of crypto to increase very rapidly with almost guaranteed returns.<br>&nbsp;"
               }
               , {
                 "id": "three",
-                "text": "I am comfortable with risk. I understand that crypto is a high risk investment.<br>&nbsp;"
+                "text": "<b>Stable pricing with modest movements</b><br>Crypto is a stable investment in which I can expect modest gains and loses.<br>&nbsp;"
               }
             ],
             "guidance": "",
@@ -205,7 +204,7 @@
           ,{
             "type": "legend",
             "id":  "question",
-            "label": "<h5>What happens to your crypto assets if Solidi becomes insolvent?</h5>",
+            "label": "<h5>If you invest in a new crypto currency which fails, how much of your investment will you get back?</h5>",
             "prepend-icon": "",
             "placeholder": "",
             "guidance": "",  
@@ -218,15 +217,15 @@
             "values": [
               {
                 "id": "one",
-                "text": "My crypto assets are segregated in Solidi's cold storage and are protected during insolvency, however it might take some time to return these to me during which I would be unable to sell them, even if prices are droping.<br>&nbsp;"
+                "text": "<b>100%</b><br>I will be able to claim back all my investment.<br>&nbsp;"
               }
               , {
                 "id": "two",
-                "text": "My crypto assets can be immediately withdrawn and I can continue to trade them.<br>&nbsp;"
+                "text": "<b>Some of my money</b><br>I will be able to get back some of my money, possibly by the Financial Services Compensation Scheme<br>&nbsp;"
               }
               , {
                 "id": "three",
-                "text": "My crypto assets would be converted to fiat and the cash returned to me immediately.<br>&nbsp;"
+                "text": "<b>Potentially no returns</b><br>If a crypto I invest in fails I understand that as a high risk, unregulated investment, I may get back none of my initial capital.<br>&nbsp;"
               }
             ],
             "guidance": "",

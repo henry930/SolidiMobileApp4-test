@@ -54,6 +54,13 @@ let Settings = () => {
 
   // Initial setup.
   useEffect( () => {
+    // Log user data immediately when component mounts
+    console.log('⚡ Settings component mounted - immediate user data check:');
+    console.log('   AppState available:', !!appState);
+    console.log('   User authenticated:', appState?.isAuthenticated);
+    console.log('   User email (direct):', appState?.userInfo?.email || appState?.getUserInfo?.('email'));
+    console.log('   User name (direct):', `${appState?.userInfo?.firstName || ''} ${appState?.userInfo?.lastName || ''}`);
+    
     setup();
   }, []); // Pass empty array so that this only runs once on mount.
 
@@ -62,10 +69,61 @@ let Settings = () => {
     try {
       await appState.generalSetup({caller: 'Settings'});
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      
+      // 🔍 LOG ALL USER RECORDS AFTER LOGIN
+      console.log('👤 ========== USER RECORDS IN SETTINGS PAGE ==========');
+      console.log('🌐 AppState Available:', !!appState);
+      console.log('🔐 Authentication Status:', {
+        isAuthenticated: appState.isAuthenticated || false,
+        authToken: appState.authToken ? 'Present' : 'Missing',
+        sessionActive: appState.sessionActive || false
+      });
+      
+      // Log all user info methods
+      console.log('👤 User Info via getUserInfo methods:');
+      const userInfoFields = ['firstName', 'lastName', 'email', 'id', 'username', 'phone', 'address', 'dateOfBirth', 'accountType', 'status'];
+      userInfoFields.forEach(field => {
+        try {
+          const value = appState.getUserInfo(field);
+          console.log(`   ${field}: ${value}`);
+        } catch (err) {
+          console.log(`   ${field}: [Error getting value]`);
+        }
+      });
+      
+      // Log raw user data objects
+      console.log('📋 Raw User Data Objects:');
+      console.log('   appState.userInfo:', appState.userInfo);
+      console.log('   appState.userData:', appState.userData);
+      console.log('   appState.user:', appState.user);
+      console.log('   appState.profile:', appState.profile);
+      console.log('   appState.account:', appState.account);
+      
+      // Log session and state data
+      console.log('🔧 Session & State Data:');
+      console.log('   sessionId:', appState.sessionId);
+      console.log('   sessionData:', appState.sessionData);
+      console.log('   stateData:', appState.stateData);
+      console.log('   currentState:', appState.currentState);
+      
+      // Log API and server info
+      console.log('🌐 API & Server Info:');
+      console.log('   apiUrl:', appState.apiUrl);
+      console.log('   serverInfo:', appState.serverInfo);
+      console.log('   connectionStatus:', appState.connectionStatus);
+      
+      // Log all appState properties (careful with this one)
+      console.log('🔍 All AppState Properties:');
+      const appStateKeys = Object.keys(appState || {});
+      console.log('   Available properties:', appStateKeys.slice(0, 20)); // Limit to first 20 to avoid overflow
+      
+      console.log('👤 ================= END USER RECORDS =================');
+      
       triggerRender(renderCount+1);
     } catch(err) {
       let msg = `Settings.setup: Error = ${err}`;
       console.log(msg);
+      console.error('❌ Error in Settings setup:', err);
     }
   }
 

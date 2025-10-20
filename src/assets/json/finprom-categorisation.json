@@ -6,11 +6,9 @@
         "js":"finprom-categorisation.js",
         "submittext": "Submit",
         "submiturl": "/submitquestions",
-        "startpage2": "restrictedconfirm",
-        "startpage2": "certified",
-        "startpage2": "sophisticated",
         "startpage": "intro",
-        "startpage3": "restricteddetails",
+        "startpage2": "restrictedconfirm",
+        "startpage3": "restricteddetails", 
         "pages": [
         {
           "pageid": "intro",

@@ -1,0 +1,848 @@
+import React, { useContext, useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import AppStateContext from 'src/application/data';
+
+// HTML renderer for processing HTML tags in question labels
+const renderHtmlText = (htmlString, baseStyle = {}) => {
+  if (!htmlString) return null;
+  
+  console.log('🎨🎨🎨 [AccountReview] Rendering HTML called!!! 🎨🎨🎨');
+  console.log('🎨 [AccountReview] HTML input:', htmlString.substring(0, 100) + (htmlString.length > 100 ? '...' : ''));
+  
+  // If no HTML tags, return simple text
+  if (!htmlString.includes('<')) {
+    return <Text style={baseStyle}>{htmlString}</Text>;
+  }
+
+  // Parse simple HTML tags and render them properly
+  const parseAndRenderHtml = (html) => {
+    // Handle line breaks first
+    const parts = html.split(/<br\s*\/?>/i);
+    const elements = [];
+    
+    parts.forEach((part, partIndex) => {
+      if (part.trim()) {
+        // Check for heading tags
+        if (part.match(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/i)) {
+          const match = part.match(/<h([1-6])[^>]*>(.*?)<\/h[1-6]>/i);
+          const level = parseInt(match[1]);
+          const content = match[2].replace(/<[^>]*>/g, ''); // Remove any other tags
+          
+          let headingStyle = { ...baseStyle };
+          switch (level) {
+            case 1:
+              headingStyle = { ...baseStyle, fontSize: 24, fontWeight: 'bold', marginVertical: 8 };
+              break;
+            case 2:
+              headingStyle = { ...baseStyle, fontSize: 20, fontWeight: 'bold', marginVertical: 6 };
+              break;
+            case 3:
+              headingStyle = { ...baseStyle, fontSize: 18, fontWeight: 'bold', marginVertical: 5 };
+              break;
+            case 4:
+              headingStyle = { ...baseStyle, fontSize: 16, fontWeight: 'bold', marginVertical: 4 };
+              break;
+            case 5:
+              headingStyle = { ...baseStyle, fontSize: 16, fontWeight: 'bold', marginVertical: 4 };
+              break;
+            case 6:
+              headingStyle = { ...baseStyle, fontSize: 14, fontWeight: 'bold', marginVertical: 3 };
+              break;
+          }
+          
+          elements.push(
+            <Text key={`heading-${partIndex}`} style={headingStyle}>
+              {content}
+            </Text>
+          );
+        } else {
+          // Handle other formatting tags
+          let processedText = part;
+          const textElements = [];
+          
+          // Split by bold tags
+          const boldParts = processedText.split(/(<b[^>]*>.*?<\/b>|<strong[^>]*>.*?<\/strong>)/i);
+          
+          boldParts.forEach((boldPart, boldIndex) => {
+            if (boldPart.match(/<(b|strong)[^>]*>(.*?)<\/(b|strong)>/i)) {
+              const boldMatch = boldPart.match(/<(b|strong)[^>]*>(.*?)<\/(b|strong)>/i);
+              const boldContent = boldMatch[2];
+              textElements.push(
+                <Text key={`bold-${partIndex}-${boldIndex}`} style={{ ...baseStyle, fontWeight: 'bold' }}>
+                  {boldContent}
+                </Text>
+              );
+            } else if (boldPart.trim()) {
+              // Clean up any remaining HTML tags and entities
+              const cleanText = boldPart
+                .replace(/<[^>]*>/g, '') // Remove HTML tags
+                .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+                .replace(/&amp;/g, '&') // Replace &amp; with &
+                .replace(/&lt;/g, '<') // Replace &lt; with <
+                .replace(/&gt;/g, '>'); // Replace &gt; with >
+              
+              if (cleanText.trim()) {
+                textElements.push(
+                  <Text key={`text-${partIndex}-${boldIndex}`} style={baseStyle}>
+                    {cleanText}
+                  </Text>
+                );
+              }
+            }
+          });
+          
+          if (textElements.length > 0) {
+            elements.push(
+              <Text key={`paragraph-${partIndex}`} style={baseStyle}>
+                {textElements}
+              </Text>
+            );
+          }
+        }
+      }
+      
+      // Add line break if not the last part
+      if (partIndex < parts.length - 1) {
+        elements.push(
+          <Text key={`br-${partIndex}`} style={baseStyle}>
+            {'\n'}
+          </Text>
+        );
+      }
+    });
+    
+    return elements;
+  };
+
+  try {
+    const renderedElements = parseAndRenderHtml(htmlString);
+    console.log('✅ [AccountReview] HTML parsed successfully, elements:', renderedElements.length);
+    
+    return (
+      <View>
+        {renderedElements}
+      </View>
+    );
+  } catch (error) {
+    console.error('❌ [AccountReview] HTML parsing error:', error);
+    // Fallback to simple text without HTML tags
+    const cleanText = htmlString
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
+    
+    return <Text style={baseStyle}>{cleanText}</Text>;
+  }
+};
+
+const AccountReview = ({ navigation }) => {
+  console.log('AccountReview component mounting...');
+  
+  const appState = useContext(AppStateContext);
+  const [formData, setFormData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  const SELF_CATEGORISATION_UUID = '12312cc5-a949-49ed-977e-c81fecc2476f';
+
+  useEffect(() => {
+    loadForm();
+  }, []);
+
+  const loadForm = async () => {
+    console.log('🚀🚀🚀 loadForm STARTED!!! 🚀🚀🚀');
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('📡 Loading form from local JSON file...');
+      
+      // Import the actual local JSON file with HTML content
+      const formData = require('../../../../../../assets/json/finprom-categorisation.json');
+      
+      console.log('✅ Local JSON loaded successfully');
+      console.log('📄 Form structure:', {
+        formtitle: formData.formtitle,
+        formid: formData.formid,
+        uuid: formData.uuid,
+        pages: formData.pages?.length || 0
+      });
+      
+      // Extract and flatten all questions from all pages
+      let allQuestions = [];
+      if (formData.pages && Array.isArray(formData.pages)) {
+        formData.pages.forEach(page => {
+          if (page.questions && Array.isArray(page.questions)) {
+            allQuestions = allQuestions.concat(page.questions);
+          }
+        });
+      }
+      
+      console.log('📝 Total questions found:', allQuestions.length);
+      if (allQuestions.length > 0) {
+        console.log('📝 First question label:', allQuestions[0].label?.substring(0, 100) + '...');
+      }
+      
+      // Create form data with flattened questions structure
+      const processedFormData = {
+        ...formData,
+        questions: allQuestions
+      };
+      
+      setFormData(processedFormData);
+
+    } catch (error) {
+      console.error('❌ Error loading form:', error.message);
+      console.log('🔄 Falling back to backup form...');
+      // Fall back to backup form if JSON loading fails
+      await loadFormBackup();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Keep this as backup in case we need the hardcoded version
+  const loadFormBackup = async () => {
+    console.log('🚀 loadForm STARTED (BACKUP)!');
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('📡 Loading local form data (hardcoded backup)...');
+      
+      // Use the JSON structure from the downloaded file
+      const data = {
+        "formtitle": "Self Categorisation",
+        "formintro": "",
+        "formid": "customer-categorisation",
+        "uuid": "12312cc5-a949-49ed-977e-c81fecc2476f",
+        "js": "finprom-categorisation.js",
+        "submittext": "Submit",
+        "submiturl": "/submitquestions",
+        "startpage": "intro",
+        "pages": [
+          {
+            "pageid": "intro",
+            "nextbutton": "Continue",
+            "prevbutton": null,
+            "nextpage": "investortype",
+            "questions": [
+              {
+                "type": "legend",
+                "id": "entitydetails2",
+                "label": "The UK Financial Conduct Authority (FCA) requires that we ask you some additional questions to better understand your financial circumstances and serve you.\n\nThe FCA prescribes three investor categories. Most customers will fit into the Restricted Investor category - please don't let the name put you off - this category is sufficient for most customers.\n\nThe questions are about your current circumstances so you can disregard anything you have told us previously.\n\nThis categorisation is entirely self declared - Solidi will not be asking for proof / documentation of these statements.",
+                "prepend-icon": "",
+                "placeholder": "",
+                "guidance": "",
+                "answer": ""
+              }
+            ]
+          },
+          {
+            "pageid": "investortype",
+            "nextbutton": "Continue", 
+            "nextpage": "accountpurpose",
+            "questions": [
+              {
+                "type": "legend",
+                "id": "entitydetails",
+                "label": "Which type of investor are you?",
+                "prepend-icon": "",
+                "placeholder": "",
+                "guidance": "Please choose the investor type which best describes you.",
+                "answer": ""
+              },
+              {
+                "type": "radio",
+                "id": "investortype",
+                "label": "Select your investor type:",
+                "options": [
+                  {
+                    "value": "restricted",
+                    "label": "Restricted Investor - Suitable for most customers"
+                  },
+                  {
+                    "value": "sophisticated",
+                    "label": "Sophisticated Investor - High net worth individual"
+                  },
+                  {
+                    "value": "certified",
+                    "label": "Certified Sophisticated Investor - Professional investor"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "pageid": "accountpurpose",
+            "nextbutton": "Submit",
+            "nextpage": null,
+            "questions": [
+              {
+                "type": "legend",
+                "id": "purpose_title",
+                "label": "What is the primary purpose of your account?",
+                "prepend-icon": "",
+                "placeholder": "",
+                "guidance": "Please select all that apply.",
+                "answer": ""
+              },
+              {
+                "type": "checkbox",
+                "id": "accountpurpose",
+                "label": "Account purposes:",
+                "options": [
+                  {
+                    "value": "investment",
+                    "label": "Investment and trading"
+                  },
+                  {
+                    "value": "savings",
+                    "label": "Savings and wealth preservation"
+                  },
+                  {
+                    "value": "retirement",
+                    "label": "Retirement planning"
+                  },
+                  {
+                    "value": "speculation",
+                    "label": "Speculation and high-risk trading"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+      
+      console.log('✅ Form data loaded successfully');
+      console.log('📄 Pages found:', data.pages?.length || 0);
+      
+      setFormData(data);
+
+    } catch (error) {
+      console.error('❌ Error loading form:', error.message);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to handle answer changes
+  const handleAnswerChange = (questionId, value) => {
+    console.log('📝 Answer changed:', questionId, '=', value);
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: value
+    }));
+  };
+
+  // Helper function to render different question types
+  const renderQuestion = (question) => {
+    const { type, id, label, options } = question;
+    
+    switch (type) {
+      case 'legend':
+        return (
+          <View key={id} style={styles.legendContainer}>
+            {renderHtmlText(label, styles.legendText)}
+          </View>
+        );
+        
+      case 'radio':
+        return (
+          <View key={id} style={styles.questionContainer}>
+            {renderHtmlText(label, styles.questionLabel)}
+            {options && options.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.radioOption,
+                  answers[id] === option.value && styles.radioSelected
+                ]}
+                onPress={() => handleAnswerChange(id, option.value)}
+              >
+                <View style={[
+                  styles.radioCircle,
+                  answers[id] === option.value && styles.radioCircleSelected
+                ]} />
+                <Text style={styles.radioText}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        );
+        
+      case 'checkbox':
+        return (
+          <View key={id} style={styles.questionContainer}>
+            {renderHtmlText(label, styles.questionLabel)}
+            {options && options.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.checkboxOption}
+                onPress={() => {
+                  const currentAnswers = answers[id] || [];
+                  const isSelected = currentAnswers.includes(option.value);
+                  const newAnswers = isSelected
+                    ? currentAnswers.filter(v => v !== option.value)
+                    : [...currentAnswers, option.value];
+                  handleAnswerChange(id, newAnswers);
+                }}
+              >
+                <View style={[
+                  styles.checkbox,
+                  (answers[id] || []).includes(option.value) && styles.checkboxSelected
+                ]}>
+                  {(answers[id] || []).includes(option.value) && (
+                    <Text style={styles.checkmark}>✓</Text>
+                  )}
+                </View>
+                <Text style={styles.checkboxText}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        );
+        
+      default:
+        return (
+          <View key={id} style={styles.questionContainer}>
+            {renderHtmlText(label, styles.questionLabel)}
+            <Text style={styles.questionType}>Question type: {type}</Text>
+          </View>
+        );
+    }
+  };
+
+  // Navigation functions
+  const goToNextPage = () => {
+    if (currentPage < formData.pages.length - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const submitForm = async () => {
+    console.log('📋 Starting form submission...');
+    console.log('📝 Current answers:', answers);
+    
+    if (submitting) {
+      console.log('⏳ Already submitting, ignoring duplicate request');
+      return;
+    }
+    
+    setSubmitting(true);
+    
+    try {
+      // Create a copy of the original form data
+      const submissionData = JSON.parse(JSON.stringify(formData));
+      
+      console.log('🔍 Original form structure:');
+      console.log('- UUID:', submissionData.uuid);
+      console.log('- Form ID:', submissionData.formid);
+      console.log('- Pages:', submissionData.pages?.length || 0);
+      
+      let answersProcessed = 0;
+      
+      // Fill in the answers according to their ID
+      if (submissionData.pages) {
+        submissionData.pages.forEach((page, pageIndex) => {
+          console.log(`📄 Processing page ${pageIndex + 1}: ${page.pageid}`);
+          if (page.questions) {
+            page.questions.forEach((question, questionIndex) => {
+              if (answers[question.id]) {
+                question.answer = answers[question.id];
+                answersProcessed++;
+                console.log(`✅ Q${questionIndex + 1} [${question.id}]: ${question.type} = ${JSON.stringify(question.answer)}`);
+              } else {
+                console.log(`⚠️ Q${questionIndex + 1} [${question.id}]: ${question.type} = NO ANSWER`);
+              }
+            });
+          }
+        });
+      }
+      
+      // Add submission metadata
+      submissionData.submittedAt = new Date().toISOString();
+      submissionData.submittedBy = 'mobile_app';
+      submissionData.version = '1.0';
+      submissionData.answersCount = answersProcessed;
+      
+      console.log(`📊 Processed ${answersProcessed} answers out of ${Object.keys(answers).length} collected`);
+      console.log('📄 Final submission data structure:', {
+        uuid: submissionData.uuid,
+        formid: submissionData.formid,
+        submittedAt: submissionData.submittedAt,
+        answersCount: submissionData.answersCount
+      });
+      
+      // Convert to JSON string
+      const jsonString = JSON.stringify(submissionData);
+      console.log('🔤 JSON string length:', jsonString.length);
+      
+      // Convert to Base64 using Buffer
+      const base64Data = Buffer.from(JSON.stringify(submissionData, null, 2)).toString('base64');
+      console.log('📦 Base64 data length:', base64Data.length);
+      console.log('📦 Base64 preview:', base64Data.substring(0, 100) + '...');
+      
+      // Upload via private_upload
+      console.log('🚀 Uploading via privateMethod...');
+      const uploadResult = await appState.privateMethod({
+        httpMethod: 'POST',
+        apiRoute: 'private_upload',
+        params: {
+          documentType: 'categorisation',
+          document: base64Data
+        }
+      });
+      
+      console.log('✅ Upload successful:', uploadResult);
+      
+      alert(`✅ Form submitted successfully!\n\nDocument ID: ${uploadResult?.documentId || uploadResult?.data?.documentId || 'Generated'}\nAnswers: ${answersProcessed}/${Object.keys(answers).length}\nUUID: ${submissionData.uuid}`);
+      
+    } catch (error) {
+      console.error('❌ Form submission error:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
+      alert(`❌ Form submission failed!\n\nError: ${error.message}\n\nPlease try again or contact support.`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.text}>Loading form...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+        <Text style={styles.retryText} onPress={loadForm}>
+          Tap to retry
+        </Text>
+      </View>
+    );
+  }
+
+  // Handle different JSON structures
+  if (formData) {
+    console.log('=== RENDER DEBUG ===');
+    console.log('formData keys:', Object.keys(formData));
+    console.log('has pages:', !!formData.pages);
+    console.log('has questions:', !!formData.questions);
+    console.log('questions type:', Array.isArray(formData.questions) ? 'array' : typeof formData.questions);
+    console.log('===================');
+
+    // Check if it's a page-based form
+    if (formData.pages && formData.pages.length > 0) {
+      const currentPageData = formData.pages[currentPage];
+      const isLastPage = currentPage === formData.pages.length - 1;
+      
+      return (
+        <ScrollView style={styles.scrollContainer}>
+          <View style={styles.formContainer}>
+            <Text style={styles.formTitle}>{formData.formtitle || 'Self Categorisation'}</Text>
+            <Text style={styles.pageIndicator}>
+              Page {currentPage + 1} of {formData.pages.length}
+            </Text>
+            
+            <View style={styles.questionsContainer}>
+              {currentPageData.questions && currentPageData.questions.map(question => 
+                renderQuestion(question)
+              )}
+            </View>
+            
+            <View style={styles.buttonContainer}>
+              {currentPage > 0 && (
+                <TouchableOpacity style={styles.secondaryButton} onPress={goToPreviousPage}>
+                  <Text style={styles.secondaryButtonText}>Previous</Text>
+                </TouchableOpacity>
+              )}
+              
+              {!isLastPage ? (
+                <TouchableOpacity style={styles.primaryButton} onPress={goToNextPage}>
+                  <Text style={styles.primaryButtonText}>Next</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity 
+                  style={[styles.primaryButton, submitting && styles.buttonDisabled]} 
+                  onPress={submitForm}
+                  disabled={submitting}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {submitting ? 'Submitting...' : 'Submit'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </ScrollView>
+      );
+    }
+    
+    // Handle flat questions array (single page form)
+    if (formData.questions && Array.isArray(formData.questions)) {
+      return (
+        <ScrollView style={styles.scrollContainer}>
+          <View style={styles.formContainer}>
+            <Text style={styles.formTitle}>{formData.formtitle || formData.title || 'Self Categorisation'}</Text>
+            
+            <View style={styles.questionsContainer}>
+              {formData.questions.map(question => renderQuestion(question))}
+            </View>
+            
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                style={[styles.primaryButton, submitting && styles.buttonDisabled]} 
+                onPress={submitForm}
+                disabled={submitting}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {submitting ? 'Submitting...' : 'Submit'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Debug Info */}
+            <View style={styles.debugContainer}>
+              <Text style={styles.debugText}>✅ JSON loaded from API</Text>
+              <Text style={styles.debugText}>❓ {formData.questions.length} questions total</Text>
+              <Text style={styles.debugText}>📋 Single page form</Text>
+            </View>
+          </View>
+        </ScrollView>
+      );
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.errorText}>No form data available</Text>
+      {formData && (
+        <View style={styles.debugContainer}>
+          <Text style={styles.debugText}>Available data keys: {Object.keys(formData).join(', ')}</Text>
+          <Text style={styles.debugText}>Data preview: {JSON.stringify(formData, null, 2).substring(0, 200)}...</Text>
+        </View>
+      )}
+      <Text style={styles.retryText} onPress={loadForm}>
+        Tap to retry
+      </Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContainer: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  formContainer: {
+    padding: 20,
+  },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  pageIndicator: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  questionsContainer: {
+    marginBottom: 30,
+  },
+  legendContainer: {
+    marginBottom: 20,
+  },
+  legendText: {
+    fontSize: 16,
+    color: '#333333',
+    lineHeight: 22,
+  },
+  questionContainer: {
+    marginBottom: 25,
+  },
+  questionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 10,
+  },
+  questionType: {
+    fontSize: 12,
+    color: '#999999',
+    fontStyle: 'italic',
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginVertical: 2,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  radioSelected: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196f3',
+    borderWidth: 1,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#cccccc',
+    marginRight: 10,
+  },
+  radioCircleSelected: {
+    borderColor: '#2196f3',
+    backgroundColor: '#2196f3',
+  },
+  radioText: {
+    fontSize: 15,
+    color: '#333333',
+    flex: 1,
+  },
+  checkboxOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginVertical: 2,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#cccccc',
+    borderRadius: 3,
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    borderColor: '#4caf50',
+    backgroundColor: '#4caf50',
+  },
+  checkmark: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  checkboxText: {
+    fontSize: 15,
+    color: '#333333',
+    flex: 1,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  primaryButton: {
+    backgroundColor: '#2196f3',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 10,
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#cccccc',
+    opacity: 0.7,
+  },
+  secondaryButton: {
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 8,
+    flex: 1,
+    marginRight: 10,
+  },
+  secondaryButtonText: {
+    color: '#333333',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  debugContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 8,
+    borderColor: '#2196f3',
+    borderWidth: 1,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#2196f3',
+    textAlign: 'center',
+    marginVertical: 2,
+  },
+  text: {
+    fontSize: 16,
+    color: '#333333',
+    textAlign: 'center',
+    marginVertical: 5,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#d32f2f',
+    textAlign: 'center',
+    marginVertical: 5,
+  },
+  retryText: {
+    fontSize: 16,
+    color: '#1976d2',
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    marginVertical: 5,
+  },
+  successText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4caf50',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+});
+
+export default AccountReview;

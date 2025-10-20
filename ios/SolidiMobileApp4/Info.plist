@@ -39,6 +39,8 @@
 	<string>Your camera is needed to scan QR codes for wallet addresses and take photos of identity verification documents.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>You may want to browse your photo library and upload an existing photo of an identity verification document.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to authenticate and secure your app access.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>FontAwesome.ttf</string>

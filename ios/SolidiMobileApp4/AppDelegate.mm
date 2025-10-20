@@ -1,5 +1,4 @@
 #import "AppDelegate.h"
-
 #import <React/RCTBundleURLProvider.h>
 #import "RNSplashScreen.h"
 
@@ -18,7 +17,7 @@
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
 #if DEBUG
-  return [NSURL URLWithString:@"http://192.168.0.65:8081/index.bundle?platform=ios&dev=true&minify=false"];
+  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #endif
