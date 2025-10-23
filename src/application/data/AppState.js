@@ -185,7 +185,7 @@ let jd = JSON.stringify;
 
 // Settings: Critical (check before making a new release)
 let autoLoginOnDevAndStag = false; // Only used during development (i.e. on 'dev' tier) to automatically login using a dev user.
-let autoLoginWithStoredCredentials = false; // Disable auto-login for development to load RegistrationCompletion page
+let autoLoginWithStoredCredentials = true; // Enable auto-login for persistent authentication
 let preserveRegistrationData = false; // Only used during development (i.e. on 'dev' tier) to preserve registration data after a successful registration.
 // - This is useful for testing the registration process, as it allows you to re-register without having to re-enter all the registration data.
 let developmentModeBypass = false; // Skip network calls and use sample data when server is unreachable
@@ -196,13 +196,15 @@ import appTier from 'src/application/appTier'; // dev / stag / prod.
 const publicAccessStates = ['Register', 'RegistrationCompletion', 'Login', 'Explore', 'EmailVerification', 'PhoneVerification'];
 
 // Settings: Initial page
+// Dynamic initial state based on authentication - will be determined at runtime
+
+// Default state (will be updated dynamically)
+let initialMainPanelState = 'Login'; // Default fallback
+
 //let initialMainPanelState = 'Trade'; // Show trade page first
 //let initialMainPanelState = 'Assets'; // Show assets page first  
 //let initialMainPanelState = 'RegistrationCompletion'; // Show registration completion page first for development
-let initialMainPanelState = 'Explore'; // Show main app content (authentication handled by SecureApp wrapper)
-//let initialMainPanelState = 'Explore'; // Show explore page first to access dynamic forms
-//let initialMainPanelState = 'Buy';
-//initialMainPanelState = 'CloseSolidiAccount'; // Dev work
+//let initialMainPanelState = 'Explore'; // Show main app content (authentication handled by SecureApp wrapper)
 //let initialMainPanelState = 'PersonalDetails'; // Default authenticated state
 let initialPageName = 'default';
 //initialPageName = 'balance'; // Dev work
@@ -340,7 +342,25 @@ class AppStateProvider extends Component {
       error: { message: '' },
       user: { 
         isAuthenticated: false,
-        info: { user: null, user_status: null },
+        info: { 
+          user: null, 
+          user_status: null, 
+          depositDetails: {
+            GBP: {
+              accountName: null,
+              sortCode: null,
+              accountNumber: null,
+              reference: null,
+            },
+          },
+          defaultAccount: {
+            GBP: {
+              accountName: null,
+              sortCode: null,
+              accountNumber: null,
+            },
+          }
+        },
         apiCredentialsFound: false
       },
       apiClient: null,
@@ -555,6 +575,76 @@ class AppStateProvider extends Component {
     }
   }
 
+  // Save last visited page for Face ID redirect
+  saveLastVisitedPage = async (mainPanelState, pageName = 'default') => {
+    try {
+      console.log('💾 [LAST PAGE] Saving last visited page:', { mainPanelState, pageName });
+      
+      // Don't save login/registration pages as "last visited"
+      const excludedStates = ['Login', 'Registration', 'RegistrationCompletion', 'PINCreation', 'PINLogin'];
+      if (excludedStates.includes(mainPanelState)) {
+        console.log('💾 [LAST PAGE] Skipping excluded state:', mainPanelState);
+        return;
+      }
+
+      const lastPageData = {
+        mainPanelState,
+        pageName,
+        timestamp: Date.now()
+      };
+      
+      await AsyncStorage.setItem('last_visited_page', JSON.stringify(lastPageData));
+      console.log('✅ [LAST PAGE] Last visited page saved successfully');
+      
+    } catch (error) {
+      console.error('❌ [LAST PAGE] Failed to save last visited page:', error);
+    }
+  }
+
+  // Retrieve last visited page for Face ID redirect
+  getLastVisitedPage = async () => {
+    try {
+      console.log('📖 [LAST PAGE] Retrieving last visited page...');
+      
+      const stored = await AsyncStorage.getItem('last_visited_page');
+      if (!stored) {
+        console.log('📖 [LAST PAGE] No last visited page found, using default');
+        return { mainPanelState: 'Home', pageName: 'default' }; // Default to Home page
+      }
+
+      const lastPageData = JSON.parse(stored);
+      console.log('📖 [LAST PAGE] Retrieved last visited page:', lastPageData);
+      
+      // Check if the stored page is not too old (7 days)
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - lastPageData.timestamp > sevenDays) {
+        console.log('📖 [LAST PAGE] Stored page is too old, using default');
+        await AsyncStorage.removeItem('last_visited_page');
+        return { mainPanelState: 'Home', pageName: 'default' };
+      }
+
+      return {
+        mainPanelState: lastPageData.mainPanelState,
+        pageName: lastPageData.pageName
+      };
+      
+    } catch (error) {
+      console.error('❌ [LAST PAGE] Failed to retrieve last visited page:', error);
+      return { mainPanelState: 'Home', pageName: 'default' };
+    }
+  }
+
+  // Clear last visited page (used during logout)
+  clearLastVisitedPage = async () => {
+    try {
+      console.log('🗑️ [LAST PAGE] Clearing last visited page...');
+      await AsyncStorage.removeItem('last_visited_page');
+      console.log('✅ [LAST PAGE] Last visited page cleared successfully');
+    } catch (error) {
+      console.error('❌ [LAST PAGE] Failed to clear last visited page:', error);
+    }
+  }
+
   // Initialize constructor with the original code
   initializeConstructor = () => {
     console.log('🔄 [STARTUP] Initializing constructor normally...');
@@ -593,8 +683,10 @@ class AppStateProvider extends Component {
     // Test keychain access early - common TestFlight failure point
     this.testKeychainAccess();
 
-    // Can set this initial state for testing.
-    this.initialMainPanelState = initialMainPanelState;
+    // Set initial state to Login by default, will be updated dynamically in componentDidMount
+    this.initialMainPanelState = 'Login'; // Safe default
+    console.log('🎯 [AppState] Initial main panel state set to default:', this.initialMainPanelState);
+    
     this.initialPageName = initialPageName;
 
     // Misc
@@ -802,6 +894,11 @@ RegisterConfirm2 AccountUpdate
         var msg = `${fName}: New stateChangeID: ${stateChangeID} (mainPanelState = ${mainPanelState})`;
         log(msg);
         this.setState({previousState: currentState, mainPanelState, pageName, stateChangeID});
+        
+        // Save last visited page for Face ID redirect (async, don't block UI)
+        this.saveLastVisitedPage(mainPanelState, pageName).catch(error => {
+          console.error('Failed to save last visited page:', error);
+        });
       }
     }
 
@@ -2400,6 +2497,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         user_status: {}
       };
       
+      // Clear last visited page (only for complete logout)
+      if (clearStoredCredentials) {
+        console.log('🗑️ Clearing last visited page for complete logout');
+        await this.clearLastVisitedPage();
+      }
+      
       // Reset the state history and wipe any stashed state.
       this.state.resetStateHistory();
       log("Logout complete.");
@@ -3445,45 +3548,51 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
         
         if (userAppropriate === 'FAILED2') {
-          console.log('⚠️ [LEVEL 2] User appropriate is FAILED2 - 24 hour wait required');
+          console.log('⚠️ [LEVEL 2] User appropriate is FAILED2 - checking coolEnd time');
           
-          // Show popup and force logout
-          Alert.alert(
-            '24 Hour Wait Required',
-            'You need to wait 24 hours before you can take the test again.',
-            [
-              {
-                text: 'OK',
-                onPress: () => {
-                  console.log('🚪 User confirmed popup - forcing logout');
-                  this.logout();
-                }
-              }
-            ],
-            { cancelable: false }
-          );
-          return 'Login'; // Will be handled by logout
+          // Check coolEnd time for 24-hour wait
+          const coolEnd = user?.coolend;
+          console.log('User coolEnd:', coolEnd);
+          
+          if (coolEnd) {
+            const coolEndTime = new Date(coolEnd);
+            const currentTime = new Date();
+            console.log('CoolEnd time:', coolEndTime.toISOString());
+            console.log('Current time:', currentTime.toISOString());
+            
+            if (currentTime < coolEndTime) {
+              const waitTimeMs = coolEndTime.getTime() - currentTime.getTime();
+              const waitHours = Math.ceil(waitTimeMs / (1000 * 60 * 60));
+              console.log(`⏰ Still in cooling period. Wait ${waitHours} more hours`);
+              
+              // Show popup and force logout
+              Alert.alert(
+                '24 Hour Wait Required',
+                `You need to wait until ${coolEndTime.toLocaleString()} before you can take the test again. (${waitHours} hours remaining)`,
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      console.log('🚪 User confirmed popup - forcing logout');
+                      this.logout();
+                    }
+                  }
+                ],
+                { cancelable: false }
+              );
+              return 'Login'; // Will be handled by logout
+            } else {
+              console.log('✅ [LEVEL 2] Cooling period has ended - proceeding to AccountReview');
+              return 'AccountReview';
+            }
+          } else {
+            console.log('⚠️ [LEVEL 2] No coolEnd time found - proceeding to AccountReview');
+            return 'AccountReview';
+          }
         }
         
         if (userAppropriate === 'PASS' || userAppropriate === 'PASSED') {
           console.log('🎉 [LEVEL 2] User appropriate is PASS - registration complete!');
-          
-          // Show welcome message for PASS status
-          setTimeout(() => {
-            Alert.alert(
-              'Welcome to Solidi!',
-              'You have completed the registration successfully. Welcome to SolidiFX!',
-              [
-                {
-                  text: 'Continue',
-                  onPress: () => {
-                    console.log('✅ User acknowledged welcome message');
-                  }
-                }
-              ]
-            );
-          }, 500);
-          
           return null; // No redirect needed, user can proceed normally
         }
 
@@ -3706,6 +3815,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       */
       // If an error occurs, we don't raise it here. There are many currencies. At any given time, a coin subsystem may be down, and the server won't be able to return deposit details for it. This shouldn't cause the app to completely halt. Handle the lack of deposit details on the relevant page.
      let details = data;
+      
+      // Initialize depositDetails if it doesn't exist
+      if (!this.state.user.info.depositDetails) {
+        this.state.user.info.depositDetails = {};
+      }
+      
       // If the data differs from existing data, save it.
       let msg = `Deposit details for asset=${asset} loaded from server.`;
       if (jd(details) === jd(this.state.user.info.depositDetails[asset])) {
@@ -3753,6 +3868,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // If the data differs from existing data, save it.
       let account = data;
       let msg = `Default account for asset=${asset} loaded from server.`;
+      
+      // Initialize defaultAccount if it doesn't exist
+      if (_.isUndefined(this.state.user.info.defaultAccount)) {
+        this.state.user.info.defaultAccount = {};
+      }
+      
       if (jd(account) === jd(this.state.user.info.defaultAccount[asset])) {
         log(msg + " No change.");
       } else {
@@ -3793,6 +3914,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log(`✅ [BANK ACCOUNT SUCCESS] ${msg}`);
         log(msg);
         // Save data in local storage.
+        // Initialize defaultAccount if it doesn't exist
+        if (_.isUndefined(this.state.user.info.defaultAccount)) {
+          this.state.user.info.defaultAccount = {};
+        }
         this.state.user.info.defaultAccount[asset] = params;
       }
       if (_.has(data, 'error')) {
@@ -4963,6 +5088,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       clearAddressBookCache: this.clearAddressBookCache,
       fetchIdentityVerificationDetails: this.fetchIdentityVerificationDetails,
       uploadDocument: this.uploadDocument,
+      saveLastVisitedPage: this.saveLastVisitedPage,
+      getLastVisitedPage: this.getLastVisitedPage,
+      clearLastVisitedPage: this.clearLastVisitedPage,
       resetPassword: this.resetPassword,
       getOpenBankingPaymentStatusFromSettlement: this.getOpenBankingPaymentStatusFromSettlement,
       getOpenBankingPaymentURLFromSettlement: this.getOpenBankingPaymentURLFromSettlement,
@@ -5244,10 +5372,71 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   componentDidMount() {
     console.log('🔄 [MOUNT] ComponentDidMount called');
     
+    // Handle async credential checking and navigation
+    this.handleInitialNavigation();
+    
     if (this.keychainTestPending) {
       this.performKeychainTest();
     }
   }
+
+  // Determine initial navigation state based on user credentials
+  determineInitialState = async () => {
+    try {
+      console.log('🔍 [AppState] Determining initial navigation state...');
+      
+      // Check if we have valid API credentials stored
+      const hasAPICredentials = this.state.user.apiCredentialsFound;
+      const isAuthenticated = this.state.user.isAuthenticated;
+      
+      console.log('🔐 [AppState] Authentication state:', {
+        hasAPICredentials,
+        isAuthenticated,
+        userEmail: this.state.user.email
+      });
+      
+      if (hasAPICredentials && isAuthenticated) {
+        // User has valid stored credentials and is authenticated → redirect to Trade page
+        console.log('✅ [AppState] Valid credentials found and authenticated → Redirecting to Trade');
+        return 'Trade';
+      } else if (hasAPICredentials && !isAuthenticated) {
+        // User has credentials but needs to authenticate → redirect to PIN entry
+        console.log('🔑 [AppState] Credentials found but not authenticated → Redirecting to PIN');
+        return 'PIN';
+      } else {
+        // No valid credentials → redirect to Login page
+        console.log('❌ [AppState] No valid credentials → Redirecting to Login');
+        return 'Login';
+      }
+    } catch (error) {
+      console.log('⚠️ [AppState] Error determining initial state:', error.message);
+      // Fallback to Login for safety
+      return 'Login';
+    }
+  };
+
+  // Handle initial navigation based on credentials
+  handleInitialNavigation = async () => {
+    try {
+      console.log('🔍 [NAVIGATION] Determining initial navigation state...');
+      
+      const initialState = await this.determineInitialState();
+      console.log('🎯 [NAVIGATION] Determined initial state:', initialState);
+      
+      // Only redirect if different from current state and not default Login
+      if (initialState !== this.state.mainPanelState) {
+        console.log('🔄 [NAVIGATION] Redirecting to:', initialState);
+        this.setMainPanelState({
+          mainPanelState: initialState,
+          pageName: 'default'
+        });
+      }
+      
+    } catch (error) {
+      console.log('⚠️ [NAVIGATION] Error determining initial navigation:', error.message);
+      // Stay on current state (Login by default)
+    }
+  };
 
   // Perform actual keychain test (async operations allowed here)
   performKeychainTest = async () => {

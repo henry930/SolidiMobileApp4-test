@@ -22,6 +22,7 @@ class SecureApp extends Component {
       authError: null,
       isAuthenticating: false,
       appState: 'unknown', // Track current app state
+      showManualAuth: false, // Show manual authentication button after timeout
     };
     
     // Idle timeout settings
@@ -46,14 +47,17 @@ class SecureApp extends Component {
     await this.initializeBiometricAuth();
     
     // Listen for app state changes to re-authenticate when app becomes active
-    AppState.addEventListener('change', this.handleAppStateChange);
+    this.appStateSubscription = AppState.addEventListener('change', this.handleAppStateChange);
     
     // Start idle timeout monitoring
     this.startIdleMonitoring();
   }
 
   componentWillUnmount() {
-    AppState.removeEventListener('change', this.handleAppStateChange);
+    // Clean up app state listener using new subscription API
+    if (this.appStateSubscription) {
+      this.appStateSubscription.remove();
+    }
     
     // Clean up idle timeout
     this.stopIdleMonitoring();
@@ -81,6 +85,14 @@ class SecureApp extends Component {
         console.log('🔍 [SecureApp] Auto-triggering biometric authentication');
         await this.performBiometricAuth();
       }
+      
+      // Set a timer to show manual authentication option if auto-auth doesn't complete
+      this.authFallbackTimer = setTimeout(() => {
+        if (!this.state.isAuthenticated) {
+          console.log('🔍 [SecureApp] Showing manual authentication option');
+          this.setState({ showManualAuth: true });
+        }
+      }, 5000); // Show manual option after 5 seconds
       
     } catch (error) {
       console.log('🔐 [SecureApp] Error during biometric setup:', error);
@@ -240,6 +252,11 @@ class SecureApp extends Component {
       
       if (result.success) {
         console.log('✅ [SecureApp] Biometric authentication successful');
+        // Clear fallback timer since auth succeeded
+        if (this.authFallbackTimer) {
+          clearTimeout(this.authFallbackTimer);
+          this.authFallbackTimer = null;
+        }
         this.setState({ isAuthenticated: true, authError: null });
         // Start idle monitoring after successful authentication
         this.startIdleMonitoring();
@@ -410,6 +427,14 @@ class SecureApp extends Component {
       return (
         <View style={[styles.container, styles.loadingContainer]}>
           <Text style={styles.loadingText}>🔐 Initializing security...</Text>
+          {this.state.showManualAuth && (
+            <TouchableOpacity 
+              style={styles.authButton}
+              onPress={() => this.performBiometricAuth()}
+            >
+              <Text style={styles.authButtonText}>Tap to Authenticate</Text>
+            </TouchableOpacity>
+          )}
         </View>
       );
     }

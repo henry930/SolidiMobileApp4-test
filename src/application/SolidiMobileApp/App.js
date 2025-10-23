@@ -1,3 +1,6 @@
+// CRITICAL: Apply NativeEventEmitter fixes BEFORE ANY imports
+import '../../fixes/NativeEventEmitterFix';
+
 // Global Debug Control
 const DEBUG_MODE = false; // Set to true to enable debug logging
 
@@ -11,9 +14,6 @@ import {
 } from 'react-native';
 // Platform-specific splash screen import
 import { Platform } from 'react-native';
-
-// CRITICAL: Apply NativeEventEmitter fixes BEFORE any other imports
-import '../../fixes/NativeEventEmitterFix';
 
 let SplashScreen;
 if (Platform.OS === 'web') {

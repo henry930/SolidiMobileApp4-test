@@ -56,46 +56,35 @@ const AccountReview = ({ navigation, onComplete }) => {
     }
     
     if (appropriate === 'FAILED2') {
-      console.log('⚠️ Appropriate is FAILED2 - checking lastcat timing for 24-hour rule');
+      console.log('⚠️ Appropriate is FAILED2 - checking coolEnd time for 24-hour wait');
       
-      if (lastcat) {
-        const lastCatDate = new Date(lastcat);
-        const now = new Date();
-        const hoursDiff = (now - lastCatDate) / (1000 * 60 * 60);
+      // Check coolEnd time instead of lastCat time
+      const coolEnd = userInfo?.coolend;
+      console.log('User coolEnd:', coolEnd, '(type:', typeof coolEnd, ')');
+      
+      if (coolEnd) {
+        const coolEndTime = new Date(coolEnd);
+        const currentTime = new Date();
+        console.log('CoolEnd time:', coolEndTime.toISOString());
+        console.log('Current time:', currentTime.toISOString());
         
-        console.log('⏰ Hours since lastcat:', hoursDiff);
-        
-        if (hoursDiff >= 24) {
-          console.log('✅ 24+ hours passed - loading finprom-suitability');
-          return 'finprom-suitability';
-        } else {
-          console.log('❌ Less than 24 hours - blocking access');
-          const hoursRemaining = Math.ceil(24 - hoursDiff);
+        if (currentTime < coolEndTime) {
+          const waitTimeMs = coolEndTime.getTime() - currentTime.getTime();
+          const waitHours = Math.ceil(waitTimeMs / (1000 * 60 * 60));
+          console.log(`⏰ Still in cooling period. Wait ${waitHours} more hours until ${coolEndTime.toISOString()}`);
+          
           Alert.alert(
-            'Wait Required',
-            `You need to wait ${hoursRemaining} more hours before you can take the assessment again.`,
-            [
-              {
-                text: 'OK',
-                onPress: () => {
-                  if (navigation && navigation.goBack) {
-                    navigation.goBack();
-                  } else {
-                    // Fallback redirect to main app if navigation not available
-                    appState.setMainPanelState({
-                      mainPanelState: 'Assets',
-                      pageName: 'default'
-                    });
-                  }
-                }
-              }
-            ]
+            '24 Hour Wait Required',
+            `You need to wait until ${coolEndTime.toLocaleString()} before you can take the test again. (${waitHours} hours remaining)`,
+            [{ text: 'OK', style: 'default' }]
           );
-          return null; // Block access
+          return null; // Don't proceed with questionnaire
+        } else {
+          console.log('✅ Cooling period has ended - allowing retry');
+          return 'finprom-suitability';
         }
       } else {
-        // No lastcat date, allow suitability
-        console.log('⚠️ No lastcat date but FAILED2 status - loading finprom-suitability');
+        console.log('⚠️ No coolEnd time found - allowing retry');
         return 'finprom-suitability';
       }
     }

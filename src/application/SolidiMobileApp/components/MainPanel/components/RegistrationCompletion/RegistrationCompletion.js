@@ -91,12 +91,65 @@ const RegistrationCompletion = () => {
     try {
       console.log('🔍 Determining appropriate step for user...');
       
-      // Check verification status first
-      const emailVerified = appState.emailVerified || false;
-      const phoneVerified = appState.phoneVerified || false;
+      // Check if user has valid credentials (logged in)
+      const userUuid = appState.user?.uuid || appState.user?.info?.user?.uuid;
+      const isAuthenticated = appState.user?.isAuthenticated;
+      const hasCredentials = userUuid && isAuthenticated;
+      
+      console.log('🔐 User UUID:', userUuid);
+      console.log('🔐 Is authenticated:', isAuthenticated);
+      console.log('🔐 Has credentials:', hasCredentials);
+      console.log('🔐 Full user object keys:', appState.user ? Object.keys(appState.user) : 'No user object');
+      
+      // Check verification status
+      const emailVerified = appState.emailVerified || appState.user?.emailVerified || false;
+      const phoneVerified = appState.phoneVerified || appState.user?.phoneVerified || false;
       
       console.log('📧 Email verified:', emailVerified);
       console.log('📱 Phone verified:', phoneVerified);
+      
+      // If user has credentials and is authenticated, prioritize extra_information check
+      if (hasCredentials) {
+        console.log('🔐 User has credentials - checking extra information requirements...');
+        
+        try {
+          // Always check extra_information/check when user has credentials
+          const extraInfoData = await appState.privateMethod({
+            functionName: 'checkExtraInformation',
+            apiRoute: 'user/extra_information/check',
+            params: {}
+          });
+          
+          console.log('📊 Extra information check result:', extraInfoData);
+          
+          // If extra_information/check has no options loaded -> step 4 (AccountReview)
+          // If extra_information/check has options -> step 3 (Extra Information)
+          if (!extraInfoData || !Array.isArray(extraInfoData) || extraInfoData.length === 0) {
+            console.log('📋 No extra information options - jumping to step 4 (AccountReview)');
+            setCurrentStep(3); // AccountReview step
+            setCompletedSteps(new Set(['email', 'phone', 'extra']));
+            return 3;
+          } else {
+            console.log('📋 Extra information options found - starting step 3 (Extra Information)');
+            setCurrentStep(2); // Extra Information step
+            setCompletedSteps(new Set(['email', 'phone']));
+            return 2;
+          }
+          
+        } catch (error) {
+          console.log('⚠️ Error checking extra information:', error.message);
+          // If API fails but user has credentials, check verification status
+          if (emailVerified && phoneVerified) {
+            console.log('📋 API failed but user verified - defaulting to step 3 (Extra Information)');
+            setCurrentStep(2);
+            setCompletedSteps(new Set(['email', 'phone']));
+            return 2;
+          }
+        }
+      }
+      
+      // For fresh registration or users without credentials, follow verification flow
+      console.log('🆕 Fresh registration flow - checking verification status...');
       
       // If email not verified, start from step 1 (Email Verification)
       if (!emailVerified) {

@@ -111,6 +111,9 @@ let Transfer = () => {
   // Address book selection modal state
   let [showAddressBookSelectionPage, setShowAddressBookSelectionPage] = useState(false);
 
+  // Identity verification state
+  let [identityVerified, setIdentityVerified] = useState(null); // null = loading, true = verified, false = not verified
+
   // Error boundary effect
   useEffect(() => {
     const handleError = (error) => {
@@ -515,6 +518,26 @@ let Transfer = () => {
   let setup = () => {
     try {
       log('Setting up Transfer component, transferType:', transferType);
+      
+      // Check identity verification status
+      const identityChecked = appState.getUserStatus('identityChecked');
+      log('Identity verification status:', identityChecked);
+      
+      if (identityChecked === '[loading]') {
+        setIdentityVerified(null); // Still loading
+        // Load user status and retry
+        appState.loadUserStatus().then(() => {
+          setTimeout(setup, 1000); // Retry after 1 second
+        });
+        return;
+      } else if (identityChecked !== true) {
+        setIdentityVerified(false);
+        log('Identity verification not completed, blocking transfer features');
+        return;
+      } else {
+        setIdentityVerified(true);
+        log('Identity verification confirmed, allowing transfer features');
+      }
       
       // Close dropdown during setup to prevent conflicts
       setOpen(false);
@@ -1027,6 +1050,46 @@ let Transfer = () => {
               }}
             >
               Try Again
+            </Button>
+          </View>
+        </View>
+      );
+    }
+
+    // Identity verification check
+    if (identityVerified === null) {
+      // Still loading identity verification status
+      return (
+        <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+          <View style={{ padding: 20, justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+            <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center' }}>
+              Checking Verification Status
+            </Text>
+            <Text variant="bodyMedium" style={{ textAlign: 'center', color: '#666' }}>
+              Please wait while we check your identity verification status...
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (identityVerified === false) {
+      // Identity verification required
+      return (
+        <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
+          <View style={{ padding: 20, justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+            <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center', color: '#F44336' }}>
+              Identity Verification Required
+            </Text>
+            <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
+              You need to complete identity verification before you can use transfer features.
+            </Text>
+            <Button 
+              mode="contained" 
+              onPress={() => appState.changeState('IdentityVerification')}
+              style={{ backgroundColor: '#1565C0' }}
+            >
+              Complete Identity Verification
             </Button>
           </View>
         </View>

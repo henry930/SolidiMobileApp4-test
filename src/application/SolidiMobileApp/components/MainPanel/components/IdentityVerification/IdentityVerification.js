@@ -14,8 +14,7 @@ import {
   List,
   IconButton
 } from 'react-native-paper';
-import {launchCamera} from 'react-native-image-picker';
-import DocumentPicker from 'react-native-document-picker';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
@@ -135,6 +134,16 @@ let IdentityVerification = () => {
   let [disablePhoto1Buttons, setDisablePhoto1Buttons] = useState(false);
   let [disablePhoto2Buttons, setDisablePhoto2Buttons] = useState(false);
 
+  // Upload success state - track when documents have been successfully uploaded
+  let [identityUploadedSuccessfully, setIdentityUploadedSuccessfully] = useState(false);
+  let [addressUploadedSuccessfully, setAddressUploadedSuccessfully] = useState(false);
+
+  // Upload progress state - track upload in progress and completion
+  let [identityUploadInProgress, setIdentityUploadInProgress] = useState(false);
+  let [addressUploadInProgress, setAddressUploadInProgress] = useState(false);
+  let [identityUploadCompleted, setIdentityUploadCompleted] = useState(false);
+  let [addressUploadCompleted, setAddressUploadCompleted] = useState(false);
+
   // Photo state for new camera implementation
   let [takePhoto1FileURI, setTakePhoto1FileURI] = useState('');
   let [takePhoto1FileExtension, setTakePhoto1FileExtension] = useState('');
@@ -180,11 +189,31 @@ let IdentityVerification = () => {
 
 
   let identityDocumentStatus = () => {
-    return getDocumentStatus('identity')
+    // Check user status to see if identity documents have been verified by the system
+    const identityChecked = appState.getUserStatus('identityChecked');
+    
+    // Return true if identity has been checked and verified by the system
+    if (identityChecked === true) {
+      return true;
+    }
+    
+    // Otherwise show that it's not verified (even if locally uploaded)
+    return false;
   }
 
 
-  let addressDocumentStatus = () => { return getDocumentStatus('address') }
+  let addressDocumentStatus = () => { 
+    // Check user status to see if address documents have been verified by the system
+    const addressConfirmed = appState.getUserStatus('addressConfirmed');
+    
+    // Return true if address has been confirmed and verified by the system
+    if (addressConfirmed === true) {
+      return true;
+    }
+    
+    // Otherwise show that it's not verified (even if locally uploaded)
+    return false;
+  }
 
 
   // We look up the document type of an existing document on the server.
@@ -408,75 +437,104 @@ let IdentityVerification = () => {
 
 
   let generateTakePhoto2Message = () => {
+    console.log('🔍 [PHOTO CHECK] generateTakePhoto2Message called - takePhoto2FileURI:', takePhoto2FileURI);
     let msg = '';
     if (takePhoto2FileURI && takePhoto2FileURI.length > 0) {
       console.log('[DEBUG] Photo 2 ready, URI length:', takePhoto2FileURI.length);
       msg = 'Photo ready.';
+    } else {
+      console.log('🔍 [PHOTO CHECK] No photo ready - takePhoto2FileURI is empty or null');
     }
+    console.log('🔍 [PHOTO CHECK] Returning message:', msg);
     return msg;
   }
 
 
   let selectPhotoFromLibrary = async (documentCategory) => {
     try {
-      log('Selecting photo from library...');
+      log('Selecting photo from iPhone photo gallery...');
+      console.log('📱 [PHOTO GALLERY] Opening photo gallery for:', documentCategory);
       
-      const result = await DocumentPicker.pick({
-        type: [DocumentPicker.types.images],
-        allowMultiSelection: false,
-      });
-
-      if (result && result[0]) {
-        const file = result[0];
-        log('File selected:', file);
-        
-        // Convert the selected file to the same format as camera photos
-        const photoData = {
-          uri: file.uri,
-          type: file.type,
-          fileName: file.name,
-          fileSize: file.size,
-        };
-
-        // Determine file extension
-        let fileExtension = '.jpg';
-        if (file.type && file.type.includes('png')) {
-          fileExtension = '.png';
-        }
-
-        // Save result in local state
-        if (documentCategory == 'identity') {
-          setTakePhoto1FileURI(file.uri);
-          setTakePhoto1FileExtension(fileExtension);
-          setUploadPhoto1Message('');
-          console.log('[DEBUG] Identity photo selected from library, URI:', file.uri);
-        } else if (documentCategory == 'address') {
-          setTakePhoto2FileURI(file.uri);
-          setTakePhoto2FileExtension(fileExtension);
-          setUploadPhoto2Message('');
-          console.log('[DEBUG] Address photo selected from library, URI:', file.uri);
-        }
-
-        // Also save in app state for backward compatibility
-        if (documentCategory == 'identity') {
-          appState.panels.identityVerification.photo1 = photoData;
-        } else if (documentCategory == 'address') {
-          appState.panels.identityVerification.photo2 = photoData;
-        }
-        
-        triggerRender(renderCount + 1); // Ensure re-render
+      // Show loading message to indicate button press was detected
+      if (documentCategory === 'identity') {
+        setUploadPhoto1Message('Opening photo gallery...');
+      } else if (documentCategory === 'address') {
+        setUploadPhoto2Message('Opening photo gallery...');
       }
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        log('File selection cancelled');
-      } else {
-        console.error('File picker error:', err);
-        let message = 'Error selecting file. Please try again.';
-        if (documentCategory == 'identity') {
-          setUploadPhoto1Message(message);
-        } else if (documentCategory == 'address') {
-          setUploadPhoto2Message(message);
+      
+      let options = {
+        mediaType: 'photo',
+        quality: 0.8,
+        includeBase64: true,
+      }
+      
+      log('Photo gallery options:', options);
+      let result = await launchImageLibrary(options);
+      log('Photo gallery result received');
+      
+      // Check if user is still logged in
+      if (!appState.user.isAuthenticated) {
+        console.log('[WARNING] User logged out during photo gallery operation');
+        return;
+      }
+      
+      // Log result for debugging
+      log('Photo gallery result:', JSON.stringify(result));
+      
+      // Handle user cancellation
+      if (result.didCancel) {
+        log('Photo selection cancelled by user');
+        if (documentCategory === 'identity') {
+          setUploadPhoto1Message('');
+        } else if (documentCategory === 'address') {
+          setUploadPhoto2Message('');
         }
+        return;
+      }
+      
+      // Handle errors
+      if (result.errorMessage) {
+        let errorMsg = `Error accessing photo gallery: ${result.errorMessage}`;
+        log(errorMsg);
+        if (documentCategory === 'identity') {
+          setUploadPhoto1Message(errorMsg);
+        } else if (documentCategory === 'address') {
+          setUploadPhoto2Message(errorMsg);
+        }
+        return;
+      }
+      
+      let image = result.assets[0];
+      log('Image selected from gallery:', image);
+      
+      // Save result in local state
+      if (documentCategory === 'identity') {
+        setTakePhoto1FileURI(image.uri);
+        setTakePhoto1FileExtension('.jpg');
+        setUploadPhoto1Message('');
+        console.log('[DEBUG] Identity photo selected from gallery, URI:', image.uri);
+      } else if (documentCategory === 'address') {
+        setTakePhoto2FileURI(image.uri);
+        setTakePhoto2FileExtension('.jpg');
+        setUploadPhoto2Message('');
+        console.log('[DEBUG] Address photo selected from gallery, URI:', image.uri);
+      }
+      
+      // Also save in app state for backward compatibility
+      if (documentCategory === 'identity') {
+        appState.panels.identityVerification.photo1 = image;
+      } else if (documentCategory === 'address') {
+        appState.panels.identityVerification.photo2 = image;
+      }
+      
+      triggerRender(renderCount + 1); // Ensure re-render
+    } catch (err) {
+      console.error('Photo gallery error:', err);
+      let message = 'Error selecting photo from gallery. Please try again.';
+      if (documentCategory == 'identity') {
+        setUploadPhoto1Message(message);
+      } else if (documentCategory == 'address') {
+        setUploadPhoto2Message(message);
       }
     }
   }
@@ -493,6 +551,8 @@ let IdentityVerification = () => {
       if (documentCategory == 'identity') {
         console.log('[DEBUG] Processing identity document upload');
         setUploadPhoto1Message('Uploading...');
+        setIdentityUploadInProgress(true); // Start progress indicator
+        setIdentityUploadCompleted(false); // Reset completion state
         documentType = idType; // E.g. 'passportUK'
         
         // Check for duplicate document types
@@ -514,6 +574,8 @@ let IdentityVerification = () => {
       } else if (documentCategory == 'address') {
         console.log('[DEBUG] Processing address document upload');
         setUploadPhoto2Message('Uploading...');
+        setAddressUploadInProgress(true); // Start progress indicator
+        setAddressUploadCompleted(false); // Reset completion state
         documentType = adType; // E.g. 'bankStatement'
         
         // Check for duplicate document types
@@ -641,15 +703,28 @@ let IdentityVerification = () => {
       console.log('🔐 [AUTH CHECK] User authenticated after upload:', !!appState.user.isAuthenticated);
       
       if (documentCategory == 'identity') {
-        setUploadPhoto1Message('✅ Upload finished successfully!');
-        setDisablePhoto1Buttons(true);
+        setUploadPhoto1Message('✅ Upload finished successfully! Awaiting verification.');
+        setIdentityUploadInProgress(false); // Stop progress indicator
+        setIdentityUploadCompleted(true); // Mark as completed
+        setDisablePhoto1Buttons(false); // Re-enable buttons for additional uploads
       } else if (documentCategory == 'address') {
-        setUploadPhoto2Message('✅ Upload finished successfully!');
-        setDisablePhoto2Buttons(true);
+        setUploadPhoto2Message('✅ Upload finished successfully! Awaiting verification.');
+        setAddressUploadInProgress(false); // Stop progress indicator
+        setAddressUploadCompleted(true); // Mark as completed
+        setDisablePhoto2Buttons(false); // Re-enable buttons for additional uploads
       }
       
       console.log('🔄 [RENDER] About to trigger render - auth status:', !!appState.user.isAuthenticated);
       triggerRender(renderCount+1); // Ensure a reload, so that the identityVerificationDetails are refreshed.
+      
+      // Also refresh user status to check if documents have been verified
+      try {
+        await appState.loadUserStatus();
+        console.log('🔄 [USER STATUS] User status refreshed after upload');
+      } catch (error) {
+        console.log('⚠️ [USER STATUS] Failed to refresh user status:', error);
+      }
+      
       console.log('🔄 [RENDER] Render triggered - auth status:', !!appState.user.isAuthenticated);
       
 
@@ -663,8 +738,12 @@ let IdentityVerification = () => {
       
       if (documentCategory == 'identity') {
         setUploadPhoto1Message(errorMsg);
+        setIdentityUploadInProgress(false); // Stop progress indicator
+        setIdentityUploadCompleted(false); // Reset completion state
       } else if (documentCategory == 'address') {
         setUploadPhoto2Message(errorMsg);
+        setAddressUploadInProgress(false); // Stop progress indicator
+        setAddressUploadCompleted(false); // Reset completion state
       }
       
 
@@ -694,23 +773,6 @@ let IdentityVerification = () => {
           {errorMessage}
         </HelperText>
       }
-
-      {/* Debug State Display */}
-      <Card style={{ marginBottom: 16, backgroundColor: '#f0f0f0' }}>
-        <Card.Content>
-          <Text variant="labelSmall">🔧 Debug Info:</Text>
-          <Text variant="bodySmall">Identity Photo URI: {takePhoto1FileURI || 'Not set'}</Text>
-          <Text variant="bodySmall">Identity Extension: {takePhoto1FileExtension || 'Not set'}</Text>
-          <Text variant="bodySmall">Identity Doc Type: {idType}</Text>
-          <Text variant="bodySmall">Photo1 Message: {generateTakePhoto1Message() || 'None'}</Text>
-          <Text variant="bodySmall">Upload1 Message: {uploadPhoto1Message || 'None'}</Text>
-          <Text variant="bodySmall">Buttons Disabled: {disablePhoto1Buttons ? 'Yes' : 'No'}</Text>
-        </Card.Content>
-      </Card>
-
-
-
-
 
       { ! isLoading && (! identityDocumentStatus() || ! addressDocumentStatus()) &&
         <Card style={{ 
@@ -762,11 +824,20 @@ let IdentityVerification = () => {
             left={(props) => <List.Icon {...props} icon="account-box" />}
             right={(props) => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {!identityDocumentStatus() && (
+                {/* Show upload progress indicator */}
+                {identityUploadInProgress && (
+                  <IconButton icon="loading" iconColor={materialTheme.colors.primary} size={20} />
+                )}
+                {/* Show upload completed (but not yet verified) */}
+                {!identityUploadInProgress && identityUploadCompleted && !identityDocumentStatus() && (
+                  <IconButton icon="clock" iconColor="#FF9800" size={20} />
+                )}
+                {/* Show verification status */}
+                {!identityDocumentStatus() && !identityUploadInProgress && !identityUploadCompleted && (
                   <IconButton icon="close-circle" iconColor={materialTheme.colors.error} size={20} />
                 )}
                 {identityDocumentStatus() && (
-                  <IconButton icon="check-circle" iconColor={materialTheme.colors.primary} size={20} />
+                  <IconButton icon="check-circle" iconColor="#4CAF50" size={20} />
                 )}
                 <IconButton {...props} icon={identityAccordionExpanded ? "chevron-up" : "chevron-down"} />
               </View>
@@ -869,9 +940,10 @@ onPress={async () => {
                           }
                         }}
                         style={{ marginTop: 8 }}
-                        icon="cloud-upload"
+                        icon={identityUploadInProgress ? "loading" : (identityUploadCompleted ? "check-circle" : "cloud-upload")}
+                        disabled={identityUploadInProgress}
                       >
-                        Upload to Server
+                        {identityUploadInProgress ? "Uploading..." : (identityUploadCompleted ? "Uploaded" : "Upload to Server")}
                       </PaperButton>
                     )}
                   </View>
@@ -892,11 +964,20 @@ onPress={async () => {
             left={(props) => <List.Icon {...props} icon="home-account" />}
             right={(props) => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {!addressDocumentStatus() && (
+                {/* Show upload progress indicator */}
+                {addressUploadInProgress && (
+                  <IconButton icon="loading" iconColor={materialTheme.colors.primary} size={20} />
+                )}
+                {/* Show upload completed (but not yet verified) */}
+                {!addressUploadInProgress && addressUploadCompleted && !addressDocumentStatus() && (
+                  <IconButton icon="clock" iconColor="#FF9800" size={20} />
+                )}
+                {/* Show verification status */}
+                {!addressDocumentStatus() && !addressUploadInProgress && !addressUploadCompleted && (
                   <IconButton icon="close-circle" iconColor={materialTheme.colors.error} size={20} />
                 )}
                 {addressDocumentStatus() && (
-                  <IconButton icon="check-circle" iconColor={materialTheme.colors.primary} size={20} />
+                  <IconButton icon="check-circle" iconColor="#4CAF50" size={20} />
                 )}
                 <IconButton {...props} icon={addressAccordionExpanded ? "chevron-up" : "chevron-down"} />
               </View>
@@ -993,9 +1074,10 @@ onPress={async () => {
                           }
                         }}
                         style={{ marginTop: 8 }}
-                        icon="cloud-upload"
+                        icon={addressUploadInProgress ? "loading" : (addressUploadCompleted ? "check-circle" : "cloud-upload")}
+                        disabled={addressUploadInProgress}
                       >
-                        Upload to Server
+                        {addressUploadInProgress ? "Uploading..." : (addressUploadCompleted ? "Uploaded" : "Upload to Server")}
                       </PaperButton>
                     )}
                   </View>

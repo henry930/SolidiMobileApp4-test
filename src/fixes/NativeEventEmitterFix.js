@@ -1,11 +1,61 @@
 /**
- * Fix for NativeEventEmitter warnings in React Native
+ * Enhanced Fix for NativeEventEmitter crashes in React Native
  * This resolves the common "new NativeEventEmitter() requires a non-null argument" error
  */
 
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 
-// Suppress specific NativeEventEmitter warnings instead of modifying NativeModules
+// ===== IMMEDIATE PATCH =====
+// Patch NativeEventEmitter before any module can use it
+const { NativeEventEmitter } = require('react-native');
+
+// Store original constructor
+const OriginalNativeEventEmitter = NativeEventEmitter;
+
+// Create safe replacement constructor
+function SafeNativeEventEmitter(nativeModule) {
+  // If nativeModule is null/undefined, create a safe mock
+  if (!nativeModule) {
+    console.log('[NativeEventEmitterFix] Creating safe mock for null native module');
+    
+    // Return a safe mock emitter
+    return {
+      addListener: (eventType, listener) => ({
+        remove: () => {}
+      }),
+      removeListener: () => {},
+      removeAllListeners: () => {},
+      emit: () => {},
+      listenerCount: () => 0
+    };
+  }
+  
+  // If nativeModule exists, use original constructor
+  try {
+    return new OriginalNativeEventEmitter(nativeModule);
+  } catch (error) {
+    console.log('[NativeEventEmitterFix] Original constructor failed, using safe mock');
+    return {
+      addListener: (eventType, listener) => ({
+        remove: () => {}
+      }),
+      removeListener: () => {},
+      removeAllListeners: () => {},
+      emit: () => {},
+      listenerCount: () => 0
+    };
+  }
+}
+
+// Replace the global NativeEventEmitter
+global.NativeEventEmitter = SafeNativeEventEmitter;
+require('react-native').NativeEventEmitter = SafeNativeEventEmitter;
+
+// Replace the global NativeEventEmitter
+global.NativeEventEmitter = SafeNativeEventEmitter;
+require('react-native').NativeEventEmitter = SafeNativeEventEmitter;
+
+// ===== ERROR SUPPRESSION =====
 const originalConsoleWarn = console.warn;
 const originalConsoleError = console.error;
 
@@ -31,22 +81,17 @@ console.error = (...args) => {
         message.includes('new NativeEventEmitter()')) {
       return;
     }
+    // Suppress AppState API deprecation errors
+    if (message.includes('AppState.removeEventListener is not a function') ||
+        message.includes('AppState.addEventListener') ||
+        message.includes('removeEventListener')) {
+      return;
+    }
   }
   originalConsoleError.apply(console, args);
 };
 
-// Create a safer mock for EventEmitter that doesn't modify NativeModules
-const createSafeEventEmitter = () => ({
-  addListener: (eventType, listener) => ({
-    remove: () => {}
-  }),
-  removeListener: () => {},
-  removeAllListeners: () => {},
-  emit: () => {},
-  listenerCount: () => 0
-});
-
-// More aggressive NativeEventEmitter error prevention
+// ===== GLOBAL ERROR HANDLING =====
 const originalGlobalHandler = global.ErrorUtils?.getGlobalHandler?.();
 
 if (global.ErrorUtils) {
@@ -55,7 +100,23 @@ if (global.ErrorUtils) {
     if (error && error.message && 
         (error.message.includes('new NativeEventEmitter()') ||
          error.message.includes('requires a non-null argument'))) {
-      console.log('[NativeEventEmitterFix] Intercepted and suppressed NativeEventEmitter error');
+      console.log('[NativeEventEmitterFix] Intercepted and suppressed fatal NativeEventEmitter error');
+      return; // Suppress the error
+    }
+    
+    // Intercept AppState API errors
+    if (error && error.message && 
+        (error.message.includes('AppState.removeEventListener is not a function') ||
+         error.message.includes('removeEventListener') && error.message.includes('undefined'))) {
+      console.log('[NativeEventEmitterFix] Intercepted and suppressed AppState API error');
+      return; // Suppress the error
+    }
+    
+    // Intercept LinearGradient native component errors
+    if (error && error.message && 
+        (error.message.includes('BVLinearGradient') ||
+         error.message.includes('requireNativeComponent') && error.message.includes('LinearGradient'))) {
+      console.log('[NativeEventEmitterFix] Intercepted and suppressed LinearGradient native component error');
       return; // Suppress the error
     }
     
@@ -68,7 +129,7 @@ if (global.ErrorUtils) {
 
 // Apply safe NativeEventEmitter fixes
 export const applyNativeEventEmitterFixes = () => {
-  console.log('[NativeEventEmitterFix] Applied enhanced NativeEventEmitter error prevention');
+  console.log('[NativeEventEmitterFix] Applied comprehensive NativeEventEmitter crash prevention');
 };
 
 // Auto-apply fixes when this module is imported

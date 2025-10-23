@@ -1,10 +1,11 @@
 // Simple Chart Component for debugging
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
-const SimpleChart = ({ data, title, asset, period }) => {
+const SimpleChart = ({ data, title, asset, period, showTitle = false, showSubtitle = false, transparent = false, cardBackgroundColor = '#ffffff' }) => {
   const screenWidth = Dimensions.get('window').width;
+  const [hoverData, setHoverData] = useState(null);
   
   console.log('📊 SimpleChart Debug:', {
     title,
@@ -119,8 +120,28 @@ const SimpleChart = ({ data, title, asset, period }) => {
   const labels = generateTimeLabels(validData.length, period);
 
   // Ensure we have at least 2 data points for the chart
-  const chartData = validData.length < 2 ? [validData[0], validData[0]] : validData;
+  const chartData = validData.length < 2 ? [validData[0] || 100, validData[0] || 100] : validData;
   const chartLabels = chartData.length < 2 ? ['Start', 'End'] : labels;
+  
+  // If we still don't have valid data, create dummy data
+  if (chartData.length === 0 || chartData.every(val => val === null || val === undefined)) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.noDataContainer}>
+          <Text style={styles.noDataText}>No chart data available</Text>
+          <Text style={styles.debugText}>
+            Unable to render chart - no valid price data
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  
+  // Calculate min and max for y-axis
+  const minValue = Math.min(...chartData);
+  const maxValue = Math.max(...chartData);
+  const yAxisMin = minValue * 0.99; // Add small padding
+  const yAxisMax = maxValue * 1.01;
 
   const lineChartData = {
     labels: chartLabels,
@@ -133,24 +154,50 @@ const SimpleChart = ({ data, title, asset, period }) => {
     ]
   };
 
+  // Custom Y-axis configuration for min/max only
+  const formatYLabel = (value) => {
+    if (Math.abs(value - minValue) < Math.abs(value - maxValue)) {
+      return `£${minValue.toFixed(0)}`;
+    } else {
+      return `£${maxValue.toFixed(0)}`;
+    }
+  };
+
+  const backgroundColor = transparent ? cardBackgroundColor : '#ffffff';
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title || `${asset} Price Chart (${period})`}</Text>
-      <Text style={styles.subtitle}>
-        {validData.length} data points • Range: £{Math.min(...validData).toFixed(2)} - £{Math.max(...validData).toFixed(2)}
-      </Text>
+    <View style={[styles.container, transparent ? { backgroundColor: 'transparent' } : { backgroundColor }]}>
+      {showTitle && (
+        <Text style={styles.title}>{title || `${asset} Price Chart (${period})`}</Text>
+      )}
+      {showSubtitle && (
+        <Text style={styles.subtitle}>
+          {validData.length} data points • Range: £{Math.min(...validData).toFixed(2)} - £{Math.max(...validData).toFixed(2)}
+        </Text>
+      )}
+      
+      {/* Hover data display */}
+      {hoverData && (
+        <View style={styles.hoverContainer}>
+          <Text style={styles.hoverText}>
+            Price: £{hoverData.value?.toFixed(2)} • Time: {hoverData.label}
+          </Text>
+        </View>
+      )}
       
       <LineChart
         data={lineChartData}
         width={screenWidth - 64}
         height={220}
-        yAxisLabel="£"
+        yAxisLabel=""
         yAxisSuffix=""
         yAxisInterval={1}
+        segments={1}
+        formatYLabel={formatYLabel}
         chartConfig={{
-          backgroundColor: '#ffffff',
-          backgroundGradientFrom: '#ffffff',
-          backgroundGradientTo: '#ffffff',
+          backgroundColor: backgroundColor,
+          backgroundGradientFrom: backgroundColor,
+          backgroundGradientTo: backgroundColor,
           decimalPlaces: 0,
           color: (opacity = 1) => `rgba(25, 118, 210, ${opacity})`,
           labelColor: (opacity = 1) => `rgba(97, 97, 97, ${opacity})`,
@@ -161,25 +208,23 @@ const SimpleChart = ({ data, title, asset, period }) => {
             r: "0",
             strokeWidth: "0",
             stroke: "transparent"
-          },
-          propsForLabels: {
-            fontSize: 10
-          },
-          propsForVerticalLabels: {
-            fontSize: 9
-          },
-          propsForHorizontalLabels: {
-            fontSize: 9
           }
         }}
         bezier
-        style={styles.chart}
+        style={[styles.chart, { backgroundColor: backgroundColor }]}
         withInnerLines={false}
         withOuterLines={false}
         withHorizontalLines={true}
         withVerticalLines={false}
         fromZero={false}
         withDots={false}
+        onDataPointClick={(data) => {
+          setHoverData({
+            value: data.value,
+            label: chartLabels[data.index] || 'N/A',
+            index: data.index
+          });
+        }}
       />
     </View>
   );
@@ -187,7 +232,6 @@ const SimpleChart = ({ data, title, asset, period }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
     paddingHorizontal: 0,
     paddingVertical: 8,
   },
@@ -203,6 +247,21 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
     paddingHorizontal: 16,
+  },
+  hoverContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    zIndex: 1000,
+  },
+  hoverText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
   },
   chart: {
     marginVertical: 0,

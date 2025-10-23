@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Material Design imports
@@ -11,7 +11,10 @@ import {
   Button,
   IconButton,
   Divider,
-  Chip
+  Chip,
+  Surface,
+  FAB,
+  Menu
 } from 'react-native-paper';
 
 // Internal imports
@@ -20,13 +23,16 @@ import { colors, sharedStyles, sharedColors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Title } from 'src/components/shared';
 import { PriceGraph } from 'src/components/atomic';
-import SimpleChart from 'src/components/atomic/SimpleChart';
+import SimpleChart from 'src/components/shared/SimpleChart';
 import misc from 'src/util/misc';
 
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('CryptoContent');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+
+// Screen dimensions
+const { width: screenWidth } = Dimensions.get('window');
 
 // OFFLINE MODE - Set to false to use real CSV data from API
 const OFFLINE_MODE = false;
@@ -115,7 +121,7 @@ const generateFallbackPriceData = (currentPrice, period) => {
   return priceData;
 };
 
-let CryptoContent = () => {
+let CryptoContent = ({ onClose }) => {
   let appState = useContext(AppStateContext);
   const materialTheme = useTheme();
   let [renderCount, triggerRender] = useState(0);
@@ -133,6 +139,36 @@ let CryptoContent = () => {
   const [isLoadingMarketStats, setIsLoadingMarketStats] = useState(false);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(false);
   const [isLoadingGeneral, setIsLoadingGeneral] = useState(false);
+
+  // Trading button states
+  const [showSendMenu, setShowSendMenu] = useState(false);
+
+  // Trading button handlers
+  const handleBuy = () => {
+    const asset = appState.selectedCrypto?.asset;
+    console.log(`🛒 Buy ${asset}`);
+    // TODO: Implement buy functionality
+  };
+
+  const handleSell = () => {
+    const asset = appState.selectedCrypto?.asset;
+    console.log(`💰 Sell ${asset}`);
+    // TODO: Implement sell functionality
+  };
+
+  const handleSend = () => {
+    const asset = appState.selectedCrypto?.asset;
+    console.log(`📤 Send ${asset}`);
+    setShowSendMenu(false);
+    // TODO: Implement send functionality
+  };
+
+  const handleReceive = () => {
+    const asset = appState.selectedCrypto?.asset;
+    console.log(`📥 Receive ${asset}`);
+    setShowSendMenu(false);
+    // TODO: Implement receive functionality
+  };
 
   // Available time periods matching API documentation
   const availablePeriods = [
@@ -669,9 +705,9 @@ let CryptoContent = () => {
       <Card style={{ marginBottom: 16, elevation: 3 }}>
         <Card.Content style={{ padding: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <TouchableOpacity onPress={goBack} style={{ marginRight: 12 }}>
+            <TouchableOpacity onPress={onClose} style={{ marginRight: 12 }}>
               <IconButton 
-                icon="arrow-left" 
+                icon="close" 
                 iconColor={materialTheme.colors.onSurface}
                 size={24}
               />
@@ -745,32 +781,6 @@ let CryptoContent = () => {
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-            <Button 
-              mode="contained" 
-              onPress={() => console.log('Buy')}
-              disabled={isLoadingTicker || isLoadingBalance}
-              loading={isLoadingGeneral}
-            >
-              Buy
-            </Button>
-            <Button 
-              mode="outlined" 
-              onPress={() => console.log('Sell')}
-              disabled={isLoadingTicker || isLoadingBalance}
-              loading={isLoadingGeneral}
-            >
-              Sell
-            </Button>
-            <Button 
-              mode="outlined" 
-              onPress={() => console.log('Send')}
-              disabled={isLoadingTicker || isLoadingBalance}
-              loading={isLoadingGeneral}
-            >
-              Send
-            </Button>
-          </View>
         </Card.Content>
       </Card>
     );
@@ -917,74 +927,64 @@ let CryptoContent = () => {
     });
 
     return (
-      <Card style={{ marginBottom: 16, elevation: 2 }}>
-        <Card.Content style={{ padding: 16 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Text variant="titleMedium" style={{ 
-              fontWeight: '600', 
-              color: materialTheme.colors.onSurface 
-            }}>
-              Price Chart ({currentAsset}/GBP)
+      <View style={{ marginBottom: 16 }}>
+        {/* Period Selection Buttons */}
+        <View style={{ flexDirection: 'row', marginBottom: 16, justifyContent: 'space-between', paddingHorizontal: 16 }}>
+          {availablePeriods.map((period) => (
+            <Button
+              key={period.value}
+              mode={selectedPeriod === period.value ? 'contained' : 'outlined'}
+              onPress={() => setSelectedPeriod(period.value)}
+              style={{ 
+                marginRight: 4,
+                flex: 1,
+                maxWidth: 60
+              }}
+              contentStyle={{ paddingHorizontal: 4, paddingVertical: 4 }}
+              labelStyle={{ fontSize: 12 }}
+              compact
+            >
+              {period.label}
+            </Button>
+          ))}
+        </View>
+
+        {/* Error Display */}
+        {priceDataError && (
+          <View style={{ 
+            backgroundColor: materialTheme.colors.errorContainer,
+            padding: 12,
+            borderRadius: 8,
+            marginBottom: 16,
+            marginHorizontal: 16
+          }}>
+            <Text style={{ color: materialTheme.colors.onErrorContainer }}>
+              {priceDataError}
             </Text>
-            {isLoadingPrices && (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Icon name="loading" size={16} color={materialTheme.colors.primary} />
-                <Text style={{ marginLeft: 4, fontSize: 12, color: materialTheme.colors.onSurfaceVariant }}>
-                  Loading...
-                </Text>
-              </View>
-            )}
+            <Button
+              mode="text"
+              onPress={() => fetchHistoricPrices(currentAsset, selectedPeriod)}
+              style={{ alignSelf: 'flex-start', marginTop: 8 }}
+            >
+              Retry
+            </Button>
           </View>
+        )}
 
-          {/* Period Selection Buttons */}
-          <View style={{ flexDirection: 'row', marginBottom: 16, justifyContent: 'space-between' }}>
-            {availablePeriods.map((period) => (
-              <Button
-                key={period.value}
-                mode={selectedPeriod === period.value ? 'contained' : 'outlined'}
-                onPress={() => setSelectedPeriod(period.value)}
-                style={{ 
-                  marginRight: 4,
-                  flex: 1,
-                  maxWidth: 60
-                }}
-                contentStyle={{ paddingHorizontal: 4, paddingVertical: 4 }}
-                labelStyle={{ fontSize: 12 }}
-                compact
-              >
-                {period.label}
-              </Button>
-            ))}
-          </View>
-
-          {/* Error Display */}
-          {priceDataError && (
-            <View style={{ 
-              backgroundColor: materialTheme.colors.errorContainer,
-              padding: 12,
-              borderRadius: 8,
-              marginBottom: 16
-            }}>
-              <Text style={{ color: materialTheme.colors.onErrorContainer }}>
-                {priceDataError}
-              </Text>
-              <Button
-                mode="text"
-                onPress={() => fetchHistoricPrices(currentAsset, selectedPeriod)}
-                style={{ alignSelf: 'flex-start', marginTop: 8 }}
-              >
-                Retry
-              </Button>
-            </View>
-          )}
-
-          {/* Simple Chart for debugging */}
-          <SimpleChart 
-            data={structuredPriceData[market] && structuredPriceData[market][selectedPeriod] ? structuredPriceData[market][selectedPeriod] : []}
-            title={`${currentAsset}/GBP Price Chart`}
-            asset={currentAsset}
-            period={selectedPeriod}
-          />
+        {/* Simple Chart with no background wrapper */}
+        <SimpleChart 
+          data={structuredPriceData[market] && structuredPriceData[market][selectedPeriod] ? 
+            structuredPriceData[market][selectedPeriod].map((price, index) => ({
+              value: typeof price === 'number' ? price : parseFloat(price) || 0,
+              date: new Date(Date.now() - (structuredPriceData[market][selectedPeriod].length - index) * 3600000).toISOString().split('T')[0]
+            })) : []
+          }
+          width={screenWidth}
+          height={220}
+          strokeColor={materialTheme.colors.primary}
+          fillColor="transparent"
+          strokeWidth={2}
+        />
 
           {/* Original PriceGraph (commented out for debugging) */}
           {/* 
@@ -1008,8 +1008,7 @@ let CryptoContent = () => {
               {structuredPriceData[market][selectedPeriod].length} data points • Last updated: {new Date().toLocaleTimeString()}
             </Text>
           )}
-        </Card.Content>
-      </Card>
+      </View>
     );
   };
 
@@ -1060,7 +1059,7 @@ let CryptoContent = () => {
 
       <ScrollView 
         style={{ flex: 1 }} 
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
         {renderHeader()}
@@ -1069,6 +1068,57 @@ let CryptoContent = () => {
         {renderMarketStats()}
         {renderAbout()}
       </ScrollView>
+
+      {/* Fixed Trading Buttons at Bottom */}
+      <Surface style={styles.tradingButtonContainer} elevation={8}>
+        <View style={styles.tradingButtons}>
+          <Button
+            mode="contained"
+            onPress={handleBuy}
+            style={[styles.tradingButton, styles.buyButton]}
+            labelStyle={styles.tradingButtonLabel}
+          >
+            Buy
+          </Button>
+          
+          <Button
+            mode="contained"
+            onPress={handleSell}
+            style={[styles.tradingButton, styles.sellButton]}
+            labelStyle={styles.tradingButtonLabel}
+          >
+            Sell
+          </Button>
+          
+          <View style={styles.sendMenuContainer}>
+            <Menu
+              visible={showSendMenu}
+              onDismiss={() => setShowSendMenu(false)}
+              anchor={
+                <FAB
+                  icon="dots-horizontal"
+                  size="small"
+                  onPress={() => setShowSendMenu(true)}
+                  style={[styles.tradingButton, styles.sendButton]}
+                />
+              }
+              contentStyle={styles.menuContent}
+            >
+              <Menu.Item 
+                onPress={handleSend} 
+                title="Send" 
+                leadingIcon="send"
+              />
+              <Divider />
+              <Menu.Item 
+                onPress={handleReceive} 
+                title="Receive" 
+                leadingIcon="download"
+              />
+            </Menu>
+          </View>
+        </View>
+      </Surface>
     </View>
   );
 };
@@ -1076,6 +1126,50 @@ let CryptoContent = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  tradingButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 24, // Bottom padding for modal (no navigation to cover)
+    elevation: 8, // High elevation to stay above content
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  tradingButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  tradingButton: {
+    flex: 0.3,
+    marginHorizontal: 4,
+  },
+  buyButton: {
+    backgroundColor: '#4CAF50',
+  },
+  sellButton: {
+    backgroundColor: '#f44336',
+  },
+  sendButton: {
+    backgroundColor: '#2196F3',
+  },
+  sendMenuContainer: {
+    flex: 0.3,
+    alignItems: 'center',
+  },
+  tradingButtonLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  menuContent: {
+    backgroundColor: '#fff',
   },
 });
 

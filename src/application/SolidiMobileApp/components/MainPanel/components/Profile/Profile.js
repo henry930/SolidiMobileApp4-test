@@ -134,11 +134,11 @@ let Profile = () => {
               </Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Chip 
-                  icon="star" 
+                  icon="account" 
                   compact
                   style={{ backgroundColor: materialTheme.colors.tertiaryContainer }}
                 >
-                  Premium
+                  Normal
                 </Chip>
               </View>
             </View>

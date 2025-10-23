@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View, TouchableOpacity, RefreshControl } from 'react-native';
+import { ScrollView, StyleSheet, View, TouchableOpacity, RefreshControl, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Material Design imports
@@ -25,6 +25,9 @@ import misc from 'src/util/misc';
 import {
   getAssetInfo
 } from './AssetDataModel';
+
+// Import CryptoContent for modal display
+import CryptoContent from '../CryptoContent/CryptoContent';
 
 // Create local references for commonly used styles
 const layout = layoutStyles;
@@ -184,13 +187,17 @@ const Assets = () => {
       
       console.log('💰 Base assets found from live markets:', Array.from(baseAssets));
       
-      // Convert to asset objects with display names
-      const assetList = Array.from(baseAssets).map(asset => ({
-        asset: asset,
-        name: getAssetDisplayName(asset)
-      }));
+      // Convert to asset objects with display names, excluding unwanted assets
+      const excludedAssets = ['OM', 'SOL', 'SUL']; // Assets to exclude from display
+      const assetList = Array.from(baseAssets)
+        .filter(asset => !excludedAssets.includes(asset)) // Filter out unwanted assets
+        .map(asset => ({
+          asset: asset,
+          name: getAssetDisplayName(asset)
+        }));
       
-      console.log('✅ Generated asset list from live market data:', assetList);
+      console.log('✅ Generated asset list from live market data (after filtering):', assetList);
+      console.log('🚫 Excluded assets:', excludedAssets);
       return assetList;
       
     } catch (error) {
@@ -202,13 +209,20 @@ const Assets = () => {
   // Fallback asset list when market data is not available
   const getFallbackAssetList = () => {
     console.log('🔄 Using fallback asset list');
-    return [
+    const allAssets = [
       { asset: 'BTC', name: 'Bitcoin' },
       { asset: 'ETH', name: 'Ethereum' },
       { asset: 'LTC', name: 'Litecoin' },
       { asset: 'XRP', name: 'Ripple' },
       { asset: 'BCH', name: 'Bitcoin Cash' }
     ];
+    
+    // Filter out excluded assets
+    const excludedAssets = ['OM', 'SOL', 'SUL'];
+    const filteredAssets = allAssets.filter(asset => !excludedAssets.includes(asset.asset));
+    
+    console.log('🚫 Excluded assets from fallback list:', excludedAssets);
+    return filteredAssets;
   };
   
   // Get display name for asset
@@ -246,6 +260,10 @@ const Assets = () => {
   let [refreshing, setRefreshing] = useState(false);
   let [showRiskModal, setShowRiskModal] = useState(false);
   let [lastUpdated, setLastUpdated] = useState(null);
+
+  // Crypto modal state
+  const [showCryptoModal, setShowCryptoModal] = useState(false);
+  const [selectedCryptoAsset, setSelectedCryptoAsset] = useState(null);
   
   // Initialize with fallback asset list, will be updated after markets load
   const [assetData, setAssetData] = useState(() => getFallbackAssetList());
@@ -507,20 +525,20 @@ const Assets = () => {
     return colorMap[assetType] || colors.primary;
   };
 
-  // Navigation function to crypto content page
+  // Navigation function to crypto content page - now shows modal instead
   const navigateToCryptoContent = (asset) => {
-    console.log(`🔗 Navigating to crypto content page for ${asset}`);
+    console.log(`🔗 Opening crypto content modal for ${asset}`);
     try {
       // Set the selected crypto asset in appState for the CryptoContent page to use
-      // The CryptoContent component reads from appState.selectedCrypto.asset
       appState.selectedCrypto = { asset: asset };
       console.log(`📱 Set selectedCrypto to:`, appState.selectedCrypto);
       
-      // Navigate to CryptoContent page
-      appState.changeState('CryptoContent');
-      console.log(`✅ Successfully navigated to CryptoContent page for ${asset}`);
+      // Show modal instead of navigating
+      setSelectedCryptoAsset(asset);
+      setShowCryptoModal(true);
+      console.log(`✅ Successfully opened CryptoContent modal for ${asset}`);
     } catch (error) {
-      console.log(`❌ Error navigating to CryptoContent page for ${asset}:`, error);
+      console.log(`❌ Error opening CryptoContent modal for ${asset}:`, error);
     }
   };
 
@@ -657,83 +675,6 @@ const Assets = () => {
             🔄 Auto-refresh every 30s • Pull to refresh manually
           </Text>
         </View>
-
-        {/* Debug Info */}
-        <View style={styles.debugContainer}>
-          <TouchableOpacity 
-            onPress={() => {
-              console.log('🏪 Current live market data:', appState.apiData?.market);
-              console.log('🔍 Available live markets:', appState.getMarkets());
-              console.log('📊 Current asset list:', assetData);
-            }}
-            style={styles.debugButton}
-          >
-            <Text style={styles.debugButtonText}>🏪 Show Live Market Data in Console</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            onPress={() => {
-              console.log('💰 Current prices from /best_volume_price API (BUY side):', prices);
-              console.log('📊 Detailed analysis of each market:');
-              Object.keys(prices).forEach(market => {
-                const priceData = prices[market];
-                console.log(`\n🔍 ${market}:`);
-                console.log(`  Full response:`, priceData);
-                if (priceData.price) {
-                  console.log(`  ✅ Price available: £${priceData.price} per unit`);
-                  console.log(`  📈 Volume used: £${priceData.volume || 'N/A'} GBP`);
-                  console.log(`  🔄 Side: ${priceData.side || 'BUY'}`);
-                  if (priceData.cryptoReceived) {
-                    console.log(`  💰 Calculation: £${priceData.volume} ÷ ${priceData.cryptoReceived} crypto = £${priceData.price} per unit`);
-                  }
-                } else if (priceData.error) {
-                  console.log(`  ❌ Error: ${priceData.error}`);
-                  if (priceData.rawResponse) {
-                    console.log(`  📄 Raw API response:`, priceData.rawResponse);
-                  }
-                } else {
-                  console.log(`  ⚠️ No price or error data available`);
-                }
-              });
-              
-              // Show which assets have vs don't have data
-              const assetsWithData = Object.keys(prices).filter(market => 
-                prices[market].price !== null && prices[market].price !== undefined
-              );
-              const assetsWithoutData = Object.keys(prices).filter(market => 
-                prices[market].price === null || prices[market].price === undefined
-              );
-              
-              console.log('\n📊 Summary:');
-              console.log(`✅ Assets with prices (${assetsWithData.length}):`, assetsWithData);
-              console.log(`❌ Assets without prices (${assetsWithoutData.length}):`, assetsWithoutData);
-            }}
-            style={styles.debugButton}
-          >
-            <Text style={styles.debugButtonText}>🔍 Show /best_volume_price API Details</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            onPress={async () => {
-              console.log('🔄 Manually refreshing live market and price data...');
-              try {
-                await appState.loadMarkets();
-                await loadPricesFromBestVolumePrice();
-                console.log('✅ Manual refresh completed');
-                
-                // Update asset list based on refreshed live data
-                const refreshedAssets = getAssetListFromMarkets();
-                setAssetData(refreshedAssets);
-                triggerRender(renderCount + 1);
-              } catch (error) {
-                console.log('❌ Manual refresh failed:', error);
-              }
-            }}
-            style={styles.debugButton}
-          >
-            <Text style={styles.debugButtonText}>🔄 Refresh Live Market & Price Data</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
 
       {/* Risk Summary Modal */}
@@ -741,6 +682,16 @@ const Assets = () => {
         visible={showRiskModal} 
         onClose={() => setShowRiskModal(false)} 
       />
+
+      {/* Crypto Content Modal */}
+      <Modal
+        visible={showCryptoModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCryptoModal(false)}
+      >
+        <CryptoContent onClose={() => setShowCryptoModal(false)} />
+      </Modal>
     </View>
   );
 };

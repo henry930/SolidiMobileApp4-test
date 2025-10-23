@@ -13,9 +13,6 @@ import {
   useTheme,
   Icon,
   Chip,
-  Dialog,
-  Portal,
-  Paragraph,
 } from 'react-native-paper';
 
 // Other imports
@@ -41,7 +38,6 @@ let Settings = () => {
 
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
-  let [showLogoutDialog, setShowLogoutDialog] = useState(false);
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
 
@@ -190,15 +186,7 @@ let Settings = () => {
               >
                 {getUserEmail()}
               </Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Chip 
-                  icon="star" 
-                  compact
-                  style={{ backgroundColor: materialTheme.colors.tertiaryContainer }}
-                >
-                  Premium
-                </Chip>
-              </View>
+
             </View>
           </Card.Content>
         </Card>
@@ -279,26 +267,7 @@ let Settings = () => {
                 style={{ paddingVertical: 4 }}
               />
               
-              <Divider />
-              
-              <List.Item
-                title="Account Update"
-                description="Update your account information and preferences"
-                left={props => <List.Icon {...props} icon="account-edit" />}
-                right={props => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => { appState.changeState('AccountUpdate'); }}
-                style={{ paddingVertical: 4 }}
-              />
-              
-              <Divider />
-              
-              <List.Item
-                title="Account Review"
-                description="Complete enhanced due diligence form"
-                right={props => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => { appState.changeState('AccountReview'); }}
-                style={{ paddingVertical: 4 }}
-              />
+
             </List.Section>
           </Card.Content>
         </Card>
@@ -341,7 +310,14 @@ let Settings = () => {
             <Button
               mode="outlined"
               icon="logout"
-              onPress={() => setShowLogoutDialog(true)}
+              onPress={async () => {
+                try {
+                  // Always perform complete logout - clears all stored credentials  
+                  await appState.signOutCompletely();
+                } catch (error) {
+                  console.error('Complete logout error:', error);
+                }
+              }}
               style={{
                 borderColor: materialTheme.colors.error,
                 borderWidth: 1,
@@ -356,58 +332,7 @@ let Settings = () => {
 
       </ScrollView>
 
-      {/* Logout Confirmation Dialog */}
-      <Portal>
-        <Dialog 
-          visible={showLogoutDialog} 
-          onDismiss={() => setShowLogoutDialog(false)}
-          style={{ borderRadius: 8 }}
-        >
-          <Dialog.Title>Logout Options</Dialog.Title>
-          <Dialog.Content>
-            <Paragraph style={{ marginBottom: 12 }}>
-              Choose your logout preference:
-            </Paragraph>
-            <Paragraph style={{ fontSize: 14, color: materialTheme.colors.onSurfaceVariant }}>
-              • <Text style={{ fontWeight: 'bold' }}>Regular Logout:</Text> Stay logged in when you reopen the app
-            </Paragraph>
-            <Paragraph style={{ fontSize: 14, color: materialTheme.colors.onSurfaceVariant }}>
-              • <Text style={{ fontWeight: 'bold' }}>Complete Sign Out:</Text> Require login when reopening the app
-            </Paragraph>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
-            <Button 
-              onPress={async () => {
-                setShowLogoutDialog(false);
-                try {
-                  // Regular logout - preserves credentials for persistent login
-                  await appState.logout(false);
-                  appState.changeState('Login');
-                } catch (error) {
-                  console.error('Logout error:', error);
-                }
-              }}
-            >
-              Regular Logout
-            </Button>
-            <Button 
-              onPress={async () => {
-                setShowLogoutDialog(false);
-                try {
-                  // Complete logout - clears all stored credentials  
-                  await appState.signOutCompletely();
-                } catch (error) {
-                  console.error('Complete logout error:', error);
-                }
-              }}
-              textColor={materialTheme.colors.error}
-            >
-              Complete Sign Out
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+
     </View>
   )
 

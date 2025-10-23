@@ -76,6 +76,36 @@ let Login = () => {
     setup();
   }, []); // Pass empty array so that this only runs once on mount.
 
+  // Auto-login check - runs after setup is complete
+  useEffect(() => {
+    // Only attempt auto-login if:
+    // 1. We have cached credentials
+    // 2. User is not authenticated
+    // 3. No manual login is in progress (button not disabled)
+    // 4. No manual email/password entered yet
+    if (appState.user.apiCredentialsFound && 
+        !appState.user.isAuthenticated && 
+        !disableLoginButton &&
+        !email && 
+        !password) {
+      console.log('🔑 [LOGIN] Found cached credentials, scheduling auto-login...');
+      
+      // Add small delay to prevent race conditions with manual login
+      setTimeout(() => {
+        // Double-check conditions haven't changed
+        if (appState.user.apiCredentialsFound && 
+            !appState.user.isAuthenticated && 
+            !disableLoginButton &&
+            !email && 
+            !password) {
+          tryAutoLogin();
+        } else {
+          console.log('🔑 [LOGIN] Auto-login cancelled - conditions changed');
+        }
+      }, 100); // 100ms delay
+    }
+  }, [appState.user.apiCredentialsFound, disableLoginButton, email, password]);  // Run when credentials are found
+
 
   let setup = async () => {
     try {
@@ -123,6 +153,76 @@ let Login = () => {
     }
   }
 
+  // Attempt auto-login with cached credentials
+  let tryAutoLogin = async () => {
+    // Prevent auto-login if manual login is in progress or user has entered credentials
+    if (disableLoginButton || email || password) {
+      console.log('⚠️ [LOGIN] Skipping auto-login - manual login in progress or user has entered credentials');
+      return;
+    }
+
+    try {
+      console.log('🔑 [LOGIN] Attempting auto-login with cached credentials...');
+      
+      // Check if we have valid API credentials
+      if (!appState.user.apiCredentialsFound) {
+        console.log('⚠️ [LOGIN] No cached credentials found for auto-login');
+        return;
+      }
+
+      // Double-check we're not conflicting with manual login
+      if (disableLoginButton) {
+        console.log('⚠️ [LOGIN] Login button already disabled, skipping auto-login');
+        return;
+      }
+
+      console.log('✅ [LOGIN] Cached credentials found, proceeding with auto-login');
+      setUploadMessage('Signing in with saved credentials...');
+      setDisableLoginButton(true);
+
+      // Use the existing login method from appState
+      const result = await appState.login();
+
+      if (result && result.success) {
+        console.log('✅ [LOGIN] Auto-login successful');
+        setUploadMessage('Welcome back! Signing you in...');
+        
+        // Clear any previous error messages
+        setErrorMessage('');
+        
+        // Redirect to appropriate page after successful auto-login
+        setTimeout(() => {
+          appState.setMainPanelState({
+            mainPanelState: 'Home',
+            pageName: 'default'
+          });
+        }, 1000);
+        
+      } else {
+        console.log('❌ [LOGIN] Auto-login failed - credentials may be expired');
+        setErrorMessage('Saved credentials expired. Please sign in again.');
+        setUploadMessage('');
+        setDisableLoginButton(false);
+        
+        // Clear invalid credentials
+        await appState.logout(true); // Complete logout to clear invalid credentials
+      }
+
+    } catch (error) {
+      console.error('❌ [LOGIN] Auto-login error:', error);
+      setErrorMessage('Auto-login failed. Please sign in manually.');
+      setUploadMessage('');
+      setDisableLoginButton(false);
+      
+      // Clear invalid credentials on error
+      try {
+        await appState.logout(true);
+      } catch (logoutError) {
+        console.error('Error during cleanup logout:', logoutError);
+      }
+    }
+  }
+
 
   let getPasswordButtonTitle = () => {
     let title = passwordVisible ? 'Hide password' : 'Show password';
@@ -134,6 +234,13 @@ let Login = () => {
 
   let submitLoginRequest = async () => {
     let fName = `submitLoginRequest`;
+    console.log('🚀 [LOGIN] Manual login attempt started', { 
+      email: email ? 'provided' : 'missing', 
+      password: password ? 'provided' : 'missing',
+      disableLoginButton,
+      apiCredentialsFound: appState.user.apiCredentialsFound 
+    });
+    
     // test data
     /*
     email = 'johnqfish@foo.com';
@@ -176,8 +283,8 @@ let Login = () => {
       // Store email for convenience on successful login (but not password for security)
       await storeEmail(email);
       
-      // Redirect to profile page on successful login.
-      appState.changeState('PersonalDetails');
+      // Redirect to home page on successful login.
+      appState.changeState('Home');
     } catch(err) {
       logger.error(err);
       
