@@ -36,9 +36,28 @@
   - **Auto-Login**: Automatically logs users back in using stored keychain credentials
   - **Enhanced Security**: Validates credential format and handles expired/invalid credentials
   - **User Choice**: Logout dialog offers both regular logout and complete sign out options
-- Use iOS PIN system on the app, when open the app or too long idle. 
+- [x] In Dynamic Form generation, ${firstname} represent user's firstname,  ${lastname} represent user's lastname. ${todaysdate} means today's date string. 
+- [x] In finprom-categorisation form, some validation check. 
+In accountpurpose value, 
+if equal to hnw, Must select Yes for one of the hnwincome and hnwassets questions
+hnwincomeamount - Must enter 100,000 or more
+hwnassetsamount - Must enter 250,000 or more
 
-## Latest Updates - October 8, 2025
+if equal to restricted, 
+Must select Yes for both prev12months and next12months answser
+Must enter up to 10 for both prevamount and nextamount
+
+When click Next questions, you need to check the above and prompt the instruction. 
+
+
+## Latest Updates - October 23, 2025
+- **Android APK Build**: Successfully built both debug and release APK files for Android testing
+  - **Debug APK**: `SolidiMobileApp4-v1.2.0-debug.apk` (59.5 MB) - Ready for development testing
+  - **Release APK**: `SolidiMobileApp4-v1.2.0-release.apk` (28.4 MB) - Optimized for production testing
+  - **Build System**: Configured Android Gradle build with React Native 0.73.0, all native dependencies compiled successfully
+  - **Distribution Ready**: APKs are ready for Android device testing and distribution to testers
+
+## Previous Updates - October 8, 2025
 - **Transfer Address Book Modal**: Replaced dropdown with slide-up modal (`AddressBookSelectionModal`) for better mobile UX, matching the add address modal behavior
 - **Navigation Cleanup**: Removed 'Explore' item from footer navigation, streamlining to 4 essential items (Trade, Assets, Wallet, Transfer)
 - **Assets Page Redesign**: Complete layout simplification - removed title component and portfolio summary block, redesigned asset list to match address book styling for UI consistency
@@ -93,6 +112,24 @@
 - **API Status Indicators**: Visual indicators showing balance and ticker API health
 - **Graceful Fallbacks**: Demo data fallback when APIs are unavailable
 - **Enhanced Logging**: Detailed console logging for debugging API calls and data flow
+
+### ✅ Android Build & Distribution
+- **APK Generation**: Successfully built both debug and release Android APK files
+- **Build Optimization**: Release APK is 50% smaller (28.4 MB vs 59.5 MB) with minification and optimization
+- **Version Management**: Properly versioned APKs (v1.2.0) with build number 33
+- **Testing Ready**: APKs are ready for installation on Android devices (API level 21+)
+- **Distribution**: Both APKs located in project root for easy access and distribution
+
+### ✅ Dynamic Form Generation & Validation
+- **Variable Substitution**: Implemented dynamic variable replacement in form fields:
+  - `${firstname}` - User's first name from profile
+  - `${lastname}` - User's last name from profile  
+  - `${todaysdate}` - Today's date in DD/MM/YYYY format
+- **Enhanced Form Validation**: Added comprehensive business logic validation for finprom-categorisation form:
+  - **High-Net-Worth (HNW) Validation**: Must select "Yes" for income OR assets, with minimum thresholds (£100k income, £250k assets)
+  - **Restricted Investor Validation**: Must confirm both previous and planned investments, with maximum 10% threshold
+  - **Real-time Processing**: Variables substituted during form loading and initialization
+  - **User-friendly Error Messages**: Clear, specific validation messages for business rule violations
 
 ### ✅ Error Handling
 - **Registration Errors**: Comprehensive field-specific error parsing and display

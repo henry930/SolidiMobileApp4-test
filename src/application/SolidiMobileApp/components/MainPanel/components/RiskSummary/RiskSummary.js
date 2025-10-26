@@ -40,16 +40,6 @@ let RiskSummary = () => {
         <View style={styles.readingTimeContainer}>
           <Text style={styles.readingTime}>Estimated reading time: 2 min</Text>
         </View>
-
-        {/* Main Warning */}
-        <Card style={styles.warningCard}>
-          <Card.Content>
-            <Text style={styles.warningText}>
-              Due to the potential for losses, the Financial Conduct Authority (FCA) considers this investment to be high risk.
-            </Text>
-          </Card.Content>
-        </Card>
-
         {/* Key Risks Section */}
         <Text style={styles.sectionTitle}>What are the key risks?</Text>
 

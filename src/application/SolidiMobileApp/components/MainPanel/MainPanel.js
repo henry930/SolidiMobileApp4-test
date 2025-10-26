@@ -29,10 +29,18 @@ let jd = JSON.stringify;
 
 let MainPanel = (props) => {
 
+  // HUGE DEBUG MESSAGE TO VERIFY LOADING
+  console.log('🚀🚀🚀 MAINPANEL IS DEFINITELY LOADING!!! 🚀🚀🚀');
 
   let {style: styleArg} = props;
 
   let appState = useContext(AppStateContext);
+
+  console.log('🎯 [MainPanel] AppState loaded:', {
+    mainPanelState: appState?.mainPanelState,
+    pageName: appState?.pageName,
+    initialMainPanelState: appState?.initialMainPanelState
+  });
 
 
   let selectPanelComponent = () => {

@@ -430,7 +430,16 @@ export default class SolidiRestAPIClientLibrary {
           console.log(JSON.stringify(parsedResponse, null, 2));
           
           if (parsedResponse.error) {
-            console.log(`\n❌ ERROR DETECTED: ${parsedResponse.error}`);
+            // Check if this is actually a success message disguised as an error
+            const isSuccessMessage = 
+              parsedResponse.error.toLowerCase().includes('success') ||
+              parsedResponse.error.toLowerCase().includes('successful');
+            
+            if (isSuccessMessage) {
+              console.log(`\n✅ SUCCESS MESSAGE: ${parsedResponse.error}`);
+            } else {
+              console.log(`\n❌ ERROR DETECTED: ${parsedResponse.error}`);
+            }
           }
           if (parsedResponse.data) {
             console.log(`\n✅ DATA PRESENT:`, JSON.stringify(parsedResponse.data, null, 2));
@@ -467,7 +476,16 @@ export default class SolidiRestAPIClientLibrary {
             console.log(JSON.stringify(parsedResponse, null, 2));
             
             if (parsedResponse.error) {
-              console.log(`❌ ERROR DETECTED: ${parsedResponse.error}`);
+              // Check if this is actually a success message disguised as an error
+              const isSuccessMessage = 
+                parsedResponse.error.toLowerCase().includes('success') ||
+                parsedResponse.error.toLowerCase().includes('successful');
+              
+              if (isSuccessMessage) {
+                console.log(`✅ SUCCESS MESSAGE: ${parsedResponse.error}`);
+              } else {
+                console.log(`❌ ERROR DETECTED: ${parsedResponse.error}`);
+              }
             }
             if (parsedResponse.data) {
               console.log(`✅ DATA PRESENT: ${JSON.stringify(parsedResponse.data)}`);

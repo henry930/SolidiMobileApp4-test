@@ -15,7 +15,7 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
  * AccountUpdate - MainPanel wrapper for the AccountUpdate component
  * This wrapper integrates the AccountUpdate component with the MainPanel navigation system
  */
-let AccountUpdate = () => {
+let AccountUpdate = ({ onComplete }) => {
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
   let firstRender = misc.useFirstRender();
@@ -55,7 +55,12 @@ let AccountUpdate = () => {
   }
 
   return (
-    <AccountUpdateComponent appState={appState} />
+    <AccountUpdateComponent 
+      appState={appState} 
+      onComplete={onComplete || (() => {
+        console.log('📋 [AccountUpdate Wrapper] No onComplete callback provided, using default');
+      })}
+    />
   );
 };
 

@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Dimensions, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Material Design imports
@@ -24,6 +24,8 @@ import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { Title } from 'src/components/shared';
 import { PriceGraph } from 'src/components/atomic';
 import SimpleChart from 'src/components/shared/SimpleChart';
+import Buy from 'src/components/Buy';
+import Sell from 'src/components/Sell';
 import misc from 'src/util/misc';
 
 // Logger
@@ -142,18 +144,20 @@ let CryptoContent = ({ onClose }) => {
 
   // Trading button states
   const [showSendMenu, setShowSendMenu] = useState(false);
+  const [showBuyPage, setShowBuyPage] = useState(false);
+  const [showSellPage, setShowSellPage] = useState(false);
 
   // Trading button handlers
   const handleBuy = () => {
     const asset = appState.selectedCrypto?.asset;
     console.log(`🛒 Buy ${asset}`);
-    // TODO: Implement buy functionality
+    setShowBuyPage(true);
   };
 
   const handleSell = () => {
     const asset = appState.selectedCrypto?.asset;
     console.log(`💰 Sell ${asset}`);
-    // TODO: Implement sell functionality
+    setShowSellPage(true);
   };
 
   const handleSend = () => {
@@ -1119,6 +1123,26 @@ let CryptoContent = ({ onClose }) => {
           </View>
         </View>
       </Surface>
+
+      {/* Buy Modal */}
+      <Modal
+        visible={showBuyPage}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowBuyPage(false)}
+      >
+        <Buy onBack={() => setShowBuyPage(false)} />
+      </Modal>
+
+      {/* Sell Modal */}
+      <Modal
+        visible={showSellPage}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowSellPage(false)}
+      >
+        <Sell onBack={() => setShowSellPage(false)} />
+      </Modal>
     </View>
   );
 };

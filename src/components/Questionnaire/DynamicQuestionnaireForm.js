@@ -12,15 +12,78 @@ import { scaledWidth, scaledHeight, normaliseFont } from '../../util/dimensions'
 import AppStateContext from '../../application/data';
 import localFormService from '../../api/LocalFormService';
 
-// Simple and reliable HTML renderer for React Native
-const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
-  if (!htmlString) return null;
+// Variable substitution function for dynamic form generation
+const substituteVariables = (text, appState) => {
+  console.log('🔄 [VARIABLE SUBSTITUTION] Running substituteVariables for text:', text?.substring(0, 50));
   
-  // console.log('🎨 Rendering HTML:', htmlString.substring(0, 100) + (htmlString.length > 100 ? '...' : ''));
+  if (!text || typeof text !== 'string') return text;
+  
+  // Get user information - try multiple sources
+  let firstName = '';
+  let lastName = '';
+  
+  try {
+    // Try different ways to get user info
+    firstName = appState?.getUserInfo?.('firstName') || 
+                appState?.userInfo?.firstName || 
+                appState?.user?.info?.user?.firstName || 
+                'John'; // Fallback for testing
+                
+    lastName = appState?.getUserInfo?.('lastName') || 
+               appState?.userInfo?.lastName || 
+               appState?.user?.info?.user?.lastName || 
+               'Doe'; // Fallback for testing
+  } catch (error) {
+    console.log('⚠️ [VARIABLE SUBSTITUTION] Error getting user info, using fallbacks:', error);
+    firstName = 'John';
+    lastName = 'Doe';
+  }
+  
+  const todaysdate = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit', 
+    year: 'numeric'
+  });
+
+  console.log('👤 [VARIABLE SUBSTITUTION] User data:', { firstName, lastName, todaysdate });
+  console.log('👤 [VARIABLE SUBSTITUTION] AppState keys:', Object.keys(appState || {}));
+
+  const result = text
+    .replace(/\$\{firstname\}/g, firstName)
+    .replace(/\$\{lastname\}/g, lastName)
+    .replace(/\$\{todaysdate\}/g, todaysdate);
+    
+  console.log('✅ [VARIABLE SUBSTITUTION] Original:', text?.substring(0, 100));
+  console.log('✅ [VARIABLE SUBSTITUTION] Result:', result?.substring(0, 100));
+  return result;
+};
+
+// Simple and reliable HTML renderer for React Native
+const renderHtmlText = (htmlString, baseStyle = {}, width = 350, appState = null) => {
+  // Handle null, undefined, or empty string cases
+  if (!htmlString || htmlString === '' || htmlString === null || htmlString === undefined) {
+    return <Text style={baseStyle}></Text>;
+  }
+  
+  // Ensure htmlString is a string
+  const stringContent = String(htmlString);
+  
+  // Apply variable substitution if appState is provided
+  let processedString = stringContent;
+  if (appState) {
+    processedString = substituteVariables(stringContent, appState);
+  }
+  
+  // Normalize baseStyle - handle both objects and arrays
+  const normalizedBaseStyle = Array.isArray(baseStyle) 
+    ? baseStyle.filter(style => style && typeof style === 'object').reduce((acc, style) => ({ ...acc, ...style }), {})
+    : (baseStyle && typeof baseStyle === 'object' ? baseStyle : {});
+  
+  // console.log('🎨 Rendering HTML:', processedString.substring(0, 100) + (processedString.length > 100 ? '...' : ''));
   
   // If no HTML tags, return simple text
-  if (!htmlString.includes('<')) {
-    return <Text style={baseStyle}>{htmlString}</Text>;
+  if (!processedString.includes('<')) {
+    return <Text style={normalizedBaseStyle}>{processedString}</Text>;
   }
 
   // Parse simple HTML tags and render them properly
@@ -37,11 +100,11 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
           const level = parseInt(match[1]);
           const content = match[2].replace(/<[^>]*>/g, ''); // Remove any other tags
           
-          let headingStyle = { ...baseStyle };
+          let headingStyle = { ...normalizedBaseStyle };
           switch (level) {
             case 1:
               headingStyle = { 
-                ...baseStyle, 
+                ...normalizedBaseStyle, 
                 fontSize: 20, 
                 fontWeight: 'normal', 
                 marginVertical: 6, 
@@ -52,7 +115,7 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
               break;
             case 2:
               headingStyle = { 
-                ...baseStyle, 
+                ...normalizedBaseStyle, 
                 fontSize: 18, 
                 fontWeight: 'normal', 
                 marginVertical: 5, 
@@ -63,7 +126,7 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
               break;
             case 3:
               headingStyle = { 
-                ...baseStyle, 
+                ...normalizedBaseStyle, 
                 fontSize: 16, 
                 fontWeight: 'normal', 
                 marginVertical: 4, 
@@ -74,7 +137,7 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
               break;
             case 4:
               headingStyle = { 
-                ...baseStyle, 
+                ...normalizedBaseStyle, 
                 fontSize: 16, 
                 fontWeight: 'normal', 
                 marginVertical: 4, 
@@ -85,7 +148,7 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
               break;
             case 5:
               headingStyle = { 
-                ...baseStyle, 
+                ...normalizedBaseStyle, 
                 fontSize: 16, 
                 fontWeight: 'normal', 
                 marginVertical: 4, 
@@ -96,7 +159,7 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
               break;
             case 6:
               headingStyle = { 
-                ...baseStyle, 
+                ...normalizedBaseStyle, 
                 fontSize: 14, 
                 fontWeight: 'normal', 
                 marginVertical: 3, 
@@ -105,66 +168,11 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
                 textAlign: 'justify'
               };
               break;
-              break;
-            case 2:
-              headingStyle = { 
-                ...baseStyle, 
-                fontSize: 17, 
-                fontWeight: '400', 
-                marginVertical: 3, 
-                color: '#334155',
-                lineHeight: 19
-              };
-              break;
-            case 3:
-              headingStyle = { 
-                ...baseStyle, 
-                fontSize: 16, 
-                fontWeight: 'normal', 
-                marginVertical: 2, 
-                color: '#374151',
-                lineHeight: 18,
-                textAlign: 'justify'
-              };
-              break;
-            case 4:
-              headingStyle = { 
-                ...baseStyle, 
-                fontSize: 15, 
-                fontWeight: 'normal', 
-                marginVertical: 2, 
-                color: '#475569',
-                lineHeight: 17,
-                textAlign: 'justify'
-              };
-              break;
-            case 5:
-              headingStyle = { 
-                ...baseStyle, 
-                fontSize: 14, 
-                fontWeight: 'normal', 
-                marginVertical: 2, 
-                color: '#64748b',
-                lineHeight: 16,
-                textAlign: 'justify'
-              };
-              break;
-            case 6:
-              headingStyle = { 
-                ...baseStyle, 
-                fontSize: 13, 
-                fontWeight: 'normal', 
-                marginVertical: 1, 
-                color: '#6b7280',
-                lineHeight: 15,
-                textAlign: 'justify'
-              };
-              break;
           }
           
           elements.push(
             <Text key={`heading-${partIndex}`} style={headingStyle}>
-              {content}
+              {content || ''}
             </Text>
           );
         } else {
@@ -178,17 +186,19 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
           boldParts.forEach((boldPart, boldIndex) => {
             if (boldPart.match(/<(b|strong)[^>]*>(.*?)<\/(b|strong)>/i)) {
               const boldMatch = boldPart.match(/<(b|strong)[^>]*>(.*?)<\/(b|strong)>/i);
-              const boldContent = boldMatch[2];
-              textElements.push(
-                <Text key={`bold-${partIndex}-${boldIndex}`} style={{ 
-                  ...baseStyle, 
-                  fontWeight: 'normal', 
-                  color: '#333333',
-                  textAlign: 'justify'
-                }}>
-                  {boldContent}
-                </Text>
-              );
+              const boldContent = boldMatch[2] || '';
+              if (boldContent.trim()) {
+                textElements.push(
+                  <Text key={`bold-${partIndex}-${boldIndex}`} style={{ 
+                    ...normalizedBaseStyle, 
+                    fontWeight: 'bold', 
+                    color: '#333333',
+                    textAlign: 'justify'
+                  }}>
+                    {boldContent}
+                  </Text>
+                );
+              }
             } else if (boldPart.trim()) {
               // Clean up any remaining HTML tags and entities
               const cleanText = boldPart
@@ -201,7 +211,7 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
               if (cleanText.trim()) {
                 textElements.push(
                   <Text key={`text-${partIndex}-${boldIndex}`} style={{
-                    ...baseStyle,
+                    ...normalizedBaseStyle,
                     color: '#333333',
                     lineHeight: 22,
                     textAlign: 'justify'
@@ -215,9 +225,9 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
           
           if (textElements.length > 0) {
             elements.push(
-              <View key={`paragraph-${partIndex}`} style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              <Text key={`paragraph-${partIndex}`} style={normalizedBaseStyle}>
                 {textElements}
-              </View>
+              </Text>
             );
           }
         }
@@ -231,12 +241,18 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
       }
     });
     
-    return elements;
+    // Ensure we always return an array, even if empty
+    return elements.length > 0 ? elements : [<Text key="empty" style={normalizedBaseStyle}></Text>];
   };
 
   try {
-    const renderedElements = parseAndRenderHtml(htmlString);
-    console.log('✅ HTML parsed successfully, elements:', renderedElements.length);
+    const renderedElements = parseAndRenderHtml(processedString);
+    console.log('✅ HTML parsed successfully, elements:', renderedElements?.length || 0);
+    
+    // Ensure we always return a valid component
+    if (!renderedElements || renderedElements.length === 0) {
+      return <Text style={normalizedBaseStyle}>{processedString}</Text>;
+    }
     
     return (
       <View>
@@ -246,14 +262,14 @@ const renderHtmlText = (htmlString, baseStyle = {}, width = 350) => {
   } catch (error) {
     console.error('❌ HTML parsing error:', error);
     // Fallback to simple text without HTML tags
-    const cleanText = htmlString
+    const cleanText = processedString
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
       .replace(/&amp;/g, '&')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>');
     
-    return <Text style={baseStyle}>{cleanText}</Text>;
+    return <Text style={normalizedBaseStyle}>{cleanText || ''}</Text>;
   }
 };
 
@@ -262,6 +278,10 @@ const DynamicQuestionnaireForm = ({
   onSubmit, 
   onBack 
 }) => {
+  console.log('🚀🚀🚀 [DynamicQuestionnaireForm] *** COMPONENT IS DEFINITELY LOADING *** formId:', formId);
+  console.log('🚀🚀🚀 [DynamicQuestionnaireForm] *** COMPONENT IS DEFINITELY LOADING *** formId:', formId);
+  console.log('🚀🚀🚀 [DynamicQuestionnaireForm] *** COMPONENT IS DEFINITELY LOADING *** formId:', formId);
+  
   const { width } = useWindowDimensions();
   const appState = useContext(AppStateContext);
   const [answers, setAnswers] = useState({});
@@ -308,10 +328,27 @@ const DynamicQuestionnaireForm = ({
 
   // Handle answer changes
   const handleAnswerChange = (questionId, value) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: value
-    }));
+    console.log('📝 [ANSWER CHANGE] Question:', questionId, 'New Value:', value, 'Type:', typeof value);
+    
+    // Special logging for validation-critical fields
+    if (questionId === 'prevamount') {
+      console.log('🎯 [ANSWER CHANGE] PREVAMOUNT updated:', value, 'Parsed as number:', parseFloat(value));
+    }
+    if (questionId === 'hnwincomeamount') {
+      console.log('🎯 [ANSWER CHANGE] HNW INCOME updated:', value, 'Parsed as number:', parseFloat(value));
+    }
+    if (questionId === 'hwnassetsamount') {
+      console.log('🎯 [ANSWER CHANGE] HNW ASSETS updated:', value, 'Parsed as number:', parseFloat(value));
+    }
+    
+    setAnswers(prev => {
+      const newAnswers = {
+        ...prev,
+        [questionId]: value
+      };
+      console.log('📝 [ANSWER CHANGE] Updated answers:', newAnswers);
+      return newAnswers;
+    });
   };
 
   // Get current questions (for single page forms or multi-page forms)
@@ -339,8 +376,187 @@ const DynamicQuestionnaireForm = ({
     return renderableQuestions.length > 0;
   };
 
+  // Enhanced validation function for finprom-categorisation form
+  const validateForm = (pageSpecific = false) => {
+    console.log('🔍 [VALIDATION] ====== STARTING FORM VALIDATION ======');
+    console.log('🔍 [VALIDATION] Page-specific validation:', pageSpecific);
+    console.log('🔍 [VALIDATION] Current page:', currentPage);
+    console.log('🔍 [VALIDATION] Current answers:', JSON.stringify(answers, null, 2));
+    
+    if (!activeFormData || !activeFormData.pages) {
+      console.log('❌ [VALIDATION] No form data available for validation');
+      return { isValid: false, errors: ['Form data not loaded'] };
+    }
+
+    const invalidFields = [];
+    const formId = activeFormData.formid;
+    console.log('🔍 [VALIDATION] Form ID:', formId);
+    
+    // Get questions to validate based on mode
+    let questionsToValidate = [];
+    
+    if (pageSpecific) {
+      // Only validate current page questions
+      const currentPageData = activeFormData.pages[currentPage];
+      questionsToValidate = currentPageData?.questions || [];
+      console.log('🔍 [VALIDATION] Page-specific: validating', questionsToValidate.length, 'questions from current page');
+    } else {
+      // Validate all questions (for final submission)
+      activeFormData.pages.forEach(page => {
+        if (page.questions) {
+          questionsToValidate.push(...page.questions);
+        }
+      });
+      console.log('🔍 [VALIDATION] Full form: validating', questionsToValidate.length, 'questions from all pages');
+    }
+
+    // Validate each question
+    questionsToValidate.forEach(question => {
+      const answer = answers[question.id];
+      console.log(`🔍 [VALIDATION] Question "${question.id}": type="${question.type}", answer="${answer}"`);
+      
+      // Skip legend/info questions
+      if (question.type === 'legend') return;
+      
+      // For number fields, validate constraints
+      if (question.type === 'number') {
+        if (answer && isNaN(Number(answer))) {
+          invalidFields.push(`${question.label?.replace(/<[^>]*>/g, '') || question.id} (must be a valid number)`);
+        }
+      }
+    });
+
+    // Special validation for finprom-categorisation form
+    if (formId === 'customer-categorisation' || formId === 'finprom-categorisation') {
+      console.log('🎯 [VALIDATION] ====== APPLYING FINPROM-CATEGORISATION VALIDATION RULES ======');
+      
+      // Get key answers
+      const accountPurpose = answers['accountpurpose']; // Main investor type selection
+      const prev12months = answers['prev12months']; // Previous investment
+      const prevAmount = answers['prevamount']; // Previous investment percentage
+      const next12months = answers['next12months']; // Future investment plans
+      const hnwIncome = answers['hnwincome']; // HNW income status
+      const hnwAssets = answers['hnwassets']; // HNW assets status
+      const hnwIncomeAmount = answers['hnwincomeamount']; // HNW income amount
+      const hnwAssetsAmount = answers['hwnassetsamount']; // HNW assets amount (note: typo in JSON)
+
+      console.log('📊 [VALIDATION] Key answers for validation:', {
+        accountPurpose, prev12months, prevAmount, next12months, 
+        hnwIncome, hnwAssets, hnwIncomeAmount, hnwAssetsAmount
+      });
+
+      // Only apply business rules if we're on the relevant pages or doing full validation
+      if (!pageSpecific || accountPurpose) {
+        
+        // Restricted investor validation - only if they've entered a prevAmount
+        if (accountPurpose === 'restricted' && prevAmount !== null && prevAmount !== undefined && prevAmount !== '') {
+          console.log('🎯 [VALIDATION] Restricted investor detected - checking prevAmount');
+          console.log('🎯 [VALIDATION] prevAmount value:', prevAmount, 'type:', typeof prevAmount);
+          
+          const percentageValue = parseFloat(prevAmount);
+          console.log('🎯 [VALIDATION] Parsed percentage value:', percentageValue);
+          
+          if (!isNaN(percentageValue) && percentageValue > 10) {
+            console.log('❌ [VALIDATION] Restricted investor validation FAILED - percentage too high:', percentageValue);
+            invalidFields.push('Invalid. Your amount should less than 10 if you are a restricted investor');
+          } else if (isNaN(percentageValue)) {
+            console.log('❌ [VALIDATION] Restricted investor validation FAILED - invalid number:', prevAmount);
+            invalidFields.push('Please enter a valid percentage for your investment amount');
+          } else {
+            console.log('✅ [VALIDATION] Restricted investor validation PASSED - percentage OK:', percentageValue);
+          }
+        }
+
+        // HNW investor validation - comprehensive check
+        if (accountPurpose === 'hnw') {
+          console.log('🎯 [VALIDATION] HNW investor detected - checking comprehensive validation');
+          
+          const hasIncomeYes = hnwIncome === 'yes';
+          const hasAssetsYes = hnwAssets === 'yes';
+          const hasIncomeNo = hnwIncome === 'no';
+          const hasAssetsNo = hnwAssets === 'no';
+          const income = parseFloat(hnwIncomeAmount) || 0;
+          const assets = parseFloat(hnwAssetsAmount) || 0;
+          
+          console.log('🎯 [VALIDATION] HNW Status:', {
+            hnwIncome, hasIncomeYes, hasIncomeNo,
+            hnwAssets, hasAssetsYes, hasAssetsNo,
+            hnwIncomeAmount, income,
+            hnwAssetsAmount, assets
+          });
+          
+          // CRITICAL: Check if they answered "no" to both income and assets - this disqualifies them
+          if (hasIncomeNo && hasAssetsNo) {
+            console.log('❌ [VALIDATION] HNW investor validation FAILED - answered NO to both income AND assets');
+            invalidFields.push('To qualify as a High-Net-Worth investor, you must have either £100,000+ annual income OR £250,000+ net assets. You cannot answer "No" to both questions.');
+          } else {
+            // Check income qualification if they answered "yes"
+            if (hasIncomeYes) {
+              if (!hnwIncomeAmount || hnwIncomeAmount === '') {
+                console.log('❌ [VALIDATION] HNW investor validation FAILED - said yes to income but no amount provided');
+                invalidFields.push('Please specify your income amount since you answered "Yes" to having £100k+ income');
+              } else if (income < 100000) {
+                console.log('❌ [VALIDATION] HNW investor validation FAILED - insufficient income amount');
+                console.log(`❌ [VALIDATION] Income amount: ${income} < 100000`);
+                invalidFields.push('Your income must be £100,000 or more to qualify via income');
+              }
+            }
+            
+            // Check assets qualification if they answered "yes"
+            if (hasAssetsYes) {
+              if (!hnwAssetsAmount || hnwAssetsAmount === '') {
+                console.log('❌ [VALIDATION] HNW investor validation FAILED - said yes to assets but no amount provided');
+                invalidFields.push('Please specify your assets amount since you answered "Yes" to having £250k+ assets');
+              } else if (assets < 250000) {
+                console.log('❌ [VALIDATION] HNW investor validation FAILED - insufficient assets amount');
+                console.log(`❌ [VALIDATION] Assets amount: ${assets} < 250000`);
+                invalidFields.push('Your assets must be £250,000 or more to qualify via assets');
+              }
+            }
+            
+            // Final validation: if they said yes to either, they must meet at least one threshold
+            if ((hasIncomeYes || hasAssetsYes) && hnwIncomeAmount && hnwAssetsAmount) {
+              const qualifiedByIncome = hasIncomeYes && income >= 100000;
+              const qualifiedByAssets = hasAssetsYes && assets >= 250000;
+              
+              if (qualifiedByIncome || qualifiedByAssets) {
+                console.log('✅ [VALIDATION] HNW investor validation PASSED');
+                if (qualifiedByIncome) {
+                  console.log(`✅ [VALIDATION] Qualified by income: ${income} >= 100000`);
+                }
+                if (qualifiedByAssets) {
+                  console.log(`✅ [VALIDATION] Qualified by assets: ${assets} >= 250000`);
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      console.log('🎯 [VALIDATION] ====== END FINPROM-CATEGORISATION VALIDATION ======');
+    }
+
+    const isValid = invalidFields.length === 0;
+    console.log(`🔍 [VALIDATION] ====== VALIDATION RESULT ======`);
+    console.log(`🔍 [VALIDATION] Valid: ${isValid}`);
+    console.log(`🔍 [VALIDATION] Errors: ${JSON.stringify(invalidFields)}`);
+    console.log(`🔍 [VALIDATION] ====== END VALIDATION ======`);
+    
+    return { isValid, errors: invalidFields };
+  };
+
   // Handle form submission
   const handleSubmit = async () => {
+    console.log('📤 [SUBMIT] Starting form submission');
+    
+    // Final validation before submission (full form validation)
+    const validation = validateForm(false); // false = full form validation
+    if (!validation.isValid) {
+      console.log('❌ [SUBMIT] Final validation failed');
+      Alert.alert('Validation Error', validation.errors.join('\n\n'));
+      return;
+    }
+
     try {
       // 1. Create a deep copy of the form structure
       const submissionData = JSON.parse(JSON.stringify(activeFormData));
@@ -374,7 +590,8 @@ const DynamicQuestionnaireForm = ({
       const jsonString = JSON.stringify(submissionData, null, 2);
       const base64Data = Buffer.from(jsonString, 'utf-8').toString('base64');
       
-      // 5. Upload
+      // 5. Upload and get response
+      console.log('📤 [SUBMIT] Uploading document:', documentType);
       const uploadResult = await appState.uploadDocument({
         documentType: documentType,
         documentCategory: documentType,
@@ -382,49 +599,99 @@ const DynamicQuestionnaireForm = ({
         fileExtension: '.json'
       });
 
-      // 6. Show success and call callback
-      Alert.alert(
-        'Thank you!', 
-        `Thank you for your evaluation. You may login after 15 mins. You can use the app if you pass.`,
-        [
-          {
-            text: 'OK',
-            onPress: async () => {
-              if (onSubmit) {
-                onSubmit({ uploadResult, uploadSuccess: true });
-              }
-              
-              // Logout automatically and redirect to login page
-              try {
-                console.log('🚪 Automatically logging out user after form submission');
-                await appState.logout(false); // Regular logout - preserves credentials for re-login
-                appState.changeState('Login');
-                console.log('✅ Successfully logged out and redirected to login');
-              } catch (error) {
-                console.error('❌ Error during automatic logout:', error);
-                // Even if logout fails, still try to go to login
-                appState.changeState('Login');
-              }
-            }
-          }
-        ]
-      );
+      console.log('📤 [SUBMIT] Upload result:', uploadResult);
+
+      // 6. BACKGROUND LOGIN AND REGISTRATION STATUS CHECK
+      console.log('� [SUBMIT] Performing background login regardless of response...');
+      
+      try {
+        // Always perform background login/authentication
+        await appState.authenticateUser();
+        console.log('✅ [SUBMIT] Background authentication successful');
+        
+        // Always reload user status to get latest registration state
+        if (appState?.loadUserInfo) {
+          await appState.loadUserInfo();
+        }
+        if (appState?.loadUserStatus) {
+          await appState.loadUserStatus();
+        }
+        console.log('✅ [SUBMIT] User status reloaded');
+        
+        // CRITICAL: Trigger the registration status check to redirect appropriately
+        console.log('🔍 [SUBMIT] Checking if user needs to be redirected based on registration status...');
+        const redirectTarget = await appState.checkUserStatusRedirect();
+        console.log('🎯 [SUBMIT] Redirect target determined:', redirectTarget);
+        
+        if (redirectTarget === 'RegistrationCompletion') {
+          console.log('📋 [SUBMIT] User needs to go to RegistrationCompletion - updating state');
+          // Set the main panel state to RegistrationCompletion
+          appState.setMainPanelState({
+            mainPanelState: 'RegistrationCompletion',
+            pageName: 'default'
+          });
+        }
+        
+      } catch (authError) {
+        console.error('⚠️ [SUBMIT] Background authentication error (continuing anyway):', authError);
+      }
+
+      // 7. Silent success handling - no user prompts
+      console.log('✅ [SUBMIT] Form submission completed successfully, proceeding silently');
+      
+      // Directly trigger the completion callback without showing alert
+      if (onSubmit) {
+        onSubmit({ 
+          uploadResult, 
+          uploadSuccess: true,
+          shouldCheckRegistration: true // Signal to check registration status
+        });
+      }
 
     } catch (error) {
-      Alert.alert(
-        'Submission Error', 
-        `Failed to submit form: ${error.message}`,
-        [
-          {
-            text: 'Retry',
-            onPress: () => handleSubmit()
-          },
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          }
-        ]
-      );
+      console.error('❌ [SUBMIT] Submission error:', error);
+      
+      // Even on error, try background login and continue
+      console.log('🔄 [SUBMIT] Form submission failed, but attempting background login anyway...');
+      
+      try {
+        await appState.authenticateUser();
+        if (appState?.loadUserInfo) {
+          await appState.loadUserInfo();
+        }
+        if (appState?.loadUserStatus) {
+          await appState.loadUserStatus();
+        }
+        console.log('✅ [SUBMIT] Background authentication successful despite submission error');
+        
+        // CRITICAL: Even on submission error, check registration status for redirect
+        console.log('🔍 [SUBMIT] Checking registration status after error...');
+        const redirectTarget = await appState.checkUserStatusRedirect();
+        console.log('🎯 [SUBMIT] Redirect target determined after error:', redirectTarget);
+        
+        if (redirectTarget === 'RegistrationCompletion') {
+          console.log('📋 [SUBMIT] User needs to go to RegistrationCompletion - updating state');
+          appState.setMainPanelState({
+            mainPanelState: 'RegistrationCompletion',
+            pageName: 'default'
+          });
+        }
+        
+      } catch (authError) {
+        console.error('❌ [SUBMIT] Background authentication also failed:', authError);
+      }
+      
+      // Silent error handling - no user prompts
+      console.log('⚠️ [SUBMIT] Form submission had errors, but proceeding silently');
+      
+      // Directly trigger the completion callback without showing alert
+      if (onSubmit) {
+        onSubmit({ 
+          uploadResult: error,
+          uploadSuccess: false,
+          shouldCheckRegistration: true // Still check registration status
+        });
+      }
     }
   };
 
@@ -475,10 +742,10 @@ const DynamicQuestionnaireForm = ({
       case 'legend':
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            {renderHtmlText(question.label, styles.legendText, width)}
+            {renderHtmlText(question.label, styles.legendText, width, appState)}
             {question.guidance ? (
               <View style={{ marginTop: 8 }}>
-                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+                {renderHtmlText(question.guidance, styles.questionGuidance, width, appState)}
               </View>
             ) : null}
           </View>
@@ -488,17 +755,28 @@ const DynamicQuestionnaireForm = ({
       case 'email':
       case 'password':
       case 'number':
+        // Apply variable substitution to the value field if it exists
+        let defaultValue = currentAnswer;
+        if (!defaultValue && question.value) {
+          defaultValue = substituteVariables(question.value, appState);
+          console.log('🔄 [VARIABLE SUBSTITUTION] Applied to input value:', question.value, '→', defaultValue);
+          // Set the substituted value as the current answer if it's not already set
+          if (!currentAnswer) {
+            updateAnswer(defaultValue);
+          }
+        }
+        
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            {renderHtmlText(question.label, styles.questionLabel, width)}
+            {renderHtmlText(question.label, styles.questionLabel, width, appState)}
             {question.guidance ? (
               <View style={{ marginTop: 8 }}>
-                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+                {renderHtmlText(question.guidance, styles.questionGuidance, width, appState)}
               </View>
             ) : null}
             <TextInput
               style={styles.textInput}
-              value={currentAnswer}
+              value={defaultValue || ''}
               placeholder={question.placeholder || ''}
               secureTextEntry={question.type === 'password'}
               keyboardType={
@@ -514,10 +792,10 @@ const DynamicQuestionnaireForm = ({
       case 'textarea':
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            {renderHtmlText(question.label, styles.questionLabel, width)}
+            {renderHtmlText(question.label, styles.questionLabel, width, appState)}
             {question.guidance ? (
               <View style={{ marginTop: 8 }}>
-                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+                {renderHtmlText(question.guidance, styles.questionGuidance, width, appState)}
               </View>
             ) : null}
             <TextInput
@@ -535,10 +813,10 @@ const DynamicQuestionnaireForm = ({
       case 'radio':
         return (
           <View key={questionKey} style={styles.questionContainer}>
-            {renderHtmlText(question.label, styles.questionLabel, width)}
+            {renderHtmlText(question.label, styles.questionLabel, width, appState)}
             {question.guidance ? (
               <View style={{ marginTop: 8 }}>
-                {renderHtmlText(question.guidance, styles.questionGuidance, width)}
+                {renderHtmlText(question.guidance, styles.questionGuidance, width, appState)}
               </View>
             ) : null}
             <View style={styles.radioGroupContainer}>
@@ -559,10 +837,12 @@ const DynamicQuestionnaireForm = ({
                     color="#1976D2"
                     uncheckedColor="#757575"
                   />
-                  {renderHtmlText(option.text, [
-                    styles.radioLabel,
-                    currentAnswer === option.id && styles.radioLabelSelected
-                  ], width)}
+                  <View style={{ flex: 1 }}>
+                    {renderHtmlText(option.text, {
+                      ...styles.radioLabel,
+                      ...(currentAnswer === option.id ? styles.radioLabelSelected : {})
+                    }, width - 60, appState)}
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -588,6 +868,18 @@ const DynamicQuestionnaireForm = ({
   };
 
   const handleNext = () => {
+    console.log('🔄 [NEXT BUTTON] Next button clicked - running page-specific validation');
+    
+    // Validate current page only (not the entire form)
+    const validation = validateForm(true); // true = page-specific validation
+    if (!validation.isValid) {
+      console.log('❌ [NEXT BUTTON] Page validation failed, showing errors');
+      Alert.alert('Validation Error', validation.errors.join('\n\n'));
+      return;
+    }
+    
+    console.log('✅ [NEXT BUTTON] Page validation passed, proceeding with navigation');
+    
     if (activeFormData?.pages && currentPage < activeFormData.pages.length - 1) {
       // Check if current page has accountpurpose question and handle conditional navigation
       const currentPageData = activeFormData.pages[currentPage];
@@ -612,46 +904,17 @@ const DynamicQuestionnaireForm = ({
           setCurrentPage(targetPageIndex);
           return;
         } else if (targetPageIndex === -1) {
-          // No matching pageid found, prompt user to submit
-          Alert.alert(
-            'Submit Form',
-            'No additional questions found for your selection. Would you like to submit the form now?',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-              },
-              {
-                text: 'Submit',
-                onPress: handleSubmit,
-              },
-            ]
-          );
+          // No matching pageid found, automatically submit
+          console.log('📝 [AUTO SUBMIT] No additional questions found for selection, auto-submitting form');
+          handleSubmit();
           return;
         }
       }
 
       // Check if current page's nextpage is "submitToServer" - meaning end of pageid flow
       if (currentPageData?.nextpage === 'submitToServer') {
-        console.log('📝 Reached end of pageid flow, checking for general questions...');
-        
-        // Look for any pages that aren't part of specific pageid flows
-        // For this form, all pages have pageids, so we submit when reaching submitToServer
-        Alert.alert(
-          'Complete Form',
-          'You have completed all questions for your selection. Would you like to submit the form now?',
-          [
-            {
-              text: 'Go Back',
-              style: 'cancel',
-              onPress: () => handlePrevious()
-            },
-            {
-              text: 'Submit',
-              onPress: handleSubmit,
-            },
-          ]
-        );
+        console.log('📝 [AUTO SUBMIT] Reached end of pageid flow, auto-submitting form');
+        handleSubmit();
         return;
       }
       
@@ -712,11 +975,11 @@ const DynamicQuestionnaireForm = ({
         >
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
-            {renderHtmlText(activeFormData.formtitle, [styles.formTitle, { fontSize: 20 }], width)}
+            {renderHtmlText(activeFormData.formtitle, { ...styles.formTitle, fontSize: 20 }, width)}
             
             {activeFormData.formintro && (
               <View style={{ marginTop: 8 }}>
-                {renderHtmlText(activeFormData.formintro, styles.formIntro, width)}
+                {renderHtmlText(activeFormData.formintro, styles.formIntro, width, appState)}
               </View>
             )}
 
@@ -867,6 +1130,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     minHeight: 50,
     overflow: 'hidden',
+    flexWrap: 'wrap',
   },
   radioOptionSelected: {
     backgroundColor: '#e3f2fd',
@@ -881,8 +1145,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'left',
     flexShrink: 1,
-    maxWidth: '72%',
-    width: '72%',
+    flexWrap: 'wrap',
   },
   radioLabelSelected: {
     fontWeight: 'normal',

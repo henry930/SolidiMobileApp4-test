@@ -267,6 +267,17 @@ let Settings = () => {
                 style={{ paddingVertical: 4 }}
               />
               
+              <Divider />
+              
+              <List.Item
+                title="Account Review"
+                description="Review and update account preferences"
+                left={props => <List.Icon {...props} icon="account-check" />}
+                right={props => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => { appState.changeState('AccountReview'); }}
+                style={{ paddingVertical: 4 }}
+              />
+              
 
             </List.Section>
           </Card.Content>

@@ -33,15 +33,36 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const Keychain = {
   getInternetCredentials: async (key) => {
     console.log(`[MockKeychain] getInternetCredentials called for key: ${key}`);
-    // Return empty result to indicate no credentials found
-    return Promise.resolve({ username: false, password: false });
+    try {
+      const stored = await AsyncStorage.getItem(`keychain_${key}`);
+      if (stored) {
+        const { username, password } = JSON.parse(stored);
+        console.log(`[MockKeychain] Found stored credentials for key: ${key}`);
+        return { username, password };
+      }
+    } catch (error) {
+      console.log(`[MockKeychain] Error retrieving credentials:`, error);
+    }
+    return { username: false, password: false };
   },
   setInternetCredentials: async (key, username, password) => {
     console.log(`[MockKeychain] setInternetCredentials called for key: ${key}`);
+    try {
+      await AsyncStorage.setItem(`keychain_${key}`, JSON.stringify({ username, password }));
+      console.log(`[MockKeychain] Successfully stored credentials for key: ${key}`);
+    } catch (error) {
+      console.log(`[MockKeychain] Error storing credentials:`, error);
+    }
     return Promise.resolve();
   },
   resetInternetCredentials: async (key) => {
     console.log(`[MockKeychain] resetInternetCredentials called for key: ${key}`);
+    try {
+      await AsyncStorage.removeItem(`keychain_${key}`);
+      console.log(`[MockKeychain] Successfully removed credentials for key: ${key}`);
+    } catch (error) {
+      console.log(`[MockKeychain] Error removing credentials:`, error);
+    }
     return Promise.resolve();
   }
 };
@@ -193,17 +214,18 @@ let bypassAuthentication = false; // Enable proper authentication flow for persi
 import appTier from 'src/application/appTier'; // dev / stag / prod.
 
 // States that are always accessible without authentication
-const publicAccessStates = ['Register', 'RegistrationCompletion', 'Login', 'Explore', 'EmailVerification', 'PhoneVerification'];
+const publicAccessStates = ['Register', 'RegistrationCompletion', 'Login', 'Explore', 'EmailVerification', 'PhoneVerification', 'AccountReview'];
 
 // Settings: Initial page
 // Dynamic initial state based on authentication - will be determined at runtime
 
 // Default state (will be updated dynamically)
-let initialMainPanelState = 'Login'; // Default fallback
-
+let initialMainPanelState = 'RegistrationCompletion'; // Direct access to RegistrationCompletion for testing finprom-categorisation
+//let initialMainPanelState = 'AccountReview'; // Direct access to AccountReview for testing finprom-categorisation
+//let initialMainPanelState = 'Login'; // Default fallback
 //let initialMainPanelState = 'Trade'; // Show trade page first
 //let initialMainPanelState = 'Assets'; // Show assets page first  
-//let initialMainPanelState = 'RegistrationCompletion'; // Show registration completion page first for development
+//let initialMainPanelState = 'Questionnaire'; // Direct access to Questionnaire for testing finprom-categorisation
 //let initialMainPanelState = 'Explore'; // Show main app content (authentication handled by SecureApp wrapper)
 //let initialMainPanelState = 'PersonalDetails'; // Default authenticated state
 let initialPageName = 'default';
@@ -683,9 +705,9 @@ class AppStateProvider extends Component {
     // Test keychain access early - common TestFlight failure point
     this.testKeychainAccess();
 
-    // Set initial state to Login by default, will be updated dynamically in componentDidMount
-    this.initialMainPanelState = 'Login'; // Safe default
-    console.log('🎯 [AppState] Initial main panel state set to default:', this.initialMainPanelState);
+    // Set initial state to our configured state for testing
+    this.initialMainPanelState = initialMainPanelState; // Use our testing configuration
+    console.log('🎯 [AppState] Initial main panel state set to:', this.initialMainPanelState);
     
     this.initialPageName = initialPageName;
 
@@ -3511,40 +3533,21 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         // ===== CATEGORIZATION STATUS CHECKING =====
         
         // 3. Check if user has 'cat' value and 'appropriate' status
-        // If cat = null, redirect to RegistrationCompletion (which will handle AccountReview step)
+        // Use RegistrationCompletion to show timeline and handle form progression
         if (userCat === null || userCat === undefined) {
-          console.log('📋 [LEVEL 2] User cat is null - requires categorisation, checking RegistrationCompletion step...');
-          
-          // Check if user should be in RegistrationCompletion or direct AccountReview
-          const shouldUseRegistrationCompletion = await this.shouldUseRegistrationCompletion();
-          if (shouldUseRegistrationCompletion) {
-            console.log('📋 [LEVEL 2] Redirecting to RegistrationCompletion for step detection');
-            return 'RegistrationCompletion';
-          } else {
-            console.log('📋 [LEVEL 2] Direct redirect to AccountReview');
-            return 'AccountReview';
-          }
+          console.log('📋 [LEVEL 2] User cat is null - requires categorisation, redirecting to RegistrationCompletion');
+          return 'RegistrationCompletion';
         }
 
         // 4. If cat is not null, check appropriate status
         if (userAppropriate === 'TBD') {
-          console.log('📋 [LEVEL 2] User appropriate is TBD - requires suitability form');
-          const shouldUseRegistrationCompletion = await this.shouldUseRegistrationCompletion();
-          if (shouldUseRegistrationCompletion) {
-            return 'RegistrationCompletion';
-          } else {
-            return 'AccountReview';
-          }
+          console.log('📋 [LEVEL 2] User appropriate is TBD - requires suitability form, redirecting to RegistrationCompletion');
+          return 'RegistrationCompletion';
         }
         
         if (userAppropriate === 'FAILED1') {
-          console.log('📋 [LEVEL 2] User appropriate is FAILED1 - requires suitability2 form');
-          const shouldUseRegistrationCompletion = await this.shouldUseRegistrationCompletion();
-          if (shouldUseRegistrationCompletion) {
-            return 'RegistrationCompletion';
-          } else {
-            return 'AccountReview';
-          }
+          console.log('📋 [LEVEL 2] User appropriate is FAILED1 - requires suitability2 form, redirecting to RegistrationCompletion');
+          return 'RegistrationCompletion';
         }
         
         if (userAppropriate === 'FAILED2') {
@@ -3582,12 +3585,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               );
               return 'Login'; // Will be handled by logout
             } else {
-              console.log('✅ [LEVEL 2] Cooling period has ended - proceeding to AccountReview');
-              return 'AccountReview';
+              console.log('✅ [LEVEL 2] Cooling period has ended - proceeding to RegistrationCompletion');
+              return 'RegistrationCompletion';
             }
           } else {
-            console.log('⚠️ [LEVEL 2] No coolEnd time found - proceeding to AccountReview');
-            return 'AccountReview';
+            console.log('⚠️ [LEVEL 2] No coolEnd time found - proceeding to RegistrationCompletion');
+            return 'RegistrationCompletion';
           }
         }
         

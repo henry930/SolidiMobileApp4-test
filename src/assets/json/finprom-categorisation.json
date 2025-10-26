@@ -57,19 +57,19 @@
             "values": [
               {
                 "id": "restricted",
-                "text": "<b>Restricted investor</b><br>You've invested less than 10% of your net worth in high risk assets (such as Crypto) over the last 12 months, <b>and</b> you intend to limit such investments to less than 10% in the year ahead.<br>&nbsp;"
+                "text": "<b>Restricted investor</b><br>Less than 10% in high-risk assets"
               },
               {
                 "id": "hnw",
-                "text": "<b>High-Net-Worth investor</b><br>You've an annual income of at least £100,000 <b>or</b> assets of at least £250,000.<br>&nbsp;"
+                "text": "<b>High-Net-Worth investor</b><br>£100k+ income or £250k+ assets"
               },
               {
                 "id": "certified",
-                "text": "<b>Certified-Sophisticated investor</b><br>You're recevied a certificate in the last three years from an authorised firm confirming that you understand the risks of crypto investing.<br>&nbsp;"
+                "text": "<b>Certified-Sophisticated investor</b><br>Have investment certification"
               },
               {
                 "id": "none",
-                "text": "<b>None of the above</b><br>If none of the above apply then unfortunately the FCA will not allow us to provide you with an account."
+                "text": "<b>None of the above</b><br>Cannot provide account"
               }
             ],
             "answer": ""
@@ -133,11 +133,11 @@
             "values": [
               {
                 "id": "yes",
-                "text": "<b>Yes (I have invested less than 10% of my net assets)<br>&nbsp;</b>"
+                "text": "<b>Yes - Less than 10%</b>"
               }
               ,{
                 "id": "no",
-                "text": "<b>No (I have invested more than 10% of my net assets)<br>&nbsp;</b>"
+                "text": "<b>No - More than 10%</b>"
               }
             ],
             "guidance": "",
@@ -176,11 +176,11 @@
             "values": [
               {
                 "id": "yes",
-                "text": "<b>Yes (I intend to invest less than 10% of my net assets)<br>&nbsp;</b>"
+                "text": "<b>Yes - Will limit to under 10%</b>"
               }
               ,{
                 "id": "no",
-                "text": "<b>No (I intend to invest more than 10% of my net assets)<br>&nbsp;</b>"
+                "text": "<b>No - Will invest over 10%</b>"
               }
             ],
             "guidance":"",
@@ -289,11 +289,11 @@
             "values": [
               {
                 "id": "no",
-                "text": "<b>No<br>&nbsp;</b>"
+                "text": "<b>No</b>"
               }
               , {
                 "id": "yes",
-                "text": "<b>Yes<br>&nbsp;</b>"
+                "text": "<b>Yes</b>"
               }
             ],
             "guidance": "",
@@ -326,11 +326,11 @@
             "values": [
               {
                 "id": "no",
-                "text": "<b>No<br>&nbsp;</b>"
+                "text": "<b>No</b>"
               }
               ,{
                 "id": "yes",
-                "text": "<b>Yes<br>&nbsp;</b>"
+                "text": "<b>Yes</b>"
               }
             ],
             "guidance":"",
@@ -437,11 +437,11 @@
             "values": [
               {
                 "id": "no",
-                "text": "<b>No<br>&nbsp;</b>"
+                "text": "<b>No</b>"
               }
               , {
                 "id": "yes",
-                "text": "<b>Yes<br>&nbsp;</b>"
+                "text": "<b>Yes</b>"
               }
             ],
             "guidance": "",

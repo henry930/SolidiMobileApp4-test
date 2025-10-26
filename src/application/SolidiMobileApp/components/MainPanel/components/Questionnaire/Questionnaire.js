@@ -20,6 +20,25 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('Questionnaire');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
+// Variable substitution function for dynamic form generation
+const substituteVariables = (text, appState) => {
+  if (!text || typeof text !== 'string') return text;
+  
+  // Get user information
+  const firstName = appState.getUserInfo('firstName') || '';
+  const lastName = appState.getUserInfo('lastName') || '';
+  const todaysdate = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit', 
+    year: 'numeric'
+  });
+
+  return text
+    .replace(/\$\{firstname\}/g, firstName)
+    .replace(/\$\{lastname\}/g, lastName)
+    .replace(/\$\{todaysdate\}/g, todaysdate);
+};
+
 // Simple HTML renderer for basic tags
 const renderHtmlText = (htmlString) => {
   if (!htmlString) return '';
@@ -88,17 +107,17 @@ const renderHtmlText = (htmlString) => {
 const availableForms = {
   'account-purpose-questionnaire': () => require('../../../../../../assets/json/account-purpose-questionnaire.json'),
   'business-account-application-form': () => require('../../../../../../assets/json/business-account-application-form.json'),
-  'business-account-application-review': () => require('../../../../../../assets/json/business-account-application-review.json'),
-  'cryptobasket-limits-form': () => require('../../../../../../assets/json/cryptobasket-limits-form.json'),
-  'enhanced-due-diligence-form': () => require('../../../../../../assets/json/enhanced-due-diligence-form.json'),
-  'enhanced-due-diligence-review-form': () => require('../../../../../../assets/json/enhanced-due-diligence-review-form.json'),
-  'finprom-categorisation': () => require('../../../../../../assets/json/finprom-categorisation.json'),
-  'finprom-suitability': () => require('../../../../../../assets/json/finprom-suitability.json'),
-  'finprom-suitability2': () => require('../../../../../../assets/json/finprom-suitability2.json'),
-  'professional-tier-application-form': () => require('../../../../../../assets/json/professional-tier-application-form.json'),
-  'professional-tier-application-review-form': () => require('../../../../../../assets/json/professional-tier-application-review-form.json'),
-  'transaction-monitor-withdraw-questions': () => require('../../../../../../assets/json/transaction-monitor-withdraw-questions.json'),
-  'travel-rule-deposit-questions': () => require('../../../../../../assets/json/travel-rule-deposit-questions.json'),
+  'business-account-application-review': () => require('../../../../../../../src/assets/json/business-account-application-review.json'),
+  'cryptobasket-limits-form': () => require('../../../../../../../src/assets/json/cryptobasket-limits-form.json'),
+  'enhanced-due-diligence-form': () => require('../../../../../../../src/assets/json/enhanced-due-diligence-form.json'),
+  'enhanced-due-diligence-review-form': () => require('../../../../../../../src/assets/json/enhanced-due-diligence-review-form.json'),
+  'finprom-categorisation': () => require('../../../../../../../src/assets/json/finprom-categorisation.json'),
+  'finprom-suitability': () => require('../../../../../../../src/assets/json/finprom-suitability.json'),
+  'finprom-suitability2': () => require('../../../../../../../src/assets/json/finprom-suitability2.json'),
+  'professional-tier-application-form': () => require('../../../../../../../src/assets/json/professional-tier-application-form.json'),
+  'professional-tier-application-review-form': () => require('../../../../../../../src/assets/json/professional-tier-application-review-form.json'),
+  'transaction-monitor-withdraw-questions': () => require('../../../../../../../src/assets/json/transaction-monitor-withdraw-questions.json'),
+  'travel-rule-deposit-questions': () => require('../../../../../../../src/assets/json/travel-rule-deposit-questions.json'),
   'travel-rule-withdraw-questions': () => require('../../../../../../assets/json/travel-rule-withdraw-questions.json'),
 };
 
@@ -109,13 +128,10 @@ let Questionnaire = () => {
   let stateChangeID = appState.stateChangeID;
   const { width } = useWindowDimensions();
 
-  // Form selection state - get from appState - DISABLED FOR CATEGORISATION TESTING
-  let selectedForm = null; // appState.selectedQuestionnaireForm || 'account-purpose-questionnaire';
-  let [questionnaireData, setQuestionnaireData] = useState({
-    formtitle: 'Old Form Disabled',
-    formintro: 'This old questionnaire has been disabled. Please use AccountReview for categorisation.',
-    questions: []
-  });
+  // Form selection state - use pageName to determine form
+  const pageName = appState.pageName;
+  let selectedForm = pageName || 'finprom-categorisation'; // Default to finprom-categorisation for testing
+  let [questionnaireData, setQuestionnaireData] = useState(null);
 
   // Form state
   let [answers, setAnswers] = useState({});
@@ -174,16 +190,55 @@ let Questionnaire = () => {
         // Handle different JSON structures
         let processedData = { ...data };
         
+        // Apply variable substitution to form data
+        const processFormWithVariables = (formData) => {
+          if (formData.pages && Array.isArray(formData.pages)) {
+            formData.pages = formData.pages.map(page => ({
+              ...page,
+              questions: page.questions ? page.questions.map(question => ({
+                ...question,
+                label: substituteVariables(question.label, appState),
+                guidance: substituteVariables(question.guidance, appState),
+                placeholder: substituteVariables(question.placeholder, appState),
+                value: substituteVariables(question.value, appState),
+                values: question.values ? question.values.map(value => ({
+                  ...value,
+                  text: substituteVariables(value.text, appState),
+                  value: substituteVariables(value.value, appState)
+                })) : question.values
+              })) : page.questions
+            }));
+          }
+          
+          if (formData.questions && Array.isArray(formData.questions)) {
+            formData.questions = formData.questions.map(question => ({
+              ...question,
+              label: substituteVariables(question.label, appState),
+              guidance: substituteVariables(question.guidance, appState),
+              placeholder: substituteVariables(question.placeholder, appState),
+              value: substituteVariables(question.value, appState),
+              values: question.values ? question.values.map(value => ({
+                ...value,
+                text: substituteVariables(value.text, appState),
+                value: substituteVariables(value.value, appState)
+              })) : question.values
+            }));
+          }
+          
+          return formData;
+        };
+        
+        processedData = processFormWithVariables(processedData);
+        
         // Check if this is a page-based form
         if (data.pages && Array.isArray(data.pages) && data.pages.length > 0) {
           console.log('Detected page-based form');
           setIsPageBasedForm(true);
           // Keep the pages structure intact for page-based navigation
-          processedData.pages = data.pages;
           
           // Also create a flattened questions array for compatibility
           let allQuestions = [];
-          data.pages.forEach(page => {
+          processedData.pages.forEach(page => {
             if (page.questions && Array.isArray(page.questions)) {
               allQuestions = allQuestions.concat(page.questions);
             }
@@ -224,7 +279,7 @@ let Questionnaire = () => {
       await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       
-      // Initialize answers with empty values
+      // Initialize answers with empty values or pre-filled values with variable substitution
       let initialAnswers = {};
       
       if (isPageBasedForm && questionnaireData.pages) {
@@ -233,7 +288,9 @@ let Questionnaire = () => {
           if (page.questions && Array.isArray(page.questions)) {
             page.questions.forEach(question => {
               if (question.id) {
-                initialAnswers[question.id] = question.answer || '';
+                // Use pre-filled value if available, otherwise empty string
+                initialAnswers[question.id] = question.value || question.answer || '';
+                console.log(`Initialized ${question.id} with value: "${initialAnswers[question.id]}"`);
               }
             });
           }
@@ -242,7 +299,9 @@ let Questionnaire = () => {
         // Initialize from traditional question structure
         questionnaireData.questions.forEach(question => {
           if (question.id) {
-            initialAnswers[question.id] = question.answer || '';
+            // Use pre-filled value if available, otherwise empty string
+            initialAnswers[question.id] = question.value || question.answer || '';
+            console.log(`Initialized ${question.id} with value: "${initialAnswers[question.id]}"`);
           }
         });
       }
@@ -464,6 +523,46 @@ let Questionnaire = () => {
         }
       }
     });
+
+    // Special validation for finprom-categorisation form
+    if (questionnaireData.formid === 'customer-categorisation' || selectedForm === 'finprom-categorisation') {
+      const accountPurpose = answers['accountpurpose'];
+      
+      if (accountPurpose === 'hnw') {
+        // High-Net-Worth investor validation
+        const hnwIncome = answers['hnwincome'];
+        const hnwAssets = answers['hnwassets'];
+        const hnwIncomeAmount = parseFloat(answers['hnwincomeamount'] || 0);
+        const hnwAssetsAmount = parseFloat(answers['hwnassetsamount'] || 0);
+        
+        // Must select Yes for one of the hnwincome and hnwassets questions
+        // AND meet the minimum thresholds
+        const hasValidIncome = hnwIncome === 'yes' && hnwIncomeAmount >= 100000;
+        const hasValidAssets = hnwAssets === 'yes' && hnwAssetsAmount >= 250000;
+        
+        if (!hasValidIncome && !hasValidAssets) {
+          invalidFields.push('Your income should be 100,000 or more, and your assets should be 250000 or more');
+        }
+      }
+      
+      if (accountPurpose === 'restricted') {
+        // Restricted investor validation
+        const prev12months = answers['prev12months'];
+        const next12months = answers['next12months'];
+        const prevAmount = parseFloat(answers['prevamount'] || 0);
+        const nextAmount = parseFloat(answers['nextamount'] || 0);
+        
+        // Must select Yes for both prev12months and next12months
+        if (prev12months !== 'yes' || next12months !== 'yes') {
+          invalidFields.push('For Restricted investors: You must select "Yes" for both previous and next 12 months questions');
+        }
+        
+        // Must enter up to 10 for both prevamount and nextamount
+        if (prevAmount > 10 || nextAmount > 10) {
+          invalidFields.push('Invalid. Your amount should less than 10 if you are a restricted investor');
+        }
+      }
+    }
     
     if (missingFields.length > 0) {
       setErrorMessage(`Please fill in the following required fields: ${missingFields.join(', ')}`);
@@ -471,7 +570,7 @@ let Questionnaire = () => {
     }
     
     if (invalidFields.length > 0) {
-      setErrorMessage(`Please correct the following fields: ${invalidFields.join(', ')}`);
+      setErrorMessage(`Please correct the following:\n\n${invalidFields.join('\n\n')}`);
       return false;
     }
     

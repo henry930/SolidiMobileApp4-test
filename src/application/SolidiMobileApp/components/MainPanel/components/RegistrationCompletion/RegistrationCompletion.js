@@ -30,11 +30,17 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
  * Each tab can only be accessed sequentially after completing the previous one.
  */
 const RegistrationCompletion = () => {
+  console.log('🚀🚀🚀 [RegistrationCompletion] *** COMPONENT IS DEFINITELY LOADING ***');
+  console.log('🚀🚀🚀 [RegistrationCompletion] *** COMPONENT IS DEFINITELY LOADING ***');
+  console.log('🚀🚀🚀 [RegistrationCompletion] *** COMPONENT IS DEFINITELY LOADING ***');
+  
   const appState = useContext(AppStateContext);
   const materialTheme = useTheme();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [currentStep, setCurrentStep] = useState(3); // Start directly on evaluation step (AccountReview) for testing
+  const [completedSteps, setCompletedSteps] = useState(new Set([0, 1, 2])); // Mark previous steps as completed
   const [isLoading, setIsLoading] = useState(false);
+  
+  console.log('🎯 [RegistrationCompletion] TESTING MODE: Starting directly on evaluation step (finprom-categorisation)');
   
   const stateChangeID = appState.stateChangeID;
   const pageName = appState.pageName;

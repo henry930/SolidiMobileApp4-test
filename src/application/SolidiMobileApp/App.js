@@ -12,6 +12,12 @@ import {
   Text,
   View,
 } from 'react-native';
+
+// MASSIVE DEBUG LOG TO VERIFY APP LOADING
+console.log('🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀');
+console.log('🚀 APP.JS IS DEFINITELY LOADING WITH OUR CHANGES!!! 🚀');
+console.log('🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀');
+
 // Platform-specific splash screen import
 import { Platform } from 'react-native';
 

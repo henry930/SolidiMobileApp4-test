@@ -468,9 +468,11 @@ class AccountUpdate extends Component {
         });
         
         // Call onComplete callback to notify parent (RegistrationCompletion) that step is done
-        if (this.props.onComplete) {
+        if (this.props.onComplete && typeof this.props.onComplete === 'function') {
           console.log('🚀 [AccountUpdate] Calling onComplete callback to advance to next step');
           this.props.onComplete({ extraInformationSubmitted: true });
+        } else {
+          console.log('📋 [AccountUpdate] No onComplete callback provided or not a function');
         }
         
         Alert.alert('Success', 'Account preferences saved successfully');
@@ -482,7 +484,7 @@ class AccountUpdate extends Component {
         
         console.error('❌ [AccountUpdate] Error saving form:', errorMessage);
         this.setState({ isLoading: false });
-        Alert.alert('Error', errorMessage);
+        // Alert.alert('Error', errorMessage);
       }
       
     } catch (error) {
