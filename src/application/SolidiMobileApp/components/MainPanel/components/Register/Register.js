@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Alert, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Alert, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Text, Button, TextInput, Card, useTheme, Checkbox } from 'react-native-paper';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import AppStateContext from 'src/application/data';
 import { Title } from 'src/components/shared';
 import misc from 'src/util/misc';
@@ -21,6 +22,8 @@ const Register = () => {
     mobileNumber: '',
     address1: '',
     address2: '',
+    address3: '',
+    address4: '',
     city: '',
     postalCode: '',
     emailPreferences: {
@@ -38,6 +41,15 @@ const Register = () => {
   const [gender, setGender] = useState('');
   const [citizenship, setCitizenship] = useState('');
   const [countryCode, setCountryCode] = useState('+44');
+  
+  // Date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateOfBirthDate, setDateOfBirthDate] = useState(new Date(1990, 0, 1)); // Default: Jan 1, 1990
+  
+  // Address lookup state
+  const [addressList, setAddressList] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+  const [showManualAddress, setShowManualAddress] = useState(false);
 
   // Options lists
   const genderOptions = [
@@ -223,6 +235,221 @@ const Register = () => {
     Alert.alert('Even More Countries', 'Choose your country of citizenship:', buttons);
   };
 
+  // Date picker handler
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
+    
+    if (selectedDate) {
+      setDateOfBirthDate(selectedDate);
+      
+      // Format date as DD/MM/YYYY
+      const day = selectedDate.getDate().toString().padStart(2, '0');
+      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = selectedDate.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+      
+      setUserData({ ...userData, dateOfBirth: formattedDate });
+    }
+  };
+
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
+  };
+
+  // Postcode lookup using completely free API
+  const lookupPostcode = async (postcode) => {
+    try {
+      console.log('🔍 Looking up postcode:', postcode);
+      
+      // Clean the postcode (remove spaces)
+      const cleanPostcode = postcode.replace(/\s/g, '').toUpperCase();
+      
+      if (cleanPostcode.length < 5) {
+        Alert.alert('Invalid Postcode', 'Please enter a valid UK postcode');
+        return;
+      }
+      
+      setIsLoadingAddresses(true);
+      
+      // Using api.postcodes.io to validate and get area info first
+      const validateResponse = await fetch(`https://api.postcodes.io/postcodes/${cleanPostcode}`);
+      const validateData = await validateResponse.json();
+      
+      if (validateData.status !== 200 || !validateData.result) {
+        setIsLoadingAddresses(false);
+        Alert.alert(
+          'Invalid Postcode',
+          'This postcode was not found. Please check and try again.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+      
+      const postcodeInfo = validateData.result;
+      console.log('✅ Postcode validated:', postcodeInfo);
+      
+      // Now try to get real addresses using getAddress.io autocomplete (no API key needed for autocomplete)
+      try {
+        const autocompleteResponse = await fetch(
+          `https://api.getaddress.io/autocomplete/${cleanPostcode}?all=true`
+        );
+        
+        const autocompleteData = await autocompleteResponse.json();
+        
+        if (autocompleteData && autocompleteData.suggestions && autocompleteData.suggestions.length > 0) {
+          console.log('✅ Found', autocompleteData.suggestions.length, 'addresses via autocomplete');
+          
+          // Parse autocomplete suggestions
+          const addresses = autocompleteData.suggestions.slice(0, 10).map(suggestion => {
+            // Suggestions come as full address strings, split them intelligently
+            const parts = suggestion.address.split(',').map(p => p.trim());
+            return {
+              line1: parts[0] || '',
+              line2: parts[1] || '',
+              line3: parts[2] || '',
+              line4: parts.length > 4 ? parts[3] : '',
+              city: postcodeInfo.admin_district || postcodeInfo.parish || parts[parts.length - 2] || '',
+              postcode: postcode,
+              fullAddress: suggestion.address
+            };
+          });
+          
+          setAddressList(addresses);
+          setIsLoadingAddresses(false);
+          showAddressSelectionDialog(addresses);
+          return;
+        }
+      } catch (autocompleteError) {
+        console.log('Autocomplete failed, trying alternative method:', autocompleteError.message);
+      }
+      
+      // Fallback: If autocomplete doesn't work, use Ideal Postcodes test API
+      try {
+        // Using Ideal Postcodes test key (limited to test postcodes only)
+        // For production, sign up at https://ideal-postcodes.co.uk for free key
+        const testApiKey = 'ak_test'; // This only works with test postcodes
+        const idealResponse = await fetch(
+          `https://api.ideal-postcodes.co.uk/v1/postcodes/${cleanPostcode}?api_key=${testApiKey}`
+        );
+        
+        const idealData = await idealResponse.json();
+        
+        if (idealData && idealData.result && idealData.result.length > 0) {
+          console.log('✅ Found', idealData.result.length, 'addresses via Ideal Postcodes');
+          
+          const addresses = idealData.result.map(addr => ({
+            line1: addr.line_1 || '',
+            line2: addr.line_2 || '',
+            line3: addr.line_3 || '',
+            line4: addr.line_4 || '',
+            city: addr.post_town || postcodeInfo.admin_district || '',
+            postcode: postcode,
+            fullAddress: [addr.line_1, addr.line_2, addr.line_3, addr.post_town, postcode]
+              .filter(Boolean)
+              .join(', ')
+          }));
+          
+          setAddressList(addresses);
+          setIsLoadingAddresses(false);
+          showAddressSelectionDialog(addresses);
+          return;
+        }
+      } catch (idealError) {
+        console.log('Ideal Postcodes failed:', idealError.message);
+      }
+      
+      // If all APIs fail, create mock addresses based on the validated postcode
+      console.log('⚠️ Using mock addresses - API lookups failed');
+      const mockAddresses = [
+        {
+          line1: `Flat 1`,
+          line2: `${postcodeInfo.admin_ward || 'Main'} Building`,
+          line3: postcodeInfo.admin_ward || '',
+          line4: '',
+          city: postcodeInfo.admin_district || postcodeInfo.parish || '',
+          postcode: postcode
+        },
+        {
+          line1: `1 High Street`,
+          line2: '',
+          line3: postcodeInfo.admin_ward || '',
+          line4: '',
+          city: postcodeInfo.admin_district || postcodeInfo.parish || '',
+          postcode: postcode
+        },
+        {
+          line1: `2 Main Road`,
+          line2: '',
+          line3: postcodeInfo.admin_ward || '',
+          line4: '',
+          city: postcodeInfo.admin_district || postcodeInfo.parish || '',
+          postcode: postcode
+        }
+      ];
+      
+      setAddressList(mockAddresses);
+      setIsLoadingAddresses(false);
+      
+      Alert.alert(
+        'Limited Results',
+        'We could only generate sample addresses for this postcode. For real address lookup, please sign up for a free API key at getaddress.io or ideal-postcodes.co.uk',
+        [
+          { 
+            text: 'Use Sample Addresses',
+            onPress: () => showAddressSelectionDialog(mockAddresses)
+          },
+          { 
+            text: 'Enter Manually',
+            style: 'cancel'
+          }
+        ]
+      );
+      
+    } catch (error) {
+      setIsLoadingAddresses(false);
+      console.error('❌ Postcode lookup error:', error);
+      Alert.alert(
+        'Lookup Failed',
+        'Unable to validate this postcode. Please enter your address manually.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+  
+  // Show dialog with list of addresses to choose from
+  const showAddressSelectionDialog = (addresses) => {
+    const buttons = addresses.map((address, index) => ({
+      text: `${address.line1}${address.line2 ? ', ' + address.line2 : ''}`,
+      onPress: () => selectAddress(address)
+    }));
+    
+    buttons.push({ text: 'Cancel', style: 'cancel' });
+    
+    Alert.alert(
+      'Select Your Address',
+      `Found ${addresses.length} addresses for this postcode:`,
+      buttons
+    );
+  };
+  
+  // Fill in the address fields when user selects an address
+  const selectAddress = (address) => {
+    console.log('✅ Address selected:', address);
+    
+    setUserData({
+      ...userData,
+      address1: address.line1 || '',
+      address2: address.line2 || '',
+      address3: address.line3 || '',
+      address4: address.line4 || '',
+      city: address.city || '',
+      postalCode: address.postcode || ''
+    });
+    
+    // Show address fields after selection (so user can see what was filled)
+    setShowManualAddress(true);
+  };
+
   const showCountryCodePicker = () => {
     console.log('🔍 showCountryCodePicker called');
     console.log('🔍 countryCodeOptions:', countryCodeOptions);
@@ -291,27 +518,15 @@ const Register = () => {
         // Delete the temporarily stored registerData from the appState
         appState.registerData = appState.blankRegisterData;
 
-        // Show success message and redirect to email verification
-        Alert.alert(
-          "Registration Successful!",
-          result.message || "Please check your email for a verification code.",
-          [
-            {
-              text: "Continue",
-              onPress: () => {
-                // Reset UI state
-                setUploadMessage('');
-                setDisableRegisterButton(false);
-                
-                // Redirect to registration completion page
-                appState.setMainPanelState({
-                  mainPanelState: 'RegistrationCompletion',
-                  pageName: 'default'
-                });
-              }
-            }
-          ]
-        );
+        // Reset UI state
+        setUploadMessage('');
+        setDisableRegisterButton(false);
+        
+        // Redirect directly to registration completion page (no popup)
+        appState.setMainPanelState({
+          mainPanelState: 'RegistrationCompletion',
+          pageName: 'default'
+        });
         
       } else if (result.result === "VALIDATION_ERROR") {
         console.log('❌ [UI] Registration validation errors:', result.details);
@@ -431,12 +646,13 @@ const Register = () => {
             />
 
             {/* Gender Selector */}
-            <TouchableOpacity onPress={showGenderPicker}>
+            <TouchableOpacity onPress={showGenderPicker} activeOpacity={0.7}>
               <TextInput
                 mode="outlined"
                 label="Gender"
                 value={gender || 'Tap to select'}
                 editable={false}
+                pointerEvents="none"
                 style={{ marginBottom: 16 }}
                 left={<TextInput.Icon icon="human-male-female" />}
                 right={<TextInput.Icon icon="chevron-down" />}
@@ -444,23 +660,39 @@ const Register = () => {
             </TouchableOpacity>
 
             {/* Date of Birth */}
-            <TextInput
-              mode="outlined"
-              label="Date of Birth (DD/MM/YYYY)"
-              value={userData.dateOfBirth}
-              onChangeText={(value) => setUserData({...userData, dateOfBirth: value})}
-              placeholder="01/01/1990"
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="calendar" />}
-            />
+            <TouchableOpacity onPress={showDatePickerModal} activeOpacity={0.7}>
+              <TextInput
+                mode="outlined"
+                label="Date of Birth"
+                value={userData.dateOfBirth || 'Tap to select date'}
+                editable={false}
+                pointerEvents="none"
+                placeholder="DD/MM/YYYY"
+                style={{ marginBottom: 16 }}
+                left={<TextInput.Icon icon="calendar" />}
+                right={<TextInput.Icon icon="chevron-down" />}
+              />
+            </TouchableOpacity>
+            
+            {showDatePicker && (
+              <DateTimePicker
+                value={dateOfBirthDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                maximumDate={new Date()} // Can't be born in the future
+                minimumDate={new Date(1900, 0, 1)} // Reasonable minimum date
+              />
+            )}
 
             {/* Citizenship Selector */}
-            <TouchableOpacity onPress={showCitizenshipPicker}>
+            <TouchableOpacity onPress={showCitizenshipPicker} activeOpacity={0.7}>
               <TextInput
                 mode="outlined"
                 label="Country of Citizenship"
                 value={citizenshipOptions.find(c => c.value === citizenship)?.label || citizenship || 'Tap to select country'}
                 editable={false}
+                pointerEvents="none"
                 style={{ marginBottom: 16 }}
                 left={<TextInput.Icon icon="flag" />}
                 right={<TextInput.Icon icon="chevron-down" />}
@@ -505,41 +737,96 @@ const Register = () => {
               />
             </View>
 
-            {/* Address */}
-            <TextInput
-              mode="outlined"
-              label="Address Line 1"
-              value={userData.address1}
-              onChangeText={(value) => setUserData({...userData, address1: value})}
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="home" />}
-            />
-
-            <TextInput
-              mode="outlined"
-              label="Address Line 2 (Optional)"
-              value={userData.address2}
-              onChangeText={(value) => setUserData({...userData, address2: value})}
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="home" />}
-            />
-
-            <View style={{ flexDirection: 'row', marginBottom: 16 }}>
-              <TextInput
-                mode="outlined"
-                label="City"
-                value={userData.city}
-                onChangeText={(value) => setUserData({...userData, city: value})}
-                style={{ flex: 1, marginRight: 8 }}
-              />
-              <TextInput
-                mode="outlined"
-                label="Postal Code"
-                value={userData.postalCode}
-                onChangeText={(value) => setUserData({...userData, postalCode: value})}
-                style={{ flex: 0.6 }}
-              />
+            {/* Postal Code - Moved to top */}
+            <View style={{ flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' }}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <TextInput
+                  mode="outlined"
+                  label="Postal Code"
+                  value={userData.postalCode}
+                  onChangeText={(value) => setUserData({...userData, postalCode: value})}
+                  autoCapitalize="characters"
+                  placeholder="SW1A 1AA"
+                  left={<TextInput.Icon icon="map-marker" />}
+                />
+              </View>
+              <Button
+                mode="contained"
+                onPress={() => lookupPostcode(userData.postalCode)}
+                disabled={!userData.postalCode || userData.postalCode.length < 5}
+                loading={isLoadingAddresses}
+                style={{ marginTop: 8 }}
+                icon="magnify"
+              >
+                {isLoadingAddresses ? 'Finding...' : 'Find'}
+              </Button>
             </View>
+
+            {/* Manual Address Entry Toggle */}
+            {!showManualAddress && (
+              <TouchableOpacity 
+                onPress={() => setShowManualAddress(true)}
+                style={{ marginBottom: 16 }}
+              >
+                <Text style={{ 
+                  color: materialTheme.colors.primary,
+                  textDecorationLine: 'underline',
+                  fontSize: 14
+                }}>
+                  📝 Enter address manually
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Address Lines - Hidden by default, shown when manual entry selected or address filled */}
+            {(showManualAddress || userData.address1) && (
+              <>
+                <TextInput
+                  mode="outlined"
+                  label="Address Line 1"
+                  value={userData.address1}
+                  onChangeText={(value) => setUserData({...userData, address1: value})}
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="home" />}
+                />
+
+                <TextInput
+                  mode="outlined"
+                  label="Address Line 2 (Optional)"
+                  value={userData.address2}
+                  onChangeText={(value) => setUserData({...userData, address2: value})}
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="home" />}
+                />
+
+                <TextInput
+                  mode="outlined"
+                  label="Address Line 3 (Optional)"
+                  value={userData.address3}
+                  onChangeText={(value) => setUserData({...userData, address3: value})}
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="home" />}
+                />
+
+                <TextInput
+                  mode="outlined"
+                  label="Address Line 4 (Optional)"
+                  value={userData.address4}
+                  onChangeText={(value) => setUserData({...userData, address4: value})}
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="home" />}
+                />
+              </>
+            )}
+            
+            <TextInput
+              mode="outlined"
+              label="City"
+              value={userData.city}
+              onChangeText={(value) => setUserData({...userData, city: value})}
+              style={{ marginBottom: 16 }}
+              left={<TextInput.Icon icon="city" />}
+            />
 
           </Card.Content>
         </Card>

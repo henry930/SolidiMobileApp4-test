@@ -95,8 +95,9 @@ const AppContent = () => {
     <SafeAreaView style={styles.container}>
       <PaperProvider theme={theme}>
         <SecureApp>
+          {/* SecureApp just gates access, AppState handles authentication */}
           <AppStateProvider>
-            {/* AppStateProvider will render its own SafeAreaView and full app structure */}
+            {/* AppStateProvider renders the full app and handles auto-login */}
           </AppStateProvider>
         </SecureApp>
       </PaperProvider>

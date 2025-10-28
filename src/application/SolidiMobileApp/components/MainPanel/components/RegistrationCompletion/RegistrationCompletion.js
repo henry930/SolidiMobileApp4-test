@@ -36,11 +36,9 @@ const RegistrationCompletion = () => {
   
   const appState = useContext(AppStateContext);
   const materialTheme = useTheme();
-  const [currentStep, setCurrentStep] = useState(3); // Start directly on evaluation step (AccountReview) for testing
-  const [completedSteps, setCompletedSteps] = useState(new Set([0, 1, 2])); // Mark previous steps as completed
-  const [isLoading, setIsLoading] = useState(false);
-  
-  console.log('🎯 [RegistrationCompletion] TESTING MODE: Starting directly on evaluation step (finprom-categorisation)');
+  const [currentStep, setCurrentStep] = useState(0); // Start at first step - will be updated by determineUserStep
+  const [completedSteps, setCompletedSteps] = useState(new Set()); // Will be populated by determineUserStep
+  const [isLoading, setIsLoading] = useState(true); // Loading while determining step
   
   const stateChangeID = appState.stateChangeID;
   const pageName = appState.pageName;
@@ -96,25 +94,59 @@ const RegistrationCompletion = () => {
   const determineUserStep = async () => {
     try {
       console.log('🔍 Determining appropriate step for user...');
+      console.log('🔍 appState.emailVerified:', appState.emailVerified);
+      console.log('🔍 appState.user?.emailVerified:', appState.user?.emailVerified);
+      console.log('🔍 appState.phoneVerified:', appState.phoneVerified);
+      console.log('🔍 appState.user?.phoneVerified:', appState.user?.phoneVerified);
+      console.log('🔍 appState.registrationSuccess:', appState.registrationSuccess);
+      console.log('🔍 appState.registrationEmail:', appState.registrationEmail);
       
-      // Check if user has valid credentials (logged in)
+      // For new registrations, email and phone are NOT verified yet
+      // Check if this is a fresh registration
+      const isNewRegistration = appState.registrationSuccess || appState.registrationEmail;
+      
+      if (isNewRegistration) {
+        console.log('🆕 Fresh registration detected - email and phone NOT verified');
+        // For new registrations, start from email verification
+        setCurrentStep(0);
+        setCompletedSteps(new Set());
+        return 0;
+      }
+      
+      // For returning users, check verification status FIRST (before checking credentials)
+      const emailVerified = appState.emailVerified || appState.user?.emailVerified || false;
+      const phoneVerified = appState.phoneVerified || appState.user?.phoneVerified || false;
+      
+      console.log('� Email verified:', emailVerified);
+      console.log('� Phone verified:', phoneVerified);
+      
+      // If email not verified, start from step 1 (Email Verification)
+      if (!emailVerified) {
+        console.log('� Email not verified - starting from step 1 (Email Verification)');
+        setCurrentStep(0);
+        setCompletedSteps(new Set());
+        return 0;
+      }
+      
+      // If email verified but phone not verified, go to step 2 (Phone Verification)
+      if (emailVerified && !phoneVerified) {
+        console.log('� Phone not verified - starting from step 2 (Phone Verification)');
+        setCurrentStep(1);
+        setCompletedSteps(new Set(['email']));
+        return 1;
+      }
+      
+      // Both email and phone verified - now check if user has credentials
       const userUuid = appState.user?.uuid || appState.user?.info?.user?.uuid;
       const isAuthenticated = appState.user?.isAuthenticated;
       const hasCredentials = userUuid && isAuthenticated;
       
-      console.log('🔐 User UUID:', userUuid);
+      console.log('� User UUID:', userUuid);
       console.log('🔐 Is authenticated:', isAuthenticated);
-      console.log('🔐 Has credentials:', hasCredentials);
+      console.log('� Has credentials:', hasCredentials);
       console.log('🔐 Full user object keys:', appState.user ? Object.keys(appState.user) : 'No user object');
       
-      // Check verification status
-      const emailVerified = appState.emailVerified || appState.user?.emailVerified || false;
-      const phoneVerified = appState.phoneVerified || appState.user?.phoneVerified || false;
-      
-      console.log('📧 Email verified:', emailVerified);
-      console.log('📱 Phone verified:', phoneVerified);
-      
-      // If user has credentials and is authenticated, prioritize extra_information check
+      // If user has credentials and both verifications complete, check extra information
       if (hasCredentials) {
         console.log('🔐 User has credentials - checking extra information requirements...');
         
@@ -144,78 +176,49 @@ const RegistrationCompletion = () => {
           
         } catch (error) {
           console.log('⚠️ Error checking extra information:', error.message);
-          // If API fails but user has credentials, check verification status
-          if (emailVerified && phoneVerified) {
-            console.log('📋 API failed but user verified - defaulting to step 3 (Extra Information)');
-            setCurrentStep(2);
-            setCompletedSteps(new Set(['email', 'phone']));
-            return 2;
-          }
-        }
-      }
-      
-      // For fresh registration or users without credentials, follow verification flow
-      console.log('🆕 Fresh registration flow - checking verification status...');
-      
-      // If email not verified, start from step 1 (Email Verification)
-      if (!emailVerified) {
-        console.log('📧 Email not verified - starting from step 1 (Email Verification)');
-        setCurrentStep(0);
-        setCompletedSteps(new Set());
-        return 0;
-      }
-      
-      // If email verified but phone not verified, go to step 2 (Phone Verification)
-      if (emailVerified && !phoneVerified) {
-        console.log('📱 Phone not verified - starting from step 2 (Phone Verification)');
-        setCurrentStep(1);
-        setCompletedSteps(new Set(['email']));
-        return 1;
-      }
-      
-      // Both email and phone verified, check extra information status
-      if (emailVerified && phoneVerified) {
-        console.log('✅ Both email and phone verified, checking extra information...');
-        
-        try {
-          // Check if extra_information/check has options loaded
-          const extraInfoData = await appState.privateMethod({
-            functionName: 'checkExtraInformation',
-            apiRoute: 'user/extra_information/check',
-            params: {}
-          });
-          
-          console.log('📊 Extra information check result:', extraInfoData);
-          
-          // If extra_information/check has no options loaded -> step 4 (AccountReview)
-          // If extra_information/check has options -> step 3 (Extra Information)
-          if (!extraInfoData || !Array.isArray(extraInfoData) || extraInfoData.length === 0) {
-            console.log('📋 No extra information options - jumping to step 4 (AccountReview)');
-            setCurrentStep(3); // AccountReview step
-            setCompletedSteps(new Set(['email', 'phone', 'extra']));
-            return 3;
-          } else {
-            console.log('📋 Extra information options found - starting step 3 (Extra Information)');
-            setCurrentStep(2); // Extra Information step
-            setCompletedSteps(new Set(['email', 'phone']));
-            return 2;
-          }
-          
-        } catch (error) {
-          console.log('⚠️ Error checking extra information:', error.message);
-          // Default to Extra Information step for safety
-          console.log('📋 Defaulting to step 3 (Extra Information)');
+          // If API fails but user has credentials and is verified, default to step 3
+          console.log('📋 API failed but user verified - defaulting to step 3 (Extra Information)');
           setCurrentStep(2);
           setCompletedSteps(new Set(['email', 'phone']));
           return 2;
         }
       }
       
-      // Fallback to first step
-      console.log('🔄 Fallback - starting from step 1');
-      setCurrentStep(0);
-      setCompletedSteps(new Set());
-      return 0;
+      // For users without credentials but both verifications complete
+      console.log('✅ Both email and phone verified, checking extra information...');
+        
+      try {
+        // Check if extra_information/check has options loaded
+        const extraInfoData = await appState.privateMethod({
+          functionName: 'checkExtraInformation',
+          apiRoute: 'user/extra_information/check',
+          params: {}
+        });
+        
+        console.log('📊 Extra information check result:', extraInfoData);
+        
+        // If extra_information/check has no options loaded -> step 4 (AccountReview)
+        // If extra_information/check has options -> step 3 (Extra Information)
+        if (!extraInfoData || !Array.isArray(extraInfoData) || extraInfoData.length === 0) {
+          console.log('📋 No extra information options - jumping to step 4 (AccountReview)');
+          setCurrentStep(3); // AccountReview step
+          setCompletedSteps(new Set(['email', 'phone', 'extra']));
+          return 3;
+        } else {
+          console.log('📋 Extra information options found - starting step 3 (Extra Information)');
+          setCurrentStep(2); // Extra Information step
+          setCompletedSteps(new Set(['email', 'phone']));
+          return 2;
+        }
+        
+      } catch (error) {
+        console.log('⚠️ Error checking extra information:', error.message);
+        // Default to Extra Information step for safety
+        console.log('📋 Defaulting to step 3 (Extra Information)');
+        setCurrentStep(2);
+        setCompletedSteps(new Set(['email', 'phone']));
+        return 2;
+      }
       
     } catch (error) {
       console.error('❌ Error determining user step:', error);
@@ -228,14 +231,24 @@ const RegistrationCompletion = () => {
 
   // Handle step completion
     const handleStepComplete = (stepId, data) => {
-    log(`Step ${stepId} completed with data:`, data);
+    log(`✅ Step ${stepId} completed with data:`, data);
+    console.log('📊 Current step before advance:', currentStep);
+    console.log('📊 Total steps:', steps.length);
+    console.log('📊 Can advance?', currentStep < steps.length - 1);
+    
     const newCompletedSteps = new Set([...completedSteps, stepId]);
     setCompletedSteps(newCompletedSteps);
     
     // Automatically advance to next step if not at the end
     if (currentStep < steps.length - 1) {
-      log(`Advancing from step ${currentStep} to step ${currentStep + 1}`);
-      setCurrentStep(currentStep + 1);
+      const nextStep = currentStep + 1;
+      log(`🚀 Advancing from step ${currentStep} to step ${nextStep}`);
+      console.log('🚀 Next step will be:', steps[nextStep].title, '(', steps[nextStep].component, ')');
+      setCurrentStep(nextStep);
+    } else {
+      console.log('🎉 Final step completed - calling handleAllStepsComplete');
+      // Last step completed - show completion dialog
+      handleAllStepsComplete();
     }
     
     if (onComplete) {
@@ -259,9 +272,9 @@ const RegistrationCompletion = () => {
             appState.registrationPhone = null;
             appState.registrationSuccess = false;
             
-            // Redirect to main app (Trade or Assets page)
+            // Redirect to Home page
             appState.setMainPanelState({
-              mainPanelState: 'Assets',
+              mainPanelState: 'Home',
               pageName: 'default'
             });
           }
@@ -467,7 +480,7 @@ const PhoneVerificationWrapper = ({ onComplete }) => {
   return <PhoneVerification onComplete={onComplete} />;
 };
 
-const AccountUpdateWrapper = ({ onComplete }) => {
+const AccountUpdateWrapper = ({ onComplete = null }) => {
   const appState = useContext(AppStateContext);
   
   useEffect(() => {
@@ -477,7 +490,9 @@ const AccountUpdateWrapper = ({ onComplete }) => {
   return (
     <AccountUpdateComponent 
       appState={appState} 
-      onComplete={onComplete} 
+      onComplete={onComplete || (() => {
+        console.log('📋 [RegistrationCompletion] No onComplete callback provided');
+      })} 
     />
   );
 };

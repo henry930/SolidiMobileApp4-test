@@ -172,16 +172,21 @@ const AccountReview = ({ navigation, onComplete }) => {
     setupAndDetermineForm();
   }, []); // Empty dependency array
 
+
   // Handle form submission with registration status checking
   const handleFormSubmission = async (result) => {
-    console.log('📋 [AccountReview] Form submission result:', result);
+    console.log('[AccountReview] Form submission result:', result);
     
     if (result.shouldCheckRegistration) {
-      // After any form submission, refresh user status and check what to do next
-      console.log('� [AccountReview] Checking updated registration status...');
+      setIsLoading(true);
       
+      // Check which form was just submitted
+      const currentFormId = formId;
+      console.log('[AccountReview] Submitted form:', currentFormId);
+      
+      // After form submission, check the API response
       try {
-        // Force reload user status to get latest state
+        // Reload user status to get the latest categorisation status
         if (appState?.loadUserInfo) {
           await appState.loadUserInfo();
         }
@@ -189,24 +194,69 @@ const AccountReview = ({ navigation, onComplete }) => {
           await appState.loadUserStatus();
         }
         
-        // Small delay to ensure state is updated
-        setTimeout(() => {
-          console.log('🔍 [AccountReview] Re-determining form based on updated status...');
-          const newFormId = getFormIdForUser();
-          
-          if (newFormId) {
-            console.log('📋 [AccountReview] Loading next form:', newFormId);
-            setFormId(newFormId);
+        // Get updated status
+        const userInfo = appState?.userInfo || appState?.user?.info?.user;
+        const cat = userInfo?.cat;
+        const appropriate = userInfo?.appropriate;
+        
+        console.log('[AccountReview] Updated status - cat:', cat, 'appropriate:', appropriate);
+        
+        // Handle finprom-suitability (first attempt) submission
+        if (currentFormId === 'finprom-suitability') {
+          if (cat === 1 && appropriate === 1) {
+            // PASSED - complete registration
+            console.log('[AccountReview] First attempt PASSED - completing registration');
             setIsLoading(false);
+            if (onComplete) {
+              onComplete({ evaluationComplete: true, passed: true });
+            }
+            return;
           } else {
-            // Either completed or blocked - getFormIdForUser handles these cases
-            console.log('📋 [AccountReview] No more forms needed or access blocked');
+            // FAILED - load second attempt form
+            console.log('[AccountReview] First attempt FAILED - loading crypto-appropriateness-assessment2');
+            setFormId('crypto-appropriateness-assessment2');
             setIsLoading(false);
+            return;
           }
-        }, 500); // Give time for state updates
+        }
+        
+        // Handle crypto-appropriateness-assessment2 (second attempt) submission
+        if (currentFormId === 'crypto-appropriateness-assessment2') {
+          if (cat === 1 && appropriate === 1) {
+            // PASSED on second attempt - complete registration
+            console.log('[AccountReview] Second attempt PASSED - completing registration');
+            setIsLoading(false);
+            if (onComplete) {
+              onComplete({ evaluationComplete: true, passed: true });
+            }
+            return;
+          } else {
+            // FAILED both attempts - show 24 hour wait message
+            console.log('[AccountReview] Second attempt FAILED - showing 24 hour wait message');
+            setIsLoading(false);
+            
+            Alert.alert(
+              'Assessment Not Passed',
+              'Sorry. You failed the evaluation. You can come back 24 hours later for another try.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    // Redirect to Home page
+                    appState.setMainPanelState({
+                      mainPanelState: 'Home',
+                      pageName: 'default'
+                    });
+                  }
+                }
+              ]
+            );
+            return;
+          }
+        }
         
       } catch (error) {
-        console.error('❌ [AccountReview] Error checking registration status:', error);
+        console.error('[AccountReview] Error checking submission result:', error);
         setIsLoading(false);
       }
     } else {

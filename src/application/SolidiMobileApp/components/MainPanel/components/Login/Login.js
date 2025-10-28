@@ -5,10 +5,12 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 // Material Design imports
 import {
+  ActivityIndicator,
   Appbar,
   Button,
   Card,
   HelperText,
+  Portal,
   Text,
   TextInput,
   useTheme,
@@ -204,8 +206,9 @@ let Login = () => {
         setUploadMessage('');
         setDisableLoginButton(false);
         
-        // Clear invalid credentials
-        await appState.logout(true); // Complete logout to clear invalid credentials
+        // Don't clear credentials - let user try manual login
+        // The credentials will be cleared only if manual login also fails
+        // await appState.logout(true); // REMOVED: Don't clear credentials on auto-login failure
       }
 
     } catch (error) {
@@ -214,12 +217,8 @@ let Login = () => {
       setUploadMessage('');
       setDisableLoginButton(false);
       
-      // Clear invalid credentials on error
-      try {
-        await appState.logout(true);
-      } catch (logoutError) {
-        console.error('Error during cleanup logout:', logoutError);
-      }
+      // Don't clear credentials on error - let user try manual login
+      // await appState.logout(true); // REMOVED: Don't clear credentials on error
     }
   }
 
@@ -469,6 +468,51 @@ let Login = () => {
 
         <View style={{ height: 32 }} />
       </KeyboardAwareScrollView>
+
+      {/* Auto-login Loading Overlay */}
+      {appState.user.isAutoLoginInProgress && (
+        <Portal>
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <Card style={{
+              padding: 32,
+              backgroundColor: theme.colors.surface,
+              borderRadius: 16,
+              elevation: 8,
+              alignItems: 'center',
+              minWidth: 200
+            }}>
+              <ActivityIndicator 
+                size="large" 
+                color={theme.colors.primary}
+                style={{ marginBottom: 16 }}
+              />
+              <Text variant="titleMedium" style={{ 
+                color: theme.colors.primary,
+                fontWeight: '600',
+                marginBottom: 8
+              }}>
+                Signing you in...
+              </Text>
+              <Text variant="bodySmall" style={{ 
+                color: theme.colors.onSurfaceVariant,
+                textAlign: 'center'
+              }}>
+                Please wait while we securely authenticate your account
+              </Text>
+            </Card>
+          </View>
+        </Portal>
+      )}
     </View>
   );
 

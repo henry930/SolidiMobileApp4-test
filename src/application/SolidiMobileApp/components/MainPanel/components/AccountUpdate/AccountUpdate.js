@@ -15,7 +15,7 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
  * AccountUpdate - MainPanel wrapper for the AccountUpdate component
  * This wrapper integrates the AccountUpdate component with the MainPanel navigation system
  */
-let AccountUpdate = ({ onComplete }) => {
+let AccountUpdate = ({ onComplete = null }) => {
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
   let firstRender = misc.useFirstRender();

@@ -32,26 +32,33 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Mock Keychain to prevent crashes while maintaining app functionality
 const Keychain = {
   getInternetCredentials: async (key) => {
-    console.log(`[MockKeychain] getInternetCredentials called for key: ${key}`);
+    console.log(`[MockKeychain] 🔍 getInternetCredentials called for key: ${key}`);
     try {
       const stored = await AsyncStorage.getItem(`keychain_${key}`);
+      console.log(`[MockKeychain] 📦 Raw stored value exists: ${!!stored}`);
       if (stored) {
         const { username, password } = JSON.parse(stored);
-        console.log(`[MockKeychain] Found stored credentials for key: ${key}`);
+        console.log(`[MockKeychain] ✅ Found credentials - username length: ${username?.length}, password length: ${password?.length}`);
         return { username, password };
       }
     } catch (error) {
-      console.log(`[MockKeychain] Error retrieving credentials:`, error);
+      console.log(`[MockKeychain] ❌ Error retrieving credentials:`, error);
     }
+    console.log(`[MockKeychain] ⚠️ No credentials found for key: ${key}`);
     return { username: false, password: false };
   },
   setInternetCredentials: async (key, username, password) => {
-    console.log(`[MockKeychain] setInternetCredentials called for key: ${key}`);
+    console.log(`[MockKeychain] 💾 setInternetCredentials called for key: ${key}`);
+    console.log(`[MockKeychain] 📝 Storing username length: ${username?.length}, password length: ${password?.length}`);
     try {
       await AsyncStorage.setItem(`keychain_${key}`, JSON.stringify({ username, password }));
-      console.log(`[MockKeychain] Successfully stored credentials for key: ${key}`);
+      console.log(`[MockKeychain] ✅ Successfully stored credentials for key: ${key}`);
+      
+      // Verify it was stored
+      const verify = await AsyncStorage.getItem(`keychain_${key}`);
+      console.log(`[MockKeychain] 🔍 Verification: stored data exists: ${!!verify}`);
     } catch (error) {
-      console.log(`[MockKeychain] Error storing credentials:`, error);
+      console.log(`[MockKeychain] ❌ Error storing credentials:`, error);
     }
     return Promise.resolve();
   },
@@ -204,6 +211,54 @@ console.log('🛡️ [SETUP] All global error handlers installed - TestFlight de
 // Shortcuts
 let jd = JSON.stringify;
 
+// ===== DEBUG: Global function to check credentials cache =====
+global.checkCredentialsCache = async () => {
+  console.log('🔍 ========== CHECKING CREDENTIALS CACHE ==========');
+  try {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    
+    const cacheData = await AsyncStorage.getItem('solidi_credentials_cache');
+    console.log('📦 Cache data exists:', !!cacheData);
+    
+    if (cacheData) {
+      const parsed = JSON.parse(cacheData);
+      console.log('✅ CACHE FILE FOUND!');
+      console.log('   - Email:', parsed.email);
+      console.log('   - API Key length:', parsed.apiKey?.length);
+      console.log('   - API Secret length:', parsed.apiSecret?.length);
+      console.log('   - Cached at:', new Date(parsed.timestamp).toLocaleString());
+      console.log('   - Age (minutes):', Math.floor((Date.now() - parsed.timestamp) / 60000));
+    } else {
+      console.log('❌ NO CACHE FILE FOUND');
+    }
+    
+    const allKeys = await AsyncStorage.getAllKeys();
+    console.log('🗂️ All AsyncStorage keys:', allKeys);
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+  }
+  console.log('🔍 ========== END CHECK ==========');
+};
+
+global.clearCredentialsCache = async () => {
+  console.log('🗑️ Clearing credentials cache...');
+  try {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    await AsyncStorage.removeItem('solidi_credentials_cache');
+    await AsyncStorage.removeItem('user_authenticated');
+    await AsyncStorage.removeItem('user_email');
+    console.log('✅ Cache cleared');
+  } catch (error) {
+    console.error('❌ Error:', error);
+  }
+};
+
+console.log('💡 DEBUG FUNCTIONS AVAILABLE:');
+console.log('   - checkCredentialsCache()  // Check what\'s in the cache');
+console.log('   - clearCredentialsCache()  // Clear all cached credentials');
+// ===== END DEBUG FUNCTIONS =====
+
 // Settings: Critical (check before making a new release)
 let autoLoginOnDevAndStag = false; // Only used during development (i.e. on 'dev' tier) to automatically login using a dev user.
 let autoLoginWithStoredCredentials = true; // Enable auto-login for persistent authentication
@@ -220,9 +275,9 @@ const publicAccessStates = ['Register', 'RegistrationCompletion', 'Login', 'Expl
 // Dynamic initial state based on authentication - will be determined at runtime
 
 // Default state (will be updated dynamically)
-let initialMainPanelState = 'RegistrationCompletion'; // Direct access to RegistrationCompletion for testing finprom-categorisation
+let initialMainPanelState = 'Login'; // Default fallback - auto-login will redirect to Home if authenticated
+//let initialMainPanelState = 'RegistrationCompletion'; // Direct access to RegistrationCompletion for testing finprom-categorisation
 //let initialMainPanelState = 'AccountReview'; // Direct access to AccountReview for testing finprom-categorisation
-//let initialMainPanelState = 'Login'; // Default fallback
 //let initialMainPanelState = 'Trade'; // Show trade page first
 //let initialMainPanelState = 'Assets'; // Show assets page first  
 //let initialMainPanelState = 'Questionnaire'; // Direct access to Questionnaire for testing finprom-categorisation
@@ -410,10 +465,13 @@ class AppStateProvider extends Component {
       // Test critical early operations that commonly fail in TestFlight
       this.testCriticalOperations();
 
-      // Initialize constructor normally
-      this.initializeConstructor();
-
-      console.log('✅ [STARTUP] AppState constructor completed successfully');
+      // Initialize constructor normally (now async to wait for credential check)
+      this.initializationPromise = this.initializeConstructor().then(() => {
+        console.log('✅ [STARTUP] AppState constructor completed successfully');
+      }).catch((error) => {
+        console.error('🚨 [STARTUP] Initialization failed:', error);
+        this.reportConstructorCrash(error);
+      });
 
     } catch (error) {
       console.error('🚨 [STARTUP CRASH] Constructor failed:', error);
@@ -668,7 +726,7 @@ class AppStateProvider extends Component {
   }
 
   // Initialize constructor with the original code
-  initializeConstructor = () => {
+  initializeConstructor = async () => {
     console.log('🔄 [STARTUP] Initializing constructor normally...');
 
     try {
@@ -690,7 +748,11 @@ class AppStateProvider extends Component {
       
       // Step 5: Mobile-specific initialization
       console.log('🔄 [STARTUP] Step 5: Mobile-specific initialization...');
-      this.initializeMobileFeatures();
+      await this.initializeMobileFeatures();
+      
+      // Step 6: Auto-login initialization (async - runs in background)
+      console.log('🔄 [STARTUP] Step 6: Initializing auto-login...');
+      this.initializeAutoLogin();
       
       console.log('✅ [STARTUP] All initialization steps completed successfully');
       
@@ -1351,43 +1413,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         });
       }
       
-      // Auto-login with stored credentials for all environments (if available)
-      if (!this.state.user.isAuthenticated && autoLoginWithStoredCredentials) {
-        try {
-          console.log('🔐 APPSTATE: Attempting auto-login with stored credentials...');
-          
-          // Ensure we check for credentials first if not already done
-          if (!this.state.user.apiCredentialsFound) {
-            await this.state.checkForAPICredentials();
-          }
-          
-          let autoLoginResult = await this.state.autoLoginWithStoredCredentials();
-          if (autoLoginResult === true) {
-            console.log('✅ APPSTATE: Auto-login successful!');
-          } else {
-            console.log('ℹ️ APPSTATE: No stored credentials found for auto-login');
-          }
-        } catch (error) {
-          console.log('⚠️ APPSTATE: Auto-login failed:', error.message);
-          
-          // If auto-login fails, clear potentially problematic credentials
-          // and ensure we don't get stuck in error state
-          try {
-            if (error.message.includes('401') || error.message.includes('invalid') || error.message.includes('expired')) {
-              console.log('🔐 APPSTATE: Clearing invalid credentials from auto-login failure');
-              await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
-              this.state.user.apiCredentialsFound = false;
-            }
-          } catch (clearError) {
-            console.log('⚠️ APPSTATE: Could not clear credentials:', clearError.message);
-          }
-          
-          // Don't throw error or trigger error state - just continue to login screen
-          console.log('🔐 APPSTATE: Continuing to login screen after auto-login failure');
-        }
-      } else if (!autoLoginWithStoredCredentials) {
-        console.log('🔐 APPSTATE: Auto-login disabled for development - staying on initial page');
-      }
+      // Note: Auto-login is now handled by initializeAutoLogin() during constructor
+      // This ensures it runs on app startup, not just when generalSetup is called
     }
 
 
@@ -1662,6 +1689,33 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       await Keychain.setInternetCredentials(this.state.apiCredentialsStorageKey, apiKey, apiSecret);
       let msg = `apiCredentials stored in keychain with key = '${this.state.apiCredentialsStorageKey}')`;
       log(msg);
+      
+      // PERSISTENT LOGIN: Store credentials in CACHE FILE for instant auto-login
+      try {
+        const cacheData = {
+          apiKey,
+          apiSecret,
+          email: this.state.user.email || null, // Email may not be set during auto-login
+          timestamp: Date.now()
+        };
+        await AsyncStorage.setItem('solidi_credentials_cache', JSON.stringify(cacheData));
+        console.log('💾 PERSISTENT LOGIN: Credentials cached to file');
+        console.log('   - Cache location: solidi_credentials_cache');
+        console.log('   - Email:', this.state.user.email || 'not set');
+        console.log('   - Timestamp:', new Date().toLocaleString());
+      } catch (cacheError) {
+        console.log('⚠️ Failed to cache credentials:', cacheError);
+      }
+      
+      // PERSISTENT LOGIN: Store authentication state in AsyncStorage
+      try {
+        await AsyncStorage.setItem('user_authenticated', 'true');
+        await AsyncStorage.setItem('user_email', this.state.user.email || 'unknown');
+        console.log('💾 PERSISTENT LOGIN: Authentication state saved to AsyncStorage');
+      } catch (storageError) {
+        console.log('⚠️ Failed to save auth state to AsyncStorage:', storageError);
+      }
+      
       // Save the fact that the API Key and Secret have been stored.
       this.state.user.apiCredentialsFound = true;
       let msg2 = `Set this.state.user.apiCredentialsFound = true`;
@@ -1727,24 +1781,117 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.autoLoginWithStoredCredentials = async () => {
       try {
         log("🔑 autoLoginWithStoredCredentials: Attempting auto-login with stored credentials");
+        console.log("🔑 [AUTO-LOGIN] ========== STARTING AUTO-LOGIN ==========");
         
         // Skip if already authenticated
         if (this.state.user.isAuthenticated) {
           log("🔑 autoLoginWithStoredCredentials: User already authenticated, skipping");
+          console.log("✅ [AUTO-LOGIN] Already authenticated");
           return true;
         }
         
-        // Check if credentials exist in keychain
+        // STEP 1: Try to load from cache file FIRST (fastest method)
+        console.log("🔑 [AUTO-LOGIN] STEP 1: Checking credentials cache file...");
+        try {
+          const cachedCreds = await AsyncStorage.getItem('solidi_credentials_cache');
+          if (cachedCreds) {
+            const parsedCreds = JSON.parse(cachedCreds);
+            const { apiKey, apiSecret, email = null, timestamp } = parsedCreds || {};
+            console.log("✅ [AUTO-LOGIN] Found credentials in cache file!");
+            console.log("   - Email:", email || 'not cached');
+            console.log("   - Cached at:", timestamp ? new Date(timestamp).toLocaleString() : 'unknown');
+            console.log("   - API Key length:", apiKey?.length);
+            
+            // Validate cache format
+            if (apiKey && apiSecret && apiKey.length > 10 && apiSecret.length > 10) {
+              console.log("🔑 [AUTO-LOGIN] Cache credentials valid, logging in...");
+              
+              // Check if apiClient exists for validation
+              if (this.state.apiClient) {
+                console.log("🔑 [AUTO-LOGIN] API client exists, validating credentials with server...");
+                // First, set the credentials in the API client temporarily to test them
+                const tempApiClient = this.state.apiClient;
+                const originalApiKey = tempApiClient.apiKey;
+                const originalApiSecret = tempApiClient.apiSecret;
+                
+                tempApiClient.apiKey = apiKey;
+                tempApiClient.apiSecret = apiSecret;
+                
+                try {
+                  // Validate credentials with the API before fully logging in
+                  console.log("🔑 [AUTO-LOGIN] Validating cached credentials with server...");
+                  const validationResult = await tempApiClient.validateCredentials();
+                  
+                  if (validationResult && !validationResult.error) {
+                    console.log("✅ [AUTO-LOGIN] Cached credentials validated, logging in...");
+                    
+                    // Login directly with cached credentials (they're already in apiClient)
+                    await this.loginWithAPIKeyAndSecret({apiKey, apiSecret});
+                    
+                    if (this.state.user.isAuthenticated) {
+                      console.log("✅ [AUTO-LOGIN] SUCCESS via cache file!");
+                      return true;
+                    }
+                  } else {
+                    console.log("❌ [AUTO-LOGIN] Cached credentials invalid, clearing cache...");
+                    await AsyncStorage.removeItem('solidi_credentials_cache');
+                    // Restore original credentials
+                    tempApiClient.apiKey = originalApiKey;
+                    tempApiClient.apiSecret = originalApiSecret;
+                  }
+                } catch (validationError) {
+                  console.log("❌ [AUTO-LOGIN] Credential validation error:", validationError.message);
+                  await AsyncStorage.removeItem('solidi_credentials_cache');
+                  // Restore original credentials
+                  tempApiClient.apiKey = originalApiKey;
+                  tempApiClient.apiSecret = originalApiSecret;
+                }
+              } else {
+                // No apiClient yet - skip validation and login directly
+                console.log("🔑 [AUTO-LOGIN] No API client yet, logging in directly (will create client)...");
+                
+                try {
+                  // Login directly - this will create the apiClient
+                  await this.loginWithAPIKeyAndSecret({apiKey, apiSecret});
+                  
+                  if (this.state.user.isAuthenticated) {
+                    console.log("✅ [AUTO-LOGIN] SUCCESS via cache file (no validation)!");
+                    return true;
+                  }
+                } catch (loginError) {
+                  console.log("❌ [AUTO-LOGIN] Login error:", loginError.message);
+                  await AsyncStorage.removeItem('solidi_credentials_cache');
+                }
+              }
+              
+              console.log("⚠️ [AUTO-LOGIN] Cache login failed, trying Keychain...");
+            } else {
+              console.log("⚠️ [AUTO-LOGIN] Cache credentials invalid format");
+            }
+          } else {
+            console.log("ℹ️ [AUTO-LOGIN] No cache file found, trying Keychain...");
+          }
+        } catch (cacheError) {
+          console.log("⚠️ [AUTO-LOGIN] Cache read error:", cacheError.message);
+        }
+        
+        // STEP 2: Fallback to Keychain if cache failed
+        console.log("🔑 [AUTO-LOGIN] STEP 2: Checking Keychain...");
         let credentials = await Keychain.getInternetCredentials(this.state.apiCredentialsStorageKey);
         
         if (credentials && credentials.username && credentials.password) {
           let apiKey = credentials.username;
           let apiSecret = credentials.password;
           
+          console.log("✅ [AUTO-LOGIN] Found credentials in Keychain");
+          console.log("   - API Key length:", apiKey.length);
+          
           // Validate credentials format (basic check)
           if (!apiKey || !apiSecret || apiKey.length < 10 || apiSecret.length < 10) {
             log("🔑 autoLoginWithStoredCredentials: Invalid credential format, clearing stored credentials");
+            console.log("❌ [AUTO-LOGIN] Invalid format, clearing...");
             await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
+            await AsyncStorage.removeItem('solidi_credentials_cache');
             this.state.user.apiCredentialsFound = false;
             return false;
           }
@@ -1755,38 +1902,103 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             log(`🔑 autoLoginWithStoredCredentials: API Secret: ${apiSecret.substring(0, 20)}...`);
           }
           
-          // Login with the stored credentials
+          console.log("🔑 [AUTO-LOGIN] Testing Keychain credentials with API...");
+          
+          // Set credentials temporarily to test them
+          const tempApiClient = this.state.apiClient;
+          const originalApiKey = tempApiClient.apiKey;
+          const originalApiSecret = tempApiClient.apiSecret;
+          
+          tempApiClient.apiKey = apiKey;
+          tempApiClient.apiSecret = apiSecret;
+          
+          try {
+            // Validate credentials with the API before fully logging in
+            console.log("🔑 [AUTO-LOGIN] Validating Keychain credentials with server...");
+            const validationResult = await tempApiClient.validateCredentials();
+            
+            if (!validationResult || validationResult.error) {
+              console.log("❌ [AUTO-LOGIN] Keychain credentials invalid/expired, clearing...");
+              log("🔑 autoLoginWithStoredCredentials: Credentials validation failed, clearing them");
+              
+              // Restore original credentials
+              tempApiClient.apiKey = originalApiKey;
+              tempApiClient.apiSecret = originalApiSecret;
+              
+              // Clear invalid credentials
+              await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
+              await AsyncStorage.removeItem('solidi_credentials_cache');
+              this.state.user.apiCredentialsFound = false;
+              return false;
+            }
+            
+            console.log("✅ [AUTO-LOGIN] Keychain credentials validated successfully");
+          } catch (validationError) {
+            console.log("❌ [AUTO-LOGIN] Credential validation error:", validationError.message);
+            log(`🔑 autoLoginWithStoredCredentials: Validation error: ${validationError.message}`);
+            
+            // Restore original credentials
+            tempApiClient.apiKey = originalApiKey;
+            tempApiClient.apiSecret = originalApiSecret;
+            
+            // Clear invalid credentials
+            await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
+            await AsyncStorage.removeItem('solidi_credentials_cache');
+            this.state.user.apiCredentialsFound = false;
+            return false;
+          }
+          
+          console.log("🔑 [AUTO-LOGIN] Logging in with validated Keychain credentials...");
+          
+          // Login with the stored credentials (they're already in apiClient from validation)
           await this.loginWithAPIKeyAndSecret({apiKey, apiSecret});
           
           // Verify login succeeded
           if (this.state.user.isAuthenticated) {
             log("🔑 autoLoginWithStoredCredentials: Auto-login successful!");
+            console.log("✅ [AUTO-LOGIN] SUCCESS via Keychain!");
+            
+            // Update cache file for next time
+            const cacheData = {
+              apiKey,
+              apiSecret,
+              email: this.state.user.email || null, // Email may not be set yet during auto-login
+              timestamp: Date.now()
+            };
+            await AsyncStorage.setItem('solidi_credentials_cache', JSON.stringify(cacheData));
+            console.log("💾 [AUTO-LOGIN] Credentials cached for next reload");
+            
             return true;
           } else {
             log("🔑 autoLoginWithStoredCredentials: Login failed despite no errors");
+            console.log("❌ [AUTO-LOGIN] Login failed");
             return false;
           }
           
         } else {
           log("🔑 autoLoginWithStoredCredentials: No stored credentials found");
+          console.log("ℹ️ [AUTO-LOGIN] No credentials in Keychain");
           this.state.user.apiCredentialsFound = false;
           return false;
         }
       } catch (error) {
         log(`🔑 autoLoginWithStoredCredentials: Error during auto-login: ${error.message}`);
-        console.error('🔑 Auto-login error:', error);
+        console.error('❌ [AUTO-LOGIN] Error:', error);
         
         // If credentials are invalid/expired, clear them
         if (error.message.includes('invalid') || error.message.includes('expired') || error.message.includes('401')) {
           log("🔑 autoLoginWithStoredCredentials: Credentials appear invalid, clearing them");
+          console.log("🗑️ [AUTO-LOGIN] Clearing invalid credentials");
           try {
             await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
+            await AsyncStorage.removeItem('solidi_credentials_cache');
             this.state.user.apiCredentialsFound = false;
           } catch (clearError) {
             log(`🔑 autoLoginWithStoredCredentials: Error clearing invalid credentials: ${clearError.message}`);
           }
         }
         
+        console.log("🔍 [AUTO-LOGIN] ========== END AUTO-LOGIN (FAILED) ==========");
         return false;
       }
     }
@@ -2479,11 +2691,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (credentials) {
         if (_.has(credentials, 'username') && _.has(credentials, 'password')) {
           log(`Stored API credentials (API Key and Secret) found in Keychain (but not loaded into memory).`);
+          console.log('✅ [CREDENTIALS CHECK] API credentials found in keychain');
           this.state.user.apiCredentialsFound = true;
           return;
         }
       }
       log(`No API credentials found in Keychain.`);
+      console.log('⚠️ [CREDENTIALS CHECK] No API credentials found in keychain');
+      this.state.user.apiCredentialsFound = false;
     }
 
 
@@ -2502,6 +2717,23 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log("🔑 Clearing stored credentials for complete logout");
         await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
         this.state.user.apiCredentialsFound = false;
+        
+        // PERSISTENT LOGIN: Clear credentials cache file
+        try {
+          await AsyncStorage.removeItem('solidi_credentials_cache');
+          console.log('🗑️ PERSISTENT LOGIN: Credentials cache file cleared');
+        } catch (cacheError) {
+          console.log('⚠️ Failed to clear credentials cache:', cacheError);
+        }
+        
+        // PERSISTENT LOGIN: Clear AsyncStorage authentication state
+        try {
+          await AsyncStorage.removeItem('user_authenticated');
+          await AsyncStorage.removeItem('user_email');
+          console.log('💾 PERSISTENT LOGIN: Authentication state cleared from AsyncStorage');
+        } catch (storageError) {
+          console.log('⚠️ Failed to clear auth state from AsyncStorage:', storageError);
+        }
       } else {
         log("🔑 Preserving stored credentials for persistent login");
         // Keep apiCredentialsFound = true so auto-login can work on next app start
@@ -5211,6 +5443,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         password: '',
         pin: '',
         apiCredentialsFound: false,
+        isAutoLoginInProgress: false, // Track auto-login status for UI
         accountReviewDismissed: false,
         info: {
           // In info, we store a lot of user-specific data retrieved from the API.
@@ -5338,11 +5571,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   }
 
   // Step 5: Initialize mobile-specific features
-  initializeMobileFeatures = () => {
+  initializeMobileFeatures = async () => {
     // Load data from keychain (mobile only).
     if (Platform.OS !== 'web') {
       this.loadPIN();
-      this.checkForAPICredentials();
+      
+      // CRITICAL: Wait for credentials check to complete before auto-login
+      console.log('🔍 [STARTUP] Checking for stored API credentials...');
+      await this.checkForAPICredentials();
+      console.log('🔍 [STARTUP] Credentials check complete. Found:', this.state.user.apiCredentialsFound);
       
       // Start the lock-app timer (mobile only).
       this.resetLockAppTimer();
@@ -5358,9 +5595,90 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // 🔐 Start authentication monitoring for web too
       this.startAuthenticationMonitoring();
     }
+  }
 
-
-
+  // 🔐 INITIALIZE AUTO-LOGIN
+  // This runs asynchronously in the background during app startup
+  initializeAutoLogin = () => {
+    console.log('🔐 [AUTO-LOGIN INIT] Starting auto-login initialization...');
+    console.log('🔐 [AUTO-LOGIN INIT] Current auth state:', this.state.user.isAuthenticated);
+    console.log('🔐 [AUTO-LOGIN INIT] API credentials found:', this.state.user.apiCredentialsFound);
+    console.log('🔐 [AUTO-LOGIN INIT] Auto-login enabled:', autoLoginWithStoredCredentials);
+    
+    // Store the auto-login promise so handleInitialNavigation can wait for it
+    if (!this.state.user.isAuthenticated && autoLoginWithStoredCredentials) {
+      // Set flag to indicate auto-login is in progress (with setState to trigger re-render)
+      this.setState({
+        user: {
+          ...this.state.user,
+          isAutoLoginInProgress: true
+        }
+      });
+      
+      this.autoLoginPromise = (async () => {
+        try {
+          console.log('🔐 ========================================');
+          console.log('🔐 AUTO-LOGIN: Starting auto-login process');
+          console.log('🔐 ========================================');
+          
+          console.log('🔐 AUTO-LOGIN: Calling autoLoginWithStoredCredentials()...');
+          let autoLoginResult = await this.state.autoLoginWithStoredCredentials();
+          
+          console.log('🔐 AUTO-LOGIN: Auto-login completed');
+          console.log('🔐 AUTO-LOGIN: Result:', autoLoginResult);
+          console.log('🔐 AUTO-LOGIN: User authenticated:', this.state.user.isAuthenticated);
+          
+          if (autoLoginResult === true) {
+            console.log('✅ AUTO-LOGIN: Auto-login successful!');
+          } else {
+            console.log('ℹ️ AUTO-LOGIN: Auto-login did not succeed (no stored credentials or validation failed)');
+          }
+          
+          // Clear flag when auto-login completes (with setState to trigger re-render)
+          this.setState({
+            user: {
+              ...this.state.user,
+              isAutoLoginInProgress: false
+            }
+          });
+          return autoLoginResult;
+        } catch (error) {
+          console.error('❌ AUTO-LOGIN: Auto-login failed with error:', error);
+          console.error('❌ AUTO-LOGIN: Error stack:', error.stack);
+          
+          // Clear flag when auto-login fails (with setState to trigger re-render)
+          this.setState({
+            user: {
+              ...this.state.user,
+              isAutoLoginInProgress: false
+            }
+          });
+          
+          // If auto-login fails, clear potentially problematic credentials
+          try {
+            if (error.message && (error.message.includes('401') || error.message.includes('invalid') || error.message.includes('expired'))) {
+              console.log('🔐 AUTO-LOGIN: Clearing invalid credentials from auto-login failure');
+              await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
+              this.state.user.apiCredentialsFound = false;
+            }
+          } catch (clearError) {
+            console.log('⚠️ AUTO-LOGIN: Could not clear credentials:', clearError.message);
+          }
+          
+          console.log('🔐 AUTO-LOGIN: Continuing to login screen after auto-login failure');
+          return false;
+        }
+      })();
+    } else if (!autoLoginWithStoredCredentials) {
+      console.log('🔐 AUTO-LOGIN: Auto-login disabled (autoLoginWithStoredCredentials = false)');
+      this.autoLoginPromise = Promise.resolve(false);
+    } else {
+      // Already authenticated
+      console.log('🔐 AUTO-LOGIN: User already authenticated, skipping auto-login');
+      this.autoLoginPromise = Promise.resolve(true);
+    }
+    
+    console.log('🔐 [AUTO-LOGIN INIT] Auto-login promise created');
   }
 
   // 🔐 CLEANUP ON COMPONENT UNMOUNT
@@ -5375,8 +5693,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   componentDidMount() {
     console.log('🔄 [MOUNT] ComponentDidMount called');
     
-    // Handle async credential checking and navigation
-    this.handleInitialNavigation();
+    // CRITICAL: Wait for initialization to complete before handling navigation
+    if (this.initializationPromise) {
+      console.log('⏳ [MOUNT] Waiting for initialization to complete...');
+      this.initializationPromise.then(() => {
+        console.log('✅ [MOUNT] Initialization complete, handling navigation...');
+        this.handleInitialNavigation();
+      });
+    } else {
+      // Fallback if no initialization promise (shouldn't happen)
+      console.log('⚠️ [MOUNT] No initialization promise, proceeding with navigation...');
+      this.handleInitialNavigation();
+    }
     
     if (this.keychainTestPending) {
       this.performKeychainTest();
@@ -5399,9 +5727,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       });
       
       if (hasAPICredentials && isAuthenticated) {
-        // User has valid stored credentials and is authenticated → redirect to Trade page
-        console.log('✅ [AppState] Valid credentials found and authenticated → Redirecting to Trade');
-        return 'Trade';
+        // User has valid stored credentials and is authenticated → redirect to Home page
+        console.log('✅ [AppState] Valid credentials found and authenticated → Redirecting to Home');
+        return 'Home';
       } else if (hasAPICredentials && !isAuthenticated) {
         // User has credentials but needs to authenticate → redirect to PIN entry
         console.log('🔑 [AppState] Credentials found but not authenticated → Redirecting to PIN');
@@ -5423,6 +5751,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     try {
       console.log('🔍 [NAVIGATION] Determining initial navigation state...');
       
+      // CRITICAL: Wait for auto-login to complete before deciding where to navigate
+      if (this.autoLoginPromise) {
+        console.log('⏳ [NAVIGATION] Waiting for auto-login to complete...');
+        const autoLoginResult = await this.autoLoginPromise;
+        console.log('✅ [NAVIGATION] Auto-login completed. Result:', autoLoginResult);
+      }
+      
       const initialState = await this.determineInitialState();
       console.log('🎯 [NAVIGATION] Determined initial state:', initialState);
       
@@ -5433,6 +5768,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           mainPanelState: initialState,
           pageName: 'default'
         });
+      } else {
+        console.log('ℹ️ [NAVIGATION] Already on correct state:', initialState);
       }
       
     } catch (error) {

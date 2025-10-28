@@ -14,8 +14,8 @@ class SecureApp extends Component {
     super(props);
     this.state = {
       isAuthenticated: false,
-      authRequired: true, // Always require auth until we check
-      skipAuth: false, // For development/testing
+      authRequired: false, // Changed: Don't require auth, use persistent login instead
+      skipAuth: true, // PERSISTENT LOGIN MODE: Skip biometric authentication completely
       showSetup: false, // Show setup screen for first-time users
       isLoading: true, // Add loading state to prevent premature rendering
       biometricInfo: { available: false, biometryType: null },
@@ -63,10 +63,24 @@ class SecureApp extends Component {
     this.stopIdleMonitoring();
   }
 
-  // Initialize biometric authentication
+  // Initialize authentication with persistent login
   initializeBiometricAuth = async () => {
     try {
-      console.log('🔍 [SecureApp] Initializing biometric authentication...');
+      console.log('🔍 [SecureApp] ========== PERSISTENT LOGIN MODE ==========');
+      console.log('� [SecureApp] Biometric authentication: COMPLETELY DISABLED');
+      console.log('✅ [SecureApp] Auto-login handled by AppState constructor');
+      console.log('✅ [SecureApp] User will be automatically logged in if credentials exist');
+      
+      // Always allow access immediately - AppState handles authentication
+      this.setState({ 
+        authRequired: false,
+        isAuthenticated: true, // SecureApp always allows access
+        isLoading: false
+      });
+      
+      console.log('✅ [SecureApp] Persistent login initialization complete');
+      console.log('🔍 [SecureApp] ========== END PERSISTENT LOGIN INIT ==========');
+      return;
       
       // Check if biometric authentication is available
       const info = await biometricAuth.isBiometricAvailable();
@@ -108,7 +122,15 @@ class SecureApp extends Component {
 
   // Handle app state changes
   handleAppStateChange = (nextAppState) => {
-    const { isAuthenticating, appState } = this.state;
+    const { isAuthenticating, appState, skipAuth } = this.state;
+    
+    // PERSISTENT LOGIN MODE: Never re-authenticate on app state changes
+    if (skipAuth) {
+      console.log('🔓 [SecureApp] PERSISTENT LOGIN: Skipping re-auth on app state change');
+      console.log('   - App state changed to:', nextAppState);
+      console.log('   - User remains logged in');
+      return;
+    }
     
     // Prevent duplicate processing of the same state change
     if (appState === nextAppState) {
@@ -605,5 +627,8 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
+
+// Add context to access AppState for auto-login
+SecureApp.contextType = AppStateContext;
 
 export default SecureApp;
