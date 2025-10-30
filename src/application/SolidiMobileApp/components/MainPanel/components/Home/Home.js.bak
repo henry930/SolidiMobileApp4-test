@@ -119,15 +119,6 @@ const Home = () => {
         return;
       }
 
-      // Define assets array BEFORE try block so it's accessible in STEP 7
-      const assets = [
-        { asset: 'BTC', name: 'Bitcoin' },
-        { asset: 'ETH', name: 'Ethereum' },
-        { asset: 'LTC', name: 'Litecoin' },
-        { asset: 'XRP', name: 'Ripple' },
-        { asset: 'BCH', name: 'Bitcoin Cash' }
-      ];
-
       try {
         setIsLoading(true);
         setDataLoadingComplete(false);
@@ -137,6 +128,13 @@ const Home = () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Set asset list
+        const assets = [
+          { asset: 'BTC', name: 'Bitcoin' },
+          { asset: 'ETH', name: 'Ethereum' },
+          { asset: 'LTC', name: 'Litecoin' },
+          { asset: 'XRP', name: 'Ripple' },
+          { asset: 'BCH', name: 'Bitcoin Cash' }
+        ];
         setAssetData(assets);
         console.log('✅ STEP 2 COMPLETE: Assets set:', assets.length);
 
@@ -255,147 +253,6 @@ const Home = () => {
         }
         setGraphData(graphPoints);
         console.log('✅ STEP 6 COMPLETE: Graph data generated');
-
-        // STEP 7: Calculate monthly change using historical prices
-        console.log('[HIST_PRICE]');
-        console.log('[HIST_PRICE] ========================================');
-        console.log('[HIST_PRICE] 📊 STEP 7: CALCULATING MONTHLY CHANGE');
-        console.log('[HIST_PRICE] ========================================');
-        console.log('[HIST_PRICE] Current total value:', totalValue);
-        console.log('[HIST_PRICE] Price data available:', Object.keys(priceData || {}).length, 'markets');
-        console.log('[HIST_PRICE] Assets array length:', assets?.length || 0);
-        console.log('[HIST_PRICE] Assets array:', assets);
-        console.log('[HIST_PRICE]');
-        
-        let portfolioValue30DaysAgo = 0;
-        
-        // Add GBP balance (no change for fiat)
-        const gbpBalanceFor30Days = appState.getBalance('GBP');
-        if (gbpBalanceFor30Days !== '[loading]') {
-          const gbpBalance30Days = parseFloat(gbpBalanceFor30Days) || 0;
-          portfolioValue30DaysAgo += gbpBalance30Days;
-          console.log('[HIST_PRICE] 💷 GBP balance (30 days ago = now):', gbpBalance30Days);
-        }
-        
-        // Calculate crypto values from 30 days ago
-        for (const asset of assets) {
-          const balanceStr = appState.getBalance(asset.asset);
-          console.log(`[HIST_PRICE] 🔎 Checking ${asset.asset} - balance string:`, balanceStr);
-          
-          if (balanceStr !== '[loading]') {
-            const balance = parseFloat(balanceStr) || 0;
-            console.log(`[HIST_PRICE] 🔎 ${asset.asset} parsed balance:`, balance);
-            
-            if (balance > 0) {
-              try {
-                const market = `${asset.asset}/GBP`;
-                console.log('[HIST_PRICE]');
-                console.log(`[HIST_PRICE] 🔍 ===== LOADING HISTORICAL PRICES FOR ${market} =====`);
-                console.log(`[HIST_PRICE]    Balance: ${balance} ${asset.asset}`);
-                console.log(`[HIST_PRICE]    appState.loadHistoricPrices exists:`, typeof appState.loadHistoricPrices);
-                
-                // Load 1 month historical prices from Solidi API
-                console.log(`[HIST_PRICE]    📞 Calling appState.loadHistoricPrices({ market: "${market}", period: "1M" })`);
-                
-                try {
-                  await appState.loadHistoricPrices({ market, period: '1M' });
-                  console.log(`[HIST_PRICE]    ✅ loadHistoricPrices call completed`);
-                  // Small delay to ensure state update propagates
-                  await new Promise(resolve => setTimeout(resolve, 100));
-                } catch (loadError) {
-                  console.log(`[HIST_PRICE]    ❌ Error calling loadHistoricPrices:`, loadError.message);
-                  console.log(`[HIST_PRICE]    ❌ Error stack:`, loadError.stack);
-                }
-                
-                // Check what's in the state immediately after
-                console.log(`[HIST_PRICE]    🔎 Checking appState.apiData.historic_prices...`);
-                console.log(`[HIST_PRICE]    - apiData exists:`, !!appState.apiData);
-                console.log(`[HIST_PRICE]    - historic_prices exists:`, !!appState.apiData?.historic_prices);
-                console.log(`   - historic_prices keys:`, Object.keys(appState.apiData?.historic_prices || {}));
-                console.log(`   - market "${market}" exists:`, !!appState.apiData?.historic_prices?.[market]);
-                if (appState.apiData?.historic_prices?.[market]) {
-                  console.log(`   - periods available:`, Object.keys(appState.apiData.historic_prices[market]));
-                }
-                
-                // Get the historic prices from appState
-                const historicPrices = appState.apiData?.historic_prices?.[market]?.['1M'];
-                
-                console.log(`   � Retrieved historic prices from state:`, {
-                  exists: !!historicPrices,
-                  length: historicPrices?.length,
-                  firstPrice: historicPrices?.[0],
-                  lastPrice: historicPrices?.[historicPrices?.length - 1]
-                });
-                
-                if (historicPrices && historicPrices.length > 0) {
-                  // Get the first price (30 days ago)
-                  const price30DaysAgo = historicPrices[0];
-                  const value30DaysAgo = balance * price30DaysAgo;
-                  portfolioValue30DaysAgo += value30DaysAgo;
-                  
-                  // Get current price for comparison
-                  const currentPrice = priceData[market] ? parseFloat(priceData[market].price) : 0;
-                  
-                  console.log(`💰 ${asset.asset}:`);
-                  console.log(`   - Balance: ${balance}`);
-                  console.log(`   - Price 30 days ago: £${price30DaysAgo}`);
-                  console.log(`   - Price now: £${currentPrice}`);
-                  console.log(`   - Value 30 days ago: £${value30DaysAgo.toFixed(2)}`);
-                  console.log(`   - Value now: £${(balance * currentPrice).toFixed(2)}`);
-                } else {
-                  console.log(`⚠️ No historical data for ${market}`);
-                }
-              } catch (error) {
-                console.log(`[HIST_PRICE] ❌ Error getting historical price for ${asset.asset}:`, error);
-              }
-            }
-          }
-        }
-        
-        // Calculate current portfolio value (GBP + crypto at current prices)
-        let portfolioValueNow = 0;
-        
-        // Add GBP balance
-        const gbpBalanceNow = appState.getBalance('GBP');
-        if (gbpBalanceNow !== '[loading]') {
-          portfolioValueNow += parseFloat(gbpBalanceNow) || 0;
-        }
-        
-        // Add current crypto values
-        for (const asset of assets) {
-          if (asset.group === 'Crypto') {
-            const balanceStr = appState.getBalance(asset.asset);
-            if (balanceStr !== '[loading]') {
-              const balance = parseFloat(balanceStr) || 0;
-              if (balance > 0) {
-                const market = `${asset.asset}/GBP`;
-                const currentPrice = priceData[market] ? parseFloat(priceData[market].price) : 0;
-                portfolioValueNow += balance * currentPrice;
-              }
-            }
-          }
-        }
-        
-        console.log('[HIST_PRICE] 📊 Portfolio value 30 days ago:', portfolioValue30DaysAgo.toFixed(2));
-        console.log('[HIST_PRICE] 📊 Portfolio value now:', portfolioValueNow.toFixed(2));
-        
-        // Calculate the change (difference, not the old value)
-        if (portfolioValue30DaysAgo > 0) {
-          const change = portfolioValueNow - portfolioValue30DaysAgo;
-          const changePercent = (change / portfolioValue30DaysAgo) * 100;
-          
-          console.log('[HIST_PRICE] 📊 Monthly change: £', change.toFixed(2));
-          console.log('[HIST_PRICE] 📊 Monthly change %:', changePercent.toFixed(2), '%');
-          
-          setMonthlyChange(change);
-          setMonthlyChangePercent(changePercent);
-        } else {
-          console.log('[HIST_PRICE] ⚠️ No portfolio value 30 days ago, setting change to 0');
-          setMonthlyChange(0);
-          setMonthlyChangePercent(0);
-        }
-        
-        console.log('[HIST_PRICE] ✅ STEP 7 COMPLETE: Monthly change calculated');
 
         console.log('✅ ========== ALL DATA LOADED SUCCESSFULLY ==========');
         setIsLoading(false);
@@ -547,11 +404,7 @@ const Home = () => {
         setIsLoading(false);
         
         // Calculate value from 30 days ago for monthly change
-        console.log('🔔 About to call calculateMonthlyChange with totalValue:', totalValue);
-        console.log('🔔 balancesLoaded:', balancesLoaded);
-        console.log('🔔 isAuthenticated:', appState.user?.isAuthenticated);
         await calculateMonthlyChange(totalValue);
-        console.log('🔔 calculateMonthlyChange completed');
         
       } catch (error) {
         console.log('❌ Error calculating portfolio value:', error);
@@ -564,94 +417,91 @@ const Home = () => {
     calculatePortfolioValue();
   }, [prices, balancesLoaded, appState.user?.isAuthenticated]);
 
-  // OLD - Monthly change calculation moved inline to loadAllDataSequentially
-  /*
+  // Calculate monthly change using historical prices from 30 days ago
   const calculateMonthlyChange = async (currentValue) => {
     try {
-      console.log('📊 Starting monthly change calculation...');
-      console.log('📊 Current portfolio value:', currentValue);
+      console.log('📅 Calculating monthly change with historical prices...');
+      console.log('📅 Current value:', currentValue);
+      console.log('📅 User authenticated:', appState.user?.isAuthenticated);
+      console.log('📅 Balances loaded:', balancesLoaded);
       
-      if (!appState.user?.isAuthenticated || currentValue === 0) {
-        console.log('⚠️ Skipping monthly change - not ready (auth:', appState.user?.isAuthenticated, 'value:', currentValue, ')');
+      if (!appState.user?.isAuthenticated) {
+        console.log('⚠️ User not authenticated, skipping monthly change calculation');
         setMonthlyChange(0);
         setMonthlyChangePercent(0);
         return;
       }
       
-      // Calculate portfolio value from 30 days ago using Solidi historical prices
-      let portfolioValue30DaysAgo = 0;
-      const assets = ['BTC', 'ETH', 'LTC', 'XRP', 'BCH'];
+      if (!balancesLoaded) {
+        console.log('⚠️ Balances not loaded, skipping monthly change calculation');
+        setMonthlyChange(0);
+        setMonthlyChangePercent(0);
+        return;
+      }
       
-      // Add GBP balance (no change for fiat)
+      let valueOneMonthAgo = 0;
+      
+      // Get GBP balance (same as current since it's fiat)
       const gbpBalanceStr = appState.getBalance('GBP');
       if (gbpBalanceStr !== '[loading]') {
         const gbpBalance = parseFloat(gbpBalanceStr) || 0;
-        portfolioValue30DaysAgo += gbpBalance;
-        console.log('💷 GBP balance (30 days ago = now):', gbpBalance);
+        valueOneMonthAgo += gbpBalance;
       }
       
-      // Calculate crypto values from 30 days ago using 1M (1 month) historical data
-      for (const asset of assets) {
+      // Get crypto balances with prices from 30 days ago
+      const cryptoAssets = ['BTC', 'ETH', 'LTC', 'XRP', 'BCH', 'DOGE', 'ADA', 'DOT', 'LINK', 'UNI'];
+      
+      for (const asset of cryptoAssets) {
         const balanceStr = appState.getBalance(asset);
         if (balanceStr !== '[loading]') {
           const balance = parseFloat(balanceStr) || 0;
           
           if (balance > 0) {
             try {
+              // Fetch historical price from 30 days ago
+              const oneMonthAgo = new Date();
+              oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+              const timestamp = Math.floor(oneMonthAgo.getTime() / 1000);
+              
               const market = `${asset}/GBP`;
-              console.log(`🔍 Loading historical prices for ${market}...`);
+              const response = await appState.api.makeUnAuthenticatedRequest({
+                path: '/graph',
+                qs: {
+                  market: market,
+                  start_date: timestamp,
+                  end_date: timestamp + 86400, // +1 day
+                  period: '1d'
+                }
+              });
               
-              // Load 1 month historical prices from Solidi API
-              await appState.loadHistoricPrices({ market, period: '1M' });
-              
-              // Get the historic prices from appState
-              const historicPrices = appState.state?.apiData?.historic_prices?.[market]?.['1M'];
-              
-              console.log(`📈 ${market} historic prices:`, historicPrices?.length, 'data points');
-              
-              if (historicPrices && historicPrices.length > 0) {
-                // Get the first price (30 days ago)
-                const price30DaysAgo = historicPrices[0];
-                const value30DaysAgo = balance * price30DaysAgo;
-                portfolioValue30DaysAgo += value30DaysAgo;
-                
-                // Get current price for comparison
-                const currentPrice = prices[market] ? parseFloat(prices[market].price) : 0;
-                
-                console.log(`💰 ${asset}:`);
-                console.log(`   - Balance: ${balance}`);
-                console.log(`   - Price 30 days ago: £${price30DaysAgo}`);
-                console.log(`   - Price now: £${currentPrice}`);
-                console.log(`   - Value 30 days ago: £${value30DaysAgo.toFixed(2)}`);
-                console.log(`   - Value now: £${(balance * currentPrice).toFixed(2)}`);
-              } else {
-                console.log(`⚠️ No historical data for ${market}`);
+              if (response && response.length > 0) {
+                const historicalPrice = parseFloat(response[0].close || response[0].price || response[0].value);
+                if (historicalPrice > 0) {
+                  const historicalValue = balance * historicalPrice;
+                  valueOneMonthAgo += historicalValue;
+                  console.log(`📅 ${asset} 30 days ago: ${balance} × £${historicalPrice} = £${historicalValue.toFixed(2)}`);
+                }
               }
             } catch (error) {
-              console.log(`❌ Error getting historical price for ${asset}:`, error);
+              console.log(`⚠️ Could not fetch historical price for ${asset}`);
+              // If historical data not available, use current price as fallback
+              const marketKey = `${asset}/GBP`;
+              if (prices[marketKey] && prices[marketKey].price) {
+                valueOneMonthAgo += balance * prices[marketKey].price;
+              }
             }
           }
         }
       }
       
-      console.log('📊 Portfolio value 30 days ago:', portfolioValue30DaysAgo);
-      console.log('📊 Portfolio value now:', currentValue);
+      // Calculate change
+      const change = currentValue - valueOneMonthAgo;
+      const changePercent = valueOneMonthAgo > 0 ? (change / valueOneMonthAgo) * 100 : 0;
       
-      // Calculate the change
-      if (portfolioValue30DaysAgo > 0) {
-        const change = currentValue - portfolioValue30DaysAgo;
-        const changePercent = (change / portfolioValue30DaysAgo) * 100;
-        
-        console.log('📊 Monthly change:', change);
-        console.log('📊 Monthly change %:', changePercent);
-        
-        setMonthlyChange(change);
-        setMonthlyChangePercent(changePercent);
-      } else {
-        console.log('⚠️ No portfolio value 30 days ago');
-        setMonthlyChange(0);
-        setMonthlyChangePercent(0);
-      }
+      console.log(`📊 Monthly Change: £${currentValue.toFixed(2)} - £${valueOneMonthAgo.toFixed(2)} = £${change.toFixed(2)} (${changePercent.toFixed(2)}%)`);
+      
+      setMonthlyChange(change);
+      setMonthlyChangePercent(changePercent);
       
     } catch (error) {
       console.log('❌ Error calculating monthly change:', error);
@@ -659,7 +509,6 @@ const Home = () => {
       setMonthlyChangePercent(0);
     }
   };
-  */
 
   // Update previous portfolio value once per day (24 hours)
   useEffect(() => {
@@ -928,9 +777,51 @@ const Home = () => {
     }
   };
 
-  // REMOVED DUPLICATE - getAssetPrice is defined later (line ~1060)
+  // Get asset price (same logic as Assets component)
+  const getAssetPrice = (asset) => {
+    try {
+      const marketKey = `${asset}/GBP`;
+      
+      if (prices[marketKey]) {
+        const priceData = prices[marketKey];
+        
+        if (priceData.price && priceData.price !== null) {
+          const livePrice = parseFloat(priceData.price);
+          return livePrice;
+        }
+      }
+      
+      // Fallback to demo prices if no live price available
+      const demoPrices = {
+        'BTC': 45000,
+        'ETH': 2800,
+        'LTC': 95,
+        'XRP': 0.45,
+        'BCH': 250
+      };
+      
+      return demoPrices[asset] || null;
+    } catch (error) {
+      console.log(`❌ Home: Error getting price for ${asset}:`, error);
+      return null;
+    }
+  };
 
-  // REMOVED DUPLICATE - formatTo9Digits is defined later (line ~1051)
+  // Format price display (9 significant digits like Assets component)
+  const formatTo9Digits = (value) => {
+    if (isNaN(value) || !isFinite(value)) return '0';
+    
+    const num = Number(value);
+    if (num === 0) return '0';
+    
+    if (Math.abs(num) >= 1) {
+      return num.toPrecision(9);
+    } else {
+      let formatted = num.toFixed(9);
+      formatted = formatted.replace(/\.?0+$/, '');
+      return formatted === '' ? '0' : formatted;
+    }
+  };
 
   // OLD CODE BELOW - All commented out, using sequential load instead
   /*
@@ -1496,6 +1387,15 @@ const Home = () => {
                 <Text style={styles.portfolioValue}>
                   {formatCurrency(portfolioValue)}
                 </Text>
+                
+                {/* Debug info - remove in production */}
+                {__DEV__ && (
+                  <Text style={{ fontSize: 10, color: '#999', marginTop: 5 }}>
+                    DEBUG: {appState.user?.isAuthenticated ? 'Authenticated' : 'Not Authenticated'} | 
+                    Value: {portfolioValue} | 
+                    {dataLoadingComplete ? 'Data Loaded' : 'Loading...'}
+                  </Text>
+                )}
                 
                 <View style={styles.changeContainer}>
                   <Text style={[

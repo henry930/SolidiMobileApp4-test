@@ -23,7 +23,18 @@ let RiskSummary = () => {
   let appState = useContext(AppStateContext);
 
   let goBack = () => {
-    appState.goBack();
+    console.log('[RiskSummary] I Understand button clicked - closing page');
+    // Use goBack to return to previous page
+    if (appState.goBack) {
+      appState.goBack();
+    } else {
+      // Fallback: navigate to Home if goBack is not available
+      console.log('[RiskSummary] goBack not available, navigating to Home');
+      appState.setMainPanelState({
+        mainPanelState: 'Home',
+        pageName: 'default'
+      });
+    }
   };
 
   return (

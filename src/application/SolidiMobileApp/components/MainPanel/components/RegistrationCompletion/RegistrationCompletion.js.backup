@@ -115,69 +115,42 @@ const RegistrationCompletion = () => {
         return 0;
       }
       
-      // CRITICAL FIX: Check credentials FIRST before checking email/phone verification
+      // For returning users, check verification status FIRST (before checking credentials)
+      const emailVerified = appState.emailVerified || appState.user?.emailVerified || false;
+      const phoneVerified = appState.phoneVerified || appState.user?.phoneVerified || false;
+      
+      console.log('� Email verified:', emailVerified);
+      console.log('� Phone verified:', phoneVerified);
+      
+      // If email not verified, start from step 1 (Email Verification)
+      if (!emailVerified) {
+        console.log('� Email not verified - starting from step 1 (Email Verification)');
+        setCurrentStep(0);
+        setCompletedSteps(new Set());
+        return 0;
+      }
+      
+      // If email verified but phone not verified, go to step 2 (Phone Verification)
+      if (emailVerified && !phoneVerified) {
+        console.log('� Phone not verified - starting from step 2 (Phone Verification)');
+        setCurrentStep(1);
+        setCompletedSteps(new Set(['email']));
+        return 1;
+      }
+      
+      // Both email and phone verified - now check if user has credentials
       const userUuid = appState.user?.uuid || appState.user?.info?.user?.uuid;
       const isAuthenticated = appState.user?.isAuthenticated;
       const hasCredentials = userUuid && isAuthenticated;
       
-      console.log('🔐 User UUID:', userUuid);
+      console.log('� User UUID:', userUuid);
       console.log('🔐 Is authenticated:', isAuthenticated);
-      console.log('🔐 Has credentials:', hasCredentials);
+      console.log('� Has credentials:', hasCredentials);
       console.log('🔐 Full user object keys:', appState.user ? Object.keys(appState.user) : 'No user object');
-      
-      // For authenticated users, skip email/phone verification checks
-      if (!hasCredentials) {
-        // Only check verification status for non-authenticated users
-        const emailVerified = appState.emailVerified || appState.user?.emailVerified || false;
-        const phoneVerified = appState.phoneVerified || appState.user?.phoneVerified || false;
-        
-        console.log('📧 Email verified:', emailVerified);
-        console.log('📱 Phone verified:', phoneVerified);
-        
-        // If email not verified, start from step 1 (Email Verification)
-        if (!emailVerified) {
-          console.log('❌ Email not verified - starting from step 1 (Email Verification)');
-          setCurrentStep(0);
-          setCompletedSteps(new Set());
-          return 0;
-        }
-        
-        // If email verified but phone not verified, go to step 2 (Phone Verification)
-        if (emailVerified && !phoneVerified) {
-          console.log('❌ Phone not verified - starting from step 2 (Phone Verification)');
-          setCurrentStep(1);
-          setCompletedSteps(new Set(['email']));
-          return 1;
-        }
-      }
       
       // If user has credentials and both verifications complete, check extra information
       if (hasCredentials) {
         console.log('🔐 User has credentials - checking registration completion requirements...');
-        
-        // EARLY CHECK: If user has already passed evaluation (but only if cat is not null)
-        const userInfo = appState.userInfo || appState.user?.info?.user || appState.user || {};
-        const userAppropriate = userInfo?.appropriate;
-        const userCat = userInfo?.cat;
-        
-        console.log('🎯 [EARLY CHECK] User status - cat:', userCat, 'appropriate:', userAppropriate);
-        
-        // CRITICAL: Only check appropriate status if cat is NOT null
-        // If cat is null, user hasn't completed categorization yet, so appropriate status is invalid
-        if (userCat !== null && userCat !== undefined) {
-          console.log('✅ [EARLY CHECK] Cat is not null - checking appropriate status');
-          if (userAppropriate === 'PASS' || userAppropriate === 'PASSED' || (userCat === 1 && userAppropriate === 1)) {
-            console.log('🎉 [EARLY CHECK] User has already passed evaluation - REGISTRATION COMPLETE!');
-            console.log('🎉 [EARLY CHECK] Triggering completion handler immediately');
-            // User has completed everything - show completion message
-            setTimeout(() => {
-              handleAllStepsComplete();
-            }, 100);
-            return null;
-          }
-        } else {
-          console.log('⚠️ [EARLY CHECK] Cat is null - ignoring appropriate status, user needs categorization');
-        }
         
         try {
           // STEP 1: Check extra_information/check FIRST (before cat)
@@ -216,16 +189,10 @@ const RegistrationCompletion = () => {
           console.log('✅ [Step Check 2] Cat exists - checking appropriate status');
           const userAppropriate = userInfo?.appropriate;
           console.log('📊 [Step Check 3] User appropriate:', userAppropriate);
-          console.log('📊 [Step Check 3] Appropriate type:', typeof userAppropriate);
-          console.log('📊 [Step Check 3] Appropriate === "TBD"?', userAppropriate === 'TBD');
-          console.log('📊 [Step Check 3] Appropriate === null?', userAppropriate === null);
-          console.log('📊 [Step Check 3] Appropriate === undefined?', userAppropriate === undefined);
 
           // If appropriate needs evaluation, go to step 4
-          if (userAppropriate === 'TBD' || userAppropriate === 'FAILED1' || userAppropriate === 'FAILED2' || userAppropriate === null || userAppropriate === undefined) {
+          if (userAppropriate === 'TBD' || userAppropriate === 'FAILED1' || userAppropriate === 'FAILED2') {
             console.log('📋 [DECISION] Appropriate status requires evaluation - MUST START AT step 4 (Suitability)');
-            console.log('📋 [DECISION] Setting currentStep to 3 (Step 4: AccountReview/Suitability)');
-            console.log('📋 [DECISION] User should see finprom-suitability form in AccountReview');
             setCurrentStep(3); // Step 4: Suitability evaluation
             setCompletedSteps(new Set(['email', 'phone', 'extra']));
             return 3;
@@ -344,49 +311,13 @@ const RegistrationCompletion = () => {
       [
         {
           text: 'Continue to App',
-          onPress: async () => {
-            console.log('🎉 [RegistrationCompletion] User clicked Continue to App');
-            
+          onPress: () => {
             // Clear registration state
             appState.registrationEmail = null;
             appState.registrationPhone = null;
             appState.registrationSuccess = false;
             
-            // CRITICAL: Mark account review as dismissed to prevent redirect loop
-            console.log('🚫 [RegistrationCompletion] Marking accountReviewDismissed = true');
-            if (appState.state && appState.state.user) {
-              appState.state.user.accountReviewDismissed = true;
-              // Force state update to ensure flag is persisted
-              appState.setState({ 
-                user: { 
-                  ...appState.state.user, 
-                  accountReviewDismissed: true 
-                } 
-              });
-            }
-            
-            // CRITICAL: Reload user data to get updated cat/appropriate values from server
-            console.log('🔄 [RegistrationCompletion] Reloading user data before redirect...');
-            try {
-              if (appState.loadUserInfo) {
-                await appState.loadUserInfo();
-                console.log('✅ [RegistrationCompletion] User data reloaded successfully');
-              }
-              if (appState.loadUserStatus) {
-                await appState.loadUserStatus();
-                console.log('✅ [RegistrationCompletion] User status reloaded successfully');
-              }
-            } catch (error) {
-              console.error('⚠️ [RegistrationCompletion] Error reloading user data:', error);
-            }
-            
-            console.log('🔍 [RegistrationCompletion] Final user state before redirect:');
-            console.log('   - accountReviewDismissed:', appState.state?.user?.accountReviewDismissed);
-            console.log('   - cat:', appState.state?.user?.info?.user?.cat);
-            console.log('   - appropriate:', appState.state?.user?.info?.user?.appropriate);
-            
             // Redirect to Home page
-            console.log('🏠 [RegistrationCompletion] Redirecting to Home page');
             appState.setMainPanelState({
               mainPanelState: 'Home',
               pageName: 'default'

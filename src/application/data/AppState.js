@@ -3552,18 +3552,30 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
     this.loadHistoricPrices = async({market, period}) => {
+      console.log('[HIST_PRICE] 🚀 loadHistoricPrices CALLED - market:', market, 'period:', period);
+      
       //this.state.loadingPrices = true;
       this.setState({loadingPrices: true});
-      let {domain} = this.state;
+      // Use production domain for public CSV files (not authentication-protected)
+      let domain = "www.solidi.co";
       let remotemarket = market.replace("/","-");
       let url = "https://"+domain+"/"+remotemarket+"-"+period+".csv";
-      log(`Loading prices from ${market} ${url}`);
+      console.log('[HIST_PRICE] 📥 Fetching URL:', url);
+      
       const response = await fetch(url);
+      console.log('[HIST_PRICE] Response status:', response.status, 'ok:', response.ok);
+      
       let prices = "";
       if(response.ok) {
         prices = await response.text();
+        console.log('[HIST_PRICE] Response text length:', prices.length);
+      } else {
+        console.log('[HIST_PRICE] ❌ Fetch failed with status:', response.status);
       }
+      
       pricesX = prices.split("\n");
+      console.log('[HIST_PRICE] Split into', pricesX.length, 'lines');
+      
       if(pricesX.length> 2) {
         let floatPrices = [];
         for(var idx in pricesX) {
@@ -3571,26 +3583,46 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             floatPrices.push(parseFloat(pricesX[idx]));
           }
         }
-        log("Saving "+market+" "+period);
+        console.log('[HIST_PRICE] Parsed', floatPrices.length, 'float prices');
+        console.log('[HIST_PRICE] Calling setHistoricPrices...');
         this.setHistoricPrices({market, period, prices:floatPrices});
         this.setState({graphPrices: floatPrices});
       } else {
-        log(`Waring - got less than 2 prices for ${market} (${period})`);
+        console.log('[HIST_PRICE] ⚠️ Warning - got less than 2 prices for', market, period);
       }
       this.setState({loadingPrices: false});
+      console.log('[HIST_PRICE] ✅ loadHistoricPrices completed');
     }
 
     this.setHistoricPrices = ({market, period, prices}) => {
-      let historic_prices = this.state.apiData.historic_prices;
+      console.log('[HIST_PRICE] 🔧 setHistoricPrices called - market:', market, 'period:', period, 'prices.length:', prices?.length);
       try {
-        if(historic_prices[market]==undefined || historic_prices[market][period]==undefined) {
-          historic_prices[market][period] = [1];
-        } else {
-          historic_prices[market][period] = prices;
+        console.log('[HIST_PRICE] Market exists before:', !!this.state.apiData.historic_prices[market]);
+        
+        if(!this.state.apiData.historic_prices[market]) {
+          this.state.apiData.historic_prices[market] = {};
+          console.log('[HIST_PRICE] Created new market object for', market);
         }
-        historic_prices['current'] = historic_prices[market][period];
-        this.setState({historic_prices});
+        
+        this.state.apiData.historic_prices[market][period] = prices;
+        console.log('[HIST_PRICE] Stored', prices.length, 'prices in', `[${market}][${period}]`);
+        
+        this.state.apiData.historic_prices['current'] = this.state.apiData.historic_prices[market][period];
+        
+        // Trigger a state update to notify listeners
+        this.setState({
+          apiData: {
+            ...this.state.apiData,
+            historic_prices: {
+              ...this.state.apiData.historic_prices
+            }
+          }
+        });
+        
+        console.log('[HIST_PRICE] Final length:', this.state.apiData.historic_prices[market][period].length);
+        console.log('[HIST_PRICE] ✅ setHistoricPrices completed successfully');
       } catch (e) {
+        console.log('[HIST_PRICE] ❌ Error:', e.message);
         logger.error(e.stack);
       }
     }
@@ -3740,6 +3772,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         // Check if user has dismissed AccountReview modal
         if (this.state.user.accountReviewDismissed) {
           console.log('🚫 [LEVEL 2] User has dismissed AccountReview modal - skip redirect');
+          console.log('🚫 [LEVEL 2] accountReviewDismissed flag is:', this.state.user.accountReviewDismissed);
           return null;
         }
         
@@ -3754,26 +3787,81 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         const userCat = user?.cat;
         const userAppropriate = user?.appropriate;
         
-        console.log('👤 User status check:', {
-          userAvailable: !!user,
-          email: user?.email,
-          cat: userCat,
-          appropriate: userAppropriate,
-          accountReviewDismissed: this.state.user.accountReviewDismissed
-        });
+        console.log('═══════════════════════════════════════════════════');
+        console.log('👤 [USER PROFILE VALUES] Current user status:');
+        console.log('   📧 Email:', user?.email);
+        console.log('   🏷️  CAT:', userCat, '(type:', typeof userCat + ')');
+        console.log('   ✅ APPROPRIATE:', userAppropriate, '(type:', typeof userAppropriate + ')');
+        console.log('   � APPROPRIATE === "TBD"?', userAppropriate === 'TBD');
+        console.log('   🔍 APPROPRIATE === null?', userAppropriate === null);
+        console.log('   🔍 APPROPRIATE === undefined?', userAppropriate === undefined);
+        console.log('   🔍 APPROPRIATE stringified:', JSON.stringify(userAppropriate));
+        console.log('   �🚫 Account Review Dismissed:', this.state.user.accountReviewDismissed);
+        console.log('═══════════════════════════════════════════════════');
+        
+        // EARLY CHECK: If user has already passed, don't bother with other checks
+        // CRITICAL: Only check appropriate status if cat is NOT null
+        // If cat is null, user hasn't completed categorization yet, so appropriate status is invalid
+        if (userCat !== null && userCat !== undefined) {
+          console.log('✅ [LEVEL 2 EARLY CHECK] Cat is not null - checking appropriate status');
+          if (userAppropriate === 'PASS' || userAppropriate === 'PASSED' || (userCat === 1 && userAppropriate === 1)) {
+            console.log('🎉 [LEVEL 2 EARLY CHECK] User appropriate is PASS/1 - registration complete!');
+            console.log('🎉 [LEVEL 2 EARLY CHECK] cat:', userCat, 'appropriate:', userAppropriate);
+            console.log('🎉 [LEVEL 2 EARLY CHECK] Skipping all other validation checks');
+            return null; // No redirect needed, user can proceed normally
+          }
+        } else {
+          console.log('⚠️ [LEVEL 2 EARLY CHECK] Cat is null - ignoring appropriate status, user needs categorization');
+        }
 
         // ===== CATEGORIZATION STATUS CHECKING =====
         
-        // 3. Check if user has 'cat' value and 'appropriate' status
+        // 3. Check if user needs extra_information step
+        // This comes BEFORE cat check because extra info must be completed first
+        try {
+          const extraInfoData = await this.state.privateMethod({
+            functionName: 'checkExtraInformation',
+            apiRoute: 'user/extra_information/check',
+            params: {}
+          });
+          
+          console.log('═══════════════════════════════════════════════════');
+          console.log('📊 [EXTRA INFO CHECK] API Result:');
+          console.log('   Type:', Array.isArray(extraInfoData) ? 'Array' : typeof extraInfoData);
+          console.log('   Length:', Array.isArray(extraInfoData) ? extraInfoData.length : 'N/A');
+          console.log('   Data:', JSON.stringify(extraInfoData, null, 2));
+          console.log('═══════════════════════════════════════════════════');
+          
+          // If extra_information/check has options -> user needs to complete step 3
+          if (extraInfoData && Array.isArray(extraInfoData) && extraInfoData.length > 0) {
+            console.log('📋 [LEVEL 2] Extra information required - redirecting to RegistrationCompletion step 3');
+            return 'RegistrationCompletion';
+          } else {
+            console.log('✅ [LEVEL 2] No extra information required - proceeding to cat check');
+          }
+        } catch (error) {
+          console.log('⚠️ [LEVEL 2] Error checking extra information:', error.message);
+          // Continue to other checks if API fails
+        }
+        
+        // 4. Check if user has 'cat' value (categorisation)
         // Use RegistrationCompletion to show timeline and handle form progression
         if (userCat === null || userCat === undefined) {
           console.log('📋 [LEVEL 2] User cat is null - requires categorisation, redirecting to RegistrationCompletion');
           return 'RegistrationCompletion';
         }
 
-        // 4. If cat is not null, check appropriate status
+        // 5. If cat is not null, check appropriate status
         if (userAppropriate === 'TBD') {
           console.log('📋 [LEVEL 2] User appropriate is TBD - requires suitability form, redirecting to RegistrationCompletion');
+          return 'RegistrationCompletion';
+        }
+        
+        // CRITICAL: Also check if appropriate is null/undefined when cat exists
+        // This means user completed categorization but hasn't done suitability assessment yet
+        if (userCat !== null && userCat !== undefined && (userAppropriate === null || userAppropriate === undefined)) {
+          console.log('📋 [LEVEL 2] User cat exists but appropriate is null/undefined - requires suitability form, redirecting to RegistrationCompletion');
+          console.log('📋 [LEVEL 2] This means user completed categorization but needs suitability assessment');
           return 'RegistrationCompletion';
         }
         
@@ -3826,8 +3914,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           }
         }
         
-        if (userAppropriate === 'PASS' || userAppropriate === 'PASSED') {
-          console.log('🎉 [LEVEL 2] User appropriate is PASS - registration complete!');
+        if (userAppropriate === 'PASS' || userAppropriate === 'PASSED' || (userCat === 1 && userAppropriate === 1)) {
+          console.log('🎉 [LEVEL 2] User appropriate is PASS/1 - registration complete!');
+          console.log('🎉 [LEVEL 2] cat:', userCat, 'appropriate:', userAppropriate);
           return null; // No redirect needed, user can proceed normally
         }
 
@@ -3870,7 +3959,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             params: {}
           });
           
-          console.log('📊 Extra information check result:', extraInfoData);
+          console.log('═══════════════════════════════════════════════════');
+          console.log('📊 [EXTRA INFO CHECK] API Result:');
+          console.log('   Type:', Array.isArray(extraInfoData) ? 'Array' : typeof extraInfoData);
+          console.log('   Length:', Array.isArray(extraInfoData) ? extraInfoData.length : 'N/A');
+          console.log('   Data:', JSON.stringify(extraInfoData, null, 2));
+          console.log('═══════════════════════════════════════════════════');
           
           // If extra_information/check has no options loaded -> step 4 (direct AccountReview)
           // If extra_information/check has options -> step 3 (RegistrationCompletion)

@@ -68,10 +68,23 @@ export const debugCredentialsCache = async () => {
 export const clearAllCredentials = async () => {
   console.log('🗑️ Clearing all credentials...');
   try {
+    // Clear cache file
     await AsyncStorage.removeItem('solidi_credentials_cache');
     await AsyncStorage.removeItem('user_authenticated');
     await AsyncStorage.removeItem('user_email');
-    console.log('✅ All credentials cleared');
+    
+    // Clear MockKeychain credentials
+    const allKeys = await AsyncStorage.getAllKeys();
+    const keychainKeys = allKeys.filter(key => key.startsWith('keychain_'));
+    
+    console.log('🔑 Found keychain keys to clear:', keychainKeys);
+    
+    for (const key of keychainKeys) {
+      await AsyncStorage.removeItem(key);
+      console.log(`  ✅ Cleared: ${key}`);
+    }
+    
+    console.log('✅ All credentials cleared (including MockKeychain)');
   } catch (error) {
     console.error('❌ Clear error:', error);
   }
@@ -100,3 +113,13 @@ export default {
   clearAllCredentials,
   setTestCredentials
 };
+
+// Auto-run clear when this script is executed directly
+console.log('🚀 Running credentials clear script...');
+clearAllCredentials().then(() => {
+  console.log('✅ Script completed');
+  process.exit(0);
+}).catch(err => {
+  console.error('❌ Script failed:', err);
+  process.exit(1);
+});

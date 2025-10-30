@@ -39,32 +39,49 @@ const AccountReview = ({ navigation, onComplete }) => {
     console.log('Full userInfo:', JSON.stringify(userInfo, null, 2));
     
     // ===== REGISTRATION COMPLETE CHECKING =====
-    // Check appropriate status first
-    if (appropriate === 'PASS' || appropriate === 'PASSED') {
-      console.log('🎉 [AccountReview] User already passed - no forms needed');
-      setTimeout(() => {
-        Alert.alert(
-          'Registration Complete!',
-          'You have completed the registration successfully. Welcome to SolidiFX!',
-          [
-            {
-              text: 'Continue to App',
-              onPress: () => {
-                if (navigation && navigation.goBack) {
-                  navigation.goBack();
-                } else {
-                  // Redirect to main app
-                  appState.setMainPanelState({
-                    mainPanelState: 'Assets',
-                    pageName: 'default'
-                  });
+    // CRITICAL: Only check appropriate status if cat is NOT null
+    // If cat is null, user hasn't completed categorization yet, so appropriate status is invalid
+    if (cat !== null && cat !== undefined) {
+      console.log('✅ [AccountReview] Cat is not null - checking appropriate status');
+      // Check appropriate status - handle both string ('PASS'/'PASSED') and numeric (1) values
+      if (appropriate === 'PASS' || appropriate === 'PASSED' || (cat === 1 && appropriate === 1)) {
+        console.log('🎉 [AccountReview] User already passed - calling onComplete');
+        console.log('🎉 [AccountReview] cat:', cat, 'appropriate:', appropriate);
+        
+        // CRITICAL FIX: Call onComplete to notify parent (RegistrationCompletion) that evaluation is complete
+        setTimeout(() => {
+          if (onComplete) {
+            console.log('✅ [AccountReview] Calling onComplete for already-passed user');
+            onComplete({ evaluationComplete: true, passed: true, alreadyPassed: true });
+          } else {
+            console.log('⚠️ [AccountReview] No onComplete callback - showing fallback alert');
+            // Fallback for when AccountReview is used standalone (not in RegistrationCompletion)
+            Alert.alert(
+              'Registration Complete!',
+              'You have completed the registration successfully. Welcome to SolidiFX!',
+              [
+                {
+                  text: 'Continue to App',
+                  onPress: () => {
+                    if (navigation && navigation.goBack) {
+                      navigation.goBack();
+                    } else {
+                      // Redirect to main app
+                      appState.setMainPanelState({
+                        mainPanelState: 'Assets',
+                        pageName: 'default'
+                      });
+                    }
+                  }
                 }
-              }
-            }
-          ]
-        );
-      }, 100);
-      return null; // No form needed
+              ]
+            );
+          }
+        }, 100);
+        return null; // No form needed
+      }
+    } else {
+      console.log('⚠️ [AccountReview] Cat is null - ignoring appropriate status, will load categorization form');
     }
     
     // ===== FORM LOADING LOGIC =====
@@ -74,9 +91,19 @@ const AccountReview = ({ navigation, onComplete }) => {
       return 'finprom-categorisation';
     }
     
+    console.log('✅ [AccountReview] Cat is not null (cat:', cat, ') - checking appropriate status...');
+    
     // 2. If cat is not null, check appropriate value
     if (appropriate === 'TBD') {
       console.log('✅ [AccountReview] Appropriate is TBD - loading finprom-suitability');
+      console.log('🎯 [AccountReview] User should see suitability assessment form');
+      return 'finprom-suitability';
+    }
+    
+    // CRITICAL: Also handle null/undefined appropriate (user completed categorization but not suitability)
+    if (appropriate === null || appropriate === undefined) {
+      console.log('✅ [AccountReview] Appropriate is null/undefined - loading finprom-suitability');
+      console.log('🎯 [AccountReview] User completed categorization, now needs suitability assessment');
       return 'finprom-suitability';
     }
     
@@ -201,11 +228,53 @@ const AccountReview = ({ navigation, onComplete }) => {
         
         console.log('[AccountReview] Updated status - cat:', cat, 'appropriate:', appropriate);
         
+        // Handle finprom-categorisation submission
+        if (currentFormId === 'finprom-categorisation') {
+          console.log('[AccountReview] Processing finprom-categorisation submission...');
+          
+          // Check if categorization passed (cat should now be set)
+          if (cat !== null && cat !== undefined) {
+            console.log('[AccountReview] Categorisation PASSED - cat is now:', cat);
+            
+            // After categorization, check if we need suitability assessment
+            if (appropriate === 'TBD' || appropriate === null || appropriate === undefined) {
+              console.log('[AccountReview] Loading finprom-suitability form for assessment');
+              setFormId('finprom-suitability');
+              setIsLoading(false);
+              return;
+            } else if (appropriate === 'PASS' || appropriate === 'PASSED' || (cat === 1 && appropriate === 1)) {
+              console.log('[AccountReview] Already passed appropriate - completing registration');
+              setIsLoading(false);
+              if (onComplete) {
+                onComplete({ evaluationComplete: true, passed: true });
+              }
+              return;
+            }
+          } else {
+            console.log('[AccountReview] Categorisation FAILED - cat is still null');
+            setIsLoading(false);
+            Alert.alert(
+              'Categorisation Required',
+              'Please complete the categorisation assessment.',
+              [{ text: 'OK' }]
+            );
+            return;
+          }
+        }
+        
         // Handle finprom-suitability (first attempt) submission
         if (currentFormId === 'finprom-suitability') {
           if (cat === 1 && appropriate === 1) {
             // PASSED - complete registration
             console.log('[AccountReview] First attempt PASSED - completing registration');
+            setIsLoading(false);
+            if (onComplete) {
+              onComplete({ evaluationComplete: true, passed: true });
+            }
+            return;
+          } else if (appropriate === 'PASS' || appropriate === 'PASSED') {
+            // PASSED with string value - complete registration
+            console.log('[AccountReview] First attempt PASSED (string value) - completing registration');
             setIsLoading(false);
             if (onComplete) {
               onComplete({ evaluationComplete: true, passed: true });
@@ -225,6 +294,14 @@ const AccountReview = ({ navigation, onComplete }) => {
           if (cat === 1 && appropriate === 1) {
             // PASSED on second attempt - complete registration
             console.log('[AccountReview] Second attempt PASSED - completing registration');
+            setIsLoading(false);
+            if (onComplete) {
+              onComplete({ evaluationComplete: true, passed: true });
+            }
+            return;
+          } else if (appropriate === 'PASS' || appropriate === 'PASSED') {
+            // PASSED with string value - complete registration
+            console.log('[AccountReview] Second attempt PASSED (string value) - completing registration');
             setIsLoading(false);
             if (onComplete) {
               onComplete({ evaluationComplete: true, passed: true });
