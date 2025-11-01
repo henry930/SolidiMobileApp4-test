@@ -38,16 +38,15 @@
   - **User Choice**: Logout dialog offers both regular logout and complete sign out options
 - [x] In Dynamic Form generation, ${firstname} represent user's firstname,  ${lastname} represent user's lastname. ${todaysdate} means today's date string. 
 - [x] In finprom-categorisation form, some validation check. 
-In accountpurpose value, 
-if equal to hnw, Must select Yes for one of the hnwincome and hnwassets questions
-hnwincomeamount - Must enter 100,000 or more
-hwnassetsamount - Must enter 250,000 or more
+- [x] Update the find addresses by postcode API, from 3rd parties API to our Solidi API. (Already using 'search_postcode' endpoint)
+- [x] The Crypto Content page, should have no default value, you may use Loading... during waiting. 
+- [x] The Crypto Content page only works in Bitcoin, not others. Please fix it. 
+- The Assets component in the home page seems wrong, as the value show should be based on his portofolio, not the price of the market. 
+- Click the logo in the header can route to home page
+- Why the assets price is different to Crypto Content price
 
-if equal to restricted, 
-Must select Yes for both prev12months and next12months answser
-Must enter up to 10 for both prevamount and nextamount
 
-When click Next questions, you need to check the above and prompt the instruction. 
+
 
 
 ## Latest Updates - October 23, 2025

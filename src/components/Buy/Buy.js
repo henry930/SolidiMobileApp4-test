@@ -168,8 +168,24 @@ const Buy = ({ onBack }) => {
     // Set active order flag
     appState.panels.buy.activeOrder = true;
     
-    // Navigate to payment choice page (use 'default' which will be converted to 'solidi')
-    appState.changeState('ChooseHowToPay', 'default');
+    // Check wallet balance to determine payment method
+    const requiredAmount = parseFloat(volumeQA);
+    const currentBalance = parseFloat(walletBalance);
+    
+    console.log(`💰 Buy: Checking balance - Required: £${requiredAmount}, Available: £${currentBalance}`);
+    
+    // Default to wallet balance if sufficient, otherwise use bank transfer
+    let defaultPaymentMethod = 'balance'; // Default to wallet balance
+    
+    if (currentBalance < requiredAmount) {
+      console.log(`⚠️ Buy: Insufficient balance (£${currentBalance} < £${requiredAmount}), defaulting to bank transfer`);
+      defaultPaymentMethod = 'solidi'; // Bank transfer
+    } else {
+      console.log(`✅ Buy: Sufficient balance (£${currentBalance} >= £${requiredAmount}), defaulting to wallet balance`);
+    }
+    
+    // Navigate to payment choice page with appropriate default
+    appState.changeState('ChooseHowToPay', defaultPaymentMethod);
   };
   
   const isValidAmount = inputAmount && parseFloat(inputAmount) > 0;

@@ -66,6 +66,8 @@ const Sell = ({ onBack }) => {
       return;
     }
     
+    console.log(`💰 [SELL] Fetching best price for ${amount} ${mode === 'CRYPTO' ? selectedAsset : 'GBP'}`);
+    
     setIsLoading(true);
     try {
       const market = `${selectedAsset}/GBP`;
@@ -79,11 +81,24 @@ const Sell = ({ onBack }) => {
           baseAssetVolume: amount
         };
         
+        console.log(`📤 [SELL] API Request:`, params);
         const response = await appState.fetchBestPriceForASpecificVolume(params);
+        console.log(`📥 [SELL] API Response:`, response);
         
-        if (response && response.price) {
+        // Check for error in response
+        if (response && response.error) {
+          console.log(`⚠️ [SELL] API Error: ${response.error}`);
+          if (response.error.includes('INSUFFICIENT_ORDERBOOK_VOLUME')) {
+            console.log(`⚠️ [SELL] Amount too large for orderbook - try a smaller amount`);
+            setConvertedAmount('Try smaller');
+          } else {
+            setConvertedAmount('Error');
+          }
+        } else if (response && response.price) {
+          console.log(`✅ [SELL] Setting GBP amount to: ${response.price}`);
           setConvertedAmount(response.price);
         } else {
+          console.log(`⚠️ [SELL] No price in response, setting to 0`);
           setConvertedAmount('0');
         }
       } else {
@@ -95,16 +110,29 @@ const Sell = ({ onBack }) => {
           quoteAssetVolume: amount
         };
         
+        console.log(`📤 [SELL] API Request:`, params);
         const response = await appState.fetchBestPriceForASpecificVolume(params);
+        console.log(`📥 [SELL] API Response:`, response);
         
-        if (response && response.price) {
+        // Check for error in response
+        if (response && response.error) {
+          console.log(`⚠️ [SELL] API Error: ${response.error}`);
+          if (response.error.includes('INSUFFICIENT_ORDERBOOK_VOLUME')) {
+            console.log(`⚠️ [SELL] Amount too large for orderbook - try a smaller amount`);
+            setConvertedAmount('Try smaller');
+          } else {
+            setConvertedAmount('Error');
+          }
+        } else if (response && response.price) {
+          console.log(`✅ [SELL] Setting crypto amount to: ${response.price}`);
           setConvertedAmount(response.price);
         } else {
+          console.log(`⚠️ [SELL] No price in response, setting to 0`);
           setConvertedAmount('0');
         }
       }
     } catch (error) {
-      console.log('Error fetching best price:', error);
+      console.log('❌ [SELL] Error fetching best price:', error);
       setConvertedAmount('0');
     } finally {
       setIsLoading(false);
@@ -113,11 +141,16 @@ const Sell = ({ onBack }) => {
   
   // Update converted amount when input changes
   useEffect(() => {
+    console.log('🔄 [SELL] useEffect triggered:', { inputAmount, inputMode, selectedAsset });
     const timer = setTimeout(() => {
+      console.log('⏰ [SELL] Debounce timer fired, calling fetchBestPrice');
       fetchBestPrice(inputAmount, inputMode);
     }, 500); // Debounce API calls
     
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('🧹 [SELL] Cleaning up timer');
+      clearTimeout(timer);
+    };
   }, [inputAmount, inputMode, selectedAsset]);
   
   const handleAmountChange = (value) => {
@@ -157,6 +190,19 @@ const Sell = ({ onBack }) => {
     const assetQA = 'GBP';
     const assetBA = selectedAsset;
     
+    // Check if user has enough crypto to sell
+    const requiredCrypto = parseFloat(volumeBA);
+    const currentCryptoBalance = parseFloat(cryptoBalance);
+    
+    console.log(`💰 Sell: Checking ${selectedAsset} balance - Required: ${requiredCrypto}, Available: ${currentCryptoBalance}`);
+    
+    if (currentCryptoBalance < requiredCrypto) {
+      console.log(`⚠️ Sell: Insufficient ${selectedAsset} balance (${currentCryptoBalance} < ${requiredCrypto})`);
+      // Could show an error here, but for now we'll continue and let the payment page handle it
+      alert(`Insufficient ${selectedAsset} balance. You have ${currentCryptoBalance} ${selectedAsset} but need ${requiredCrypto} ${selectedAsset}.`);
+      return;
+    }
+    
     // Save order details to appState.panels.sell
     _.assign(appState.panels.sell, {
       volumeQA,
@@ -168,7 +214,9 @@ const Sell = ({ onBack }) => {
     // Set active order flag
     appState.panels.sell.activeOrder = true;
     
-    // Navigate to receive payment choice page
+    console.log(`✅ Sell: Sufficient ${selectedAsset} balance, proceeding to receive payment in wallet`);
+    
+    // Navigate to receive payment choice page - default to wallet balance
     appState.changeState('ChooseHowToReceivePayment', 'balance');
   };
   
@@ -328,14 +376,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   amountInput: {
-    amountInput: {
-    fontSize: 48, // Reduced from 72
+    fontSize: 48,
     fontWeight: 'bold',
     color: '#424242',
     minWidth: 100,
     padding: 0,
     textAlign: 'right',
-  },
   },
   swapButton: {
     marginLeft: 16,
@@ -379,7 +425,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FF9800',
+    backgroundColor: '#f44336', // Red for sell
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
@@ -394,7 +440,7 @@ const styles = StyleSheet.create({
   },
   reviewButton: {
     width: '100%',
-    backgroundColor: '#FF5722', // Orange/red for sell action
+    backgroundColor: '#f44336', // Red for sell action
     paddingVertical: 18,
     borderRadius: 28,
     alignItems: 'center',

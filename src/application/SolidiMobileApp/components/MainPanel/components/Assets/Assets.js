@@ -299,9 +299,15 @@ const Assets = () => {
     }
   };
 
-  // Initial setup.
+  // Track if initial setup has run
+  const [hasInitialSetup, setHasInitialSetup] = useState(false);
+  const [lastStateChangeID, setLastStateChangeID] = useState(stateChangeID);
+
+  // Initial setup - runs once on mount.
   useEffect(() => {
+    console.log('🎬 Assets: Running initial setup...');
     setup();
+    setHasInitialSetup(true);
   }, []); // Pass empty array so that this only runs once on mount.
 
   // Safety useEffect to ensure assetData is never empty
@@ -312,10 +318,14 @@ const Assets = () => {
     }
   }, [assetData]);
 
-  // Rerun setup when stateChangeID changes.
+  // Rerun setup only when stateChangeID actually changes (not on initial mount)
   useEffect(() => {
-    setup();
-  }, [stateChangeID]);
+    if (hasInitialSetup && stateChangeID !== lastStateChangeID) {
+      console.log(`🔄 Assets: stateChangeID changed (${lastStateChangeID} → ${stateChangeID}), refreshing...`);
+      setup();
+      setLastStateChangeID(stateChangeID);
+    }
+  }, [stateChangeID, hasInitialSetup]);
 
   // Auto-refresh prices every 30 seconds
   useEffect(() => {
@@ -342,27 +352,33 @@ const Assets = () => {
       
       setIsDataReady(false);
       
-      // Step 1: Load live markets to understand what trading pairs are available
-      console.log('🏪 Loading live markets from /market API...');
-      try {
-        await appState.loadMarkets();
-        console.log('✅ Live markets loaded successfully');
-      } catch (error) {
-        console.log('❌ Failed to load live markets:', error);
-        console.log('🔄 Continuing with fallback asset list');
-      }
-      
-      // Step 2: Generate asset list based on live market data
+      // Use fallback asset list immediately for faster initial render
       const dynamicAssets = getAssetListFromMarkets();
       setAssetData(dynamicAssets);
-      console.log('📊 Asset list updated based on live market data');
+      console.log('📊 Asset list set (using fallback or cached markets)');
       
-      // Step 3: Load live price data using public /best_volume_price API
+      // Start loading prices immediately - don't wait for markets to load
       console.log('📈 Loading live prices using public API...');
-      await loadPricesFromBestVolumePrice();
+      const priceLoadPromise = loadPricesFromBestVolumePrice();
+      
+      // Load markets in parallel (optional, for future use)
+      const marketLoadPromise = (async () => {
+        try {
+          console.log('🏪 Loading live markets from /market API (in background)...');
+          await appState.loadMarkets();
+          console.log('✅ Live markets loaded successfully');
+        } catch (error) {
+          console.log('❌ Failed to load live markets:', error);
+        }
+      })();
+      
+      // Wait for prices to load (markets loading in background doesn't block)
+      await priceLoadPromise;
       
       setIsDataReady(true);
       console.log('✅ Assets: Live data setup completed successfully');
+      
+      // Markets will continue loading in background
     } catch (error) {
       console.log('❌ Assets: Live data setup failed:', error);
       // Ensure we always have fallback asset data even if setup fails
@@ -371,86 +387,85 @@ const Assets = () => {
     }
   }
 
-  // Load live prices using public /best_volume_price API (no authentication required)
-  // Using BUY side as buyer - we want to buy crypto with GBP
+  // Load prices from AppState cache (instant if available, or trigger update if needed)
   async function loadPricesFromBestVolumePrice() {
     try {
-      console.log('📈 Assets: Loading prices using public /best_volume_price API (BUY side)...');
+      const startTime = Date.now();
+      console.log('[CRYPTO-CACHE] 📱 Assets page: Loading prices...');
       setIsLoadingPrices(true);
       
-      const newPrices = {};
-      const volume = 100; // Use £100 GBP volume for better price discovery
+      // Check if cache has any prices
+      console.log('[CRYPTO-CACHE] � Checking cache state...', {
+        hasCryptoRates: !!appState.cryptoRates,
+        sellPricesKeys: appState.cryptoRates?.sellPrices ? Object.keys(appState.cryptoRates.sellPrices) : [],
+        sellPricesCount: appState.cryptoRates?.sellPrices ? Object.keys(appState.cryptoRates.sellPrices).length : 0
+      });
       
-      // Get price for each asset paired with GBP
-      for (const assetItem of assetData) {
+      const hasCachedPrices = appState.cryptoRates && 
+                             Object.keys(appState.cryptoRates.sellPrices || {}).length > 0;
+      
+      if (!hasCachedPrices) {
+        console.log('[CRYPTO-CACHE] 📱 ⚠️ No cached prices found - triggering update...');
+        console.log('[CRYPTO-CACHE] 📱 Calling appState.updateCryptoRates()...');
+        // Trigger immediate update if no prices cached yet
+        await appState.updateCryptoRates();
+        console.log('[CRYPTO-CACHE] 📱 ✅ Update completed');
+      } else {
+        console.log('[CRYPTO-CACHE] 📱 ✅ Using cached prices (already loaded)');
+      }
+      
+      const newPrices = {};
+      
+      // Get all prices from cache
+      assetData.forEach((assetItem) => {
         const asset = assetItem.asset;
         const market = `${asset}/GBP`;
         
         try {
-          console.log(`💰 Fetching BUY price for ${market} with £${volume} volume...`);
+          // Get SELL price from AppState cache
+          const sellPrice = appState.getCryptoSellPrice(asset);
           
-          // Call public best_volume_price API - BUY side means we're buying crypto with GBP
-          const response = await appState.publicMethod({
-            httpMethod: 'GET',
-            apiRoute: `best_volume_price/${asset}/GBP/BUY/quote/${volume}`,
-          });
-          
-          console.log(`🔍 API Response for ${market}:`, response);
-          
-          if (response && response.price) {
-            // IMPORTANT: For BUY/quote, response.price is the amount of crypto we get for our GBP volume
-            // To get price per unit: price_per_unit = volume_spent / crypto_amount_received
-            const cryptoAmountReceived = parseFloat(response.price);
-            
-            if (cryptoAmountReceived > 0) {
-              const pricePerUnit = volume / cryptoAmountReceived;
-              newPrices[market] = {
-                price: pricePerUnit.toString(),
-                currency: 'GBP',
-                volume: volume,
-                side: 'BUY',
-                cryptoReceived: cryptoAmountReceived
-              };
-              console.log(`✅ ${market}: £${pricePerUnit.toFixed(2)} per ${asset}`);
-              console.log(`   📊 Details: £${volume} → ${cryptoAmountReceived} ${asset} = £${pricePerUnit.toFixed(2)}/${asset}`);
-            } else {
-              console.log(`❌ ${market}: Invalid crypto amount received: ${cryptoAmountReceived}`);
-              newPrices[market] = {
-                error: 'Invalid crypto amount received',
-                price: null,
-                rawResponse: response
-              };
-            }
-          } else {
-            console.log(`❌ ${market}: No price data returned - Response:`, response);
+          if (sellPrice && sellPrice > 0) {
             newPrices[market] = {
-              error: response?.error || 'No price data available',
+              price: sellPrice.toString(),
+              currency: 'GBP',
+              side: 'SELL',
+              cached: true
+            };
+            console.log(`[CRYPTO-CACHE] 📱 ${market}: £${sellPrice.toFixed(2)}`);
+          } else {
+            console.log(`[CRYPTO-CACHE] 📱 ⚠️ ${market}: No price available`);
+            newPrices[market] = {
               price: null,
-              rawResponse: response
+              error: 'Price unavailable'
             };
           }
-          
         } catch (error) {
-          console.log(`❌ ${market}: Error fetching price:`, error);
+          console.log(`[CRYPTO-CACHE] 📱 ❌ ${market}: Error:`, error);
           newPrices[market] = {
-            error: error.message || 'Price fetch failed',
-            price: null
+            price: null,
+            error: error.message
           };
         }
-      }
+      });
       
-      console.log('📊 All prices from /best_volume_price:', newPrices);
+      const endTime = Date.now();
+      const duration = ((endTime - startTime) / 1000).toFixed(2);
+      
+      console.log(`[CRYPTO-CACHE] 📱 Completed in ${duration}s`);
+      console.log(`[CRYPTO-CACHE] 📱 Loaded ${Object.keys(newPrices).filter(k => newPrices[k].price).length}/${Object.keys(newPrices).length} prices`);
+      
       setPrices(newPrices);
       setLastUpdated(new Date());
+      setIsLoadingPrices(false);
       
     } catch (error) {
-      console.log('❌ Assets: Failed to load prices from best_volume_price API:', error);
-    } finally {
+      console.log('[CRYPTO-CACHE] 📱 ❌ Error loading prices:', error);
       setIsLoadingPrices(false);
     }
   }
 
-  // Get live price from /best_volume_price API only
+  // Get live price from AppState cache only
   function getAssetPrice(asset) {
     try {
       console.log(`💰 Getting live price for ${asset} from /best_volume_price API...`);
@@ -526,19 +541,36 @@ const Assets = () => {
   };
 
   // Navigation function to crypto content page - now shows modal instead
-  const navigateToCryptoContent = (asset) => {
-    console.log(`🔗 Opening crypto content modal for ${asset}`);
+  const navigateToCryptoContent = (assetSymbol) => {
+    console.log(`🔗 Opening crypto content modal for ${assetSymbol}`);
     try {
+      // Find the full asset object from assetData to get name and other properties
+      const assetObject = assetData.find(a => a.asset === assetSymbol);
+      
       // Set the selected crypto asset in appState for the CryptoContent page to use
-      appState.selectedCrypto = { asset: asset };
-      console.log(`📱 Set selectedCrypto to:`, appState.selectedCrypto);
+      if (assetObject) {
+        appState.selectedCrypto = {
+          asset: assetObject.asset,
+          name: assetObject.name,
+          symbol: assetObject.asset // Use asset as symbol
+        };
+        console.log(`📱 Set selectedCrypto to:`, appState.selectedCrypto);
+      } else {
+        // Fallback if asset not found in list
+        appState.selectedCrypto = {
+          asset: assetSymbol,
+          name: getAssetDisplayName(assetSymbol),
+          symbol: assetSymbol
+        };
+        console.log(`⚠️ Asset ${assetSymbol} not found in assetData, using fallback`);
+      }
       
       // Show modal instead of navigating
-      setSelectedCryptoAsset(asset);
+      setSelectedCryptoAsset(assetSymbol);
       setShowCryptoModal(true);
-      console.log(`✅ Successfully opened CryptoContent modal for ${asset}`);
+      console.log(`✅ Successfully opened CryptoContent modal for ${assetSymbol}`);
     } catch (error) {
-      console.log(`❌ Error opening CryptoContent modal for ${asset}:`, error);
+      console.log(`❌ Error opening CryptoContent modal for ${assetSymbol}:`, error);
     }
   };
 

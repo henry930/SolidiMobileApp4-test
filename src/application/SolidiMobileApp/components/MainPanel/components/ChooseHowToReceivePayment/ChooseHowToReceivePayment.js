@@ -550,127 +550,6 @@ let ChooseHowToReceivePayment = () => {
           </Card.Content>
         </Card>
 
-        {/* Payment Methods */}
-        <Card style={modernStyles.paymentMethodsCard}>
-          <Card.Content style={modernStyles.cardContent}>
-            <View style={modernStyles.cardHeader}>
-              <Icon2 name="bank-transfer" size={24} color="#007AFF" />
-              <Text style={modernStyles.cardTitle}>How would you like to be paid?</Text>
-            </View>
-
-            {/* Payment Method Selection */}
-            <View style={modernStyles.paymentMethodsContainer}>
-              
-              {/* Bank Transfer Payment Option */}
-              <TouchableOpacity 
-                onPress={() => {
-                  log(`paymentChoice selected: solidi`);
-                  setPaymentChoice('solidi');
-                }}
-                activeOpacity={0.7}
-                style={[
-                  modernStyles.paymentMethodCard,
-                  paymentChoice === 'solidi' && modernStyles.selectedCard
-                ]}
-              >
-                <Card style={[
-                  modernStyles.card,
-                  paymentChoice === 'solidi' && modernStyles.cardSelected
-                ]}>
-                  <Card.Content style={modernStyles.cardContent}>
-                    <View style={modernStyles.paymentMethodHeader}>
-                      <View style={modernStyles.paymentMethodTitleContainer}>
-                        <Icon2 name="bank-transfer" size={24} color="#007AFF" />
-                        <Text style={modernStyles.paymentMethodTitle}>Bank Transfer</Text>
-                        <View style={modernStyles.feeBadge}>
-                          <Text style={modernStyles.feeBadgeText}>NO FEE</Text>
-                        </View>
-                      </View>
-                      <RadioButton 
-                        value="solidi"
-                        status={paymentChoice === 'solidi' ? 'checked' : 'unchecked'}
-                        color="#007AFF"
-                      />
-                    </View>
-                    <View style={modernStyles.paymentMethodDetails}>
-                      <View style={modernStyles.featureRow}>
-                        <Icon2 name="clock-fast" size={16} color="#4CAF50" />
-                        <Text style={modernStyles.featureText}>Paid to your bank account in 8 hours</Text>
-                      </View>
-                      { ! bankAccountDetailsAreEmpty() && (
-                        <>
-                          <View style={modernStyles.featureRow}>
-                            <Icon2 name="bank" size={16} color="#4CAF50" />
-                            <Text style={modernStyles.featureText}>Paying to: {getBankAccount().accountName}</Text>
-                          </View>
-                          <View style={modernStyles.featureRow}>
-                            <Icon2 name="credit-card-outline" size={16} color="#4CAF50" />
-                            <Text style={modernStyles.featureText}>Sort Code: {getBankAccount().sortCode}</Text>
-                          </View>
-                          <View style={modernStyles.featureRow}>
-                            <Icon2 name="pound" size={16} color="#4CAF50" />
-                            <Text style={modernStyles.featureText}>Account: {getBankAccount().accountNumber}</Text>
-                          </View>
-                        </>
-                      )}
-                    </View>
-                  </Card.Content>
-                </Card>
-              </TouchableOpacity>
-
-              {/* Balance Payment Option */}
-              <TouchableOpacity 
-                onPress={() => {
-                  log(`paymentChoice selected: balance`);
-                  setPaymentChoice('balance');
-                }}
-                activeOpacity={0.7}
-                style={[
-                  modernStyles.paymentMethodCard,
-                  paymentChoice === 'balance' && modernStyles.selectedCard
-                ]}
-              >
-                <Card style={[
-                  modernStyles.card,
-                  paymentChoice === 'balance' && modernStyles.cardSelected
-                ]}>
-                  <Card.Content style={modernStyles.cardContent}>
-                    <View style={modernStyles.paymentMethodHeader}>
-                      <View style={modernStyles.paymentMethodTitleContainer}>
-                        <Icon2 name="wallet" size={24} color="#4CAF50" />
-                        <Text style={modernStyles.paymentMethodTitle}>Solidi Balance</Text>
-                        <View style={modernStyles.popularBadge}>
-                          <Text style={modernStyles.popularBadgeText}>INSTANT</Text>
-                        </View>
-                      </View>
-                      <RadioButton 
-                        value="balance"
-                        status={paymentChoice === 'balance' ? 'checked' : 'unchecked'}
-                        color="#007AFF"
-                      />
-                    </View>
-                    <View style={modernStyles.paymentMethodDetails}>
-                      <View style={modernStyles.featureRow}>
-                        <Icon2 name="flash" size={16} color="#4CAF50" />
-                        <Text style={modernStyles.featureText}>Paid to your Solidi balance - No fee!</Text>
-                      </View>
-                      <View style={modernStyles.featureRow}>
-                        <Icon2 name="check-circle" size={16} color="#4CAF50" />
-                        <Text style={modernStyles.featureText}>Processed instantly</Text>
-                      </View>
-                      <View style={modernStyles.featureRow}>
-                        <Icon2 name="information" size={16} color="#666" />
-                        <Text style={modernStyles.featureText}>{getBalanceDescription()}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
-              </TouchableOpacity>
-
-            </View>
-          </Card.Content>
-        </Card>
-
         {/* Payment Conditions Button */}
         <View style={modernStyles.conditionsContainer}>
           <Button 
@@ -1127,11 +1006,11 @@ let modernStyles = StyleSheet.create({
     backgroundColor: '#cccccc',
   },
   confirmButtonContent: {
-    paddingVertical: scaledHeight(12),
+    paddingVertical: 12,
   },
   confirmButtonText: {
     fontSize: normaliseFont(18),
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: 'white',
   },
   sendOrderText: {

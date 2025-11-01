@@ -54,6 +54,12 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [previousPortfolioValue, setPreviousPortfolioValue] = useState(null);
   
+  // State for graph interaction
+  const [selectedGraphPoint, setSelectedGraphPoint] = useState(null);
+  const [originalPortfolioValue, setOriginalPortfolioValue] = useState(0);
+  const [originalMonthlyChange, setOriginalMonthlyChange] = useState(0);
+  const [originalMonthlyChangePercent, setOriginalMonthlyChangePercent] = useState(0);
+  
   // Modal state management
   const [activeModal, setActiveModal] = useState(null);
   
@@ -198,12 +204,27 @@ const Home = () => {
               const marketKey = `${asset.asset}/GBP`;
               console.log(`   🔍 Looking for price in priceData['${marketKey}']:`, priceData[marketKey]);
               
-              if (priceData[marketKey] && priceData[marketKey].price) {
-                // Parse price from string (like Wallet does)
-                const price = parseFloat(priceData[marketKey].price) || 0;
-                const value = balance * price;
-                totalValue += value;
-                console.log(`   ✅ ${asset.asset}: ${balance} × £${price} = £${value.toFixed(2)}`);
+              if (priceData[marketKey]) {
+                let price = 0;
+                
+                // Check if price data has 'price' property (old format) or 'ask'/'bid' (new format)
+                if (priceData[marketKey].price) {
+                  price = parseFloat(priceData[marketKey].price) || 0;
+                } else if (priceData[marketKey].ask && priceData[marketKey].bid) {
+                  // Calculate mid-price from ask/bid
+                  const ask = parseFloat(priceData[marketKey].ask) || 0;
+                  const bid = parseFloat(priceData[marketKey].bid) || 0;
+                  price = (ask + bid) / 2;
+                  console.log(`   🔍 ${asset.asset} Ask: £${ask}, Bid: £${bid}, Mid-price: £${price}`);
+                }
+                
+                if (price > 0) {
+                  const value = balance * price;
+                  totalValue += value;
+                  console.log(`   ✅ ${asset.asset}: ${balance} × £${price.toFixed(2)} = £${value.toFixed(2)}`);
+                } else {
+                  console.log(`   ⚠️ Could not determine price for ${marketKey}`);
+                }
               } else {
                 console.log(`   ⚠️ No price data for ${marketKey}`);
               }
@@ -242,19 +263,99 @@ const Home = () => {
           setTransactions([]);
         }
 
-        // STEP 6: Generate graph data
-        console.log('📊 STEP 6: Generating graph data...');
+        // STEP 6: Generate graph data showing portfolio value over last 30 days
+        console.log('[GRAPH] 📊 STEP 6: Generating portfolio value graph for last 30 days...');
+        
         const graphPoints = [];
-        const baseValue = totalValue;
-        for (let i = 0; i < 30; i++) {
-          const variation = (Math.random() - 0.5) * 0.1;
-          graphPoints.push({
-            timestamp: Date.now() / 1000 - ((30 - i) * 24 * 60 * 60),
-            value: Math.max(0, baseValue * (1 + variation))
-          });
+        
+        // Get BTC balance
+        const btcBalanceStr = appState.getBalance('BTC');
+        const btcBalance = (btcBalanceStr !== '[loading]') ? parseFloat(btcBalanceStr) || 0 : 0;
+        console.log('[GRAPH] 💰 BTC Balance:', btcBalance);
+        
+        // Get GBP balance (constant)
+        const gbpBalanceStrForGraph = appState.getBalance('GBP');
+        const gbpBalanceForGraph = (gbpBalanceStrForGraph !== '[loading]') ? parseFloat(gbpBalanceStrForGraph) || 0 : 0;
+        console.log('[GRAPH] 💷 GBP Balance:', gbpBalanceForGraph);
+        
+        const btcMarketForGraph = 'BTC/GBP';
+        
+        // Load BTC historical prices
+        try {
+          console.log('[GRAPH] 📥 Loading BTC historical prices...');
+          await appState.loadHistoricPrices({ market: btcMarketForGraph, period: '1M' });
+          console.log('[GRAPH] ✅ BTC historical prices loaded');
+        } catch (error) {
+          console.log('[GRAPH] ❌ Error loading BTC prices:', error.message);
         }
+        
+        // Get BTC historical prices
+        const btcHistoricPricesForGraph = appState.apiData?.historic_prices?.[btcMarketForGraph]?.['1M'];
+        
+        if (btcHistoricPricesForGraph && btcHistoricPricesForGraph.length >= 30) {
+          console.log('[GRAPH] 📊 BTC historic prices available:', btcHistoricPricesForGraph.length, 'data points');
+          
+          // Generate graph point for each of the last 30 days
+          for (let dayIndex = 0; dayIndex < 30; dayIndex++) {
+            const daysAgo = 29 - dayIndex; // 29 days ago to today (0)
+            
+            // Get BTC price for this day
+            const btcPriceOnDay = btcHistoricPricesForGraph[daysAgo];
+            
+            // Validate price is a valid number
+            if (btcPriceOnDay !== undefined && !isNaN(btcPriceOnDay) && isFinite(btcPriceOnDay) && btcPriceOnDay > 0) {
+              const timestamp = Date.now() / 1000 - (daysAgo * 24 * 60 * 60);
+              
+              // Calculate portfolio value = GBP + (BTC balance × BTC price)
+              const portfolioValueOnDay = gbpBalanceForGraph + (btcBalance * btcPriceOnDay);
+              
+              graphPoints.push({
+                timestamp: Number(timestamp),
+                value: Number(portfolioValueOnDay)
+              });
+              
+              if (dayIndex % 10 === 0) {
+                console.log(`[GRAPH] Day ${daysAgo}: BTC price = £${btcPriceOnDay.toFixed(2)}, Portfolio value = £${portfolioValueOnDay.toFixed(2)}`);
+              }
+            } else {
+              console.log(`[GRAPH] ⚠️ Invalid BTC price for day ${daysAgo}:`, btcPriceOnDay);
+            }
+          }
+        } else {
+          console.log('[GRAPH] ⚠️ Not enough BTC historical data. Available:', btcHistoricPricesForGraph?.length || 0);
+          
+          // Fallback: use current price for all days if no historical data
+          const currentPriceData = priceData[btcMarketForGraph];
+          if (currentPriceData) {
+            const ask = parseFloat(currentPriceData.ask);
+            const bid = parseFloat(currentPriceData.bid);
+            const currentPrice = (ask + bid) / 2;
+            const currentPortfolioValue = gbpBalance + (btcBalance * currentPrice);
+            
+            console.log('[GRAPH] 📊 Using current portfolio value as fallback: £', currentPortfolioValue.toFixed(2));
+            
+            for (let dayIndex = 0; dayIndex < 30; dayIndex++) {
+              const daysAgo = 29 - dayIndex;
+              const timestamp = Date.now() / 1000 - (daysAgo * 24 * 60 * 60);
+              
+              graphPoints.push({
+                timestamp: Number(timestamp),
+                value: Number(currentPortfolioValue)
+              });
+            }
+          }
+        }
+        
+        console.log('[GRAPH] 📋 Generated', graphPoints.length, 'portfolio value points');
+        if (graphPoints.length > 0) {
+          console.log('[GRAPH] 📋 First point (30 days ago):', JSON.stringify(graphPoints[0]));
+          console.log('[GRAPH] 📋 Last point (today):', JSON.stringify(graphPoints[graphPoints.length - 1]));
+          console.log('[GRAPH] 📊 Portfolio value range: £', Math.min(...graphPoints.map(p => p.value)).toFixed(2), 
+                      '→ £', Math.max(...graphPoints.map(p => p.value)).toFixed(2));
+        }
+        
         setGraphData(graphPoints);
-        console.log('✅ STEP 6 COMPLETE: Graph data generated');
+        console.log('[GRAPH] ✅ STEP 6 COMPLETE: Generated', graphPoints.length, 'graph points');
 
         // STEP 7: Calculate monthly change using historical prices
         console.log('[HIST_PRICE]');
@@ -376,21 +477,58 @@ const Home = () => {
           }
         }
         
-        console.log('[HIST_PRICE] 📊 Portfolio value 30 days ago:', portfolioValue30DaysAgo.toFixed(2));
-        console.log('[HIST_PRICE] 📊 Portfolio value now:', portfolioValueNow.toFixed(2));
+        // STEP 7: Load BTC historical prices and calculate price change
+        console.log('[HIST_PRICE] 📊 STEP 7: Calculating BTC price change over 30 days');
         
-        // Calculate the change (difference, not the old value)
-        if (portfolioValue30DaysAgo > 0) {
-          const change = portfolioValueNow - portfolioValue30DaysAgo;
-          const changePercent = (change / portfolioValue30DaysAgo) * 100;
+        const btcMarket = 'BTC/GBP';
+        
+        // Ensure BTC historical prices are loaded
+        try {
+          await appState.loadHistoricPrices({ market: btcMarket, period: '1M' });
+          console.log('[HIST_PRICE] ✅ BTC historical prices loaded');
+        } catch (error) {
+          console.log('[HIST_PRICE] ❌ Error loading BTC historical prices:', error);
+        }
+        
+        // Get BTC price from 30 days ago (first price in array)
+        const btcHistoricPrices = appState.apiData?.historic_prices?.[btcMarket]?.['1M'];
+        const btcPrice30DaysAgo = btcHistoricPrices?.[0] || 0;
+        
+        // Get current BTC price - use ask price (or calculate mid-price from bid/ask)
+        console.log('[HIST_PRICE] 🔍 priceData:', JSON.stringify(priceData, null, 2));
+        console.log('[HIST_PRICE] 🔍 priceData[BTC/GBP]:', priceData[btcMarket]);
+        
+        let btcPriceNow = 0;
+        if (priceData[btcMarket]) {
+          // Calculate mid-price from bid and ask
+          const ask = parseFloat(priceData[btcMarket].ask);
+          const bid = parseFloat(priceData[btcMarket].bid);
+          btcPriceNow = (ask + bid) / 2;
+          console.log('[HIST_PRICE] 🔍 Ask:', ask, 'Bid:', bid, 'Mid-price:', btcPriceNow);
+        }
+        
+        console.log('[HIST_PRICE] 📊 Historical prices available:', btcHistoricPrices?.length || 0, 'data points');
+        console.log('[HIST_PRICE] 📊 BTC Price 30 days ago: £', btcPrice30DaysAgo);
+        console.log('[HIST_PRICE] 📊 BTC Price now: £', btcPriceNow);
+        
+        console.log('[HIST_PRICE] 📊 Historical prices available:', btcHistoricPrices?.length || 0, 'data points');
+        console.log('[HIST_PRICE] 📊 BTC Price 30 days ago: £', btcPrice30DaysAgo);
+        console.log('[HIST_PRICE] 📊 BTC Price now: £', btcPriceNow);
+        
+        // Calculate BTC price change (difference between now and 30 days ago)
+        if (btcPrice30DaysAgo > 0 && btcPriceNow > 0) {
+          const priceChange = btcPriceNow - btcPrice30DaysAgo;
+          const priceChangePercent = (priceChange / btcPrice30DaysAgo) * 100;
           
-          console.log('[HIST_PRICE] 📊 Monthly change: £', change.toFixed(2));
-          console.log('[HIST_PRICE] 📊 Monthly change %:', changePercent.toFixed(2), '%');
+          console.log('[HIST_PRICE] � BTC Price change: £', priceChange.toFixed(2));
+          console.log('[HIST_PRICE] � BTC Price change %:', priceChangePercent.toFixed(2), '%');
+          console.log('[HIST_PRICE] 💰 Setting monthlyChange =', priceChange);
+          console.log('[HIST_PRICE] 💰 Setting monthlyChangePercent =', priceChangePercent);
           
-          setMonthlyChange(change);
-          setMonthlyChangePercent(changePercent);
+          setMonthlyChange(priceChange);
+          setMonthlyChangePercent(priceChangePercent);
         } else {
-          console.log('[HIST_PRICE] ⚠️ No portfolio value 30 days ago, setting change to 0');
+          console.log('[HIST_PRICE] ⚠️ Invalid BTC prices - 30 days ago:', btcPrice30DaysAgo, 'now:', btcPriceNow);
           setMonthlyChange(0);
           setMonthlyChangePercent(0);
         }
@@ -420,7 +558,7 @@ const Home = () => {
         console.log('💼 Loading user balances...');
         setBalancesLoaded(false);
         setIsLoading(true);
-        await appState.fetchBalance();
+        await appState.loadBalances();
         
         // Wait a moment for appState to update
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -546,12 +684,9 @@ const Home = () => {
         setPortfolioValue(totalValue);
         setIsLoading(false);
         
-        // Calculate value from 30 days ago for monthly change
-        console.log('🔔 About to call calculateMonthlyChange with totalValue:', totalValue);
-        console.log('🔔 balancesLoaded:', balancesLoaded);
-        console.log('🔔 isAuthenticated:', appState.user?.isAuthenticated);
-        await calculateMonthlyChange(totalValue);
-        console.log('🔔 calculateMonthlyChange completed');
+        // Monthly change calculation completed in STEP 7 above - no need to call old function
+        console.log('✅ Monthly change already calculated in STEP 7');
+        console.log('✅ monthlyChange and monthlyChangePercent are set');
         
       } catch (error) {
         console.log('❌ Error calculating portfolio value:', error);
@@ -825,10 +960,11 @@ const Home = () => {
       }
     };
     
-    // Load graph data when portfolio value changes
-    if (portfolioValue > 0) {
-      loadGraphData();
-    }
+    // DISABLED: This was causing graph to regenerate with random data
+    // Graph data is now set once during initial load (STEP 6)
+    // if (portfolioValue > 0) {
+    //   loadGraphData();
+    // }
   }, [portfolioValue]);
 
   // Live price updates - refresh every 30 seconds
@@ -862,7 +998,7 @@ const Home = () => {
     const balanceUpdateInterval = setInterval(async () => {
       console.log('🔄 Refreshing balances...');
       try {
-        await appState.fetchBalance();
+        await appState.loadBalances();
         console.log('✅ Balances refreshed');
       } catch (error) {
         console.log('❌ Error refreshing balances:', error);
@@ -875,58 +1011,58 @@ const Home = () => {
     };
   }, [appState.user?.isAuthenticated]);
 
-  // Load prices from /best_volume_price API (same as Assets component)
+  // Load prices from cached AppState (instant, no API calls!)
   const loadPricesForAssets = async (assets) => {
     try {
-      console.log('💰 Home: Loading prices using public /best_volume_price API...');
+      console.log('💰 Home: Loading prices from cached AppState (instant)...');
       
       const newPrices = {};
-      const volume = 100; // Use £100 GBP volume for better price discovery
       
-      // Get price for each asset paired with GBP
+      // Get price for each asset from AppState cache
       for (const assetItem of assets) {
         const asset = assetItem.asset;
         const market = `${asset}/GBP`;
         
         try {
-          console.log(`💰 Home: Fetching BUY price for ${market} with £${volume} volume...`);
+          // Get SELL price from cache (instant, no API call!)
+          const sellPrice = appState.getCryptoSellPrice(asset);
           
-          // Call public best_volume_price API - same as Assets component
-          const response = await appState.publicMethod({
-            httpMethod: 'GET',
-            apiRoute: `best_volume_price/${asset}/GBP/BUY/quote/${volume}`,
-          });
-          
-          console.log(`🔍 Home: API Response for ${market}:`, response);
-          
-          if (response && response.price) {
-            const price = parseFloat(response.price);
-            if (!isNaN(price) && price > 0) {
-              newPrices[market] = {
-                price: price,
-                volume: response.volume || volume,
-                side: 'BUY'
-              };
-              console.log(`✅ Home: Price loaded for ${market}: £${price}`);
-            } else {
-              console.log(`⚠️ Home: Invalid price for ${market}:`, response.price);
-            }
+          if (sellPrice && sellPrice > 0) {
+            newPrices[market] = {
+              price: sellPrice,
+              side: 'SELL',
+              cached: true
+            };
+            console.log(`✅ Home: Cached SELL price for ${market}: £${sellPrice.toFixed(2)}`);
           } else {
-            console.log(`⚠️ Home: No price data for ${market}`);
+            console.log(`⚠️ Home: No cached price for ${market} yet (background update pending)`);
           }
         } catch (assetError) {
-          console.log(`❌ Home: Error loading price for ${asset}:`, assetError);
+          console.log(`❌ Home: Error getting cached price for ${asset}:`, assetError);
         }
       }
       
-      console.log(`✅ Home: Loaded ${Object.keys(newPrices).length} prices out of ${assets.length} assets`);
+      console.log(`✅ Home: Loaded ${Object.keys(newPrices).length} cached prices out of ${assets.length} assets (instant!)`);
       setPrices(newPrices);
       
     } catch (error) {
-      console.log('❌ Home: Error loading prices:', error);
+      console.log('❌ Home: Error loading cached prices:', error);
       setPrices({});
     }
   };
+
+  // Refresh prices from cache every time crypto prices update in background
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      // Check if we have assets to refresh
+      if (assetData && assetData.length > 0) {
+        console.log('🔄 Home: Refreshing prices from AppState cache (background update)');
+        loadPricesForAssets(assetData);
+      }
+    }, 31000); // Refresh slightly after AppState updates (every 31 seconds)
+    
+    return () => clearInterval(refreshInterval);
+  }, [assetData]);
 
   // REMOVED DUPLICATE - getAssetPrice is defined later (line ~1060)
 
@@ -1079,18 +1215,26 @@ const Home = () => {
     return colors[asset] || '#6B7280';
   };
 
-  // Get asset price helper (used in renderAssetItem)
+  // Get asset price helper (uses cached prices - instant!)
   const getAssetPrice = (asset) => {
     try {
       const marketKey = `${asset}/GBP`;
       
+      // First try to get from loaded prices state
       if (prices[marketKey] && prices[marketKey].price) {
         const price = parseFloat(prices[marketKey].price);
-        console.log(`💰 Price for ${asset}: £${price}`);
+        console.log(`💰 Price for ${asset} from state: £${price.toFixed(2)}`);
         return price;
       }
       
-      console.log(`⚠️ No price for ${asset}`);
+      // Fallback: get directly from AppState cache
+      const cachedPrice = appState.getCryptoSellPrice(asset);
+      if (cachedPrice && cachedPrice > 0) {
+        console.log(`💰 Price for ${asset} from AppState cache: £${cachedPrice.toFixed(2)}`);
+        return cachedPrice;
+      }
+      
+      console.log(`⚠️ No price for ${asset} (background update pending)`);
       return null;
     } catch (error) {
       console.log(`❌ Home: Error getting price for ${asset}:`, error);
@@ -1356,6 +1500,49 @@ const Home = () => {
     setTimeout(() => setActiveModal(null), 300); // Delay to allow animation
   };
 
+  // Handle graph point selection
+  const handleGraphPointSelected = (pointData) => {
+    if (!pointData) {
+      // Reset to current values
+      console.log('[GRAPH_TOUCH] 📊 Reset to current values');
+      if (originalPortfolioValue > 0) {
+        setPortfolioValue(originalPortfolioValue);
+        setMonthlyChange(originalMonthlyChange);
+        setMonthlyChangePercent(originalMonthlyChangePercent);
+      }
+      setSelectedGraphPoint(null);
+      return;
+    }
+
+    // Store original values if this is the first touch
+    if (selectedGraphPoint === null) {
+      setOriginalPortfolioValue(portfolioValue);
+      setOriginalMonthlyChange(monthlyChange);
+      setOriginalMonthlyChangePercent(monthlyChangePercent);
+    }
+
+    console.log(`[GRAPH_TOUCH] 📊 Selected day ${pointData.daysAgo}: £${pointData.value.toFixed(2)}`);
+    setSelectedGraphPoint(pointData);
+
+    // Update displayed BTC price to the selected point
+    setPortfolioValue(pointData.value);
+
+    // Calculate change from 30 days ago to the selected point
+    if (graphData && graphData.length > 0) {
+      const priceAt30DaysAgo = graphData[0].value; // First point in graph (30 days ago)
+      const selectedPrice = pointData.value;       // Selected point's BTC price
+      const change = selectedPrice - priceAt30DaysAgo;
+      const changePercent = (change / priceAt30DaysAgo) * 100;
+
+      setMonthlyChange(change);
+      setMonthlyChangePercent(changePercent);
+      
+      const daysAgoText = pointData.daysAgo === 0 ? 'today' : `${pointData.daysAgo} days ago`;
+      console.log(`[GRAPH_TOUCH] 💰 BTC Price ${daysAgoText}: £${selectedPrice.toFixed(2)}`);
+      console.log(`[GRAPH_TOUCH] 💰 Change from 30 days ago: £${change.toFixed(2)} (${changePercent.toFixed(2)}%)`);
+    }
+  };
+
   // Render modal content - with special handling for Trade modal
   const renderModalContent = () => {
     if (!activeModal) return null;
@@ -1385,7 +1572,7 @@ const Home = () => {
             </View>
             <View style={styles.tradeModalContent}>
               <AppStateContext.Provider value={appState}>
-                <Trade />
+                <Trade inModal={true} />
               </AppStateContext.Provider>
             </View>
           </TouchableOpacity>
@@ -1496,6 +1683,7 @@ const Home = () => {
                 <Text style={styles.portfolioValue}>
                   {formatCurrency(portfolioValue)}
                 </Text>
+                {console.log('[UI_RENDER] 🖥️  monthlyChange:', monthlyChange, 'monthlyChangePercent:', monthlyChangePercent)}
                 
                 <View style={styles.changeContainer}>
                   <Text style={[
@@ -1529,6 +1717,7 @@ const Home = () => {
                   fillColor="transparent"
                   strokeWidth={3}
                   backgroundColor="#F9FAFB"
+                  onPointSelected={handleGraphPointSelected}
                 />
               </View>
             )}
@@ -1607,7 +1796,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaledWidth(20),
   },
   portfolioValue: {
-    fontSize: normaliseFont(36),
+    fontSize: normaliseFont(28),
     fontWeight: 'bold',
     color: '#1F2937',
     marginBottom: scaledHeight(12),

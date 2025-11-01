@@ -3745,6 +3745,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       await this.loadPersonalDetailOptions(); // Load dropdown options for Personal Details page
       await this.loadDepositDetailsForAsset('GBP');
       await this.loadDefaultAccountForAsset('GBP');
+      
+      // Start background crypto price updates after login
+      this.state.startCryptoPriceUpdates();
     }
 
     // LEVEL 2 VALIDATION: Check user status and return redirect target 
@@ -4283,6 +4286,197 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let dp = this.state.getAssetInfo(asset).decimalPlaces;
       let balanceString = Big(balance).toFixed(dp);
       return balanceString;
+    }
+
+    // Background crypto rate updater - fetches and pre-calculates ALL rates
+    this.updateCryptoRates = async () => {
+      const cryptoCurrencies = ['BTC', 'ETH', 'LTC', 'XRP', 'BCH', 'LINK'];
+      
+      console.log('[CRYPTO-CACHE] ========================================');
+      console.log('[CRYPTO-CACHE] BACKGROUND UPDATE STARTED');
+      console.log('[CRYPTO-CACHE] ========================================');
+      
+      try {
+        const newRates = {
+          sellPrices: {},      // GBP per 1 crypto (calculated from local_balance / avail)
+          buyPrices: {},       // GBP per 1 crypto (same as sell for now)
+          balancesInGBP: {}    // Pre-calculated balance values in GBP
+        };
+        
+        // Fetch balance data which includes prices
+        console.log('[CRYPTO-CACHE] Fetching /v2/balance...');
+        const response = await this.state.apiClient.privateMethod({
+          httpMethod: 'POST',
+          apiRoute: 'balance',
+          params: {},
+          apiVersion: 'v2',
+          abortController: this.createAbortController({tag: 'crypto-cache-balance'})
+        });
+        
+        if (!response) {
+          console.log('[CRYPTO-CACHE] ❌ No response from /v2/balance');
+          return null;
+        }
+        
+        console.log('[CRYPTO-CACHE] ✅ Response received, processing accounts...');
+        console.log('[CRYPTO-CACHE] 📋 Response type:', typeof response);
+        console.log('[CRYPTO-CACHE] 📋 Response keys:', Object.keys(response || {}).length);
+        console.log('[CRYPTO-CACHE] 📋 FULL RESPONSE:');
+        console.log(JSON.stringify(response, null, 2));
+        
+        // Check for error in response
+        if (response && response.error) {
+          console.log('[CRYPTO-CACHE] ❌ API returned error:', response.error);
+          return null;
+        }
+        
+        // Process each account
+        const accounts = Object.values(response);
+        console.log(`[CRYPTO-CACHE] 📋 Total accounts found: ${accounts.length}`);
+        
+        accounts.forEach((account, index) => {
+          const currency = account.currency;
+          
+          console.log(`[CRYPTO-CACHE] 🔍 Processing account:`, {
+            currency,
+            acctype: account.acctype,
+            enabled: account.enabled,
+            local_balance: account.local_balance,
+            cur: account.cur
+          });
+          
+          // Skip non-crypto accounts and multi-currency accounts
+          if (!currency || currency === '*' || !cryptoCurrencies.includes(currency)) {
+            console.log(`[CRYPTO-CACHE] ⏭️ Skipping ${currency} (not in crypto list)`);
+            return;
+          }
+          
+          try {
+            const currencyData = account.cur?.[currency];
+            if (!currencyData) {
+              console.log(`[CRYPTO-CACHE] ⚠️ ${currency}: No currency data in cur object`);
+              return;
+            }
+            
+            const avail = parseFloat(currencyData.avail) || 0;
+            const localBalance = parseFloat(account.local_balance) || 0;
+            
+            console.log(`[CRYPTO-CACHE] 📊 ${currency} calculation:`, {
+              avail,
+              localBalance,
+              formula: `${localBalance} / ${avail}`,
+              result: avail > 0 ? (localBalance / avail) : 0
+            });
+            
+            if (avail > 0) {
+              // Calculate price per unit: local_balance / avail
+              const pricePerUnit = localBalance / avail;
+              
+              newRates.sellPrices[currency] = pricePerUnit;
+              newRates.buyPrices[currency] = pricePerUnit;
+              newRates.balancesInGBP[currency] = localBalance;
+              
+              console.log(`[CRYPTO-CACHE] ${currency}: ${avail} × £${pricePerUnit.toFixed(2)} = £${localBalance.toFixed(2)}`);
+            } else {
+              newRates.sellPrices[currency] = 0;
+              newRates.buyPrices[currency] = 0;
+              newRates.balancesInGBP[currency] = 0;
+              console.log(`[CRYPTO-CACHE] ${currency}: No available balance (avail = 0)`);
+            }
+          } catch (error) {
+            console.log(`[CRYPTO-CACHE] ❌ ${currency} processing error:`, error.message);
+          }
+        });
+        
+        // Add GBP balance (always 1:1)
+        const gbpAccount = Object.values(response).find(acc => acc.currency === 'GBP');
+        if (gbpAccount) {
+          const gbpBalance = parseFloat(gbpAccount.local_balance) || 0;
+          newRates.balancesInGBP['GBP'] = gbpBalance;
+          console.log(`[CRYPTO-CACHE] GBP: £${gbpBalance.toFixed(2)} (base currency)`);
+        }
+        
+        // Update state
+        this.state.cryptoRates = newRates;
+        this.state.cryptoRatesLastUpdated = new Date();
+        
+        console.log('[CRYPTO-CACHE] ========================================');
+        console.log('[CRYPTO-CACHE] UPDATE COMPLETE ✅');
+        console.log('[CRYPTO-CACHE] SELL Prices:', Object.keys(newRates.sellPrices).length);
+        console.log('[CRYPTO-CACHE] BUY Prices:', Object.keys(newRates.buyPrices).length);
+        console.log('[CRYPTO-CACHE] Balances Calculated:', Object.keys(newRates.balancesInGBP).length);
+        console.log('[CRYPTO-CACHE] ========================================');
+        
+        return newRates;
+      } catch (error) {
+        console.error('[CRYPTO-CACHE] ❌ Error updating crypto rates:', error);
+        return null;
+      }
+    }
+
+    // Get crypto SELL price (instant retrieval, no calculation!)
+    this.getCryptoSellPrice = (currency) => {
+      const price = this.state.cryptoRates?.sellPrices?.[currency];
+      if (price) {
+        return price;
+      }
+      return null;
+    }
+
+    // Get crypto BUY price (instant retrieval, no calculation!)
+    this.getCryptoBuyPrice = (currency) => {
+      const price = this.state.cryptoRates?.buyPrices?.[currency];
+      if (price) {
+        return price;
+      }
+      return null;
+    }
+
+    // Get balance in GBP (instant retrieval, already pre-calculated!)
+    this.getBalanceInGBP = (currency) => {
+      const value = this.state.cryptoRates?.balancesInGBP?.[currency];
+      if (value !== undefined) {
+        return value;
+      }
+      return 0;
+    }
+
+    // Calculate any crypto amount to GBP (instant using cached rate)
+    this.calculateCryptoGBPValue = (currency, amount) => {
+      const price = this.getCryptoSellPrice(currency);
+      if (price && amount) {
+        return amount * price;
+      }
+      return 0;
+    }
+
+    // Start background rate update interval (every 30 seconds)
+    this.startCryptoPriceUpdates = () => {
+      console.log('[CRYPTO-CACHE] 🚀 Starting background updates...');
+      
+      // Initial fetch
+      this.updateCryptoRates();
+      
+      // Set up interval for automatic updates
+      if (this.cryptoPriceUpdateInterval) {
+        clearInterval(this.cryptoPriceUpdateInterval);
+      }
+      
+      this.cryptoPriceUpdateInterval = setInterval(() => {
+        console.log('[CRYPTO-CACHE] 🔄 30-second interval triggered...');
+        this.updateCryptoRates();
+      }, 30000); // Update every 30 seconds
+      
+      console.log('[CRYPTO-CACHE] ✅ Background updates started (30s interval)');
+    }
+
+    // Stop background rate updates
+    this.stopCryptoPriceUpdates = () => {
+      if (this.cryptoPriceUpdateInterval) {
+        clearInterval(this.cryptoPriceUpdateInterval);
+        this.cryptoPriceUpdateInterval = null;
+        console.log('� [AppState] Background crypto rate updates stopped');
+      }
     }
 
 
@@ -5323,6 +5517,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       setFooterIndex: this.setFooterIndex,
       loadingPrices: true, // Enable loading for all platforms
       graphPrices: [],
+      cryptoRates: {
+        sellPrices: {},       // Pre-calculated SELL prices (GBP per 1 crypto)
+        buyPrices: {},        // Pre-calculated BUY prices (GBP per 1 crypto)
+        balancesInGBP: {}     // Pre-calculated balance values in GBP
+      },
+      cryptoRatesLastUpdated: null,
       maintenanceMode: false,
       setMaintenanceMode: this.setMaintenanceMode,
       checkMaintenanceMode: this.checkMaintenanceMode,
@@ -5397,6 +5597,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       updateDefaultAccountForAsset: this.updateDefaultAccountForAsset,
       loadBalances: this.loadBalances,
       getBalance: this.getBalance,
+      updateCryptoRates: this.updateCryptoRates,
+      getCryptoSellPrice: this.getCryptoSellPrice,
+      getCryptoBuyPrice: this.getCryptoBuyPrice,
+      getBalanceInGBP: this.getBalanceInGBP,
+      calculateCryptoGBPValue: this.calculateCryptoGBPValue,
+      startCryptoPriceUpdates: this.startCryptoPriceUpdates,
+      stopCryptoPriceUpdates: this.stopCryptoPriceUpdates,
       fetchPricesForASpecificVolume: this.fetchPricesForASpecificVolume,
       fetchBestPriceForASpecificVolume: this.fetchBestPriceForASpecificVolume,
       fetchOrderStatus: this.fetchOrderStatus,

@@ -173,18 +173,50 @@ let Wallet = () => {
 
   let setup = async () => {
     try {
-      console.log('🔄 Wallet: Starting setup...');
+      console.log('🔄 CONSOLE: ===== GENERAL SETUP API CALL =====');
+      console.log('📤 CONSOLE: About to call appState.generalSetup({caller: "Wallet"})...');
       const generalSetupResult = await appState.generalSetup({caller: 'Wallet'});
-      console.log('✅ Wallet: General setup complete');
+      console.log('📨 CONSOLE: ===== GENERAL SETUP API RESPONSE =====');
+      console.log('📨 CONSOLE: Raw generalSetup response:', generalSetupResult);
+      console.log('📨 CONSOLE: Response type:', typeof generalSetupResult);
+      console.log('📨 CONSOLE: Response JSON:', JSON.stringify(generalSetupResult, null, 2));
+      console.log('📨 CONSOLE: ===== END GENERAL SETUP API RESPONSE =====');
       
-      // No need to load ticker - we use cached prices from AppState!
-      console.log('� Wallet: Using cached crypto prices from AppState (no ticker load needed)');
+      // Load ticker data first for exchange rates
+      try {
+        console.log('💱 Wallet: Loading ticker data...');
+        console.log('🔄 CONSOLE: ===== LOAD TICKER API CALL =====');
+        console.log('📤 CONSOLE: About to call appState.loadTicker()...');
+        const loadTickerResult = await appState.loadTicker();
+        console.log('📨 CONSOLE: ===== LOAD TICKER API RESPONSE =====');
+        console.log('📨 CONSOLE: Raw loadTicker response:', loadTickerResult);
+        console.log('📨 CONSOLE: Response type:', typeof loadTickerResult);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(loadTickerResult, null, 2));
+        console.log('📨 CONSOLE: ===== END LOAD TICKER API RESPONSE =====');
+        
+        let currentTickerData = appState.apiData?.ticker || {};
+        console.log('💱 Wallet: Ticker data loaded:', currentTickerData);
+        console.log('💱 CONSOLE: Final ticker data in appState:', currentTickerData);
+        setTickerData(currentTickerData);
+      } catch (error) {
+        log('Wallet: Error loading ticker:', error);
+      }
       
       // Load user balances
       try {
         console.log('🏦 Wallet: Loading balances from API...');
+        console.log('🔄 CONSOLE: ===== LOAD BALANCES API CALL =====');
+        console.log('📤 CONSOLE: About to call appState.loadBalances()...');
         let balanceResult = await appState.loadBalances();
-        console.log('✅ Wallet: Balances loaded:', balanceResult);
+        console.log('📨 CONSOLE: ===== LOAD BALANCES API RESPONSE =====');
+        console.log('📨 CONSOLE: Raw loadBalances response:', balanceResult);
+        console.log('📨 CONSOLE: Response type:', typeof balanceResult);
+        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(balanceResult, null, 2));
+        console.log('📨 CONSOLE: ===== END LOAD BALANCES API RESPONSE =====');
+        
+        console.log('🏦 Wallet: Balance API result:', balanceResult);
+        console.log('🏦 Wallet: Balance data in appState:', appState.apiData?.balance);
+        console.log('🏦 CONSOLE: Final balance data in appState:', appState.apiData?.balance);
         
         // Calculate total portfolio value after loading balances
         let balanceData = getBalanceData();
@@ -317,6 +349,97 @@ let Wallet = () => {
     } catch (error) {
       console.log('📊 Error in portfolio calculation wrapper:', error);
       setTotalPortfolioValue(0);
+    } finally {
+      setIsCalculatingTotal(false);
+    }
+  };
+
+  let calculateTotalPortfolioValue = async (balanceData) => {
+    if (isCalculatingTotal) return;
+    
+    setIsCalculatingTotal(true);
+    let totalInGBP = 0;
+    
+    try {
+      console.log('📊 ===== PORTFOLIO CALCULATION START =====');
+      console.log('📊 Balance data received:', JSON.stringify(balanceData, null, 2));
+      
+      // First, add all fiat balances directly
+      const fiatCurrencies = ['GBP', 'EUR', 'USD'];
+      let fiatTotal = 0;
+      
+      for (let currency of fiatCurrencies) {
+        if (balanceData[currency]) {
+          let balance = balanceData[currency].total || 0;
+          if (balance > 0) {
+            if (currency === 'GBP') {
+              fiatTotal += balance;
+              totalInGBP += balance;
+              console.log(`� ${currency}: £${balance.toFixed(2)} (base currency)`);
+            } else {
+              // For other fiat currencies, we'd need exchange rates
+              // For now, just log them
+              console.log(`💵 ${currency}: ${balance} (exchange rate needed)`);
+            }
+          }
+        }
+      }
+      
+      console.log(`💷 Total fiat value: £${fiatTotal.toFixed(2)}`);
+      
+      // Then, calculate crypto values using best_volume_price API
+      const cryptoCurrencies = ['BTC', 'ETH', 'LTC', 'XRP', 'BCH'];
+      let cryptoTotal = 0;
+      
+      // Create promises for all crypto prices
+      const cryptoPricePromises = cryptoCurrencies.map(async (currency) => {
+        if (!balanceData[currency]) return { currency, value: 0 };
+        
+        let balance = balanceData[currency].total || 0;
+        if (balance <= 0) return { currency, value: 0 };
+        
+        try {
+          console.log(`� Fetching price for ${currency} (balance: ${balance})...`);
+          
+          // Use the same API as Assets page - get price for 100 GBP
+          const response = await appState.publicMethod({
+            httpMethod: 'GET',
+            apiRoute: `best_volume_price/${currency}/GBP/BUY/quote/100`,
+          });
+          
+          if (response && response.price) {
+            const cryptoAmountReceived = parseFloat(response.price);
+            if (cryptoAmountReceived > 0) {
+              const pricePerUnit = 100 / cryptoAmountReceived;
+              const gbpValue = balance * pricePerUnit;
+              console.log(`� ${currency}: ${balance} × £${pricePerUnit.toFixed(2)} = £${gbpValue.toFixed(2)}`);
+              return { currency, value: gbpValue };
+            }
+          }
+          
+          console.log(`⚠️ ${currency}: Could not fetch price`);
+          return { currency, value: 0 };
+        } catch (error) {
+          console.log(`❌ ${currency}: Error fetching price:`, error);
+          return { currency, value: 0 };
+        }
+      });
+      
+      // Wait for all crypto prices to be fetched
+      const cryptoValues = await Promise.all(cryptoPricePromises);
+      
+      // Sum up crypto values
+      cryptoValues.forEach(({ currency, value }) => {
+        cryptoTotal += value;
+        totalInGBP += value;
+      });
+      
+      console.log(`₿ Total crypto value: £${cryptoTotal.toFixed(2)}`);
+      console.log(`� Total portfolio value: £${fiatTotal.toFixed(2)} (fiat) + £${cryptoTotal.toFixed(2)} (crypto) = £${totalInGBP.toFixed(2)}`);
+      
+      setTotalPortfolioValue(totalInGBP);
+    } catch (error) {
+      console.log('📊 Error calculating total portfolio value:', error);
     } finally {
       setIsCalculatingTotal(false);
     }
@@ -871,38 +994,54 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     }
   };
 
-  // Calculate GBP value for any currency using pre-calculated values (instant!)
-  let calculateGBPValue = (currency, amount) => {
+  // Calculate GBP value for any currency using ticker rates
+  let calculateGBPValue = (currency, amount, tickerData) => {
+    console.log(`💱 calculateGBPValue: ${currency}, amount: ${amount}`);
+    console.log(`💱 tickerData available:`, Object.keys(tickerData || {}));
+    console.log(`💱 Full tickerData:`, JSON.stringify(tickerData, null, 2));
+    
     if (currency === 'GBP') {
       return amount; // Already in GBP
     }
     
     // Check if amount is valid
     if (!amount || amount <= 0) {
+      console.log(`💱 Invalid amount for ${currency}: ${amount}`);
       return 0;
     }
     
-    // For crypto: Try to get pre-calculated balance first (fastest!)
-    const cryptoCurrencies = ['BTC', 'ETH', 'LTC', 'XRP', 'BCH'];
-    if (cryptoCurrencies.includes(currency)) {
-      // If this is the user's actual balance, get pre-calculated value
-      const userBalance = parseFloat(appState.getBalance(currency));
-      if (Math.abs(amount - userBalance) < 0.00000001) {
-        // This is the user's balance - use pre-calculated value!
-        const precalculatedValue = appState.getBalanceInGBP(currency);
-        if (precalculatedValue !== undefined && precalculatedValue !== 0) {
-          console.log(`⚡ Wallet: ${currency} using PRE-CALCULATED balance: £${precalculatedValue.toFixed(2)}`);
-          return precalculatedValue;
-        }
-      }
+    let market = `${currency}/GBP`;
+    let rateData = tickerData[market];
+    
+    console.log(`💱 Looking for market: ${market}`);
+    console.log(`💱 Rate data found:`, rateData);
+    
+    if (rateData && rateData.price) {
+      let rate = parseFloat(rateData.price) || 0;
+      let gbpValue = amount * rate;
+      console.log(`💱 ${currency}: ${amount} × £${rate} = £${gbpValue.toFixed(2)}`);
+      return gbpValue;
+    } else {
+      console.log(`💱 No valid rate found for ${market}. Using fallback rates...`);
       
-      // Otherwise calculate on-the-fly using cached rate
-      const value = appState.calculateCryptoGBPValue(currency, amount);
-      return value || 0;
+      // Fallback rates for testing (remove in production)
+      let fallbackRates = {
+        'BTC/GBP': 31712.51,
+        'ETH/GBP': 2324.00,
+        'EUR/GBP': 0.85,
+        'USD/GBP': 0.80
+      };
+      
+      let fallbackRate = fallbackRates[market];
+      if (fallbackRate) {
+        let gbpValue = amount * fallbackRate;
+        console.log(`💱 ${currency}: ${amount} × £${fallbackRate} (fallback) = £${gbpValue.toFixed(2)}`);
+        return gbpValue;
+      }
     }
     
-    // Fallback for fiat currencies (EUR, USD) - would need exchange rates
-    return 0;
+    console.log(`💱 No rate available for ${market} - returning 0`);
+    return 0; // No rate available
   };
 
   // Navigate to CryptoContent page
@@ -915,10 +1054,10 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     }
 
     const { total } = balanceInfo;
-    const gbpValue = calculateGBPValue(currency, total); // Use cached prices (instant!)
+    const gbpValue = calculateGBPValue(currency, total, tickerData || {});
     
-    // Get current price from AppState cache
-    const currentPrice = appState.getCryptoSellPrice(currency) || 0;
+    // Get current price from ticker data
+    const currentPrice = tickerData?.[currency]?.price || 0;
     
     // Calculate 24h price change (mock data for now)
     const priceChange = Math.random() * 10 - 5; // Random between -5% and +5%
@@ -961,11 +1100,17 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     let icon = getCurrencyIcon(currency);
     let isCrypto = ['BTC', 'ETH'].includes(currency);
     
-    // Calculate GBP value instantly using cached prices (no async needed!)
-    let gbpValue = calculateGBPValue(currency, total);
+    console.log(`🎨 Rendering ${currency}: balanceInfo =`, balanceInfo);
+    console.log(`🎨 ${currency}: total = ${total} (type: ${typeof total})`);
+    console.log(`🎨 ${currency}: tickerData keys =`, Object.keys(tickerData || {}));
+    
+    // Calculate GBP value for this specific currency
+    let gbpValue = calculateGBPValue(currency, total, tickerData || {});
+    console.log(`🎨 ${currency}: calculated GBP value = ${gbpValue}`);
     
     // For display: always show GBP value on the right
     let displayValue = `£${formatCurrency(gbpValue.toString(), 'GBP')}`;
+    console.log(`🎨 ${currency}: final display value = ${displayValue}`);
     
     // Show original amount in description for reference
     let description = '';

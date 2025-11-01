@@ -14,7 +14,8 @@ import {
   Chip,
   Surface,
   FAB,
-  Menu
+  Menu,
+  SegmentedButtons
 } from 'react-native-paper';
 
 // Internal imports
@@ -134,6 +135,10 @@ let CryptoContent = ({ onClose }) => {
   const [selectedPeriod, setSelectedPeriod] = useState('1D');
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
   const [priceDataError, setPriceDataError] = useState(null);
+
+  // Selected graph point state
+  const [selectedGraphPoint, setSelectedGraphPoint] = useState(null);
+  const [originalPrice, setOriginalPrice] = useState(null);
 
   // API Loading states
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
@@ -404,17 +409,16 @@ let CryptoContent = ({ onClose }) => {
     }
   }, [selectedPeriod, appState.selectedCrypto?.asset, appState.apiData?.historic_prices, appState.apiData?.ticker]);
 
-  // Simulate initial API loading when component mounts
+  // Initialize loading states on mount (will be controlled by actual API calls)
   useEffect(() => {
-    // Start all loading states
+    // Start initial loading states
     setIsLoadingBalance(true);
-    setIsLoadingTicker(true);
+    // isLoadingTicker is controlled by price fetch useEffect
     setIsLoadingMarketStats(true);
     setIsLoadingPortfolio(true);
     setIsLoadingGeneral(true);
 
-    // Simulate API calls with different timings
-    setTimeout(() => setIsLoadingTicker(false), 1000);
+    // Stop non-price loading states after a short delay
     setTimeout(() => setIsLoadingBalance(false), 1500);
     setTimeout(() => setIsLoadingMarketStats(false), 2000);
     setTimeout(() => setIsLoadingPortfolio(false), 2500);
@@ -595,93 +599,145 @@ let CryptoContent = ({ onClose }) => {
     asset = 'BTC',
     name = 'Bitcoin',
     symbol = 'BTC',
-    balance = '0.15420000',
-    priceChange = 5.23,
-    portfolioValue = '6939.00'
   } = cryptoData;
 
-  // Get real current price from ticker data
-  const getRealCurrentPrice = () => {
+  // Get real balance from API data
+  const getRealBalance = () => {
     try {
-      const tickerData = appState.apiData?.ticker;
-      const assetPair = `${asset}/GBP`; // e.g., BTC/GBP (with slash)
-      
-      console.log('🔍 Getting real price for', assetPair);
-      console.log('📊 Available ticker data:', tickerData ? Object.keys(tickerData) : 'No ticker data');
-      
-      if (tickerData && tickerData[assetPair]) {
-        const tickerInfo = tickerData[assetPair];
-        console.log('📊 Ticker info for', assetPair, ':', tickerInfo);
-        
-        // Try different price fields in order of preference
-        let price = null;
-        
-        // Check for standard price fields
-        if (tickerInfo.last) price = parseFloat(tickerInfo.last);
-        else if (tickerInfo.price) price = parseFloat(tickerInfo.price);
-        else if (tickerInfo.close) price = parseFloat(tickerInfo.close);
-        
-        // If no direct price, calculate mid-price from bid/ask
-        if (!price && tickerInfo.bid && tickerInfo.ask) {
-          const bid = parseFloat(tickerInfo.bid);
-          const ask = parseFloat(tickerInfo.ask);
-          if (!isNaN(bid) && !isNaN(ask)) {
-            price = (bid + ask) / 2;
-            console.log(`💰 Calculated mid-price from bid (${bid}) and ask (${ask}): ${price}`);
-          }
-        }
-        
-        if (price && !isNaN(price)) {
-          console.log(`✅ Found real price for ${assetPair}:`, price);
-          return price;
-        }
+      const balance = appState.getBalance(asset);
+      if (balance === '[loading]') {
+        return '0.00000000';
       }
-      
-      // Fallback: try alternative naming conventions
-      const alternativeKeys = [`${asset}GBP`, `${asset}_GBP`, asset];
-      for (const key of alternativeKeys) {
-        if (tickerData && tickerData[key]) {
-          const tickerInfo = tickerData[key];
-          let price = parseFloat(tickerInfo.last || tickerInfo.price || tickerInfo.close);
-          
-          // Calculate mid-price if needed
-          if (!price && tickerInfo.bid && tickerInfo.ask) {
-            const bid = parseFloat(tickerInfo.bid);
-            const ask = parseFloat(tickerInfo.ask);
-            if (!isNaN(bid) && !isNaN(ask)) {
-              price = (bid + ask) / 2;
-            }
-          }
-          
-          if (price && !isNaN(price)) {
-            console.log(`✅ Found real price for ${key}:`, price);
-            return price;
-          }
-        }
-      }
-      
-      console.log('⚠️ No real price found, using default');
-      return 45000; // Default fallback
+      return balance;
     } catch (error) {
-      console.log('❌ Error getting real price:', error);
-      return 45000; // Default fallback
+      console.log('❌ Error getting balance:', error);
+      return '0.00000000';
     }
   };
 
-  const currentPrice = getRealCurrentPrice();
+  const balance = getRealBalance();
 
-  // Dummy data for the page
-  const marketData = {
-    marketCap: '$850,234,567,890',
-    volume24h: '$28,456,789,123',
-    circulatingSupply: '19.8M BTC',
-    totalSupply: '21M BTC',
-    rank: '#1',
-    high24h: currentPrice * 1.05,
-    low24h: currentPrice * 0.95,
-    ath: currentPrice * 1.2,
-    atl: currentPrice * 0.3
+  // State to store fetched price
+  const [fetchedPrice, setFetchedPrice] = useState(null);
+
+  // Fetch current price from best_volume_price API (same as Assets page)
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        setIsLoadingTicker(true);  // Use existing loading state
+        console.log(`🔍 CryptoContent: Fetching price for ${asset}/GBP...`);
+        
+        const volume = 100; // Use £100 GBP volume for better price discovery
+        
+        const response = await appState.publicMethod({
+          httpMethod: 'GET',
+          apiRoute: `best_volume_price/${asset}/GBP/BUY/quote/${volume}`,
+        });
+
+        console.log(`📊 CryptoContent: Price API response for ${asset}:`, response);
+
+        if (response && response.price) {
+          // For BUY/quote, response.price is the amount of crypto we get for our GBP volume
+          // To get price per unit: price_per_unit = volume_spent / crypto_amount_received
+          const cryptoAmountReceived = parseFloat(response.price);
+          
+          if (cryptoAmountReceived > 0) {
+            const pricePerUnit = volume / cryptoAmountReceived;
+            console.log(`✅ CryptoContent: Successfully fetched price for ${asset}: £${pricePerUnit.toFixed(2)}`);
+            console.log(`   📊 Details: £${volume} → ${cryptoAmountReceived} ${asset} = £${pricePerUnit.toFixed(2)}/${asset}`);
+            setFetchedPrice(pricePerUnit);
+          } else {
+            console.log(`⚠️ CryptoContent: Invalid crypto amount received for ${asset}: ${cryptoAmountReceived}`);
+            setFetchedPrice(null);
+          }
+        } else {
+          console.log(`⚠️ CryptoContent: No price data in response for ${asset}`, response);
+          setFetchedPrice(null);
+        }
+      } catch (error) {
+        console.log(`❌ CryptoContent: Error fetching price for ${asset}:`, error);
+        setFetchedPrice(null);
+      } finally {
+        setIsLoadingTicker(false);  // Stop loading when done
+      }
+    };
+
+    fetchPrice();
+    
+    // Refresh price every 30 seconds
+    const interval = setInterval(fetchPrice, 30000);
+    
+    return () => clearInterval(interval);
+  }, [asset]);
+
+  const currentPrice = fetchedPrice;
+
+  // Calculate portfolio value based on balance and current price
+  const getPortfolioValue = () => {
+    try {
+      // If price is null (loading), return loading text
+      if (currentPrice === null) {
+        return 'Loading...';
+      }
+      const balanceNum = parseFloat(balance);
+      if (isNaN(balanceNum) || balanceNum === 0) {
+        return '0.00';
+      }
+      const value = balanceNum * currentPrice;
+      return value.toFixed(2);
+    } catch (error) {
+      console.log('❌ Error calculating portfolio value:', error);
+      return 'Loading...';
+    }
   };
+
+  const portfolioValue = getPortfolioValue();
+
+  // Dynamic market data based on selected asset
+  const getMarketData = () => {
+    // If price is null (loading), return loading placeholders
+    if (currentPrice === null) {
+      return {
+        marketCap: 'Loading...',
+        volume24h: 'Loading...',
+        circulatingSupply: 'Loading...',
+        totalSupply: 'Loading...',
+        rank: 'Loading...',
+        high24h: 0,
+        low24h: 0,
+        ath: 0,
+        atl: 0
+      };
+    }
+
+    const assetSupplyData = {
+      'BTC': { circulating: '19.8M', total: '21M' },
+      'ETH': { circulating: '120M', total: 'Unlimited' },
+      'LTC': { circulating: '73M', total: '84M' },
+      'XRP': { circulating: '53B', total: '100B' },
+      'BCH': { circulating: '19.6M', total: '21M' },
+      'ADA': { circulating: '35B', total: '45B' },
+      'DOT': { circulating: '1.2B', total: '1.4B' },
+      'LINK': { circulating: '556M', total: '1B' },
+      'UNI': { circulating: '753M', total: '1B' }
+    };
+
+    const supply = assetSupplyData[asset] || { circulating: 'N/A', total: 'N/A' };
+    
+    return {
+      marketCap: `£${(currentPrice * parseFloat(supply.circulating.replace(/[MB]/g, '')) * (supply.circulating.includes('B') ? 1000000000 : 1000000)).toLocaleString()}`,
+      volume24h: `£${(currentPrice * 0.05 * parseFloat(supply.circulating.replace(/[MB]/g, '')) * (supply.circulating.includes('B') ? 1000000000 : 1000000)).toLocaleString()}`,
+      circulatingSupply: `${supply.circulating} ${asset}`,
+      totalSupply: `${supply.total} ${asset}`,
+      rank: asset === 'BTC' ? '#1' : asset === 'ETH' ? '#2' : asset === 'LTC' ? '#20' : '#N/A',
+      high24h: currentPrice * 1.05,
+      low24h: currentPrice * 0.95,
+      ath: currentPrice * 1.2,
+      atl: currentPrice * 0.3
+    };
+  };
+
+  const marketData = getMarketData();
 
   const cryptoIconConfig = {
     'BTC': { name: 'bitcoin', color: '#F7931A' },
@@ -701,9 +757,34 @@ let CryptoContent = ({ onClose }) => {
     });
   };
 
+  // Handler for when user touches/selects a point on the graph
+  const handleGraphPointSelected = (pointData) => {
+    if (!pointData) {
+      // User released touch - restore original values
+      if (originalPrice !== null) {
+        setSelectedGraphPoint(null);
+        // Reset will happen automatically when original values are displayed
+      }
+      return;
+    }
+
+    // Store original values on first selection
+    if (originalPrice === null) {
+      setOriginalPrice(currentPrice);
+    }
+
+    // Update selected point
+    setSelectedGraphPoint(pointData);
+    
+    console.log('[GRAPH_TOUCH] Selected point:', {
+      value: pointData.value,
+      index: pointData.index,
+      daysAgo: pointData.daysAgo
+    });
+  };
+
   const renderHeader = () => {
     const iconConfig = cryptoIconConfig[asset] || { name: 'circle', color: '#6b7280' };
-    const isPositiveChange = priceChange >= 0;
 
     return (
       <Card style={{ marginBottom: 16, elevation: 3 }}>
@@ -753,33 +834,51 @@ let CryptoContent = ({ onClose }) => {
 
           <View style={{ alignItems: 'center', marginBottom: 20 }}>
             <Text variant="displaySmall" style={{ fontWeight: '700', marginBottom: 4 }}>
-              {isLoadingTicker ? 'Loading...' : `£${currentPrice.toLocaleString()}`}
+              {isLoadingTicker || currentPrice === null ? 'Loading...' : selectedGraphPoint 
+                ? `£${selectedGraphPoint.value.toLocaleString()}` 
+                : `£${currentPrice.toLocaleString()}`
+              }
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {isLoadingTicker ? (
+              {isLoadingTicker || currentPrice === null ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Icon name="loading" size={20} color={materialTheme.colors.primary} />
                   <Text style={{ marginLeft: 4, color: materialTheme.colors.onSurfaceVariant }}>
-                    Loading price change...
+                    Loading price data...
                   </Text>
                 </View>
               ) : (
                 <>
-                  <Icon 
-                    name={isPositiveChange ? "trending-up" : "trending-down"}
-                    size={20}
-                    color={isPositiveChange ? '#4CAF50' : '#F44336'}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text style={{ 
-                    color: isPositiveChange ? '#4CAF50' : '#F44336',
-                    fontWeight: '600'
-                  }}>
-                    {isPositiveChange ? '+' : ''}{priceChange}%
-                  </Text>
-                  <Text style={{ color: materialTheme.colors.onSurfaceVariant, marginLeft: 8 }}>
-                    24h
-                  </Text>
+                  {(() => {
+                    // Calculate price change based on selected point or current price
+                    const displayPrice = selectedGraphPoint ? selectedGraphPoint.value : currentPrice;
+                    const market = `${asset}/GBP`;
+                    const priceData = historicPrices[market]?.[selectedPeriod] || [];
+                    const firstPrice = priceData.length > 0 ? priceData[0] : displayPrice;
+                    const changeAmount = displayPrice - firstPrice;
+                    const changePercent = firstPrice > 0 ? ((changeAmount / firstPrice) * 100).toFixed(2) : 0;
+                    const isPositive = changeAmount >= 0;
+                    
+                    return (
+                      <>
+                        <Icon 
+                          name={isPositive ? "trending-up" : "trending-down"}
+                          size={20}
+                          color={isPositive ? '#4CAF50' : '#F44336'}
+                          style={{ marginRight: 4 }}
+                        />
+                        <Text style={{ 
+                          color: isPositive ? '#4CAF50' : '#F44336',
+                          fontWeight: '600'
+                        }}>
+                          {isPositive ? '+' : ''}{changePercent}%
+                        </Text>
+                        <Text style={{ color: materialTheme.colors.onSurfaceVariant, marginLeft: 8 }}>
+                          {selectedPeriod}
+                        </Text>
+                      </>
+                    );
+                  })()}
                 </>
               )}
             </View>
@@ -819,7 +918,7 @@ let CryptoContent = ({ onClose }) => {
             Portfolio Value
           </Text>
           <Text variant="bodyMedium" style={{ fontWeight: '600' }}>
-            {isLoadingBalance ? 'Loading...' : `£${portfolioValue}`}
+            {isLoadingBalance || portfolioValue === 'Loading...' ? 'Loading...' : `£${portfolioValue}`}
           </Text>
         </View>
       </Card.Content>
@@ -932,25 +1031,19 @@ let CryptoContent = ({ onClose }) => {
 
     return (
       <View style={{ marginBottom: 16 }}>
-        {/* Period Selection Buttons */}
-        <View style={{ flexDirection: 'row', marginBottom: 16, justifyContent: 'space-between', paddingHorizontal: 16 }}>
-          {availablePeriods.map((period) => (
-            <Button
-              key={period.value}
-              mode={selectedPeriod === period.value ? 'contained' : 'outlined'}
-              onPress={() => setSelectedPeriod(period.value)}
-              style={{ 
-                marginRight: 4,
-                flex: 1,
-                maxWidth: 60
-              }}
-              contentStyle={{ paddingHorizontal: 4, paddingVertical: 4 }}
-              labelStyle={{ fontSize: 12 }}
-              compact
-            >
-              {period.label}
-            </Button>
-          ))}
+        {/* Period Selection Buttons - Compact Segmented Style */}
+        <View style={{ marginBottom: 16, paddingHorizontal: 16 }}>
+          <SegmentedButtons
+            value={selectedPeriod}
+            onValueChange={setSelectedPeriod}
+            buttons={availablePeriods.map((period) => ({
+              value: period.value,
+              label: period.label,
+              style: { minWidth: 40 },
+              labelStyle: { fontSize: 11, marginHorizontal: 0 }
+            }))}
+            density="small"
+          />
         </View>
 
         {/* Error Display */}
@@ -983,11 +1076,12 @@ let CryptoContent = ({ onClose }) => {
               date: new Date(Date.now() - (structuredPriceData[market][selectedPeriod].length - index) * 3600000).toISOString().split('T')[0]
             })) : []
           }
-          width={screenWidth}
+          width={screenWidth - 32}
           height={220}
           strokeColor={materialTheme.colors.primary}
           fillColor="transparent"
           strokeWidth={2}
+          onPointSelected={handleGraphPointSelected}
         />
 
           {/* Original PriceGraph (commented out for debugging) */}

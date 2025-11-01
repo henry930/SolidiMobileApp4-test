@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -16,6 +16,7 @@ import {
   Divider,
   IconButton,
   Icon,
+  ActivityIndicator,
 } from 'react-native-paper';
 
 // Other imports
@@ -24,11 +25,11 @@ import Big from 'big.js';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
-import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Spinner, PriceGraph } from 'src/components/atomic';
+import { PriceGraph } from 'src/components/atomic';
 import LivePriceTicker from 'src/components/LivePriceTicker';
 import misc from 'src/util/misc';
+import { sharedStyles as styles, layoutStyles as layout, textStyles as text, cardStyles as cards, buttonStyles as buttons, formStyles as forms } from 'src/styles';
 import ImageLookup from 'src/images';
 
 // Logger
@@ -137,6 +138,7 @@ let Sell = () => {
   let [balanceBA, setBalanceBA] = useState(appState.getBalance(assetBA));
   let [errorMessage, setErrorMessage] = useState('');
   let [loadingBestPrice, setLoadingBestPrice] = useState(true);
+  let [newAPIVersionDetected, setNewAPIVersionDetected] = useState(false);
 
 
   // Initial setup.
@@ -155,6 +157,7 @@ let Sell = () => {
       setItemsQA(generateQuoteAssetItems());
       setBalanceBA(appState.getBalance(assetBA));
       setLoadingBestPrice(false);
+      setNewAPIVersionDetected(appState.checkLatestAPIVersion());
 
       let market = assetBA + '/' + assetQA;
       let period = "2H";
@@ -476,6 +479,52 @@ let Sell = () => {
   }
 
 
+  let getDomain = () => {
+    let domain = appState.domain;
+    log(`getDomain: domain = ${domain}`);
+    return domain;
+  }
+
+
+  let upgradeRequired = () => {
+    return (
+      <View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <Icon source="alert-circle" size={24} color={materialTheme.colors.onSecondaryContainer} />
+          <Text variant="titleMedium" style={{ 
+            marginLeft: 8, 
+            color: materialTheme.colors.onSecondaryContainer,
+            fontWeight: 'bold'
+          }}>
+            App Update Required
+          </Text>
+        </View>
+        <Text variant="bodyMedium" style={{ 
+          marginBottom: 16,
+          color: materialTheme.colors.onSecondaryContainer,
+          lineHeight: 20
+        }}>
+          Solidi has finished a major new release. Please upgrade to switch over to the new system. 
+          Visit our website for instructions.
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Text variant="bodyMedium" style={{ color: materialTheme.colors.onSecondaryContainer }}>
+            If you have any trouble, please{' '}
+          </Text>
+          <Button 
+            mode="text" 
+            onPress={() => appState.changeState('ContactUs')}
+            style={{ margin: 0 }}
+            labelStyle={{ marginHorizontal: 0 }}
+          >
+            contact us
+          </Button>
+        </View>
+      </View>
+    );
+  }
+
+
   const materialTheme = useTheme();
 
   return (
@@ -509,7 +558,7 @@ let Sell = () => {
               bottom: 0,
               left: 0,
               right: 0,
-              backgroundColor: 'rgba(21, 101, 192, 0.8)', // Different color overlay for sell
+              backgroundColor: 'rgba(229, 57, 53, 0.8)', // Red overlay for sell
               padding: 16
             }}>
               <Text variant="headlineSmall" style={{ 
@@ -525,7 +574,7 @@ let Sell = () => {
                 marginTop: 4,
                 opacity: 0.9
               }}>
-                Convert your crypto to cash on Solidi
+                Convert your crypto to cash instantly
               </Text>
             </View>
           </View>
@@ -570,105 +619,149 @@ let Sell = () => {
           elevation: 4,
           backgroundColor: materialTheme.colors.surface,
           borderTopWidth: 3,
-          borderTopColor: '#1565C0' // Blue accent for sell
+          borderTopColor: '#E53935' // Red accent for sell
         }}>
           <Card.Title 
-            title="Sell Cryptocurrency" 
-            subtitle="Convert your crypto to fiat currency"
-            left={(props) => <IconButton {...props} icon="trending-down" iconColor="#1565C0" />}
-            titleStyle={{ color: '#1565C0', fontWeight: 'bold' }}
+            title="Sell Cryptocurrency"
+            subtitle="Enter your trading details"
+            left={(props) => <Icon {...props} source="trending-down" color="#E53935" />}
+            titleStyle={{ color: '#E53935', fontWeight: 'bold' }}
           />
           <Card.Content>
-            {/* Quote Asset Section - What you want to get */}
-            <Text variant="titleMedium" style={{ marginBottom: 12, color: materialTheme.colors.primary }}>
-              I want to get:
-            </Text>
-            
-            <View style={{ flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' }}>
-              <TextInput
-                mode="outlined"
-                label="Amount"
-                value={volumeQA}
-                onChangeText={validateAndSetVolumeQA}
-                keyboardType='decimal-pad'
-                style={{ flex: 2, marginRight: 8 }}
-                contentStyle={{ fontSize: 18 }}
-              />
-              <Surface style={{ flex: 1, borderRadius: 4, marginLeft: 8 }}>
-                <DropDownPicker
-                  listMode="MODAL"
-                  placeholder={appState.getAssetInfo(assetQA).displayString}
-                  style={{ 
-                    borderColor: materialTheme.colors.outline,
-                    borderRadius: 4,
-                    minHeight: 56,
-                  }}
-                  open={openQA}
-                  value={assetQA}
-                  items={itemsQA}
-                  setOpen={setOpenQA}
-                  setValue={setAssetQA}
-                  setItems={setItemsQA}
-                  searchable={true}
-                  searchTextInputProps={{ maxLength: 15 }}
-                  maxHeight={scaledHeight(300)}
+
+            {/* Amount to Sell Section */}
+            <View style={{ marginBottom: 24 }}>
+              <Text variant="titleSmall" style={{ 
+                marginBottom: 12, 
+                color: materialTheme.colors.onSurface,
+                fontWeight: '600'
+              }}>
+                🪙 Amount to Sell
+              </Text>
+              
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <TextInput
+                  mode="outlined"
+                  label="Enter amount"
+                  value={volumeBA}
+                  onChangeText={validateAndSetVolumeBA}
+                  keyboardType='decimal-pad'
+                  style={{ flex: 2 }}
+                  contentStyle={{ fontSize: 18 }}
+                  left={<TextInput.Icon icon="bitcoin" />}
                 />
-              </Surface>
+                <Surface style={{ 
+                  flex: 1, 
+                  borderRadius: 4,
+                  elevation: 1 
+                }}>
+                  <DropDownPicker
+                    listMode="MODAL"
+                    placeholder={appState.getAssetInfo(assetBA).displayString}
+                    style={{ 
+                      borderColor: materialTheme.colors.outline,
+                      borderRadius: 4,
+                      minHeight: 56,
+                      backgroundColor: materialTheme.colors.surface,
+                    }}
+                    textStyle={{
+                      fontSize: 16,
+                      color: materialTheme.colors.onSurface
+                    }}
+                    open={openBA}
+                    value={assetBA}
+                    items={itemsBA}
+                    setOpen={setOpenBA}
+                    setValue={setAssetBA}
+                    setItems={setItemsBA}
+                    searchable={true}
+                    searchTextInputProps={{ maxLength: 15 }}
+                    maxHeight={scaledHeight(300)}
+                  />
+                </Surface>
+              </View>
             </View>
 
             <Divider style={{ marginVertical: 16 }} />
 
-            {/* Base Asset Section - What you're selling */}
-            <Text variant="titleMedium" style={{ marginBottom: 12, color: materialTheme.colors.primary }}>
-              By selling:
-            </Text>
-            
-            <View style={{ flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' }}>
-              <TextInput
-                mode="outlined"
-                label="Amount"
-                value={volumeBA}
-                onChangeText={validateAndSetVolumeBA}
-                keyboardType='decimal-pad'
-                style={{ flex: 2, marginRight: 8 }}
-                contentStyle={{ fontSize: 18 }}
-              />
-              <Surface style={{ flex: 1, borderRadius: 4, marginLeft: 8 }}>
-                <DropDownPicker
-                  listMode="MODAL"
-                  placeholder={appState.getAssetInfo(assetBA).displayString}
-                  style={{ 
-                    borderColor: materialTheme.colors.outline,
-                    borderRadius: 4,
-                    minHeight: 56,
-                  }}
-                  open={openBA}
-                  value={assetBA}
-                  items={itemsBA}
-                  setOpen={setOpenBA}
-                  setValue={setAssetBA}
-                  setItems={setItemsBA}
-                  searchable={true}
-                  searchTextInputProps={{ maxLength: 15 }}
-                  maxHeight={scaledHeight(300)}
-                />
-              </Surface>
+            {/* Amount to Receive Section */}
+            <View style={{ marginBottom: 24 }}>
+              <Text variant="titleSmall" style={{ 
+                marginBottom: 12, 
+                color: materialTheme.colors.onSurface,
+                fontWeight: '600'
+              }}>
+                💷 Amount to Receive
+              </Text>
+              
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <View style={{ flex: 2, position: 'relative' }}>
+                  <TextInput
+                    mode="outlined"
+                    label="You will receive"
+                    value={volumeQA}
+                    onChangeText={validateAndSetVolumeQA}
+                    keyboardType='decimal-pad'
+                    contentStyle={{ fontSize: 18 }}
+                    left={<TextInput.Icon icon="currency-gbp" />}
+                  />
+                  {loadingBestPrice && volumeQA === '[loading]' && (
+                    <View style={{ 
+                      position: 'absolute', 
+                      right: 12, 
+                      top: 16, 
+                      zIndex: 10 
+                    }}>
+                      <ActivityIndicator size="small" />
+                    </View>
+                  )}
+                </View>
+                <Surface style={{ 
+                  flex: 1, 
+                  borderRadius: 4,
+                  elevation: 1 
+                }}>
+                  <DropDownPicker
+                    listMode="MODAL"
+                    placeholder={appState.getAssetInfo(assetQA).displayString}
+                    style={{ 
+                      borderColor: materialTheme.colors.outline,
+                      borderRadius: 4,
+                      minHeight: 56,
+                      backgroundColor: materialTheme.colors.surface,
+                    }}
+                    textStyle={{
+                      fontSize: 16,
+                      color: materialTheme.colors.onSurface
+                    }}
+                    open={openQA}
+                    value={assetQA}
+                    items={itemsQA}
+                    setOpen={setOpenQA}
+                    setValue={setAssetQA}
+                    setItems={setItemsQA}
+                    searchable={true}
+                    searchTextInputProps={{ maxLength: 15 }}
+                    maxHeight={scaledHeight(300)}
+                  />
+                </Surface>
+              </View>
             </View>
 
-            {/* Price Information */}
+            {/* Current Price Display */}
             <Surface style={{ 
               padding: 12, 
               borderRadius: 8, 
               marginBottom: 16,
-              backgroundColor: 'rgba(21, 101, 192, 0.1)', // Light blue for sell
+              backgroundColor: 'rgba(229, 57, 53, 0.1)', // Light red for sell
               borderWidth: 1,
-              borderColor: 'rgba(21, 101, 192, 0.3)'
+              borderColor: 'rgba(229, 57, 53, 0.3)'
             }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon source="trending-down" size={20} color="#1565C0" />
+                <Icon source="trending-down" size={20} color="#E53935" />
                 <Text variant="bodyMedium" style={{ 
                   marginLeft: 8,
-                  color: '#0D47A1',
+                  color: '#C62828',
                   fontWeight: '600'
                 }}>
                   {generatePriceDescription() || 'Loading current price...'}
@@ -678,6 +771,14 @@ let Sell = () => {
 
             {/* Balance Section */}
             {generateBalanceSection()}
+
+            {/* Development Info */}
+            {appState.getUserStatus('supportLevel2') === true && 
+             appState.user.isAuthenticated == true && (
+              <HelperText type="info" style={{ textAlign: 'center' }}>
+                Dev Domain: {getDomain()}
+              </HelperText>
+            )}
           </Card.Content>
         </Card>
 
@@ -687,138 +788,37 @@ let Sell = () => {
           onPress={startSellRequest}
           style={{ 
             marginBottom: 16, 
-            paddingVertical: 8,
-            borderRadius: 12,
+            paddingVertical: 12,
+            borderRadius: 16,
             elevation: 3,
-            backgroundColor: '#1565C0' // Blue theme for sell
+            backgroundColor: '#E53935' // Red theme for sell
           }}
-          contentStyle={{ paddingVertical: 4 }}
-          labelStyle={{ fontSize: 18, fontWeight: '600', color: 'white' }}
+          contentStyle={{ paddingVertical: 8 }}
+          labelStyle={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}
           icon="trending-down"
+          disabled={loadingBestPrice || !!errorMessage}
         >
-          Sell Now
+          {loadingBestPrice ? 'Loading...' : 'Sell Cryptocurrency'}
         </Button>
+
+        {/* API Version Upgrade Notice */}
+        {newAPIVersionDetected && (
+          <Card style={{ 
+            backgroundColor: materialTheme.colors.secondaryContainer,
+            elevation: 2,
+            marginBottom: 16
+          }}>
+            <Card.Content>
+              {upgradeRequired()}
+            </Card.Content>
+          </Card>
+        )}
 
         <View style={{ height: 20 }} />
       </KeyboardAwareScrollView>
     </View>
   )
 };
-
-
-let styles = StyleSheet.create({
-  panelContainer: {
-    paddingVertical: scaledHeight(0),
-    paddingHorizontal: scaledWidth(15),
-    width: '100%',
-    height: '100%',
-  },
-  panelSubContainer: {
-    paddingTop: scaledHeight(0),
-    //paddingHorizontal: scaledWidth(30),
-    height: '100%',
-    //borderWidth: 1, // testing
-  },
-  heading: {
-    alignItems: 'center',
-    marginBottom: scaledHeight(40),
-  },
-  headingText: {
-    fontSize: normaliseFont(20),
-    fontWeight: 'bold',
-  },
-  basicText: {
-    fontSize: normaliseFont(14),
-  },
-  dropdownText: {
-    fontSize: normaliseFont(14),
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  descriptionText: {
-    fontWeight: 'bold',
-    fontSize: normaliseFont(18),
-  },
-  quoteAssetWrapper: {
-    //paddingVertical: scaledHeight(20),
-    paddingTop: scaledHeight(0),
-    paddingBottom: scaledHeight(20),
-
-    width: '100%',
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  volumeQA: {
-    fontSize: normaliseFont(16),
-    height: scaledHeight(40),
-    width: scaledWidth(125),
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(15),
-  },
-  quoteAssetContainer: {
-    width: scaledWidth(220),
-  },
-  quoteAsset: {
-    height: scaledHeight(40),
-    width: scaledWidth(220),
-  },
-  baseAssetWrapper: {
-    //paddingVertical: scaledHeight(20),
-    paddingTop: scaledHeight(0),
-    paddingBottom: scaledHeight(20),
-
-    width: '100%',
-    flexDirection: "row",
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  volumeBA: {
-    fontSize: normaliseFont(16),
-    height: scaledHeight(40),
-    width: scaledWidth(125),
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: scaledWidth(10),
-    marginRight: scaledWidth(15),
-  },
-  baseAssetContainer: {
-    width: scaledWidth(220),
-  },
-  baseAsset: {
-    height: scaledHeight(40),
-    width: scaledWidth(220),
-  },
-  balanceWrapper: {
-    marginVertical: scaledHeight(10),
-  },
-  priceWrapper: {
-    marginVertical: scaledHeight(10),
-    alignItems: 'center',
-  },
-  priceText: {
-    fontWeight: 'bold',
-    fontSize: normaliseFont(16),
-  },
-  buttonWrapper: {
-    marginTop: scaledHeight(20),
-    marginLeft: '25%',
-    width: '50%',
-  },
-  errorWrapper: {
-    //marginTop: scaledHeight(20),
-    marginBottom: scaledHeight(20),
-  },
-  errorMessageText: {
-    fontSize: normaliseFont(14),
-    color: 'red',
-  },
-});
 
 
 export default Sell;

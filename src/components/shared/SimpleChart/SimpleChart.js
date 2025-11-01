@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import React, { useState, useMemo } from 'react';
+import { View, StyleSheet, Dimensions, PanResponder, Text } from 'react-native';
+import Svg, { Path, Circle, Defs, LinearGradient, Stop, Text as SvgText, Rect } from 'react-native-svg';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -15,8 +15,89 @@ const SimpleChart = ({
   strokeColor = '#4CAF50',
   fillColor = 'rgba(76, 175, 80, 0.1)',
   strokeWidth = 2,
-  backgroundColor = 'transparent'
+  backgroundColor = 'transparent',
+  onPointSelected = null  // Callback when user touches the graph
 }) => {
+  
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  
+  // Log what data we receive (only once when data changes)
+  useMemo(() => {
+    console.log('[CHART] 📊 Data received:', data.length, 'points');
+    if (data.length > 0) {
+      console.log('[CHART] 📊 First value:', data[0]?.value);
+      console.log('[CHART] 📊 Last value:', data[data.length - 1]?.value);
+    }
+  }, [data]);
+  
+  // Memoize calculations so graph doesn't recalculate when selectedIndex changes
+  const chartCalculations = useMemo(() => {
+    console.log('[CHART] 🔄 Recalculating chart (this should ONLY happen when data changes)');
+    
+    // Use the actual data passed in - no mock data
+    const chartData = data;
+    
+    // If no data, return empty chart
+    if (data.length === 0) {
+      return {
+        chartData: [],
+        padding: 5,
+        chartWidth: width - 10,
+        chartHeight: height - 10,
+        values: [],
+        minValue: 0,
+        maxValue: 0,
+        valueRange: 0,
+        chartPoints: []
+      };
+    }
+
+    // Calculate chart dimensions
+    const padding = 5;
+    const chartWidth = width - (padding * 2);
+    const chartHeight = height - (padding * 2);
+
+    // Find min and max values for scaling
+    const values = chartData.map(item => item.value);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const valueRange = maxValue - minValue;
+
+    // Generate points for the line
+    const chartPoints = chartData.map((item, index) => {
+      const x = padding + (index / (chartData.length - 1)) * chartWidth;
+      let y;
+      
+      if (valueRange === 0) {
+        // All values are the same - draw line in the middle
+        y = padding + chartHeight / 2;
+      } else {
+        y = padding + chartHeight - ((item.value - minValue) / valueRange) * chartHeight;
+      }
+      
+      return { x, y };
+    });
+
+    // Find indices of highest and lowest values
+    const maxIndex = values.indexOf(maxValue);
+    const minIndex = values.indexOf(minValue);
+
+    return {
+      chartData,
+      padding,
+      chartWidth,
+      chartHeight,
+      values,
+      minValue,
+      maxValue,
+      valueRange,
+      chartPoints,
+      maxIndex,
+      minIndex
+    };
+  }, [data, width, height]); // Only recalculate when data, width, or height changes
+  
+  const { chartData, padding, chartWidth, chartHeight, values, minValue, maxValue, valueRange, chartPoints, maxIndex, minIndex } = chartCalculations;
   
   // Helper function to create smooth curve path
   const createSmoothPath = (points) => {
@@ -59,41 +140,9 @@ const SimpleChart = ({
     
     return path;
   };
-  
-  if (data.length === 0) {
-    // Generate mock data for demonstration
-    const mockData = [
-      { value: 10000, date: '2025-09-01' },
-      { value: 10200, date: '2025-09-08' },
-      { value: 9800, date: '2025-09-15' },
-      { value: 11000, date: '2025-09-22' },
-      { value: 11500, date: '2025-09-29' },
-      { value: 12000, date: '2025-10-06' },
-      { value: 11800, date: '2025-10-13' },
-      { value: 12345, date: '2025-10-20' }
-    ];
-    data = mockData;
-  }
 
-  // Calculate chart dimensions
-  const padding = 10; // Add padding to prevent cutoff
-  const chartWidth = width - (padding * 2);
-  const chartHeight = height - (padding * 2);
-
-  // Find min and max values for scaling
-  const values = data.map(item => item.value);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const valueRange = maxValue - minValue;
-
-  // Generate points for the line
-  const chartPoints = data.map((item, index) => ({
-    x: padding + (index / (data.length - 1)) * chartWidth,
-    y: padding + chartHeight - ((item.value - minValue) / valueRange) * chartHeight
-  }));
-
-  // Create smooth path
-  const smoothLinePath = createSmoothPath(chartPoints);
+  // Create smooth path (memoized to avoid recalculation on touch)
+  const smoothLinePath = useMemo(() => createSmoothPath(chartPoints), [chartPoints]);
 
   // Generate points for the area fill
   const areaPath = smoothLinePath + ` L ${padding + chartWidth} ${padding + chartHeight} L ${padding} ${padding + chartHeight} Z`;
@@ -104,8 +153,88 @@ const SimpleChart = ({
   const change = currentValue - previousValue;
   const isPositive = change >= 0;
 
+  // Create PanResponder for touch handling
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (evt) => {
+      handleTouch(evt.nativeEvent.locationX);
+    },
+    onPanResponderMove: (evt) => {
+      handleTouch(evt.nativeEvent.locationX);
+    },
+    onPanResponderRelease: () => {
+      // Reset to current day when touch ends
+      setSelectedIndex(null);
+      if (onPointSelected) {
+        onPointSelected(null); // Reset to current values
+      }
+    }
+  });
+
+  // Handle touch to find nearest data point
+  const handleTouch = (touchX) => {
+    if (chartData.length === 0) return;
+    
+    // Find the nearest data point index based on touch X position
+    const relativeX = touchX - padding;
+    const normalizedX = Math.max(0, Math.min(1, relativeX / chartWidth));
+    const index = Math.round(normalizedX * (chartData.length - 1));
+    
+    setSelectedIndex(index);
+    
+    // Notify parent component with selected data point
+    if (onPointSelected && chartData[index]) {
+      onPointSelected({
+        index: index,
+        value: chartData[index].value,
+        timestamp: chartData[index].timestamp,
+        daysAgo: chartData.length - 1 - index
+      });
+    }
+  };
+
   return (
-    <View style={[styles.container, { width, height, backgroundColor }]}>
+    <View 
+      style={[styles.container, { width, height, backgroundColor }]}
+      {...panResponder.panHandlers}
+    >
+      {/* Highest value label - positioned to the right of the point */}
+      {chartData.length > 0 && maxIndex >= 0 && chartPoints[maxIndex] && valueRange > 0 && (
+        <View style={{
+          position: 'absolute',
+          left: Math.min(chartPoints[maxIndex].x + 10, width - 70),
+          top: Math.max(chartPoints[maxIndex].y - 10, 5),
+          backgroundColor: 'rgba(76, 175, 80, 0.95)',
+          paddingHorizontal: 5,
+          paddingVertical: 2,
+          borderRadius: 3,
+          zIndex: 10
+        }}>
+          <Text style={{ color: 'white', fontSize: 9, fontWeight: 'bold' }}>
+            H: £{maxValue.toFixed(0)}
+          </Text>
+        </View>
+      )}
+      
+      {/* Lowest value label - positioned to the right of the point */}
+      {chartData.length > 0 && minIndex >= 0 && chartPoints[minIndex] && valueRange > 0 && maxIndex !== minIndex && (
+        <View style={{
+          position: 'absolute',
+          left: Math.min(chartPoints[minIndex].x + 10, width - 70),
+          top: Math.min(chartPoints[minIndex].y - 10, height - 25),
+          backgroundColor: 'rgba(244, 67, 54, 0.95)',
+          paddingHorizontal: 5,
+          paddingVertical: 2,
+          borderRadius: 3,
+          zIndex: 10
+        }}>
+          <Text style={{ color: 'white', fontSize: 9, fontWeight: 'bold' }}>
+            L: £{minValue.toFixed(0)}
+          </Text>
+        </View>
+      )}
+      
       <Svg width={width} height={height}>
         <Defs>
           {/* Gradient temporarily disabled */}
@@ -137,11 +266,50 @@ const SimpleChart = ({
           strokeLinejoin="round"
         />
         
-        {/* End point indicator */}
-        {data.length > 0 && (
+        {/* Highest value marker */}
+        {chartData.length > 0 && maxIndex >= 0 && chartPoints[maxIndex] && valueRange > 0 && (
+          <Circle
+            cx={chartPoints[maxIndex].x}
+            cy={chartPoints[maxIndex].y}
+            r="5"
+            fill="#4CAF50"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+          />
+        )}
+        
+        {/* Lowest value marker */}
+        {chartData.length > 0 && minIndex >= 0 && chartPoints[minIndex] && valueRange > 0 && maxIndex !== minIndex && (
+          <Circle
+            cx={chartPoints[minIndex].x}
+            cy={chartPoints[minIndex].y}
+            r="5"
+            fill="#F44336"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+          />
+        )}
+        
+        {/* Selected point indicator (when touching) */}
+        {selectedIndex !== null && chartPoints[selectedIndex] && (
+          <Circle
+            cx={chartPoints[selectedIndex].x}
+            cy={chartPoints[selectedIndex].y}
+            r="6"
+            fill={strokeColor}
+            stroke="#FFFFFF"
+            strokeWidth="2"
+          />
+        )}
+        
+        {/* End point indicator (default) */}
+        {chartData.length > 0 && selectedIndex === null && (
           <Circle
             cx={padding + chartWidth}
-            cy={padding + chartHeight - ((values[values.length - 1] - minValue) / valueRange) * chartHeight}
+            cy={valueRange === 0 
+              ? padding + chartHeight / 2 
+              : padding + chartHeight - ((values[values.length - 1] - minValue) / valueRange) * chartHeight
+            }
             r="4"
             fill={strokeColor}
             stroke="none"
@@ -161,4 +329,17 @@ const styles = StyleSheet.create({
   }
 });
 
-export default SimpleChart;
+// Wrap with React.memo to prevent unnecessary re-renders when parent updates
+export default React.memo(SimpleChart, (prevProps, nextProps) => {
+  // Only re-render if data, width, height, or colors change
+  // Don't re-render if only onPointSelected changes
+  return (
+    prevProps.data === nextProps.data &&
+    prevProps.width === nextProps.width &&
+    prevProps.height === nextProps.height &&
+    prevProps.strokeColor === nextProps.strokeColor &&
+    prevProps.fillColor === nextProps.fillColor &&
+    prevProps.strokeWidth === nextProps.strokeWidth &&
+    prevProps.backgroundColor === nextProps.backgroundColor
+  );
+});
