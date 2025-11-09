@@ -1,19 +1,32 @@
 // React imports
-import React, { useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Text, StyleSheet, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
+// Internal imports
+import { SolidiLoadingScreen } from 'src/components/shared';
 
+/**
+ * Spinner - Legacy wrapper component that now uses SolidiLoadingScreen
+ * This maintains backward compatibility with existing code while
+ * providing the new branded loading experience
+ */
 let Spinner = () => {
   return (
-    <View style={StyleSheet.create({
-      height: '80%',
-      //borderWidth: 1, //testing
-      justifyContent: 'center',
-    })}>
-      <ActivityIndicator color={'blue'} size={'large'} />
+    <View style={styles.container}>
+      <SolidiLoadingScreen 
+        fullScreen={false}
+        size="medium"
+        message=""
+      />
     </View>
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    height: '80%',
+    justifyContent: 'center',
+  }
+});
 
 export default Spinner;

@@ -61,6 +61,7 @@ import { colors, sharedStyles, sharedColors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { TransferUtils, transferDataModel } from './TransferDataModel';
 import { AddressBookPicker, AddressBookModal, AddressBookSelectionPage } from 'src/components/atomic';
+import { SolidiLoadingScreen } from 'src/components/shared';
 
 // Logger
 import logger from 'src/util/logger';
@@ -1017,19 +1018,10 @@ let Transfer = () => {
     // Show loading screen while initializing
     if (isInitializing) {
       return (
-        <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
-          <View style={{ padding: 20, justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-            <Text variant="headlineSmall" style={{ marginBottom: 16, textAlign: 'center' }}>
-              Loading Transfer
-            </Text>
-            <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
-              Checking authentication and loading data...
-            </Text>
-            <Button mode="contained" loading disabled>
-              Please wait
-            </Button>
-          </View>
-        </View>
+        <SolidiLoadingScreen 
+          message="Preparing transfer..."
+          size="medium"
+        />
       );
     }
 

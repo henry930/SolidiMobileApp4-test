@@ -100,17 +100,37 @@ let AddressBook = (props) => {
 
   // Handle QR code scan success
   let handleQRScanSuccess = (qrData) => {
+    console.log('[QR-SCAN] ════════════════════════════════');
+    console.log('[QR-SCAN] 🎯 AddressBook callback received!');
+    console.log('[QR-SCAN] � Data:', qrData);
+    console.log('[QR-SCAN] 📏 Length:', qrData?.length);
+    console.log('[QR-SCAN] ════════════════════════════════');
+    
+    // IMMEDIATELY close the scanner
+    console.log('[QR-SCAN] 🚪 Closing scanner...');
     setShowQRScanner(false);
+    console.log('[QR-SCAN] ✅ Scanner closed');
     
     // Basic validation for wallet address format
     if (qrData && qrData.length > 10) {
+      console.log('[QR-SCAN] ✅ Validation passed');
+      // Auto-fill the address field
+      console.log('[QR-SCAN] 📝 Filling address field...');
       handleInputChange('withdrawAddress', qrData);
-      Alert.alert(
-        'QR Code Scanned',
-        'Wallet address has been filled in from the QR code.',
-        [{ text: 'OK' }]
-      );
+      console.log('[QR-SCAN] ✅ Field filled with:', qrData);
+      
+      // Show subtle success confirmation after a brief delay
+      setTimeout(() => {
+        Alert.alert(
+          '✓ Address Scanned',
+          'Wallet address has been automatically filled in.',
+          [{ text: 'OK' }],
+          { cancelable: true }
+        );
+      }, 200);
     } else {
+      // Show error for invalid QR codes
+      console.log('❌ Invalid QR code data:', qrData);
       Alert.alert(
         'Invalid QR Code',
         'The scanned QR code does not appear to contain a valid wallet address.',
@@ -616,14 +636,22 @@ let AddressBook = (props) => {
               // Crypto Address Form
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Withdraw Address</Text>
+                {console.log('[ADDRESS-INPUT] Rendering TextInput with value:', formData.withdrawAddress)}
                 <View style={styles.addressInputContainer}>
                   <TextInput
-                    style={[styles.textInput, styles.addressInput]}
+                    style={[styles.textInput, { flex: 1, color: 'rgb(0, 0, 0)' }]}
                     placeholder="Enter wallet address or scan QR code"
+                    placeholderTextColor="#999999"
                     value={formData.withdrawAddress}
-                    onChangeText={(value) => handleInputChange('withdrawAddress', value)}
+                    onChangeText={(value) => {
+                      console.log('[ADDRESS-INPUT] Text changed to:', value);
+                      handleInputChange('withdrawAddress', value);
+                    }}
+                    onFocus={() => console.log('[ADDRESS-INPUT] Input focused, current value:', formData.withdrawAddress)}
                     autoCapitalize="none"
                     autoCorrect={false}
+                    underlineColorAndroid="transparent"
+                    selectionColor="#000000"
                   />
                   <TouchableOpacity 
                     style={styles.qrButton}
@@ -668,6 +696,11 @@ let AddressBook = (props) => {
             </Modal>
 
             {/* QR Scanner Component */}
+            {console.log('[QR-SCAN] 🔧 Rendering QRScanner with:', {
+              visible: showQRScanner,
+              onScanSuccess: typeof handleQRScanSuccess,
+              onScanSuccessExists: !!handleQRScanSuccess
+            })}
             <QRScanner
               visible={showQRScanner}
               onScanSuccess={handleQRScanSuccess}
@@ -1053,6 +1086,7 @@ const styles = StyleSheet.create({
     paddingVertical: scaledHeight(12),
     fontSize: normaliseFont(14),
     backgroundColor: colors.white,
+    color: '#000000',
   },
   textArea: {
     height: scaledHeight(80),

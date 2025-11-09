@@ -1,6 +1,6 @@
 // React imports
 import React, { useContext, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View, Platform, ScrollView } from 'react-native';
+import { FlatList, StyleSheet, View, Platform, ScrollView, RefreshControl } from 'react-native';
 import { TouchableNativeFeedback, TouchableOpacity } from 'react-native';
 
 // Material Design imports
@@ -18,6 +18,11 @@ import {
 // Other imports
 import _ from 'lodash';
 import Big from 'big.js';
+
+// Shared components
+import TransactionListItem from '../shared/TransactionListItem';
+import DateSectionHeader from '../shared/DateSectionHeader';
+import { groupByDate, formatDateHeader } from '../shared/TransactionHelpers';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
@@ -52,6 +57,17 @@ let History = () => {
   let [historyDataModel, setHistoryDataModel] = useState(new HistoryDataModel());
   let [selectedHistoryCategory, setSelectedHistoryCategory] = useState('Transactions');
   let [transactionsData, setTransactionsData] = useState([]);  // Add state for transaction data
+  
+  // Infinite scroll state
+  let [displayedTransactions, setDisplayedTransactions] = useState([]);
+  let [displayedOrders, setDisplayedOrders] = useState([]);
+  let [transactionPage, setTransactionPage] = useState(1);
+  let [orderPage, setOrderPage] = useState(1);
+  let [hasMoreTransactions, setHasMoreTransactions] = useState(true);
+  let [hasMoreOrders, setHasMoreOrders] = useState(true);
+  let [isLoadingMore, setIsLoadingMore] = useState(false);
+  let [refreshing, setRefreshing] = useState(false);
+  const ITEMS_PER_PAGE = 20;
 
 
   // Check pageName to see if a category has been specified as this panel is loaded.
@@ -170,12 +186,75 @@ let History = () => {
       console.log('[HISTORY] 📊 Transactions list:', dataModel.getTransactions());
       console.log('[HISTORY] 📊 Orders list:', dataModel.getOrders());
       
+      // Initialize pagination - load first page
+      const allTransactions = dataModel.getTransactions() || [];
+      const allOrders = dataModel.getOrders() || [];
+      
+      setDisplayedTransactions(allTransactions.slice(0, ITEMS_PER_PAGE));
+      setDisplayedOrders(allOrders.slice(0, ITEMS_PER_PAGE));
+      setHasMoreTransactions(allTransactions.length > ITEMS_PER_PAGE);
+      setHasMoreOrders(allOrders.length > ITEMS_PER_PAGE);
+      setTransactionPage(1);
+      setOrderPage(1);
+      
       setIsLoading(false);
     } catch (error) {
       console.log('[HISTORY] ❌ Exception loading transaction history:', error);
       setIsLoading(false);
     }
   }
+
+  // Load more transactions
+  const loadMoreTransactions = () => {
+    if (isLoadingMore || !hasMoreTransactions) return;
+    
+    setIsLoadingMore(true);
+    const allTransactions = historyDataModel?.getTransactions() || [];
+    const nextPage = transactionPage + 1;
+    const startIndex = nextPage * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const newItems = allTransactions.slice(startIndex, endIndex);
+    
+    if (newItems.length > 0) {
+      setDisplayedTransactions([...displayedTransactions, ...newItems]);
+      setTransactionPage(nextPage);
+      setHasMoreTransactions(endIndex < allTransactions.length);
+    } else {
+      setHasMoreTransactions(false);
+    }
+    
+    setIsLoadingMore(false);
+  };
+
+  // Load more orders
+  const loadMoreOrders = () => {
+    if (isLoadingMore || !hasMoreOrders) return;
+    
+    setIsLoadingMore(true);
+    const allOrders = historyDataModel?.getOrders() || [];
+    const nextPage = orderPage + 1;
+    const startIndex = nextPage * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const newItems = allOrders.slice(startIndex, endIndex);
+    
+    if (newItems.length > 0) {
+      setDisplayedOrders([...displayedOrders, ...newItems]);
+      setOrderPage(nextPage);
+      setHasMoreOrders(endIndex < allOrders.length);
+    } else {
+      setHasMoreOrders(false);
+    }
+    
+    setIsLoadingMore(false);
+  };
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    console.log('[HISTORY] 🔄 Pull-to-refresh triggered');
+    setRefreshing(true);
+    await setup();
+    setRefreshing(false);
+  };
 
 
   let displayHistoryControls = () => {
@@ -212,20 +291,7 @@ let History = () => {
                   labelStyle: selectedHistoryCategory === 'PendingOrders' ? { color: 'white', fontWeight: '600' } : { fontWeight: '500' }
                 },
               ]}
-              style={{ marginBottom: 8 }}
             />
-            <Button 
-              mode="outlined" 
-              icon="refresh" 
-              onPress={() => {
-                console.log('[HISTORY] 🔄 Manual refresh triggered');
-                setIsLoading(true);
-                setup();
-              }}
-              style={{ marginTop: 8 }}
-            >
-              Refresh History
-            </Button>
           </Card.Content>
         </Card>
       </View>
@@ -268,13 +334,10 @@ let History = () => {
       );
     }
     
-    let data = historyDataModel.getTransactions();
-    console.log('🔍 Transaction data:', data);
-    console.log('🔍 Transaction data length:', data?.length);
-    console.log('🔍 Transaction data type:', typeof data);
-    console.log('🔍 Transaction data isArray:', Array.isArray(data));
-    console.log('🔍 First item:', data?.[0]);
-    console.log('🔍 Second item:', data?.[1]);
+    // Use displayed transactions (paginated)
+    let data = displayedTransactions;
+    console.log('🔍 Displayed transaction count:', data?.length);
+    console.log('🔍 Total transactions:', historyDataModel.getTransactions()?.length);
     
     if (!data || data.length === 0) {
       console.log('🔍 No transaction data - showing empty card');
@@ -295,20 +358,50 @@ let History = () => {
     
     console.log('🔍 Rendering', data.length, 'transactions');
     
-    // Render transactions directly (parent ScrollView handles scrolling)
+    // Group transactions by date and render with section headers
+    const groupedData = groupByDate(data);
+    
     return (
       <View>
-        {data.map((item, index) => (
-          <View key={item.id || index.toString()}>
-            {renderTransactionItem({ item })}
+        {groupedData.map((group, groupIndex) => (
+          <View key={`date-group-${groupIndex}`}>
+            <DateSectionHeader date={formatDateHeader(group.date)} />
+            {group.items.map((item, index) => (
+              <TransactionListItem
+                key={item.id || `${groupIndex}-${index}`}
+                transaction={item}
+                index={index}
+                compact={false}
+                onPress={() => {
+                  console.log('History: Tapped on transaction', item.id);
+                }}
+              />
+            ))}
           </View>
         ))}
+        
+        {/* Loading indicator when fetching more */}
+        {isLoadingMore && (
+          <View style={{ marginTop: 16, marginBottom: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#999', fontSize: 14 }}>Loading more...</Text>
+          </View>
+        )}
+        
+        {/* End of list indicator */}
+        {!hasMoreTransactions && data.length > 0 && (
+          <View style={{ marginTop: 16, marginBottom: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#999', fontSize: 14 }}>
+              No more transactions
+            </Text>
+          </View>
+        )}
       </View>
     );
   }
 
 
-  let renderTransactionItem = ({ item }) => {
+  // renderTransactionItem moved to shared/TransactionListItem.js
+  let renderTransactionItem_OLD = ({ item }) => {
     console.log('🎨 renderTransactionItem starting for:', item?.baseAsset);
     
     // Handle error items
@@ -571,36 +664,56 @@ let History = () => {
       );
     }
     
-    console.log(`[HISTORY] 🔍 Rendering ${data.length} orders`);
+    // Use displayed orders (paginated)
+    data = displayedOrders;
+    console.log(`[HISTORY] 🔍 Displaying ${data.length} orders`);
+    console.log(`[HISTORY] 🔍 Total orders:`, historyDataModel.getOrders()?.length);
     
     // Render each order
     return (
       <View>
-        <Card style={{ marginBottom: 16, backgroundColor: '#e8f5e9', borderLeftWidth: 4, borderLeftColor: '#4caf50' }}>
-          <Card.Content>
-            <Text variant="titleSmall" style={{ fontWeight: 'bold', marginBottom: 8, color: '#2e7d32' }}>
-              ✅ Found {data.length} Orders
-            </Text>
-            <Text variant="bodySmall" style={{ color: '#2e7d32' }}>
-              Scroll down to view all orders
-            </Text>
-          </Card.Content>
-        </Card>
-        
-        {data.map((item, index) => {
-          console.log(`[HISTORY] 🎨 Mapping order ${index + 1}/${data.length}:`, item);
+        {groupByDate(data).map((group, groupIndex) => {
+          console.log(`[HISTORY] 🎨 Rendering order group ${groupIndex + 1}:`, group.date);
           return (
-            <View key={item?.id || `order-${index}`}>
-              {renderOrderItem({ item, index })}
+            <View key={`date-group-${groupIndex}`}>
+              <DateSectionHeader date={formatDateHeader(group.date)} />
+              {group.items.map((item, index) => (
+                <TransactionListItem
+                  key={item?.id || `order-${groupIndex}-${index}`}
+                  transaction={item}
+                  index={index}
+                  itemType="order"
+                  onPress={() => {
+                    console.log('History: Tapped on order', item?.id);
+                  }}
+                />
+              ))}
             </View>
           );
         })}
+        
+        {/* Loading indicator when fetching more */}
+        {isLoadingMore && (
+          <View style={{ marginTop: 16, marginBottom: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#999', fontSize: 14 }}>Loading more...</Text>
+          </View>
+        )}
+        
+        {/* End of list indicator */}
+        {!hasMoreOrders && data.length > 0 && (
+          <View style={{ marginTop: 16, marginBottom: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#999', fontSize: 14 }}>
+              No more orders
+            </Text>
+          </View>
+        )}
       </View>
     );
   }
 
 
-  let renderOrderItem = ({ item, index }) => {
+  // renderOrderItem moved to shared/TransactionListItem.js (itemType='order')
+  let renderOrderItem_OLD = ({ item, index }) => {
     // item is already an OrderDataModel instance with safe fallbacks
     console.log(`[HISTORY] 🎨 Rendering order ${index + 1}:`, item);
     
@@ -781,25 +894,57 @@ let History = () => {
   }
 
 
+  // Handle scroll event to auto-load more items
+  const handleScroll = (event) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const paddingToBottom = 100; // Trigger when 100px from bottom
+    
+    const isNearBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+    
+    if (isNearBottom && !isLoadingMore) {
+      if (selectedHistoryCategory === 'Transactions' && hasMoreTransactions) {
+        loadMoreTransactions();
+      } else if (selectedHistoryCategory === 'PendingOrders' && hasMoreOrders) {
+        loadMoreOrders();
+      }
+    }
+  };
+
   const materialTheme = useTheme();
 
   return (
     <View style={{ flex: 1, backgroundColor: materialTheme.colors.background }}>
+      {/* Fixed header with tabs */}
+      <View style={{ padding: 16, paddingBottom: 0 }}>
+        {displayHistoryControls()}
+      </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
-
+      {/* Scrollable content area */}
       { isLoading && (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
           <Spinner/>
         </View>
       )}
 
-      {! isLoading && displayHistoryControls()}
-
-      {! isLoading && selectedHistoryCategory === 'PendingOrders' && renderOrders()}
-
-      {! isLoading && selectedHistoryCategory === 'Transactions' && renderTransactions()}
-      </ScrollView>
+      {! isLoading && (
+        <ScrollView 
+          style={{ flex: 1 }} 
+          contentContainerStyle={{ padding: 16 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#10b981']} // Android
+              tintColor="#10b981" // iOS
+            />
+          }
+          onScroll={handleScroll}
+          scrollEventThrottle={400}
+        >
+          {selectedHistoryCategory === 'PendingOrders' && renderOrders()}
+          {selectedHistoryCategory === 'Transactions' && renderTransactions()}
+        </ScrollView>
+      )}
     </View>
   );
 

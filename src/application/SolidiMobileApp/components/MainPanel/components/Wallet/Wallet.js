@@ -26,11 +26,14 @@ import {
 import _ from 'lodash';
 import Big from 'big.js';
 
+// Shared components
+import BalanceListItem from '../shared/BalanceListItem';
+
 // Internal imports
 import AppStateContext from 'src/application/data';
 import { colors, sharedStyles, layoutStyles, cardStyles } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { Title } from 'src/components/shared';
+import { Title, SolidiLoadingScreen } from 'src/components/shared';
 import { StandardButton, AddressBookPicker } from 'src/components/atomic';
 import misc from 'src/util/misc';
 import { calculatePortfolioValue } from 'src/util/portfolioCalculator';
@@ -362,19 +365,7 @@ let Wallet = () => {
   };
 
   // Get currency icon (using same mapping as AddressBook)
-  let getCurrencyIcon = (currency) => {
-    const iconMap = {
-      'BTC': 'bitcoin',
-      'ETH': 'ethereum', 
-      'GBP': 'currency-gbp',
-      'USD': 'currency-usd',
-      'EUR': 'currency-eur',
-      'LTC': 'litecoin',
-      'BCH': 'bitcoin',
-      'XRP': 'ripple'
-    };
-    return iconMap[currency] || 'currency-btc';
-  };
+  // getCurrencyIcon moved to shared/BalanceListItem.js
 
   // Calculate total portfolio value using pure function (no caching, no accumulation)
   let [totalPortfolioValue, setTotalPortfolioValue] = useState(0);
@@ -1159,57 +1150,9 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
   };
 
   // Helper function to determine if an asset is cryptocurrency
-  let isCryptoCurrency = (currency) => {
-    // Fiat currencies
-    const fiatCurrencies = ['GBP', 'EUR', 'USD', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD'];
-    // If it's not fiat, it's crypto
-    return !fiatCurrencies.includes(currency);
-  };
-
-  // Calculate GBP value for any currency using pre-calculated values (instant!)
-  let calculateGBPValue = (currency, amount) => {
-    console.log(`🔍 WALLET calculateGBPValue: ${currency}, amount = ${amount}`);
-    
-    if (currency === 'GBP') {
-      console.log(`🔍 WALLET: ${currency} is GBP, returning amount: ${amount}`);
-      return amount; // Already in GBP
-    }
-    
-    // Check if amount is valid
-    if (!amount || amount <= 0) {
-      console.log(`🔍 WALLET: ${currency} has zero/invalid amount, returning 0`);
-      return 0;
-    }
-    
-    // For crypto: Try to get pre-calculated balance first (fastest!)
-    if (isCryptoCurrency(currency)) {
-      console.log(`🔍 WALLET: ${currency} is crypto, checking pre-calculated value...`);
-      // If this is the user's actual balance, get pre-calculated value
-      const userBalance = parseFloat(appState.getBalance(currency));
-      console.log(`🔍 WALLET: User balance from appState = ${userBalance}`);
-      
-      if (Math.abs(amount - userBalance) < 0.00000001) {
-        // This is the user's balance - use pre-calculated value!
-        const precalculatedValue = appState.getBalanceInGBP(currency);
-        console.log(`🔍 WALLET: Pre-calculated GBP value = ${precalculatedValue}`);
-        
-        if (precalculatedValue !== undefined && precalculatedValue !== 0) {
-          console.log(`⚡ WALLET: ${currency} using PRE-CALCULATED balance: £${precalculatedValue.toFixed(2)}`);
-          return precalculatedValue;
-        }
-      }
-      
-      // Otherwise calculate on-the-fly using cached rate
-      console.log(`🔍 WALLET: Calculating on-the-fly using appState.calculateCryptoGBPValue...`);
-      const value = appState.calculateCryptoGBPValue(currency, amount);
-      console.log(`🔍 WALLET: On-the-fly calculated value = ${value}`);
-      return value || 0;
-    }
-    
-    // Fallback for fiat currencies (EUR, USD) - would need exchange rates
-    console.log(`🔍 WALLET: ${currency} is fiat (not GBP), returning 0 (no exchange rate)`);
-    return 0;
-  };
+  // isCryptoCurrency and calculateGBPValue moved to shared/BalanceListItem.js
+  // Import them from the shared module if needed locally
+  const { isCryptoCurrency, calculateGBPValue } = require('../shared/BalanceListItem');
 
   // Navigate to CryptoContent page
   const navigateToCrypto = (currency, balanceInfo, tickerData) => {
@@ -1261,74 +1204,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     });
   };
 
-  // Render balance list item for each currency
-  let renderBalanceListItem = (currency, balanceInfo, tickerData) => {
-    let { total } = balanceInfo;
-    let icon = getCurrencyIcon(currency);
-    let isCrypto = isCryptoCurrency(currency);
-    
-    // Calculate GBP value instantly using cached prices (no async needed!)
-    let gbpValue = calculateGBPValue(currency, total);
-    
-    console.log(`💰 WALLET CARD: ${currency} balance = ${total}, GBP value = £${gbpValue.toFixed(2)}`);
-    
-    // For display: always show GBP value on the right
-    let displayValue = `£${formatCurrency(gbpValue.toString(), 'GBP')}`;
-    
-    // Show original amount in description for reference
-    let description = '';
-    if (currency === 'GBP') {
-      description = 'Base currency';
-    } else {
-      // Show original amount for all non-GBP currencies
-      if (isCrypto) {
-        description = `${formatCurrency(total, currency)} ${currency}`;
-      } else {
-        description = `${getCurrencySymbol(currency)}${formatCurrency(total, currency)}`;
-      }
-    }
-    
-    // Get icon color exactly like AddressBook
-    let getAssetColor = (assetType) => {
-      switch (assetType) {
-        case 'BTC': return '#f7931a';
-        case 'ETH': return '#627eea';
-        case 'GBP': return '#009639';
-        default: return '#999999'; // mediumGray equivalent
-      }
-    };
-    
-    return (
-      <View key={currency} style={{ paddingVertical: 8 }}>
-        <List.Item
-          title={currency}
-          description={description}
-          onPress={() => navigateToCrypto(currency, balanceInfo, tickerData)}
-          left={props => (
-            <View style={{ 
-              justifyContent: 'center', 
-              alignItems: 'center',
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: theme.colors.surfaceVariant,
-              marginRight: 12
-            }}>
-              <Icon name={icon} size={24} color={getAssetColor(currency)} />
-            </View>
-          )}
-          right={props => (
-            <View style={{ justifyContent: 'center' }}>
-              <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.primary }}>
-                {displayValue}
-              </Text>
-            </View>
-          )}
-          style={{ paddingVertical: 4 }}
-        />
-      </View>
-    );
-  };
+  // renderBalanceListItem moved to shared/BalanceListItem.js component
 
   // Filter balances by type
   let getFilteredBalances = (balanceData, type) => {
@@ -1345,10 +1221,10 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
   if (isLoading) {
     return (
-      <View style={[layout.panelContainer, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ProgressBar indeterminate />
-        <Text style={{ marginTop: 16 }}>Loading wallet...</Text>
-      </View>
+      <SolidiLoadingScreen 
+        message="Loading your wallet..."
+        size="medium"
+      />
     );
   }
 
@@ -1452,9 +1328,16 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
             
             {/* Balance List */}
             <View>
-              {getFilteredBalances(balanceData, selectedBalanceTab).map(([currency, balanceInfo]) => 
-                renderBalanceListItem(currency, balanceInfo, tickerData)
-              )}
+              {getFilteredBalances(balanceData, selectedBalanceTab).map(([currency, balanceInfo]) => (
+                <BalanceListItem
+                  key={currency}
+                  currency={currency}
+                  balanceInfo={balanceInfo}
+                  appState={appState}
+                  theme={theme}
+                  onPress={() => navigateToCrypto(currency, balanceInfo, tickerData)}
+                />
+              ))}
               {getFilteredBalances(balanceData, selectedBalanceTab).length === 0 && (
                 <View style={{ padding: 20, alignItems: 'center' }}>
                   <Text style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>

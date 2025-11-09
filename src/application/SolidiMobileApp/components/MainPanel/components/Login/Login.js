@@ -40,7 +40,7 @@ const Keychain = {
 import AppStateContext from 'src/application/data';
 import SolidiRestAPIClientLibrary from 'src/api/SolidiRestAPIClientLibrary';
 import { StandardButton } from 'src/components/atomic';
-import { Title } from 'src/components/shared';
+import { Title, SolidiLoadingScreen } from 'src/components/shared';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import misc from 'src/util/misc';
 import { colors } from 'src/constants';
@@ -478,38 +478,17 @@ let Login = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
             justifyContent: 'center',
             alignItems: 'center',
             zIndex: 1000
           }}>
-            <Card style={{
-              padding: 32,
-              backgroundColor: theme.colors.surface,
-              borderRadius: 16,
-              elevation: 8,
-              alignItems: 'center',
-              minWidth: 200
-            }}>
-              <ActivityIndicator 
-                size="large" 
-                color={theme.colors.primary}
-                style={{ marginBottom: 16 }}
-              />
-              <Text variant="titleMedium" style={{ 
-                color: theme.colors.primary,
-                fontWeight: '600',
-                marginBottom: 8
-              }}>
-                Signing you in...
-              </Text>
-              <Text variant="bodySmall" style={{ 
-                color: theme.colors.onSurfaceVariant,
-                textAlign: 'center'
-              }}>
-                Please wait while we securely authenticate your account
-              </Text>
-            </Card>
+            <SolidiLoadingScreen 
+              fullScreen={false}
+              message="Signing you in..."
+              size="large"
+              backgroundColor="transparent"
+            />
           </View>
         </Portal>
       )}

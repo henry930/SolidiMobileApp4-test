@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, AppState } from 'react-native';
 import { biometricAuth } from '../../util/BiometricAuthUtils';
 import AppStateContext from '../../application/data';
+import SecureAppBridge from '../../util/SecureAppBridge';
 
 /**
  * SecureApp - Wrapper component that enforces authentication before app access
@@ -14,8 +15,8 @@ class SecureApp extends Component {
     super(props);
     this.state = {
       isAuthenticated: false,
-      authRequired: false, // Changed: Don't require auth, use persistent login instead
-      skipAuth: true, // PERSISTENT LOGIN MODE: Skip biometric authentication completely
+      authRequired: true, // Enable biometric authentication
+      skipAuth: false, // Enable biometric authentication when app goes to background/idle
       showSetup: false, // Show setup screen for first-time users
       isLoading: true, // Add loading state to prevent premature rendering
       biometricInfo: { available: false, biometryType: null },
@@ -23,6 +24,7 @@ class SecureApp extends Component {
       isAuthenticating: false,
       appState: 'unknown', // Track current app state
       showManualAuth: false, // Show manual authentication button after timeout
+      isCameraActive: false, // Track if camera/modal is open to prevent auth during camera usage
     };
     
     // Idle timeout settings
@@ -43,6 +45,10 @@ class SecureApp extends Component {
 
   async componentDidMount() {
     console.log('🚀 [SecureApp] Component mounted - starting biometric authentication');
+    
+    // Register with bridge so other components can communicate with us
+    SecureAppBridge.registerSecureApp(this);
+    
     // Initialize biometric authentication
     await this.initializeBiometricAuth();
     
@@ -54,6 +60,9 @@ class SecureApp extends Component {
   }
 
   componentWillUnmount() {
+    // Unregister from bridge
+    SecureAppBridge.unregisterSecureApp();
+    
     // Clean up app state listener using new subscription API
     if (this.appStateSubscription) {
       this.appStateSubscription.remove();
@@ -67,20 +76,8 @@ class SecureApp extends Component {
   initializeBiometricAuth = async () => {
     try {
       console.log('🔍 [SecureApp] ========== PERSISTENT LOGIN MODE ==========');
-      console.log('� [SecureApp] Biometric authentication: COMPLETELY DISABLED');
-      console.log('✅ [SecureApp] Auto-login handled by AppState constructor');
-      console.log('✅ [SecureApp] User will be automatically logged in if credentials exist');
-      
-      // Always allow access immediately - AppState handles authentication
-      this.setState({ 
-        authRequired: false,
-        isAuthenticated: true, // SecureApp always allows access
-        isLoading: false
-      });
-      
-      console.log('✅ [SecureApp] Persistent login initialization complete');
-      console.log('🔍 [SecureApp] ========== END PERSISTENT LOGIN INIT ==========');
-      return;
+      console.log('🔐 [SecureApp] Biometric authentication: ENABLED');
+      console.log('🔐 [SecureApp] Checking biometric availability...');
       
       // Check if biometric authentication is available
       const info = await biometricAuth.isBiometricAvailable();
@@ -122,15 +119,7 @@ class SecureApp extends Component {
 
   // Handle app state changes
   handleAppStateChange = (nextAppState) => {
-    const { isAuthenticating, appState, skipAuth } = this.state;
-    
-    // PERSISTENT LOGIN MODE: Never re-authenticate on app state changes
-    if (skipAuth) {
-      console.log('🔓 [SecureApp] PERSISTENT LOGIN: Skipping re-auth on app state change');
-      console.log('   - App state changed to:', nextAppState);
-      console.log('   - User remains logged in');
-      return;
-    }
+    const { isAuthenticating, appState, isCameraActive } = this.state;
     
     // Prevent duplicate processing of the same state change
     if (appState === nextAppState) {
@@ -149,6 +138,13 @@ class SecureApp extends Component {
     this.lastStateChangeTime = now;
     
     if (nextAppState === 'background' || nextAppState === 'inactive') {
+      // Check if camera/modal is active - if so, ignore this state change
+      if (isCameraActive) {
+        console.log('📸 [SecureApp] Camera is active, ignoring app state change to:', nextAppState);
+        this.setState({ appState: nextAppState }); // Still update appState for tracking
+        return;
+      }
+      
       // Record when app went to background
       this.appStateChangeTime = now;
       console.log('🔍 [SecureApp] App going to background at:', new Date(now).toISOString());
@@ -427,6 +423,17 @@ class SecureApp extends Component {
   handleSetupSkip = () => {
     console.log('⏭️ [SecureApp] Setup skipped - allowing access for now');
     this.setState({ showSetup: false, isAuthenticated: true, authRequired: false });
+  };
+
+  // Camera state management - used to prevent auth during camera/modal usage
+  setCameraActive = (isActive) => {
+    console.log('📸 [SecureApp] Camera state changed:', isActive ? 'ACTIVE' : 'INACTIVE');
+    this.setState({ isCameraActive: isActive });
+  };
+
+  // Get camera state
+  isCameraActive = () => {
+    return this.state.isCameraActive;
   };
 
   render() {

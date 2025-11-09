@@ -10,14 +10,19 @@ export const SafeQRCodeScanner = {
   create: () => {
     try {
       if (Platform.OS === 'web') {
+        console.log('[SafeQRCodeScanner] Web platform detected, returning null');
         return null; // Web version handled separately
       }
       
+      console.log('[SafeQRCodeScanner] Attempting to load react-native-qrcode-scanner...');
       // Try to import QR scanner safely
       const QRCodeScanner = require('react-native-qrcode-scanner');
-      return QRCodeScanner.default || QRCodeScanner;
+      const scanner = QRCodeScanner.default || QRCodeScanner;
+      console.log('[SafeQRCodeScanner] Successfully loaded QRCodeScanner:', !!scanner);
+      return scanner;
     } catch (error) {
       console.warn('[SafeQRCodeScanner] Failed to load QRCodeScanner:', error.message);
+      console.warn('[SafeQRCodeScanner] Error stack:', error.stack);
       return null;
     }
   }

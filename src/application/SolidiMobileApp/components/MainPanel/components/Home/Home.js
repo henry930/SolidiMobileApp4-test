@@ -7,7 +7,7 @@ import {
   Modal,
   ScrollView
 } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text, useTheme, Card, List } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Import GradientWrapper and SimpleChart
@@ -23,9 +23,16 @@ import Assets from '../Assets/Assets';
 
 // Import History component for transaction display
 import History from '../History/History';
+import HistoryDataModel from '../History/HistoryDataModel';
 
 // Import for asset data
 import { getAssetInfo } from '../Assets/AssetDataModel';
+
+// Import shared components
+import BalanceListItem from '../shared/BalanceListItem';
+import TransactionListItem from '../shared/TransactionListItem';
+import DateSectionHeader from '../shared/DateSectionHeader';
+import { groupByDate, formatDateHeader } from '../shared/TransactionHelpers';
 
 // Import utility functions
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
@@ -138,43 +145,46 @@ const Home = () => {
         setIsLoading(true);
         setDataLoadingComplete(false);
 
-        // Load balances
-        await appState.loadBalances();
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // STEP 1 & 3: Load balances and prices FAST using Wallet's approach!
+        log('⏱️ STEP 1 & 3: Loading balances and crypto rates (Wallet method)...');
+        const dataLoadStart = Date.now();
+        
+        // Load balances and update crypto rates in parallel (like Wallet does!)
+        log(`   📡 Loading: Balances + CryptoRates (updateCryptoRates)`);
+        const balanceStart = Date.now();
+        const cryptoRatesStart = Date.now();
+        
+        await Promise.all([
+          appState.loadBalances().then(() => {
+            log(`   ⏱️ loadBalances() done in ${Date.now() - balanceStart}ms`);
+          }),
+          appState.updateCryptoRates().then(() => {
+            log(`   ⏱️ updateCryptoRates() done in ${Date.now() - cryptoRatesStart}ms`);
+          })
+        ]);
+        
+        log(`   ⚡ Parallel load complete in ${Date.now() - dataLoadStart}ms`);
+        log(`⏱️ STEP 1 & 3 COMPLETE: Data ready in ${Date.now() - dataLoadStart}ms`);
 
         // Set asset list
         setAssetData(assets);
-        console.log('✅ STEP 2 COMPLETE: Assets set:', assets.length);
+        log('✅ STEP 2 COMPLETE: Assets set:', assets.length);
 
-        // STEP 3: Load prices (using same method as Wallet component)
-        console.log('� STEP 3: Loading prices with loadTicker()...');
-        let priceData = {};
-        try {
-          // Use loadTicker() like Wallet component does
-          await appState.loadTicker();
-          
-          // Get ticker data from appState
-          const ticker = appState.getTicker();
-          console.log('📈 Raw ticker data:', ticker);
-          
-          // Ticker format: {"BTC/GBP": {"price": "31712.51"}, "ETH/GBP": {"price": "2324.00"}}
-          if (ticker) {
-            // Copy ticker data directly - it's already in the right format!
-            priceData = {...ticker};
-            
-            for (const [market, data] of Object.entries(ticker)) {
-              if (data && data.price) {
-                console.log(`   ✅ ${market}: £${data.price}`);
-              }
-            }
+        // Build priceData using getCryptoSellPrice (INSTANT! No ticker parsing needed!)
+        log('📊 STEP 3B: Building price data from cryptoRates cache...');
+        const priceData = {};
+        for (const asset of assets) {
+          const price = appState.getCryptoSellPrice(asset.asset);
+          if (price && price > 0) {
+            priceData[`${asset.asset}/GBP`] = { price: price.toString() };
+            log(`   ✅ ${asset.asset}/GBP: £${price.toFixed(2)} (from cryptoRates)`);
+          } else {
+            log(`   ⚠️ ${asset.asset}/GBP: No price available`);
           }
-          
-          setPrices(priceData);
-          console.log('✅ STEP 3 COMPLETE: Prices loaded:', Object.keys(priceData).length, 'markets');
-        } catch (error) {
-          console.log('❌ Error loading ticker:', error.message);
-          setPrices({});
         }
+        
+        setPrices(priceData);
+        log('✅ STEP 3B COMPLETE:', Object.keys(priceData).length, 'prices loaded from cache');
 
         // STEP 4: Calculate portfolio value
         console.log('📊 STEP 4: Calculating portfolio value...');
@@ -250,14 +260,29 @@ const Home = () => {
         // STEP 5: Load transactions
         console.log('📊 STEP 5: Loading recent transactions...');
         try {
-          // TODO: Implement transaction history API
-          // const txHistory = await appState.loadTransactionHistory({ limit: 5 });
-          // if (txHistory && Array.isArray(txHistory)) {
-          //   setTransactions(txHistory.slice(0, 5));
-          //   console.log('✅ STEP 5 COMPLETE: Loaded', txHistory.slice(0, 5).length, 'transactions');
-          // }
-          setTransactions([]);
-          console.log('⏭️ STEP 5 SKIPPED: Transaction history not yet implemented');
+          const transactionResponse = await appState.privateMethod({
+            apiRoute: 'transaction',
+            functionName: 'Home.setup.transactions'
+          });
+          
+          console.log('📥 Home: Transaction API response:', transactionResponse);
+          
+          if (transactionResponse && !transactionResponse.error) {
+            // Use the same HistoryDataModel as History component
+            const dataModel = new HistoryDataModel();
+            const loadedTransactions = dataModel.loadTransactions(transactionResponse);
+            
+            console.log(`✅ Home: Loaded ${loadedTransactions.length} total transactions`);
+            
+            // Get the latest 5 transactions
+            const recentTransactions = loadedTransactions.slice(0, 5);
+            setTransactions(recentTransactions);
+            
+            console.log('✅ STEP 5 COMPLETE: Loaded', recentTransactions.length, 'recent transactions');
+          } else {
+            console.log('⚠️ No transactions found or error:', transactionResponse?.error);
+            setTransactions([]);
+          }
         } catch (error) {
           console.log('   ⚠️ Could not load transactions:', error.message);
           setTransactions([]);
@@ -1219,118 +1244,8 @@ const Home = () => {
     }
   };
 
-  // Helper function to determine if an asset is cryptocurrency (same as Wallet)
-  const isCryptoCurrency = (currency) => {
-    const fiatCurrencies = ['GBP', 'EUR', 'USD', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD'];
-    return !fiatCurrencies.includes(currency);
-  };
-
-  // Calculate GBP value for any currency (same as Wallet)
-  const calculateGBPValue = (currency, amount) => {
-    if (currency === 'GBP') {
-      return amount;
-    }
-    
-    if (!amount || amount <= 0) {
-      return 0;
-    }
-    
-    if (isCryptoCurrency(currency)) {
-      const userBalance = parseFloat(appState.getBalance(currency));
-      
-      if (Math.abs(amount - userBalance) < 0.00000001) {
-        const precalculatedValue = appState.getBalanceInGBP(currency);
-        if (precalculatedValue !== undefined && precalculatedValue !== 0) {
-          return precalculatedValue;
-        }
-      }
-      
-      const value = appState.calculateCryptoGBPValue(currency, amount);
-      return value || 0;
-    } else {
-      const rate = appState.getFXRate(currency, 'GBP');
-      return rate ? amount * rate : 0;
-    }
-  };
-
-  // Get currency icon (same as Wallet)
-  const getCurrencyIcon = (currency) => {
-    const iconMap = {
-      'BTC': 'bitcoin',
-      'ETH': 'ethereum',
-      'LTC': 'litecoin',
-      'XRP': 'currency-usd',
-      'BCH': 'cash',
-      'GBP': 'currency-gbp',
-      'EUR': 'currency-eur',
-      'USD': 'currency-usd'
-    };
-    return iconMap[currency] || 'cash';
-  };
-
-  // Render balance list item (same as Wallet)
-  const renderBalanceListItem = (currency, balanceInfo) => {
-    const { total } = balanceInfo;
-    const icon = getCurrencyIcon(currency);
-    const isCrypto = isCryptoCurrency(currency);
-    
-    const gbpValue = calculateGBPValue(currency, total);
-    const displayValue = `£${formatCurrency(gbpValue.toString(), 'GBP')}`;
-    
-    let description = '';
-    if (currency === 'GBP') {
-      description = 'Base currency';
-    } else {
-      if (isCrypto) {
-        description = `${formatCurrency(total, currency)} ${currency}`;
-      } else {
-        description = `${getCurrencySymbol(currency)}${formatCurrency(total, currency)}`;
-      }
-    }
-    
-    const getAssetColor = (assetType) => {
-      switch (assetType) {
-        case 'BTC': return '#f7931a';
-        case 'ETH': return '#627eea';
-        case 'GBP': return '#009639';
-        case 'LTC': return '#345d9d';
-        case 'XRP': return '#23292f';
-        case 'BCH': return '#8dc351';
-        default: return '#999999';
-      }
-    };
-    
-    return (
-      <TouchableOpacity 
-        key={currency} 
-        style={styles.homeAssetItem}
-        onPress={() => {
-          console.log(`Home: Tapped on ${currency}`);
-          openModal('Assets');
-        }}
-        activeOpacity={0.7}
-      >
-        <View style={styles.homeAssetIconSection}>
-          <Icon 
-            name={icon} 
-            size={24} 
-            color={getAssetColor(currency)} 
-          />
-        </View>
-        
-        <View style={styles.homeAssetMainContent}>
-          <Text style={styles.homeAssetName}>{currency}</Text>
-          <Text style={styles.homeAssetSymbol}>{description}</Text>
-        </View>
-        
-        <View style={styles.homeAssetPriceSection}>
-          <Text style={styles.homeAssetPrice}>
-            {displayValue}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  // Import helper from shared utilities
+  const { isCryptoCurrency } = require('../shared/BalanceListItem');
 
   // Get balance data (same as Wallet)
   const getBalanceData = () => {
@@ -1352,128 +1267,7 @@ const Home = () => {
   };
 
   // Render transaction item - using same logic as History component but compact
-  const renderTransactionItem = (transaction, index) => {
-    try {
-      console.log(`🎨 Home: Rendering transaction ${index}:`, transaction);
-      
-      // Validate transaction object
-      if (!transaction || typeof transaction !== 'object') {
-        console.log(`❌ Home: Invalid transaction object at index ${index}:`, transaction);
-        return null;
-      }
-      
-      // Extract transaction data using same field names as History component
-      const txnDate = transaction.date;
-      const txnTime = transaction.time;
-      const txnCode = transaction.code;
-      const baseAsset = transaction.baseAsset;
-      const baseAssetVolume = transaction.baseAssetVolume;
-      const description = transaction.description;
-      const status = transaction.status;
-      
-      // Determine transaction type and icon (same logic as History component)
-      const isIncoming = ['PI', 'FI'].includes(txnCode) || description?.includes('In');
-      const isOutgoing = ['PO', 'FO'].includes(txnCode) || description?.includes('Out');
-      
-      let transactionTypeDisplay = description || 'Transaction';
-      let iconName = 'swap-horizontal';
-      let iconColor = '#6B7280';
-      
-      if (isIncoming) {
-        iconName = 'arrow-down-circle';
-        iconColor = '#10B981';
-        transactionTypeDisplay = description || 'Payment In';
-      } else if (isOutgoing) {
-        iconName = 'arrow-up-circle';
-        iconColor = '#EF4444';
-        transactionTypeDisplay = description || 'Payment Out';
-      }
-      
-      // Format amount with proper precision (same as History component)
-      let amountDisplay = '';
-      if (baseAssetVolume && baseAsset) {
-        try {
-          const Big = require('big.js');
-          let volume = Big(baseAssetVolume);
-          
-          // Format to 9 significant digits (same as History)
-          let formatted;
-          if (volume.eq(0)) {
-            formatted = '0';
-          } else if (volume.abs().gte(1)) {
-            formatted = volume.toPrecision(9).replace(/\.?0+$/, '');
-          } else {
-            formatted = volume.toFixed(8).replace(/\.?0+$/, '');
-          }
-          
-          amountDisplay = `${isIncoming ? '+' : '-'}${formatted} ${baseAsset}`;
-        } catch (err) {
-          amountDisplay = `${isIncoming ? '+' : '-'}${baseAssetVolume} ${baseAsset}`;
-        }
-      }
-      
-      // Format GBP value if available
-      let gbpValueDisplay = '';
-      if (transaction.quoteAssetVolume && transaction.quoteAsset === 'GBP') {
-        const gbpAmount = parseFloat(transaction.quoteAssetVolume);
-        if (!isNaN(gbpAmount)) {
-          gbpValueDisplay = `£${formatTo9Digits(gbpAmount)}`;
-        }
-      }
-      
-      // Status display
-      const statusDisplay = status === 'A' ? 'Completed' : (status || 'Pending');
-      
-      return (
-        <TouchableOpacity 
-          key={`transaction-${transaction.id || index}`} 
-          style={styles.homeTransactionItem}
-          onPress={() => {
-            console.log(`Home: Tapped on transaction ${transaction.id}`);
-            // Could navigate to transaction details or open full History
-          }}
-          activeOpacity={0.7}
-        >
-          <View style={styles.homeTransactionIconSection}>
-            <Icon 
-              name={iconName} 
-              size={24} 
-              color={iconColor} 
-            />
-          </View>
-          
-          <View style={styles.homeTransactionMainContent}>
-            <Text style={styles.homeTransactionDescription}>
-              {transactionTypeDisplay}
-            </Text>
-            <Text style={styles.homeTransactionDate}>
-              {txnDate} • {txnTime}
-            </Text>
-            {gbpValueDisplay && (
-              <Text style={styles.homeTransactionGbpValue}>
-                {gbpValueDisplay}
-              </Text>
-            )}
-          </View>
-          
-          <View style={styles.homeTransactionAmountSection}>
-            <Text style={[
-              styles.homeTransactionAmount,
-              { color: isIncoming ? '#10B981' : '#EF4444' }
-            ]}>
-              {amountDisplay}
-            </Text>
-            <Text style={styles.homeTransactionStatus}>
-              {statusDisplay}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      );
-    } catch (error) {
-      console.log(`❌ Home: Error rendering transaction ${index}:`, error);
-      return null;
-    }
-  };
+  // renderTransactionItem moved to shared/TransactionListItem.js
 
   // Modal helper functions
   const openModal = (modalType) => {
@@ -1736,7 +1530,10 @@ const Home = () => {
         <View style={styles.homeSection}>
           <View style={styles.homeSectionHeader}>
             <Text style={styles.homeSectionTitle}>Your Assets</Text>
-            <TouchableOpacity onPress={() => openModal('Assets')}>
+            <TouchableOpacity onPress={() => {
+              console.log('🔄 Home: Navigating to Assets page');
+              appState.changeState('Assets', 'default');
+            }}>
               <Text style={styles.homeSectionSeeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -1745,9 +1542,19 @@ const Home = () => {
             {Object.entries(getBalanceData())
               .filter(([currency]) => isCryptoCurrency(currency))
               .slice(0, 5)
-              .map(([currency, balanceInfo]) => 
-                renderBalanceListItem(currency, balanceInfo)
-              )}
+              .map(([currency, balanceInfo]) => (
+                <BalanceListItem
+                  key={currency}
+                  currency={currency}
+                  balanceInfo={balanceInfo}
+                  appState={appState}
+                  theme={theme}
+                  onPress={() => {
+                    console.log(`Home: Tapped on ${currency}`);
+                    openModal('Assets');
+                  }}
+                />
+              ))}
             {Object.entries(getBalanceData()).filter(([currency]) => isCryptoCurrency(currency)).length === 0 && (
               <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text style={{ color: '#6B7280', textAlign: 'center' }}>
@@ -1771,7 +1578,23 @@ const Home = () => {
           </View>
           
           <View style={styles.homeTransactionsList}>
-            {transactions.map((transaction, index) => renderTransactionItem(transaction, index))}
+            {groupByDate(transactions).map((group, groupIndex) => (
+              <View key={`date-group-${groupIndex}`}>
+                <DateSectionHeader date={formatDateHeader(group.date)} />
+                {group.items.map((transaction, index) => (
+                  <TransactionListItem
+                    key={`transaction-${transaction.id || index}`}
+                    transaction={transaction}
+                    index={index}
+                    compact={true}
+                    onPress={() => {
+                      console.log(`Home: Tapped on transaction ${transaction.id}`);
+                      appState.changeState('History', 'transactions');
+                    }}
+                  />
+                ))}
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>

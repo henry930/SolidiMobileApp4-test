@@ -599,10 +599,12 @@ let AddressBookModal = ({ visible, onClose, onAddressAdded, selectedAsset }) => 
           <QRScanner
             visible={showQRScanner}
             onClose={() => setShowQRScanner(false)}
-            onCodeScanned={(code) => {
+            onScanSuccess={(code) => {
+              console.log('[QR-SCAN] 📥 AddressBookModal received:', code);
               setFormData(prev => ({ ...prev, withdrawAddress: code }));
               setShowQRScanner(false);
             }}
+            title="Scan Wallet Address"
           />
         )}
       </View>
@@ -701,6 +703,7 @@ const styles = StyleSheet.create({
     fontSize: normaliseFont(16),
     marginBottom: 15,
     backgroundColor: 'white',
+    color: '#000000',
   },
   
   addressInput: {
