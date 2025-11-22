@@ -76,7 +76,10 @@ let AddressBookForm = ({
     }
   }, [selectedAsset]);
 
-  // Ensure API client is initialized
+  // State for dynamic asset options
+  const [dynamicAssetOptions, setDynamicAssetOptions] = useState([]);
+  
+  // Ensure API client is initialized and load balance data
   useEffect(() => {
     const initializeApiClient = async () => {
       console.log('🔧 AddressBookForm: Checking API client...');
@@ -96,6 +99,20 @@ let AddressBookForm = ({
       } else {
         console.log('✅ AddressBookForm: API client already initialized');
       }
+      
+      // Use cached balance data to populate asset options
+      // Balance data is loaded during authentication
+      try {
+        console.log('✅ AddressBookForm: Using cached balance data');
+        // Generate asset options from cached balance data
+        const newOptions = getAssetOptions();
+        console.log('📋 AddressBookForm: Asset options generated:', newOptions);
+        setDynamicAssetOptions(newOptions);
+      } catch (err) {
+        console.error('❌ AddressBookForm: Failed to get asset options:', err);
+        // Use fallback options
+        setDynamicAssetOptions(getAssetOptions());
+      }
     };
     
     initializeApiClient();
@@ -111,15 +128,36 @@ let AddressBookForm = ({
     { id: 6, title: 'Summary', subtitle: 'Review and confirm' }
   ];
 
-  // Asset options for dropdown
-  const assetOptions = [
-    { id: 'btc', label: 'Bitcoin (BTC)' },
-    { id: 'eth', label: 'Ethereum (ETH)' },
-    { id: 'usdt', label: 'Tether (USDT)' },
-    { id: 'usdc', label:'USD Coin (USDC)' },
-    { id: 'bnb', label: 'Binance Coin (BNB)' },
-    { id: 'gbp', label: 'British Pound (GBP)' }
-  ];
+  // Asset options for dropdown - dynamically loaded from balance API
+  const getAssetOptions = () => {
+    // Get available assets from balance API
+    let availableAssets = appState?.getAvailableAssets() || [];
+    
+    if (availableAssets && availableAssets.length > 0) {
+      // Map to asset options format with display names
+      return availableAssets.map(asset => {
+        let assetUpper = asset.toUpperCase();
+        let displayName = appState.getAssetInfo(asset)?.displayString || asset;
+        return {
+          id: asset.toLowerCase(),
+          label: displayName
+        };
+      });
+    }
+    
+    // Fallback to hardcoded list if balance API not available
+    return [
+      { id: 'btc', label: 'Bitcoin (BTC)' },
+      { id: 'eth', label: 'Ethereum (ETH)' },
+      { id: 'usdt', label: 'Tether (USDT)' },
+      { id: 'usdc', label:'USD Coin (USDC)' },
+      { id: 'bnb', label: 'Binance Coin (BNB)' },
+      { id: 'gbp', label: 'British Pound (GBP)' }
+    ];
+  };
+
+  // Use dynamic asset options if loaded, otherwise use initial options
+  const assetOptions = dynamicAssetOptions.length > 0 ? dynamicAssetOptions : getAssetOptions();
 
   // Contact picker handlers
   const openContactPicker = () => {
@@ -142,21 +180,50 @@ let AddressBookForm = ({
   };
 
   // Handle input changes
-  let handleInputChange = (field, value) => {
+  let handleInputChange = async (field, value) => {
     // Special handling for recipient selection
     if (field === 'recipient') {
       if (value === 'myself') {
-        // Auto-fill with user's own name from appState
-        // Try multiple possible paths
-        const userData1 = appState?.state?.user?.info?.user;
-        const userData2 = appState?.state?.user;
-        const userData3 = appState?.user?.info?.user;
-        const userData4 = appState?.state?.user?.firstName ? appState?.state?.user : null;
+        console.log('=== AUTOFILL START ===');
         
-        // Use whichever path has the data
-        const userData = userData1 || userData2 || userData3 || userData4 || {};
-        const userFirstName = userData?.firstName || '';
-        const userLastName = userData?.lastName || '';
+        // Check if user info is loaded
+        const userInfoObject = appState?.user?.info?.user;
+        console.log('AUTOFILL: userInfoObject:', JSON.stringify(userInfoObject, null, 2));
+        console.log('AUTOFILL: isEmpty?', !userInfoObject || Object.keys(userInfoObject).length === 0);
+        
+        // If user info is empty, try to load it
+        if (!userInfoObject || Object.keys(userInfoObject).length === 0) {
+          console.log('AUTOFILL: Loading user info...');
+          if (appState.loadUserInfo) {
+            try {
+              await appState.loadUserInfo();
+              console.log('AUTOFILL: Loaded. New data:', JSON.stringify(appState?.user?.info?.user, null, 2));
+            } catch (err) {
+              console.log('AUTOFILL: Load error:', err);
+            }
+          }
+        }
+        
+        // Get the names
+        let userFirstName = '';
+        let userLastName = '';
+        
+        if (appState.getUserInfo) {
+          const fn = appState.getUserInfo('firstname');
+          const ln = appState.getUserInfo('lastname');
+          console.log('AUTOFILL: getUserInfo results - firstname:', fn, ', lastname:', ln);
+          if (fn && fn !== '[loading]') userFirstName = fn;
+          if (ln && ln !== '[loading]') userLastName = ln;
+        }
+        
+        if (!userFirstName || !userLastName) {
+          const userData = appState?.user?.info?.user || {};
+          if (!userFirstName) userFirstName = userData.firstname || userData.firstName || '';
+          if (!userLastName) userLastName = userData.lastname || userData.lastName || '';
+        }
+        
+        console.log('AUTOFILL: Final - firstName:', userFirstName, ', lastName:', userLastName);
+        console.log('=== AUTOFILL END ===');
         
         setFormData(prev => ({
           ...prev,
@@ -252,20 +319,23 @@ let AddressBookForm = ({
           setErrorMessage('Last name is required');
           return false;
         }
-        // Basic name validation (allow spaces, hyphens, apostrophes, and more for company names)
-        if (!/^[a-zA-Z\s-']+$/.test(formData.firstName)) {
+        // More permissive validation - allow letters, numbers, spaces, and common punctuation
+        // Allows: letters (any language), numbers, spaces, hyphens, apostrophes, periods, commas, ampersands, parentheses
+        const nameRegex = /^[\p{L}\p{N}\s\-'.,&()]+$/u;
+        
+        if (!nameRegex.test(formData.firstName)) {
           setErrorMessage(formData.recipient === 'another_business' ? 'Company name contains invalid characters' : 'First name contains invalid characters');
           return false;
         }
         // Only validate lastName format if not a business
-        if (formData.recipient !== 'another_business' && !/^[a-zA-Z\s-']+$/.test(formData.lastName)) {
+        if (formData.recipient !== 'another_business' && !nameRegex.test(formData.lastName)) {
           setErrorMessage('Last name contains invalid characters');
           return false;
         }
         break;
 
       case 3:
-        if (!formData.asset) {
+        if (!formData.asset || formData.asset.trim() === '') {
           setErrorMessage('Please select an asset');
           return false;
         }
@@ -302,11 +372,7 @@ let AddressBookForm = ({
             setErrorMessage('Withdrawal address is required');
             return false;
           }
-          // Basic crypto address validation (at least 26 characters)
-          if (formData.withdrawAddress.length < 26) {
-            setErrorMessage('Invalid cryptocurrency address (too short)');
-            return false;
-          }
+          // No length validation - different cryptocurrencies have different address formats and lengths
         }
         break;
 
@@ -748,6 +814,15 @@ let AddressBookForm = ({
         );
 
       case 4: // Destination
+        // Safety check - shouldn't reach here without an asset selected
+        if (!formData.asset) {
+          return (
+            <View style={styles.stepContainer}>
+              <Text style={styles.errorMessageText}>Please select an asset in the previous step</Text>
+            </View>
+          );
+        }
+        
         if (formData.asset.toLowerCase() === 'gbp') {
           // GBP bank account form
           return (

@@ -628,6 +628,7 @@ const Register = () => {
                   label="Country"
                   value={countryCode || 'Tap to select'}
                   editable={false}
+                  pointerEvents="none"
                   right={<TextInput.Icon icon="chevron-down" />}
                 />
               </TouchableOpacity>

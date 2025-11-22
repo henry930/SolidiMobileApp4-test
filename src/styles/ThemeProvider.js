@@ -2,7 +2,7 @@
 // Provides theme context that automatically adapts to platform
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import { getPlatformTheme } from './universalTheme';
 
 // Create theme context
@@ -19,21 +19,22 @@ export const useTheme = () => {
 
 // Theme provider component
 export const ThemeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const systemScheme = useColorScheme();
+  const [isDarkMode, setIsDarkMode] = useState(systemScheme === 'dark');
   const [platformOverride, setPlatformOverride] = useState(null);
-  
+
   // Get current platform (allow override for testing)
   const currentPlatform = platformOverride || Platform.OS;
   const isWeb = currentPlatform === 'web';
-  
+
   // Get the appropriate theme
   const theme = getPlatformTheme(isDarkMode, isWeb);
-  
+
   // Load saved theme preference
   useEffect(() => {
     loadThemePreference();
   }, []);
-  
+
   const loadThemePreference = async () => {
     try {
       if (Platform.OS === 'web') {
@@ -53,11 +54,11 @@ export const ThemeProvider = ({ children }) => {
       console.warn('Failed to load theme preference:', error);
     }
   };
-  
+
   const toggleTheme = async () => {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
-    
+
     // Save preference
     try {
       if (Platform.OS === 'web') {
@@ -71,12 +72,12 @@ export const ThemeProvider = ({ children }) => {
       console.warn('Failed to save theme preference:', error);
     }
   };
-  
+
   // For development/testing - allows switching platform behavior
   const setPlatformMode = (platform) => {
     setPlatformOverride(platform);
   };
-  
+
   const contextValue = {
     theme,
     isDarkMode,
@@ -84,7 +85,7 @@ export const ThemeProvider = ({ children }) => {
     currentPlatform,
     toggleTheme,
     setPlatformMode, // Remove this in production
-    
+
     // Convenience methods
     colors: theme.colors,
     typography: theme.typography,
@@ -92,7 +93,7 @@ export const ThemeProvider = ({ children }) => {
     layout: theme.layout,
     platform: theme.platform
   };
-  
+
   return (
     <ThemeContext.Provider value={contextValue}>
       {children}
@@ -111,7 +112,7 @@ export const withTheme = (Component) => {
 // Hook for creating platform-aware styles
 export const useThemedStyles = (createStyles) => {
   const { theme, isWeb, currentPlatform } = useTheme();
-  
+
   return React.useMemo(() => {
     return createStyles({ theme, isWeb, platform: currentPlatform });
   }, [theme, isWeb, currentPlatform, createStyles]);

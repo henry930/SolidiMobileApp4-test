@@ -121,6 +121,7 @@ let History = () => {
       let transactionResponse = await appState.privateMethod({
         httpMethod: 'POST',
         apiRoute: 'transaction',
+        params: { limit: 1000 },  // Request up to 1000 transactions for pagination
         functionName: 'History.setup.transactions'
       });
       
@@ -208,20 +209,37 @@ let History = () => {
 
   // Load more transactions
   const loadMoreTransactions = () => {
-    if (isLoadingMore || !hasMoreTransactions) return;
+    console.log('[LOAD MORE TRANSACTIONS] Called');
+    console.log('[LOAD MORE TRANSACTIONS] isLoadingMore:', isLoadingMore);
+    console.log('[LOAD MORE TRANSACTIONS] hasMoreTransactions:', hasMoreTransactions);
+    
+    if (isLoadingMore || !hasMoreTransactions) {
+      console.log('[LOAD MORE TRANSACTIONS] ⚠️ Skipping - already loading or no more items');
+      return;
+    }
     
     setIsLoadingMore(true);
     const allTransactions = historyDataModel?.getTransactions() || [];
     const nextPage = transactionPage + 1;
-    const startIndex = nextPage * ITEMS_PER_PAGE;
+    const startIndex = transactionPage * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
     const newItems = allTransactions.slice(startIndex, endIndex);
     
+    console.log('[LOAD MORE TRANSACTIONS] Total transactions:', allTransactions.length);
+    console.log('[LOAD MORE TRANSACTIONS] Current page:', transactionPage);
+    console.log('[LOAD MORE TRANSACTIONS] Next page:', nextPage);
+    console.log('[LOAD MORE TRANSACTIONS] Loading items from index', startIndex, 'to', endIndex);
+    console.log('[LOAD MORE TRANSACTIONS] New items count:', newItems.length);
+    console.log('[LOAD MORE TRANSACTIONS] Currently displayed:', displayedTransactions.length);
+    
     if (newItems.length > 0) {
-      setDisplayedTransactions([...displayedTransactions, ...newItems]);
+      const updatedList = [...displayedTransactions, ...newItems];
+      console.log('[LOAD MORE TRANSACTIONS] ✅ Adding items. New total:', updatedList.length);
+      setDisplayedTransactions(updatedList);
       setTransactionPage(nextPage);
       setHasMoreTransactions(endIndex < allTransactions.length);
     } else {
+      console.log('[LOAD MORE TRANSACTIONS] ⚠️ No new items to add');
       setHasMoreTransactions(false);
     }
     
@@ -899,14 +917,29 @@ let History = () => {
   // Handle scroll event to auto-load more items
   const handleScroll = (event) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const paddingToBottom = 100; // Trigger when 100px from bottom
+    const paddingToBottom = 200; // Trigger when 200px from bottom
     
     const isNearBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
     
+    console.log('[HISTORY SCROLL]', {
+      scrollY: contentOffset.y,
+      viewHeight: layoutMeasurement.height,
+      contentHeight: contentSize.height,
+      distanceFromBottom: contentSize.height - (layoutMeasurement.height + contentOffset.y),
+      isNearBottom,
+      isLoadingMore,
+      hasMoreTransactions,
+      hasMoreOrders,
+      category: selectedHistoryCategory
+    });
+    
     if (isNearBottom && !isLoadingMore) {
+      console.log('[HISTORY SCROLL] 🔄 Triggering load more...');
       if (selectedHistoryCategory === 'Transactions' && hasMoreTransactions) {
+        console.log('[HISTORY SCROLL] ✅ Loading more transactions...');
         loadMoreTransactions();
       } else if (selectedHistoryCategory === 'PendingOrders' && hasMoreOrders) {
+        console.log('[HISTORY SCROLL] ✅ Loading more orders...');
         loadMoreOrders();
       }
     }

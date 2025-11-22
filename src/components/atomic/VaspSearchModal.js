@@ -34,6 +34,16 @@ const VaspSearchModal = ({ visible, onSelect, onCancel, initialQuery = '' }) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const debounceRef = useRef(null);
+  
+  // Add new exchange form
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addFormData, setAddFormData] = useState({
+    vaspname: '',
+    vaspurl: '',
+    vaspdetails: ''
+  });
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState('');
 
   // Reset when modal opens
   useEffect(() => {
@@ -171,8 +181,92 @@ const VaspSearchModal = ({ visible, onSelect, onCancel, initialQuery = '' }) => 
   };
 
   const handleAddNew = () => {
-    // Return a placeholder object with the typed name
-    onSelect({ name: searchQuery, isNew: true });
+    // Open the add form with pre-filled name
+    setAddFormData({
+      vaspname: searchQuery,
+      vaspurl: '',
+      vaspdetails: ''
+    });
+    setShowAddForm(true);
+    setAddError('');
+  };
+
+  const handleAddFormCancel = () => {
+    setShowAddForm(false);
+    setAddFormData({ vaspname: '', vaspurl: '', vaspdetails: '' });
+    setAddError('');
+  };
+
+  const handleAddFormSubmit = async () => {
+    // Validate
+    if (!addFormData.vaspname.trim()) {
+      setAddError('Exchange name is required');
+      return;
+    }
+    if (!addFormData.vaspurl.trim()) {
+      setAddError('Exchange URL is required');
+      return;
+    }
+
+    setAddLoading(true);
+    setAddError('');
+
+    try {
+      console.log('🆕 Creating new VASP:', addFormData);
+
+      // Ensure API client is available
+      if (!appState || !appState.apiClient || typeof appState.apiClient.privateMethod !== 'function') {
+        console.log('⚠️ API client not ready for VASP creation, calling generalSetup...');
+        if (appState && typeof appState.generalSetup === 'function') {
+          try {
+            await appState.generalSetup({ caller: 'VaspSearchModal-Create' });
+            console.log('✅ generalSetup finished for VASP creation');
+          } catch (gsErr) {
+            console.error('❌ generalSetup failed for VASP creation:', gsErr);
+          }
+        }
+      }
+
+      if (!appState || !appState.apiClient || typeof appState.apiClient.privateMethod !== 'function') {
+        throw new Error('API client not available for VASP creation');
+      }
+
+      const params = {
+        vaspname: addFormData.vaspname.trim(),
+        vaspurl: addFormData.vaspurl.trim(),
+        vaspdetails: addFormData.vaspdetails.trim()
+      };
+
+      const abortController = appState && appState.createAbortController
+        ? appState.createAbortController({ tag: 'vaspCreate' })
+        : undefined;
+
+      const result = await appState.apiClient.privateMethod({
+        httpMethod: 'POST',
+        apiRoute: 'vasp',
+        params,
+        abortController
+      });
+
+      console.log('✅ VASP created successfully:', result);
+
+      // Return the created VASP
+      const newVasp = {
+        id: result.uuid || result.id || addFormData.vaspname,
+        name: addFormData.vaspname,
+        compgroup: addFormData.vaspname,
+        url: addFormData.vaspurl,
+        uuid: result.uuid || result.id,
+        isNew: true
+      };
+
+      onSelect(newVasp);
+    } catch (err) {
+      console.error('❌ VASP creation error:', err);
+      setAddError(err?.message || 'Failed to create exchange. Please try again.');
+    } finally {
+      setAddLoading(false);
+    }
   };
 
   return (
@@ -285,6 +379,82 @@ const VaspSearchModal = ({ visible, onSelect, onCancel, initialQuery = '' }) => 
             </View>
           )}
         </ScrollView>
+
+        {/* Add New Exchange Form Modal */}
+        {showAddForm && (
+          <View style={styles.addFormOverlay}>
+            <View style={styles.addFormContainer}>
+              <View style={styles.addFormHeader}>
+                <Text style={styles.addFormTitle}>Add New Exchange</Text>
+                <TouchableOpacity onPress={handleAddFormCancel} style={styles.addFormCloseButton}>
+                  <Text style={styles.addFormCloseButtonText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.addFormContent}>
+                <View style={styles.addFormGroup}>
+                  <Text style={styles.addFormLabel}>Exchange Name *</Text>
+                  <TextInput
+                    style={styles.addFormInput}
+                    placeholder="e.g., Binance"
+                    value={addFormData.vaspname}
+                    onChangeText={(value) => setAddFormData(prev => ({ ...prev, vaspname: value }))}
+                    autoCapitalize="words"
+                  />
+                </View>
+
+                <View style={styles.addFormGroup}>
+                  <Text style={styles.addFormLabel}>Exchange URL *</Text>
+                  <TextInput
+                    style={styles.addFormInput}
+                    placeholder="e.g., www.binance.com"
+                    value={addFormData.vaspurl}
+                    onChangeText={(value) => setAddFormData(prev => ({ ...prev, vaspurl: value }))}
+                    autoCapitalize="none"
+                    keyboardType="url"
+                  />
+                </View>
+
+                <View style={styles.addFormGroup}>
+                  <Text style={styles.addFormLabel}>Details (Optional)</Text>
+                  <TextInput
+                    style={[styles.addFormInput, styles.addFormTextArea]}
+                    placeholder="e.g., Centralized exchange based in Malta"
+                    value={addFormData.vaspdetails}
+                    onChangeText={(value) => setAddFormData(prev => ({ ...prev, vaspdetails: value }))}
+                    multiline={true}
+                    numberOfLines={3}
+                  />
+                </View>
+
+                {addError ? (
+                  <View style={styles.addFormError}>
+                    <Text style={styles.addFormErrorText}>❌ {addError}</Text>
+                  </View>
+                ) : null}
+              </ScrollView>
+
+              <View style={styles.addFormButtons}>
+                <TouchableOpacity
+                  style={[styles.addFormButton, styles.addFormButtonSecondary]}
+                  onPress={handleAddFormCancel}
+                  disabled={addLoading}
+                >
+                  <Text style={styles.addFormButtonTextSecondary}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.addFormButton, styles.addFormButtonPrimary]}
+                  onPress={handleAddFormSubmit}
+                  disabled={addLoading}
+                >
+                  <Text style={styles.addFormButtonTextPrimary}>
+                    {addLoading ? 'Adding...' : 'Add Exchange'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </Modal>
   );
@@ -493,6 +663,120 @@ const styles = StyleSheet.create({
     color: '#757575',
     textAlign: 'center',
     lineHeight: scaledHeight(22),
+  },
+
+  // Add form styles
+  addFormOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scaledWidth(20),
+  },
+  addFormContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    width: '100%',
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  addFormHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: scaledWidth(20),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  addFormTitle: {
+    fontSize: normaliseFont(20),
+    fontWeight: '700',
+    color: '#212121',
+  },
+  addFormCloseButton: {
+    padding: scaledWidth(4),
+  },
+  addFormCloseButtonText: {
+    fontSize: normaliseFont(24),
+    color: '#757575',
+    fontWeight: '300',
+  },
+  addFormContent: {
+    padding: scaledWidth(20),
+    maxHeight: scaledHeight(400),
+  },
+  addFormGroup: {
+    marginBottom: scaledHeight(20),
+  },
+  addFormLabel: {
+    fontSize: normaliseFont(14),
+    fontWeight: '600',
+    color: '#424242',
+    marginBottom: scaledHeight(8),
+  },
+  addFormInput: {
+    borderWidth: 1,
+    borderColor: '#BDBDBD',
+    borderRadius: 8,
+    padding: scaledWidth(12),
+    fontSize: normaliseFont(16),
+    color: '#212121',
+    backgroundColor: '#FAFAFA',
+  },
+  addFormTextArea: {
+    height: scaledHeight(80),
+    textAlignVertical: 'top',
+  },
+  addFormError: {
+    backgroundColor: '#FFEBEE',
+    padding: scaledWidth(12),
+    borderRadius: 8,
+    marginTop: scaledHeight(8),
+  },
+  addFormErrorText: {
+    color: '#C62828',
+    fontSize: normaliseFont(14),
+    textAlign: 'center',
+  },
+  addFormButtons: {
+    flexDirection: 'row',
+    padding: scaledWidth(20),
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    gap: scaledWidth(12),
+  },
+  addFormButton: {
+    flex: 1,
+    paddingVertical: scaledHeight(14),
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addFormButtonSecondary: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#BDBDBD',
+  },
+  addFormButtonPrimary: {
+    backgroundColor: colors.primary,
+  },
+  addFormButtonTextSecondary: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: '#424242',
+  },
+  addFormButtonTextPrimary: {
+    fontSize: normaliseFont(16),
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });
 

@@ -154,54 +154,82 @@ const Assets = () => {
     );
   }
   
-  // Dynamic asset list based on actual market data from /market API (live data)
+  // Dynamic asset list based on user's actual balance from /balance API
   const getAssetListFromMarkets = () => {
     try {
-      console.log('📊 Getting asset list from live /market API data...');
+      console.log('\n' + '💎'.repeat(60));
+      console.log('💎 [ASSETS] Getting asset list from BALANCE API...');
+      console.log('💎 [ASSETS] appState exists:', !!appState);
+      console.log('💎 [ASSETS] getAvailableAssets function exists:', !!appState?.getAvailableAssets);
       
-      // Get available markets from AppState (now live data)
-      const markets = appState.getMarkets();
-      console.log('🏪 Available markets from live API:', markets);
+      // Check if balance data exists in appState directly
+      const balanceData = appState?.state?.apiData?.balance;
+      console.log('💎 [ASSETS] Direct balance check - balance exists:', !!balanceData);
+      console.log('💎 [ASSETS] Direct balance data:', JSON.stringify(balanceData));
+      console.log('💎 [ASSETS] Balance data type:', typeof balanceData);
+      console.log('💎 [ASSETS] Is balance an object?:', balanceData && typeof balanceData === 'object');
       
-      if (!markets || markets.length === 0) {
-        console.log('⚠️ No markets available, using fallback list');
+      // Get available assets from balance API (cached during authentication)
+      const availableAssets = appState.getAvailableAssets ? appState.getAvailableAssets() : [];
+      console.log('💎 [ASSETS] Available assets from getAvailableAssets():', availableAssets);
+      console.log('💎 [ASSETS] Number of assets:', availableAssets.length);
+      
+      // Also try direct balance keys as backup
+      const directAssets = balanceData ? Object.keys(balanceData) : [];
+      console.log('💎 [ASSETS] Direct balance keys:', directAssets);
+      console.log('💎 [ASSETS] Direct balance keys length:', directAssets.length);
+      
+      // Use whichever has data - prefer getAvailableAssets
+      const assetsToUse = availableAssets.length > 0 ? availableAssets : directAssets;
+      console.log('💎 [ASSETS] Assets to use:', assetsToUse);
+      console.log('💎 [ASSETS] Source:', availableAssets.length > 0 ? 'getAvailableAssets()' : 'direct balance keys');
+      
+      if (!assetsToUse || assetsToUse.length === 0) {
+        console.log('❌❌❌ [ASSETS] NO ASSETS IN BALANCE DATA!');
+        console.log('❌ [ASSETS] balanceData is:', balanceData);
+        console.log('❌ [ASSETS] This means balance API returned empty object');
+        console.log('💎 [ASSETS] ⚠️ USING: ❌ HARDCODED LIST (empty balance)');
+        alert('DEBUG: Balance API returned EMPTY - using hardcoded list');
+        console.log('💎'.repeat(60) + '\n');
         return getFallbackAssetList();
       }
       
-      // Extract unique base assets from markets (e.g., BTC from BTC/GBP)
-      const baseAssets = new Set();
-      markets.forEach(market => {
-        if (typeof market === 'string' && market.includes('/')) {
-          const [baseAsset, quoteAsset] = market.split('/');
-          // Include crypto assets paired with major fiat currencies
-          if (['GBP', 'EUR', 'USD'].includes(quoteAsset)) {
-            baseAssets.add(baseAsset);
-          }
-        } else if (market && market.asset1 && market.asset2) {
-          // Handle object format: {asset1: "BTC", asset2: "GBP", ...}
-          if (['GBP', 'EUR', 'USD'].includes(market.asset2)) {
-            baseAssets.add(market.asset1);
-          }
-        }
-      });
+      // Filter to crypto assets only (exclude fiat currencies)
+      const excludedAssets = ['GBP', 'USD', 'EUR', 'OM', 'SOL', 'SUL'];
+      const cryptoAssets = assetsToUse.filter(asset => !excludedAssets.includes(asset));
       
-      console.log('💰 Base assets found from live markets:', Array.from(baseAssets));
+      console.log('💎 [ASSETS] All assets before filtering:', assetsToUse);
+      console.log('💎 [ASSETS] Crypto assets (after filtering):', cryptoAssets);
+      console.log('💎 [ASSETS] 🚫 Excluded assets:', excludedAssets);
+      console.log('💎 [ASSETS] Number of crypto assets:', cryptoAssets.length);
       
-      // Convert to asset objects with display names, excluding unwanted assets
-      const excludedAssets = ['OM', 'SOL', 'SUL']; // Assets to exclude from display
-      const assetList = Array.from(baseAssets)
-        .filter(asset => !excludedAssets.includes(asset)) // Filter out unwanted assets
-        .map(asset => ({
-          asset: asset,
-          name: getAssetDisplayName(asset)
-        }));
+      // Check if filtering removed all assets
+      if (cryptoAssets.length === 0) {
+        console.log('❌❌❌ [ASSETS] ALL ASSETS WERE FILTERED OUT!');
+        console.log('❌ [ASSETS] Original assets:', assetsToUse);
+        console.log('❌ [ASSETS] All were excluded (probably all fiat)');
+        alert('DEBUG: All balance assets were fiat currencies - using hardcoded crypto list');
+        console.log('💎'.repeat(60) + '\n');
+        return getFallbackAssetList();
+      }
       
-      console.log('✅ Generated asset list from live market data (after filtering):', assetList);
-      console.log('🚫 Excluded assets:', excludedAssets);
+      // Convert to asset objects with display names
+      const assetList = cryptoAssets.map(asset => ({
+        asset: asset,
+        name: getAssetDisplayName(asset)
+      }));
+      
+      console.log('💎 [ASSETS] ✅ USING: ✅ BALANCE API LIST');
+      console.log('💎 [ASSETS] Final asset list:', assetList);
+      console.log('💎 [ASSETS] Comparison with fallback:', getFallbackAssetList());
+      console.log('💎'.repeat(60) + '\n');
+      
       return assetList;
       
     } catch (error) {
-      console.log('❌ Error getting assets from live markets:', error);
+      console.log('❌ [ASSETS] Error getting assets from balance API:', error);
+      console.log('💎 [ASSETS] ⚠️ USING: ❌ HARDCODED LIST (error fallback)');
+      console.log('💎'.repeat(60) + '\n');
       return getFallbackAssetList();
     }
   };
@@ -209,12 +237,13 @@ const Assets = () => {
   // Fallback asset list when market data is not available
   const getFallbackAssetList = () => {
     console.log('🔄 Using fallback asset list');
+    console.log('⚠️⚠️⚠️ FALLBACK LIST - NOT FROM BALANCE API ⚠️⚠️⚠️');
     const allAssets = [
-      { asset: 'BTC', name: 'Bitcoin' },
-      { asset: 'ETH', name: 'Ethereum' },
-      { asset: 'LTC', name: 'Litecoin' },
-      { asset: 'XRP', name: 'Ripple' },
-      { asset: 'BCH', name: 'Bitcoin Cash' }
+      { asset: 'BTC', name: 'Bitcoin (HARDCODED)' },
+      { asset: 'ETH', name: 'Ethereum (HARDCODED)' },
+      { asset: 'LTC', name: 'Litecoin (HARDCODED)' },
+      { asset: 'XRP', name: 'Ripple (HARDCODED)' },
+      { asset: 'BCH', name: 'Bitcoin Cash (HARDCODED)' }
     ];
     
     // Filter out excluded assets
@@ -270,6 +299,9 @@ const Assets = () => {
   
   // Define prices state that's used in getAssetPrice
   const [prices, setPrices] = useState({});
+  
+  // Track if balance is loaded
+  const [balanceLoaded, setBalanceLoaded] = useState(false);
 
   // Refresh function for manual data reload with comprehensive error handling
   let refreshData = async () => {
@@ -352,10 +384,12 @@ const Assets = () => {
       
       setIsDataReady(false);
       
-      // Use fallback asset list immediately for faster initial render
+      // Just read asset list from CACHED balance data (should already be loaded during authentication)
+      console.log('📋 Assets: Reading asset list from CACHED balance data...');
       const dynamicAssets = getAssetListFromMarkets();
+      console.log('📋 Assets: Got', dynamicAssets.length, 'assets from cache');
       setAssetData(dynamicAssets);
-      console.log('📊 Asset list set (using fallback or cached markets)');
+      console.log('📊 Asset list set from CACHED balance data');
       
       // Start loading prices immediately - don't wait for markets to load
       console.log('📈 Loading live prices using public API...');

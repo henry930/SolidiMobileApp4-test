@@ -3973,6 +3973,24 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }, 5 * 60 * 1000); // Refresh every 5 minutes
       console.log('[REG-CHECK] ✅ Address book auto-refresh configured (every 5 minutes)');
       
+      // Step 10: Load user balances (cached for asset list generation across all components)
+      console.log('\n' + '💰'.repeat(60));
+      console.log('[REG-CHECK] Step 10: Loading user balances...');
+      console.log('[REG-CHECK] balancesLoaded flag BEFORE:', this.state.balancesLoaded);
+      if (!this.state.balancesLoaded) {
+        console.log('[REG-CHECK] Calling loadBalances() for the first time...');
+        let balanceData = await this.loadBalances();
+        this.state.balancesLoaded = true;
+        console.log('[REG-CHECK] ✅ User balances loaded and cached');
+        console.log('[REG-CHECK] Balance data returned:', balanceData);
+        console.log('[REG-CHECK] Assets in balance:', Object.keys(balanceData || {}));
+        console.log('[REG-CHECK] balancesLoaded flag AFTER:', this.state.balancesLoaded);
+      } else {
+        console.log('[REG-CHECK] ⏭️  User balances already loaded, skipping');
+        console.log('[REG-CHECK] Current cached assets:', Object.keys(this.state.apiData.balance || {}));
+      }
+      console.log('💰'.repeat(60) + '\n');
+      
       console.log('\n' + '✅'.repeat(60));
       console.log('[REG-CHECK] ===== loadInitialStuffAboutUser COMPLETED =====');
       console.log('✅'.repeat(60) + '\n');
@@ -4539,17 +4557,27 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadBalances = async () => {
+      console.log('🔄💰 [LOAD BALANCES] Starting balance API call...');
       let data = await this.state.privateMethod({httpMethod: 'POST', apiRoute: 'balance'});
-      if (data == 'DisplayedError') return;
-      let msg = "User balances loaded from server.";
-      if (jd(data) === jd(this.state.apiData.balance)) {
-        log(msg + " No change.");
-      } else {
-        log(msg + " New data saved to appState." + " " + jd(data));
-        //this.state.setAPIData({key:'balance', data});
-        this.state.apiData.balance = data;
+      if (data == 'DisplayedError') {
+        console.log('❌💰 [LOAD BALANCES] Error loading balances - returning empty object');
+        this.state.apiData.balance = {};
+        return {};
       }
-      return data;
+      console.log('✅💰 [LOAD BALANCES] Balance API response received:');
+      console.log('💰 [LOAD BALANCES] Raw balance data:', JSON.stringify(data, null, 2));
+      console.log('💰 [LOAD BALANCES] Assets found:', Object.keys(data || {}));
+      console.log('💰 [LOAD BALANCES] Number of assets:', Object.keys(data || {}).length);
+      
+      // Always save the data, even if it's empty or unchanged
+      console.log('💰 [LOAD BALANCES] Saving balance data to appState.apiData.balance');
+      this.state.apiData.balance = data || {};
+      
+      let msg = "User balances loaded from server.";
+      log(msg + " " + jd(data));
+      console.log('💰 [LOAD BALANCES] Balance data saved. Assets:', Object.keys(this.state.apiData.balance));
+      
+      return data || {};
     }
 
 
@@ -4562,6 +4590,69 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let dp = this.state.getAssetInfo(asset).decimalPlaces;
       let balanceString = Big(balance).toFixed(dp);
       return balanceString;
+    }
+
+    this.getAvailableAssets = () => {
+      // Get list of ALL assets available for trading from the balance API
+      // Used in: Trade, Assets, AddressBook pages
+      // Returns ALL assets from /balance API response (including those with 0 balance)
+      console.log('\n' + '🔍'.repeat(60));
+      console.log('🔍 getAvailableAssets CALLED - FOR TRADING');
+      console.log('🔍 apiData exists?', !_.isUndefined(this.state.apiData));
+      console.log('🔍 Balance data exists?', !_.isUndefined(this.state.apiData.balance));
+      console.log('🔍 balancesLoaded flag:', this.state.balancesLoaded);
+      console.log('🔍 Full balance data:', JSON.stringify(this.state.apiData.balance, null, 2));
+      
+      if (_.isUndefined(this.state.apiData.balance)) {
+        console.log('❌ getAvailableAssets: Balance data is UNDEFINED');
+        console.log('⚠️ getAvailableAssets: This means balance API was not called or failed');
+        console.log('🔍'.repeat(60) + '\n');
+        return [];
+      }
+      
+      // Return ALL assets from balance API (tradeable assets)
+      let allAssets = Object.keys(this.state.apiData.balance);
+      
+      console.log(`✅ getAvailableAssets: Found ${allAssets.length} total tradeable assets from balance API`);
+      console.log(`✅ ALL TRADEABLE ASSETS:`, allAssets);
+      console.log(`📌 Use Case: Trade, Assets, AddressBook pages`);
+      console.log('🔍'.repeat(60) + '\n');
+      log(`getAvailableAssets: Found ${allAssets.length} tradeable assets:`, allAssets);
+      return allAssets;
+    }
+
+    this.getOwnedAssets = () => {
+      // Get list of assets that the user OWNS (balance > 0)
+      // Used in: Send, Withdraw, Wallet pages
+      // Returns only assets with balance > 0 from /balance API
+      console.log('\n' + '💰'.repeat(60));
+      console.log('💰 getOwnedAssets CALLED - FOR USER OWNED ASSETS');
+      console.log('💰 apiData exists?', !_.isUndefined(this.state.apiData));
+      console.log('💰 Balance data exists?', !_.isUndefined(this.state.apiData.balance));
+      console.log('💰 balancesLoaded flag:', this.state.balancesLoaded);
+      console.log('💰 Full balance data:', JSON.stringify(this.state.apiData.balance, null, 2));
+      
+      if (_.isUndefined(this.state.apiData.balance)) {
+        console.log('❌ getOwnedAssets: Balance data is UNDEFINED');
+        console.log('⚠️ getOwnedAssets: This means balance API was not called or failed');
+        console.log('💰'.repeat(60) + '\n');
+        return [];
+      }
+      
+      // Filter to only assets with balance > 0 (owned assets)
+      let allAssets = Object.keys(this.state.apiData.balance);
+      let ownedAssets = allAssets.filter(asset => {
+        const balance = parseFloat(this.state.apiData.balance[asset]);
+        return !isNaN(balance) && balance > 0;
+      });
+      
+      console.log(`✅ getOwnedAssets: Found ${allAssets.length} total assets, ${ownedAssets.length} owned`);
+      console.log(`✅ OWNED ASSETS (balance > 0):`, ownedAssets);
+      console.log(`🚫 NOT OWNED (balance = 0):`, allAssets.filter(a => !ownedAssets.includes(a)));
+      console.log(`📌 Use Case: Send, Withdraw, Wallet pages`);
+      console.log('💰'.repeat(60) + '\n');
+      log(`getOwnedAssets: Found ${ownedAssets.length} owned assets:`, ownedAssets);
+      return ownedAssets;
     }
 
     // Helper function to fetch price for a single cryptocurrency
@@ -5569,7 +5660,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadTransactions = async () => {
-      let data = await this.state.privateMethod({httpMethod: 'POST', apiRoute: 'transaction'});
+      let data = await this.state.privateMethod({
+        httpMethod: 'POST',
+        apiRoute: 'transaction',
+        params: { limit: 1000 }  // Request up to 1000 transactions
+      });
       if (data == 'DisplayedError') return;
       /* Example data:
       [
@@ -5665,9 +5760,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       const fName = 'loadAllAddressBooks';
       console.log(`\n📚 ${fName}: ===== STARTING PARALLEL ADDRESS BOOK LOADING =====`);
       
-      // List of all supported assets (crypto + fiat)
-      const assetsToLoad = ['BTC', 'ETH', 'LTC', 'XRP', 'BCH', 'GBP', 'EUR', 'USD'];
+      // Use balance API to get user's actual assets instead of hardcoded list
+      let assetsToLoad = this.state.getAvailableAssets && this.state.getAvailableAssets().length > 0
+        ? this.state.getAvailableAssets()
+        : ['BTC', 'ETH', 'LTC', 'XRP', 'BCH', 'GBP', 'EUR', 'USD'];
       
+      console.log(`📚 ${fName}: Using assets from balance API`);
       console.log(`📚 ${fName}: Loading address books for ${assetsToLoad.length} assets:`, assetsToLoad);
       
       try {
@@ -6076,6 +6174,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       updateDefaultAccountForAsset: this.updateDefaultAccountForAsset,
       loadBalances: this.loadBalances,
       getBalance: this.getBalance,
+      getAvailableAssets: this.getAvailableAssets,
+      getOwnedAssets: this.getOwnedAssets,
       updateCryptoRates: this.updateCryptoRates,
       getCryptoSellPrice: this.getCryptoSellPrice,
       getCryptoBuyPrice: this.getCryptoBuyPrice,
@@ -6158,6 +6258,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       assetsInfoLoaded: false,
       marketsLoaded: false,
       assetsIconsLoaded: false,
+      balancesLoaded: false,
       ipAddressLoaded: false,
       changeStateParameters: {
         orderID: null,

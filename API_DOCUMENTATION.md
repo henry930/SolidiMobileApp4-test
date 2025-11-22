@@ -737,7 +737,6 @@ After registration, users typically need to complete verification steps:
 - `created_at` - Timestamp when address was added
 
 **Note:** The `address` field is a JSON string that needs to be parsed. For crypto, it contains the wallet address. For fiat (GBP), it contains bank account details (accountName, sortCode, accountNumber).
-```
 
 ### 8. Add Address to Address Book
 

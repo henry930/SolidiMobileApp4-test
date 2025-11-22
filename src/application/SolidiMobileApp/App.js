@@ -32,7 +32,7 @@ import { PaperProvider } from 'react-native-paper';
 
 // Internal imports
 import { AppStateProvider } from '../data';
-import { theme } from '../../constants';
+import { theme, darkTheme } from '../../constants';
 // Universal Theme System
 import { ThemeProvider, useTheme } from '../../styles/ThemeProvider';
 // Biometric Authentication
@@ -41,10 +41,10 @@ import SecureApp from '../../components/BiometricAuth/SecureApp';
 // Disable Inspector completely in development
 if (__DEV__) {
   console.disableYellowBox = true;
-  
+
   // Additional Inspector disabling
   try {
-    const {DevSettings} = require('react-native');
+    const { DevSettings } = require('react-native');
     if (DevSettings && DevSettings.setIsShakeToShowDevMenuEnabled) {
       DevSettings.setIsShakeToShowDevMenuEnabled(false);
     }
@@ -56,12 +56,12 @@ if (__DEV__) {
 // Logger
 import logger from '../../util/logger';
 let logger2 = logger.extend('App');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 // Inner App component that uses the theme
 const AppContent = () => {
-  const { theme: universalTheme, colors, isWeb } = useTheme();
-  
+  const { theme: universalTheme, colors, isWeb, isDarkMode } = useTheme();
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -98,13 +98,13 @@ const AppContent = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-      <StatusBar 
+      <StatusBar
         translucent={true}
         backgroundColor="transparent"
-        barStyle="dark-content"
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
       />
       <View style={styles.container}>
-        <PaperProvider theme={theme}>
+        <PaperProvider theme={isDarkMode ? darkTheme : theme}>
           <SecureApp>
             {/* SecureApp just gates access, AppState handles authentication */}
             <AppStateProvider>

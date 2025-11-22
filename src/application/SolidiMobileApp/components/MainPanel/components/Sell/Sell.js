@@ -109,8 +109,19 @@ let Sell = () => {
   }
 
   // Functions that derive dropdown properties from the current lists of base and quote assets.
-  let generateBaseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
-  let generateQuoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
+  // Use getAvailableAssets() to get all assets from the balance API response
+  let generateBaseAssetItems = () => { 
+    let availableAssets = appState.getAvailableAssets();
+    // Filter to crypto assets (exclude fiat currencies like GBP, USD, EUR)
+    let cryptoAssets = availableAssets.filter(asset => !['GBP', 'USD', 'EUR'].includes(asset));
+    return deriveAssetItems(cryptoAssets.length > 0 ? cryptoAssets : appState.getBaseAssets());
+  }
+  let generateQuoteAssetItems = () => { 
+    let availableAssets = appState.getAvailableAssets();
+    // Filter to fiat currencies for quote assets
+    let fiatAssets = availableAssets.filter(asset => ['GBP', 'USD', 'EUR'].includes(asset));
+    return deriveAssetItems(fiatAssets.length > 0 ? fiatAssets : appState.getQuoteAssets());
+  }
 
   // If we're reloading an existing order, load its details from the global state.
   if (appState.pageName === 'loadExistingOrder') {
@@ -150,9 +161,10 @@ let Sell = () => {
   let setup = async () => {
     try {
       await appState.generalSetup({caller: 'Sell'});
-      await appState.loadBalances();
+      // Balance data is now loaded during authentication (cached)
       await fetchBestPriceForQuoteAssetVolume();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      // Generate asset items from cached balance data
       setItemsBA(generateBaseAssetItems());
       setItemsQA(generateQuoteAssetItems());
       setBalanceBA(appState.getBalance(assetBA));
@@ -169,10 +181,11 @@ let Sell = () => {
   }
 
 
-  // When the user changes the assetBA, select the balance value appropriately, and also reload it, in case it has changed.
+  // When the user changes the assetBA, select the balance value appropriately.
+  // Note: Balance is loaded and cached during authentication
   let loadBalanceData = async () => {
     setBalanceBA(appState.getBalance(assetBA));
-    await appState.loadBalances();
+    // Balance data is already loaded and cached during authentication
     if (appState.stateChangeIDHasChanged(stateChangeID)) return;
     setBalanceBA(appState.getBalance(assetBA));
   }

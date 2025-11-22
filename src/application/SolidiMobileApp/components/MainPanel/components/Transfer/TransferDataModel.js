@@ -109,11 +109,37 @@ export const TRANSFER_ASSET_DISPLAY = {
  * Provides safe fallback methods and data structures
  */
 export class TransferDataModel {
-  constructor() {
-    this.assets = Object.keys(TRANSFER_CAPABILITIES);
+  constructor(appState = null) {
+    this.appState = appState;
     this.capabilities = TRANSFER_CAPABILITIES;
     this.addresses = {}; // Empty - must be loaded from API
     this.displayInfo = TRANSFER_ASSET_DISPLAY;
+    // Initialize assets - will be updated when setAppState is called
+    this._updateAssets();
+  }
+
+  /**
+   * Update appState reference and refresh assets from balance API
+   * @param {Object} appState - AppState instance
+   */
+  setAppState(appState) {
+    this.appState = appState;
+    this._updateAssets();
+  }
+
+  /**
+   * Internal method to update assets from balance API or fallback
+   * @private
+   */
+  _updateAssets() {
+    // Use ALL AVAILABLE (tradeable) assets from balance API for the full list
+    if (this.appState && this.appState.getAvailableAssets) {
+      this.assets = this.appState.getAvailableAssets();
+      console.log('📤 [TRANSFER] Using ALL tradeable assets from balance API:', this.assets);
+    } else {
+      this.assets = Object.keys(TRANSFER_CAPABILITIES);
+      console.log('📤 [TRANSFER] Using hardcoded TRANSFER_CAPABILITIES assets:', this.assets);
+    }
   }
 
   /**
@@ -122,12 +148,21 @@ export class TransferDataModel {
    */
   getWithdrawalEnabledAssets() {
     try {
+      // Use OWNED assets (balance > 0) for withdrawal/send
+      if (this.appState && this.appState.getOwnedAssets) {
+        const ownedAssets = this.appState.getOwnedAssets();
+        // Filter to only crypto (exclude fiat)
+        const cryptoAssets = ownedAssets.filter(a => a !== 'GBP' && a !== 'USD' && a !== 'EUR');
+        console.log('📤 [TRANSFER] Withdrawal assets (owned crypto):', cryptoAssets);
+        return cryptoAssets;
+      }
+      // Fallback to filtering this.assets by capabilities
       return this.assets.filter(asset => 
         this.capabilities[asset] && this.capabilities[asset].withdrawalEnabled
       );
     } catch (error) {
       console.warn('Error getting withdrawal assets:', error);
-      return ['BTC', 'ETH', 'GBP']; // Safe fallback
+      return ['BTC', 'ETH']; // Last resort fallback
     }
   }
 
@@ -137,12 +172,19 @@ export class TransferDataModel {
    */
   getDepositEnabledAssets() {
     try {
+      // Use OWNED assets (balance > 0) for deposit/receive
+      if (this.appState && this.appState.getOwnedAssets) {
+        const ownedAssets = this.appState.getOwnedAssets();
+        console.log('📤 [TRANSFER] Deposit assets (owned assets):', ownedAssets);
+        return ownedAssets;
+      }
+      // Fallback to filtering this.assets by capabilities
       return this.assets.filter(asset => 
         this.capabilities[asset] && this.capabilities[asset].depositEnabled
       );
     } catch (error) {
       console.warn('Error getting deposit assets:', error);
-      return ['BTC', 'ETH', 'GBP']; // Safe fallback
+      return ['BTC', 'ETH', 'GBP']; // Last resort fallback
     }
   }
 

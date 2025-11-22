@@ -68,7 +68,7 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('Transfer');
 let {deb, dj, log, lj} = logger.getShortcuts(logger2);
 
-let Transfer = () => {
+let Transfer = ({ initialMode } = {}) => {
   console.log('🎯 CONSOLE: Transfer component initializing...');
   let appState = useContext(AppStateContext);
   console.log('🎯 CONSOLE: AppState context loaded:', !!appState);
@@ -77,8 +77,8 @@ let Transfer = () => {
   let stateChangeID = appState?.stateChangeID || 0;
 
   // Transfer type state - 'send' or 'receive'
-  // Check if pageName is 'receive' to set initial tab
-  const initialTransferType = appState?.pageName === 'receive' ? 'receive' : 'send';
+  // Check if pageName is 'receive' to set initial tab, or use initialMode prop
+  const initialTransferType = initialMode || (appState?.pageName === 'receive' ? 'receive' : 'send');
   const [transferType, setTransferType] = useState(initialTransferType);
 
   // Asset selection state with safe defaults
@@ -145,6 +145,10 @@ let Transfer = () => {
           setInitializationError('Loading application state...');
           return;
         }
+
+        // Update transferDataModel with appState to use balance API
+        transferDataModel.setAppState(appState);
+        log('📤 Transfer data model updated with appState');
 
         // Step 2: Check authentication status
         if (appState.state && appState.state.mainPanelState) {
@@ -504,6 +508,7 @@ let Transfer = () => {
           let assetItem = {
             label: displayString,
             value: asset,
+            fromBalanceAPI: false, // Will be set by generateSendAssetItems
           };
           
           // TODO: Icon functionality disabled temporarily to prevent rendering issues
@@ -529,30 +534,52 @@ let Transfer = () => {
   // Generate asset items for dropdowns with enhanced error handling
   let generateSendAssetItems = () => { 
     try {
-      // Try to get assets from appState first
-      if (appState?.getAssets) {
-        console.log('🔄 CONSOLE: ===== GETTING WITHDRAWAL ASSETS =====');
-        console.log('📤 CONSOLE: About to call appState.getAssets({withdrawalEnabled: true})...');
-        let withdrawalAssets = appState.getAssets({withdrawalEnabled: true});
-        console.log('📨 CONSOLE: ===== WITHDRAWAL ASSETS API RESPONSE =====');
-        console.log('📨 CONSOLE: Raw getAssets (withdrawal) response:', withdrawalAssets);
-        console.log('📨 CONSOLE: Response type:', typeof withdrawalAssets);
-        console.log('📨 CONSOLE: Response is array:', Array.isArray(withdrawalAssets));
-        console.log('📨 CONSOLE: Response length:', withdrawalAssets?.length);
-        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(withdrawalAssets, null, 2));
-        console.log('📨 CONSOLE: ===== END WITHDRAWAL ASSETS API RESPONSE =====');
+      console.log('\n' + '📤'.repeat(60));
+      console.log('📤 [TRANSFER SEND] generateSendAssetItems CALLED');
+      console.log('📤 [TRANSFER SEND] appState exists?', !!appState);
+      console.log('📤 [TRANSFER SEND] appState.getOwnedAssets exists?', !!appState?.getOwnedAssets);
+      console.log('📤 [TRANSFER SEND] appState.getAvailableAssets exists?', !!appState?.getAvailableAssets);
+      
+      // Use getOwnedAssets() to get assets user OWNS (balance > 0)
+      if (appState && appState.getOwnedAssets) {
+        console.log('📤 [TRANSFER SEND] Getting OWNED assets from balance API...');
+        let ownedAssets = appState.getOwnedAssets();
+        console.log('📤 [TRANSFER SEND] Owned assets from balance API:', ownedAssets);
+        console.log('📤 [TRANSFER SEND] Number of owned assets:', ownedAssets.length);
         
+        if (ownedAssets && ownedAssets.length > 0) {
+          // Return ALL owned assets including both crypto AND fiat (BTC, GBP, etc.)
+          console.log('✅ [TRANSFER SEND] All owned assets (crypto + fiat):', ownedAssets);
+          console.log('📤 [TRANSFER SEND] ⚠️ USING: ✅ OWNED ASSETS LIST (balance > 0)');
+          console.log('📤'.repeat(60) + '\n');
+          
+          return deriveAssetItems(ownedAssets);
+        }
+      }
+      
+      // Fallback: Try old method
+      console.log('⚠️ [TRANSFER SEND] Balance API returned empty, trying old method...');
+      if (appState?.getAssets) {
+        let withdrawalAssets = appState.getAssets({withdrawalEnabled: true});
+        console.log('📤 [TRANSFER SEND] Old method assets:', withdrawalAssets);
         if (withdrawalAssets && withdrawalAssets.length > 0) {
-          log('Using appState withdrawal assets:', withdrawalAssets);
-          console.log('✅ CONSOLE: Using appState withdrawal assets:', withdrawalAssets);
+          console.log('📤 [TRANSFER SEND] ⚠️ USING: ❌ HARDCODED LIST (old method)');
+          console.log('📤'.repeat(60) + '\n');
+          log('Using appState withdrawal assets (fallback method):', withdrawalAssets);
           return deriveAssetItems(withdrawalAssets);
         }
       }
       
-      // Fallback to data model
+      // Final fallback to data model
+      console.log('❌ [TRANSFER SEND] All methods failed, using data model fallback');
+      console.log('📤 [TRANSFER SEND] ⚠️ USING: ❌ HARDCODED LIST (data model)');
+      console.log('📤'.repeat(60) + '\n');
       log('Using fallback withdrawal assets from data model');
       return TransferUtils.generateSendItems();
     } catch (error) {
+      console.log('❌ [TRANSFER SEND] ERROR:', error);
+      console.log('📤 [TRANSFER SEND] ⚠️ USING: ❌ HARDCODED LIST (error fallback)');
+      console.log('📤'.repeat(60) + '\n');
       log('Error generating send assets, using safe fallback:', error);
       return TransferUtils.generateSendItems();
     }
@@ -560,27 +587,46 @@ let Transfer = () => {
 
   let generateReceiveAssetItems = () => { 
     try {
-      // Try to get assets from appState first
-      if (appState?.getAssets) {
-        console.log('🔄 CONSOLE: ===== GETTING DEPOSIT ASSETS =====');
-        console.log('📤 CONSOLE: About to call appState.getAssets({depositEnabled: true})...');
-        let depositAssets = appState.getAssets({depositEnabled: true});
-        console.log('📨 CONSOLE: ===== DEPOSIT ASSETS API RESPONSE =====');
-        console.log('📨 CONSOLE: Raw getAssets (deposit) response:', depositAssets);
-        console.log('📨 CONSOLE: Response type:', typeof depositAssets);
-        console.log('📨 CONSOLE: Response is array:', Array.isArray(depositAssets));
-        console.log('📨 CONSOLE: Response length:', depositAssets?.length);
-        console.log('📨 CONSOLE: Response JSON:', JSON.stringify(depositAssets, null, 2));
-        console.log('📨 CONSOLE: ===== END DEPOSIT ASSETS API RESPONSE =====');
+      // Use getAvailableAssets() to get all assets from the balance API
+      if (appState?.getAvailableAssets) {
+        console.log('🔄 CONSOLE: ===== GETTING AVAILABLE ASSETS FOR RECEIVE =====');
+        let availableAssets = appState.getAvailableAssets();
+        console.log('📨 CONSOLE: Available assets from balance API:', availableAssets);
         
+        if (availableAssets && availableAssets.length > 0) {
+          // Filter to assets that have deposit enabled
+          let depositAssets = availableAssets.filter(asset => {
+            try {
+              let assetInfo = appState.getAssetInfo(asset);
+              return assetInfo && assetInfo.depositEnabled;
+            } catch (e) {
+              // If we can't get asset info, include it anyway
+              return true;
+            }
+          });
+          
+          console.log('✅ CONSOLE: Deposit-enabled assets:', depositAssets);
+          
+          if (depositAssets.length > 0) {
+            return deriveAssetItems(depositAssets);
+          }
+          
+          // If no deposit-enabled assets, use all available assets
+          console.log('⚠️ CONSOLE: No deposit-enabled assets found, using all available');
+          return deriveAssetItems(availableAssets);
+        }
+      }
+      
+      // Fallback: Try old method
+      if (appState?.getAssets) {
+        let depositAssets = appState.getAssets({depositEnabled: true});
         if (depositAssets && depositAssets.length > 0) {
-          log('Using appState deposit assets:', depositAssets);
-          console.log('✅ CONSOLE: Using appState deposit assets:', depositAssets);
+          log('Using appState deposit assets (fallback method):', depositAssets);
           return deriveAssetItems(depositAssets);
         }
       }
       
-      // Fallback to data model
+      // Final fallback to data model
       log('Using fallback deposit assets from data model');
       return TransferUtils.generateReceiveItems();
     } catch (error) {
@@ -601,6 +647,20 @@ let Transfer = () => {
   let setup = async () => {
     try {
       log('Setting up Transfer component, transferType:', transferType);
+      
+      // Balance data is now loaded during authentication (cached)
+      await appState.generalSetup({caller: 'Transfer'});
+      log('Using cached balance data to generate asset items...');
+      
+      // Generate asset items from cached balance data
+      let newItems;
+      if (transferType === 'send') {
+        newItems = generateSendAssetItems();
+      } else {
+        newItems = generateReceiveAssetItems();
+      }
+      setItems(newItems);
+      log('Asset items generated:', newItems.length, 'items');
       
       // Check identity verification status
       const identityChecked = appState.getUserStatus('identityChecked');
@@ -643,7 +703,7 @@ let Transfer = () => {
       // Close dropdown during setup to prevent conflicts
       setOpen(false);
       
-      let newItems;
+      // Regenerate items (reusing variable from above)
       if (transferType === 'send') {
         newItems = generateSendAssetItems();
       } else {

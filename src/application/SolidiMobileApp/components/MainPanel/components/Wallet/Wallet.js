@@ -28,6 +28,7 @@ import Big from 'big.js';
 
 // Shared components
 import BalanceListItem from '../shared/BalanceListItem';
+import Transfer from '../Transfer/Transfer';
 
 // Internal imports
 import AppStateContext from 'src/application/data';
@@ -160,6 +161,9 @@ let Wallet = () => {
   
   // Currency selection dialog state
   let [showCurrencyDialog, setShowCurrencyDialog] = useState(false);
+  
+  // Transfer Send modal state
+  let [showTransferModal, setShowTransferModal] = useState(false);
   
   // Withdraw modal state
   let [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -407,7 +411,10 @@ let Wallet = () => {
 
   // Handle deposit action
   let handleDeposit = async (currency) => {
-    if (['BTC', 'ETH'].includes(currency)) {
+    // Check if this is a crypto currency (not fiat)
+    const isCrypto = isCryptoCurrency(currency);
+    
+    if (isCrypto) {
       Alert.alert(
         'Crypto Deposit',
         `To deposit ${currency}, please use the Receive feature to get your wallet address.`,
@@ -781,49 +788,19 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
 
 
-  // Handle withdrawal
+  // Handle withdrawal - navigate to Transfer Send page
   let handleWithdraw = (currency) => {
     console.log('\n' + '🏦'.repeat(60));
     console.log('[WALLET] handleWithdraw called');
     console.log('[WALLET] Currency:', currency);
-    console.log('[WALLET] Is crypto (BTC/ETH):', ['BTC', 'ETH'].includes(currency));
+    console.log('[WALLET] Navigating to Transfer Send page for withdrawal');
     console.log('🏦'.repeat(60) + '\n');
     
-    if (['BTC', 'ETH'].includes(currency)) {
-      console.log('[WALLET] Opening crypto withdrawal modal for', currency);
-      // Open withdraw modal for crypto currencies
-      setWithdrawCurrency(currency);
-      setWithdrawToAddress('');
-      setWithdrawAmountInput('');
-      setShowWithdrawModal(true);
-      console.log('[WALLET] Crypto withdrawal modal opened');
-      return;
-    }
-
-    console.log('[WALLET] Opening fiat withdrawal modal for', currency);
-    console.log('[WALLET] Current userBankAccount:', JSON.stringify(userBankAccount, null, 2));
-    
-    // Use cached address book from AppState
-    const addresses = appState.getAddressBook(currency);
-    console.log('[WALLET] Using cached address book from AppState for', currency, ':', addresses.length, 'address(es)');
-    
-    // Reset state
-    setFiatWithdrawCurrency(currency);
-    setFiatWithdrawAmount('');
-    
-    // Auto-select first address if available
-    if (addresses.length > 0) {
-      setSelectedFiatAddress(addresses[0].uuid);
-      console.log('[WALLET] Auto-selected first bank account:', addresses[0].uuid);
-    } else {
-      setSelectedFiatAddress('');
-      console.log('[WALLET] No addresses available for', currency);
-    }
-    
-    // Open modal
-    setShowFiatWithdrawModal(true);
-    console.log('[WALLET] Fiat withdrawal modal opened');
-    console.log('🏦'.repeat(60) + '\n');
+    // Navigate to Transfer Send page (same component for all withdrawals)
+    appState.changeState({
+      mainPanelState: 'Transfer',
+      pageName: 'send'
+    });
   };
 
   // Handle fiat withdrawal submission
@@ -1183,8 +1160,8 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
   // Navigate to CryptoContent page
   const navigateToCrypto = (currency, balanceInfo, tickerData) => {
-    // Only allow navigation for crypto currencies
-    const isCrypto = ['BTC', 'ETH', 'XRP', 'LTC', 'ADA', 'DOT', 'LINK', 'UNI'].includes(currency);
+    // Only allow navigation for crypto currencies (use helper function to check)
+    const isCrypto = isCryptoCurrency(currency);
     if (!isCrypto) {
       console.log(`${currency} is not a crypto currency, navigation skipped`);
       return;
@@ -1305,7 +1282,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
               </Button>
               <Button
                 mode="outlined"
-                onPress={() => setShowCurrencyDialog(true)}
+                onPress={() => setShowTransferModal(true)}
                 style={{ flex: 1 }}
                 icon="minus"
               >
@@ -1472,8 +1449,49 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                 showsVerticalScrollIndicator={false}
               >
                 <Text variant="titleLarge" style={{ fontWeight: 'bold', marginBottom: 20, textAlign: 'center' }}>
-                  Withdraw {withdrawCurrency}
+                  Withdraw Cryptocurrency
                 </Text>
+
+                {/* Asset Selection - only show crypto assets from balance API */}
+                <View style={{ marginBottom: 20 }}>
+                  <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                    Select Asset
+                  </Text>
+                  <TouchableOpacity
+                    style={{
+                      borderWidth: 1,
+                      borderColor: theme.colors.outline,
+                      borderRadius: 8,
+                      padding: 12,
+                      backgroundColor: '#FFFFFF'
+                    }}
+                    onPress={() => {
+                      // Get OWNED crypto assets (balance > 0) for withdrawal
+                      const ownedAssets = appState.getOwnedAssets ? appState.getOwnedAssets() : [];
+                      const cryptoAssets = ownedAssets.filter(asset => isCryptoCurrency(asset));
+                      
+                      console.log('🏦 Owned crypto assets for withdrawal:', cryptoAssets);
+                      
+                      // Show asset picker
+                      Alert.alert(
+                        'Select Asset to Withdraw',
+                        'Choose which cryptocurrency you want to withdraw',
+                        cryptoAssets.map(asset => ({
+                          text: asset,
+                          onPress: () => {
+                            setWithdrawCurrency(asset);
+                            setWithdrawToAddress('');
+                            setWithdrawAmountInput('');
+                          }
+                        })).concat([{ text: 'Cancel', style: 'cancel' }])
+                      );
+                    }}
+                  >
+                    <Text style={{ fontSize: 16, color: withdrawCurrency ? '#000000' : '#999999' }}>
+                      {withdrawCurrency || 'Select cryptocurrency...'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
                 {/* Address Selection */}
                 <View style={{ marginBottom: 20 }}>
@@ -1926,6 +1944,43 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      {/* Transfer Send Modal */}
+      <Modal
+        visible={showTransferModal}
+        animationType="slide"
+        onRequestClose={() => setShowTransferModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+          {/* Header with Close button */}
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            backgroundColor: theme.colors.primary,
+            paddingTop: Platform.OS === 'ios' ? 50 : 20,
+            paddingBottom: 15,
+            paddingHorizontal: 16
+          }}>
+            <IconButton
+              icon="close"
+              iconColor="#FFFFFF"
+              size={24}
+              onPress={() => setShowTransferModal(false)}
+            />
+            <Text style={{ 
+              color: '#FFFFFF', 
+              fontSize: 20, 
+              fontWeight: 'bold',
+              marginLeft: 8
+            }}>
+              Send / Withdraw
+            </Text>
+          </View>
+
+          {/* Transfer Component */}
+          <Transfer initialMode="send" />
+        </View>
+      </Modal>
     </View>
   );
 };

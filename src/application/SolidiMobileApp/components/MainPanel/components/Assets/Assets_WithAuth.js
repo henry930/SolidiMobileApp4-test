@@ -252,7 +252,12 @@ const Assets = () => {
       
       // Get balance data
       let realBalances = {};
-      const assetList = ['BTC', 'ETH', 'LTC', 'XRP', 'ADA', 'DOT', 'LINK', 'UNI', 'GBP', 'USD', 'EUR'];
+      // Use balance API to get actual asset list instead of hardcoded
+      const assetList = appState.getAvailableAssets && appState.getAvailableAssets().length > 0 
+        ? appState.getAvailableAssets() 
+        : ['BTC', 'ETH', 'LTC', 'XRP', 'GBP', 'USD', 'EUR'];
+      
+      console.log('📋 Using asset list from balance API:', assetList);
       
       // Check if we have API balance data
       if (appState.state && appState.state.apiData && appState.state.apiData.balance) {

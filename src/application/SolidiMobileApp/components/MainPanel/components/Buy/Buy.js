@@ -93,8 +93,41 @@ let Buy = () => {
   }
 
   // Functions that derive dropdown properties from the current lists of base and quote assets.
-  let generateBaseAssetItems = () => { return deriveAssetItems(appState.getBaseAssets()) }
-  let generateQuoteAssetItems = () => { return deriveAssetItems(appState.getQuoteAssets()) }
+  // Use getAvailableAssets() to get all assets from the balance API response
+  let generateBaseAssetItems = () => { 
+    console.log('\n' + '🔷'.repeat(60));
+    console.log('🔷 [BUY] generateBaseAssetItems CALLED');
+    let availableAssets = appState.getAvailableAssets();
+    console.log('🔷 [BUY] Available assets from balance API:', availableAssets);
+    // Filter to crypto assets (exclude fiat currencies like GBP, USD, EUR)
+    let cryptoAssets = availableAssets.filter(asset => !['GBP', 'USD', 'EUR'].includes(asset));
+    console.log('🔷 [BUY] Crypto assets (after filtering):', cryptoAssets);
+    let hardcodedAssets = appState.getBaseAssets();
+    console.log('🔷 [BUY] Hardcoded base assets (fallback):', hardcodedAssets);
+    
+    let finalAssets = cryptoAssets.length > 0 ? cryptoAssets : hardcodedAssets;
+    console.log('🔷 [BUY] ⚠️ USING:', cryptoAssets.length > 0 ? '✅ BALANCE API LIST' : '❌ HARDCODED LIST');
+    console.log('🔷 [BUY] Final base assets:', finalAssets);
+    console.log('🔷'.repeat(60) + '\n');
+    return deriveAssetItems(finalAssets);
+  }
+  let generateQuoteAssetItems = () => { 
+    console.log('\n' + '🔶'.repeat(60));
+    console.log('🔶 [BUY] generateQuoteAssetItems CALLED');
+    let availableAssets = appState.getAvailableAssets();
+    console.log('🔶 [BUY] Available assets from balance API:', availableAssets);
+    // Filter to fiat currencies for quote assets
+    let fiatAssets = availableAssets.filter(asset => ['GBP', 'USD', 'EUR'].includes(asset));
+    console.log('🔶 [BUY] Fiat assets (after filtering):', fiatAssets);
+    let hardcodedAssets = appState.getQuoteAssets();
+    console.log('🔶 [BUY] Hardcoded quote assets (fallback):', hardcodedAssets);
+    
+    let finalAssets = fiatAssets.length > 0 ? fiatAssets : hardcodedAssets;
+    console.log('🔶 [BUY] ⚠️ USING:', fiatAssets.length > 0 ? '✅ BALANCE API LIST' : '❌ HARDCODED LIST');
+    console.log('🔶 [BUY] Final quote assets:', finalAssets);
+    console.log('🔶'.repeat(60) + '\n');
+    return deriveAssetItems(finalAssets);
+  }
 
   // Volume state:
   // BA = Base Asset
@@ -127,8 +160,10 @@ let Buy = () => {
   let setup = async () => {
     try {
       await appState.generalSetup({caller: 'Buy'});
+      // Balance data is now loaded during authentication (cached)
       await fetchBestPriceForQuoteAssetVolume();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
+      // Generate asset items from cached balance data
       setItemsBA(generateBaseAssetItems());
       setItemsQA(generateQuoteAssetItems());
       setNewAPIVersionDetected(appState.checkLatestAPIVersion());
