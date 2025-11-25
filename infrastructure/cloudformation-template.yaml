@@ -1,0 +1,297 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Push Notification Infrastructure for Solidi Mobile App'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+
+  APNSCertificateArn:
+    Type: String
+    Description: ARN of the APNS certificate (leave empty if not configured yet)
+    Default: ''
+
+  FCMServerKey:
+    Type: String
+    Description: Firebase Cloud Messaging server key (leave empty if not configured yet)
+    Default: ''
+    NoEcho: true
+
+Conditions:
+  HasAPNS: !Not [!Equals [!Ref APNSCertificateArn, '']]
+  HasFCM: !Not [!Equals [!Ref FCMServerKey, '']]
+
+Resources:
+  # DynamoDB Table for Device Tokens
+  DeviceTokensTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${Environment}-device-tokens'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: deviceId
+          AttributeType: S
+        - AttributeName: endpointArn
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: deviceId
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: endpointArn-index
+          KeySchema:
+            - AttributeName: endpointArn
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: SolidiMobileApp
+
+  # SNS Platform Application for iOS (APNS)
+  APNSPlatformApplication:
+    Type: AWS::SNS::PlatformApplication
+    Condition: HasAPNS
+    Properties:
+      PlatformApplicationName: !Sub '${Environment}-solidi-ios'
+      Platform: APNS
+      Attributes:
+        PlatformCredential: !Ref APNSCertificateArn
+
+  # SNS Platform Application for Android (FCM)
+  FCMPlatformApplication:
+    Type: AWS::SNS::PlatformApplication
+    Condition: HasFCM
+    Properties:
+      PlatformApplicationName: !Sub '${Environment}-solidi-android'
+      Platform: GCM
+      Attributes:
+        PlatformCredential: !Ref FCMServerKey
+
+  # IAM Role for Lambda Functions
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${Environment}-push-notification-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt DeviceTokensTable.Arn
+                  - !Sub '${DeviceTokensTable.Arn}/index/*'
+        - PolicyName: SNSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:CreatePlatformEndpoint
+                  - sns:SetEndpointAttributes
+                  - sns:GetEndpointAttributes
+                  - sns:DeleteEndpointArn
+                  - sns:Publish
+                Resource: '*'
+
+  # Lambda Function: Register Device
+  RegisterDeviceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-register-device'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Placeholder - deploy actual code' })
+            };
+          };
+      Environment:
+        Variables:
+          DEVICE_TOKENS_TABLE: !Ref DeviceTokensTable
+          APNS_PLATFORM_ARN: !If [HasAPNS, !Ref APNSPlatformApplication, '']
+          FCM_PLATFORM_ARN: !If [HasFCM, !Ref FCMPlatformApplication, '']
+          ENVIRONMENT: !Ref Environment
+      Timeout: 30
+      MemorySize: 256
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Lambda Function: Send Notification
+  SendNotificationFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-send-notification'
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Placeholder - deploy actual code' })
+            };
+          };
+      Environment:
+        Variables:
+          DEVICE_TOKENS_TABLE: !Ref DeviceTokensTable
+          ENVIRONMENT: !Ref Environment
+      Timeout: 60
+      MemorySize: 512
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # API Gateway REST API
+  PushNotificationAPI:
+    Type: AWS::ApiGateway::RestAPI
+    Properties:
+      Name: !Sub '${Environment}-push-notification-api'
+      Description: API for push notification management
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resource: /register
+  RegisterResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PushNotificationAPI
+      ParentId: !GetAtt PushNotificationAPI.RootResourceId
+      PathPart: register
+
+  # API Gateway Method: POST /register
+  RegisterMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PushNotificationAPI
+      ResourceId: !Ref RegisterResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegisterDeviceFunction.Arn}/invocations'
+
+  # API Gateway Resource: /send
+  SendResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PushNotificationAPI
+      ParentId: !GetAtt PushNotificationAPI.RootResourceId
+      PathPart: send
+
+  # API Gateway Method: POST /send
+  SendMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PushNotificationAPI
+      ResourceId: !Ref SendResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendNotificationFunction.Arn}/invocations'
+
+  # API Gateway Deployment
+  APIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - RegisterMethod
+      - SendMethod
+    Properties:
+      RestApiId: !Ref PushNotificationAPI
+      StageName: !Ref Environment
+
+  # Lambda Permissions for API Gateway
+  RegisterLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RegisterDeviceFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PushNotificationAPI}/*/*/*'
+
+  SendLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SendNotificationFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PushNotificationAPI}/*/*/*'
+
+Outputs:
+  APIEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${PushNotificationAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${Environment}-push-notification-api-endpoint'
+
+  RegisterDeviceFunctionArn:
+    Description: Register Device Lambda Function ARN
+    Value: !GetAtt RegisterDeviceFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-register-device-function-arn'
+
+  SendNotificationFunctionArn:
+    Description: Send Notification Lambda Function ARN
+    Value: !GetAtt SendNotificationFunction.Arn
+    Export:
+      Name: !Sub '${Environment}-send-notification-function-arn'
+
+  DeviceTokensTableName:
+    Description: DynamoDB Device Tokens Table Name
+    Value: !Ref DeviceTokensTable
+    Export:
+      Name: !Sub '${Environment}-device-tokens-table'
+
+  APNSPlatformApplicationArn:
+    Condition: HasAPNS
+    Description: APNS Platform Application ARN
+    Value: !Ref APNSPlatformApplication
+    Export:
+      Name: !Sub '${Environment}-apns-platform-arn'
+
+  FCMPlatformApplicationArn:
+    Condition: HasFCM
+    Description: FCM Platform Application ARN
+    Value: !Ref FCMPlatformApplication
+    Export:
+      Name: !Sub '${Environment}-fcm-platform-arn'

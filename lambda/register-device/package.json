@@ -1,0 +1,9 @@
+{
+    "name": "register-device-lambda",
+    "version": "1.0.0",
+    "description": "Lambda function to register device tokens for push notifications",
+    "main": "index.js",
+    "dependencies": {
+        "aws-sdk": "^2.1000.0"
+    }
+}

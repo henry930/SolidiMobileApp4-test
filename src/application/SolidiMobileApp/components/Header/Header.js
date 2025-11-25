@@ -10,20 +10,21 @@ import { Button, ImageButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import ImageLookup from 'src/images';
 import { sharedStyles as styles, layoutStyles as layout, buttonStyles as buttons, textStyles as text } from 'src/styles';
+import { NotificationBellIcon } from 'src/components/NotificationInbox';
 
 
 
 
 let Header = (props) => {
 
-  let {style: styleArg} = props;
+  let { style: styleArg } = props;
   const insets = useSafeAreaInsets();
 
   let appState = useContext(AppStateContext);
 
   let logoImageName = 'solidi_logo_landscape_black_1924x493';
 
-    let statesWhereBackButtonIsHidden = [
+  let statesWhereBackButtonIsHidden = [
     'Trade',
     'PIN',
     'RegisterConfirm',
@@ -45,7 +46,7 @@ let Header = (props) => {
   let backButton = (
     <ImageButton imageName='chevron-left' imageType='icon'
       styles={styleBackButton}
-      onPress={ () => { appState.decrementStateHistory() } }
+      onPress={() => { appState.decrementStateHistory() }}
     />
   )
   let blankBackButton = <></>;
@@ -53,13 +54,13 @@ let Header = (props) => {
   // Check whether to include back button.
   let includeBackButton = false;
   if (appState.stateHistoryList.length > 1) {
-    if (! hideBackButton) {
+    if (!hideBackButton) {
       includeBackButton = true;
     }
   }
 
   // Check whether to include notification button. (this is not currently used).
-  let includeNotificationButton = ! hideBackButton;
+  let includeNotificationButton = !hideBackButton;
 
 
   let isSettingsButtonSelected = 'Settings' === appState.mainPanelState;
@@ -81,7 +82,7 @@ let Header = (props) => {
   return (
     <View style={[styleArg, headerStyles.container]}>
       {/* Risk Warning Banner */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={headerStyles.riskBanner}
         onPress={() => changeState('RiskSummary')}
         activeOpacity={0.8}
@@ -91,24 +92,27 @@ let Header = (props) => {
           <Text style={headerStyles.learnMoreText}>learn more</Text>.
         </Text>
       </TouchableOpacity>
-      
+
       {/* Main Header */}
       <View style={headerStyles.header}>
-        <View style={headerStyles.sideButtonWrapper}>
-          {includeBackButton ? backButton : blankBackButton}
+        <View style={headerStyles.leftButtonWrapper}>
+          {/* Notification Bell Icon on the left side */}
+          {!hideSettingsButton && (
+            <NotificationBellIcon />
+          )}
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={headerStyles.logoWrapper}
           onPress={() => changeState('Home')}
           activeOpacity={0.8}
         >
           <Image source={ImageLookup[logoImageName]} style={headerStyles.logo} />
         </TouchableOpacity>
-        <View style={headerStyles.sideButtonWrapper}>
-          {! hideSettingsButton &&
+        <View style={headerStyles.rightButtonWrapper}>
+          {!hideSettingsButton &&
             <ImageButton imageName='user' imageType='icon'
               styles={_styleSettingsButton}
-              onPress={ () => { 
+              onPress={() => {
                 // Check if user is authenticated to decide navigation
                 if (appState.user.isAuthenticated) {
                   changeState('Settings'); // Go to profile/settings page
@@ -171,10 +175,19 @@ const headerStyles = StyleSheet.create({
     height: scaledHeight(30),
     resizeMode: 'contain'
   },
-  sideButtonWrapper: {
+  leftButtonWrapper: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    width: scaledWidth(60)
+    justifyContent: 'flex-start',
+    width: scaledWidth(60),
+    paddingLeft: scaledWidth(10)
+  },
+  rightButtonWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    width: scaledWidth(60),
+    paddingRight: scaledWidth(10)
   }
 });
 

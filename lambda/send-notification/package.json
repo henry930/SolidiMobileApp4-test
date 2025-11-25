@@ -1,0 +1,9 @@
+{
+    "name": "send-notification-lambda",
+    "version": "1.0.0",
+    "description": "Lambda function to send push notifications to users",
+    "main": "index.js",
+    "dependencies": {
+        "aws-sdk": "^2.1000.0"
+    }
+}
