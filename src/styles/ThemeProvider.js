@@ -2,7 +2,7 @@
 // Provides theme context that automatically adapts to platform
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Platform, useColorScheme } from 'react-native';
+import { Platform } from 'react-native';
 import { getPlatformTheme } from './universalTheme';
 
 // Create theme context
@@ -19,8 +19,7 @@ export const useTheme = () => {
 
 // Theme provider component
 export const ThemeProvider = ({ children }) => {
-  const systemScheme = useColorScheme();
-  const [isDarkMode, setIsDarkMode] = useState(systemScheme === 'dark');
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [platformOverride, setPlatformOverride] = useState(null);
 
   // Get current platform (allow override for testing)

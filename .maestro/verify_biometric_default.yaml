@@ -1,0 +1,45 @@
+appId: com.solidimobileapp4test
+---
+# Verify Biometric Default Setting
+- launchApp
+- clearState
+
+# Wait for splash/initialization
+- extendedWaitUntil:
+    visible: "Initializing"
+    timeout: 5000
+    optional: true
+
+# Wait for login screen (Secure Login)
+- extendedWaitUntil:
+    visible: "Secure Login"
+    timeout: 15000
+
+# Login to access Settings
+- tapOn: "Email Address"
+- inputText: "henry930@gmail.com"
+- hideKeyboard
+- tapOn: "Password"
+- inputText: "DazzPow/930"
+- hideKeyboard
+- tapOn: "Sign In"
+
+# Wait for main screen
+- extendedWaitUntil:
+    visible: "Wallet"
+    timeout: 15000
+
+# Go to Settings (assuming it's accessible via an icon or menu)
+# Based on UI hierarchy, there might be a profile icon or settings tab
+- runFlow:
+    when:
+      visible: ".*Settings.*|.*Profile.*|.*Account.*|.*⚙.*|.*.*"
+    commands:
+      - tapOn: ".*Settings.*|.*Profile.*|.*Account.*|.*⚙.*|.*.*"
+      - extendedWaitUntil:
+          visible: ".*Biometric.*"
+          timeout: 5000
+
+# Verify Biometric Authentication is Enabled
+- assertVisible: "Enabled"
+- takeScreenshot: biometric_setting_verified

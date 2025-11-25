@@ -30,7 +30,7 @@ class SecureApp extends Component {
       needsBiometrics: false, // Flag to indicate if biometric check is needed
       biometricVerified: false, // Flag to track if biometric verification passed
     };
-    
+
     // Idle timeout settings
     this.idleTimeoutDuration = 30 * 1000; // 30 seconds in milliseconds
     this.idleTimeoutId = null;
@@ -40,7 +40,7 @@ class SecureApp extends Component {
     this.lastStateChangeTime = 0; // Track last app state change to prevent rapid processing
     this.isFirstLaunch = true; // Track if this is initial app launch (not resume from background)
 
-    
+
     // Bind methods
     this.resetIdleTimer = this.resetIdleTimer.bind(this);
     this.checkForIdleTimeout = this.checkForIdleTimeout.bind(this);
@@ -49,24 +49,24 @@ class SecureApp extends Component {
 
   async componentDidMount() {
     console.log('🚀 [SecureApp] Component mounted - starting biometric authentication');
-    
+
     // Register with bridge so other components can communicate with us
     SecureAppBridge.registerSecureApp(this);
-    
+
     // IMPORTANT: Wait for AppState context to initialize and check credentials
     // This prevents biometric auth from interfering with auto-login credential validation
     console.log('⏳ [SecureApp] Waiting for AppState to initialize...');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Initialize biometric authentication
     await this.initializeBiometricAuth();
-    
+
     // Listen for app state changes to re-authenticate when app becomes active
     console.log('🎧 [SecureApp] Registering AppState change listener...');
     this.appStateSubscription = AppState.addEventListener('change', this.handleAppStateChange);
     console.log('🎯 [SecureApp] AppState listener registered:', !!this.appStateSubscription);
     console.log('🎯 [SecureApp] Current AppState:', AppState.currentState);
-    
+
     // Manually trigger active event handler if app is already active
     // This ensures biometric check happens even if no state change event fires
     if (AppState.currentState === 'active') {
@@ -75,7 +75,7 @@ class SecureApp extends Component {
         this.handleAppStateChange('active');
       }, 100);
     }
-    
+
     // Start idle timeout monitoring
     this.startIdleMonitoring();
   }
@@ -83,12 +83,12 @@ class SecureApp extends Component {
   componentWillUnmount() {
     // Unregister from bridge
     SecureAppBridge.unregisterSecureApp();
-    
+
     // Clean up app state listener using new subscription API
     if (this.appStateSubscription) {
       this.appStateSubscription.remove();
     }
-    
+
     // Clean up idle timeout
     this.stopIdleMonitoring();
   }
@@ -97,20 +97,21 @@ class SecureApp extends Component {
   initializeBiometricAuth = async () => {
     try {
       console.log('🔍 [SecureApp] ========== INITIALIZING BIOMETRIC SYSTEM ==========');
-      
+
       // Check if biometric authentication is available
       const info = await biometricAuth.isBiometricAvailable();
       console.log('🔍 [SecureApp] Biometric info:', info);
-      
-            // Check biometricsEnabled preference from Settings
+
+      // Check biometricsEnabled preference from Settings
       const biometricsEnabledFlag = await AsyncStorage.getItem('biometricsEnabled');
-      const biometricsEnabled = biometricsEnabledFlag === 'true';
-      
+      // Default to true (enabled) if no preference is saved
+      const biometricsEnabled = biometricsEnabledFlag === null ? true : biometricsEnabledFlag === 'true';
+
       // Check isLogout flag to determine if user is logged in
       const isLogoutFlag = await AsyncStorage.getItem('isLogout');
       const isLogout = isLogoutFlag === 'true' || isLogoutFlag === null; // true if logged out or never logged in
-      
-      console.log('==========================================' );
+
+      console.log('==========================================');
       console.log('🔍🔍🔍 [SecureApp] BIOMETRIC PREFERENCE CHECK');
       console.log('🔍 [SecureApp] biometricsEnabled from Settings:', biometricsEnabled);
       console.log('🔍 [SecureApp] Raw isLogout flag value from AsyncStorage:', JSON.stringify(isLogoutFlag));
@@ -118,12 +119,12 @@ class SecureApp extends Component {
       console.log('🔍 [SecureApp] isLogoutFlag === null:', isLogoutFlag === null);
       console.log('🔍 [SecureApp] Computed isLogout:', isLogout);
       console.log('🔍 [SecureApp] Decision: Will', (isLogout || !biometricsEnabled) ? 'SKIP' : 'SHOW', 'biometrics');
-      console.log('==========================================' );
-      
+      console.log('==========================================');
+
       if (isLogout || !biometricsEnabled) {
         // User logged out, never logged in, or biometrics disabled - skip biometrics
         console.log('❌❌❌ [SecureApp] SKIPPING BIOMETRICS - User logged out, never logged in, or biometrics disabled in Settings');
-        this.setState({ 
+        this.setState({
           biometricInfo: info,
           showSetup: false,
           isLoading: false,
@@ -135,7 +136,7 @@ class SecureApp extends Component {
         // User was logged in before and biometrics enabled - require biometrics
         console.log('✅✅✅ [SecureApp] SHOWING BIOMETRICS - User was logged in before and biometrics enabled');
         console.log('🔐🔐🔐 [SecureApp] Setting needsBiometrics = true, biometricVerified = false');
-        this.setState({ 
+        this.setState({
           biometricInfo: info,
           showSetup: false,
           isLoading: false,
@@ -147,13 +148,13 @@ class SecureApp extends Component {
           console.log('⏳ [SecureApp] Waiting for AppState active event to trigger biometric auth');
         });
       }
-      
+
       console.log('✅ [SecureApp] Biometric system initialized');
       console.log('==========================================');
-      
+
     } catch (error) {
       console.log('🔐 [SecureApp] Error during biometric setup:', error);
-      this.setState({ 
+      this.setState({
         showSetup: false,
         isLoading: false,
         authError: error.message,
@@ -168,25 +169,25 @@ class SecureApp extends Component {
   handleAppStateChange = async (nextAppState) => {
     console.log('🚨🚨🚨 [SecureApp] ===== APP STATE CHANGE EVENT =====');
     console.log('🚨 [SecureApp] nextAppState:', nextAppState);
-    
+
     const { isAuthenticating, appState, isCameraActive } = this.state;
-    
+
     // Prevent duplicate processing of the same state change
     if (appState === nextAppState) {
       console.log('🔍 [SecureApp] App state unchanged:', nextAppState, '- skipping duplicate');
       return;
     }
-    
+
     console.log('🔍 [SecureApp] App state changed to:', nextAppState, 'from previous state:', appState);
     const now = Date.now();
-    
+
     // Debounce rapid state changes, but NEVER debounce "active" state (resume is critical!)
     if (nextAppState !== 'active' && this.lastStateChangeTime && (now - this.lastStateChangeTime) < 500) {
       console.log('⚠️ [SecureApp] Rapid state change detected, debouncing...');
       return;
     }
     this.lastStateChangeTime = now;
-    
+
     if (nextAppState === 'background' || nextAppState === 'inactive') {
       // Check if camera/modal is active - if so, ignore this state change
       if (isCameraActive) {
@@ -194,31 +195,32 @@ class SecureApp extends Component {
         this.setState({ appState: nextAppState }); // Still update appState for tracking
         return;
       }
-      
+
       // Record when app went to background
       this.appStateChangeTime = now;
       console.log('🔍 [SecureApp] App going to background at:', new Date(now).toISOString());
-      
+
       // App going to background - check if credentials exist and require biometrics on return
       // Check isLogout flag since context is not reliable
       const isLogoutFlag = await AsyncStorage.getItem('isLogout');
       const isLogout = isLogoutFlag === 'true' || isLogoutFlag === null;
-      
+
       console.log('🔐 [SecureApp] Background detected - isLogout flag:', isLogoutFlag);
       console.log('🔐 [SecureApp] Background detected - computed isLogout:', isLogout);
       console.log('🔐 [SecureApp] Background detected - current needsBiometrics:', this.state.needsBiometrics);
       console.log('🔐 [SecureApp] Background detected - current biometricVerified:', this.state.biometricVerified);
-      
+
       // Check if biometrics are enabled in Settings
       const biometricsEnabledFlag = await AsyncStorage.getItem('biometricsEnabled');
-      const biometricsEnabled = biometricsEnabledFlag === 'true';
-      
+      // Default to true (enabled) if no preference is saved
+      const biometricsEnabled = biometricsEnabledFlag === null ? true : biometricsEnabledFlag === 'true';
+
       console.log('🔐 [SecureApp] BACKGROUND - biometricsEnabled from Settings:', biometricsEnabled);
-      
+
       // Require biometrics if user is logged in (isLogout=false) AND biometrics enabled
       if (!isLogout && biometricsEnabled) {
         console.log('🔐🔐🔐 [SecureApp] BACKGROUND - User is logged in and biometrics enabled - Setting needsBiometrics = true');
-        this.setState({ 
+        this.setState({
           appState: nextAppState,
           needsBiometrics: true,
           biometricVerified: false
@@ -227,60 +229,60 @@ class SecureApp extends Component {
         });
       } else {
         console.log('🔐 [SecureApp] ❌ User not logged in or biometrics disabled - skipping biometric requirement');
-        this.setState({ 
+        this.setState({
           appState: nextAppState
         });
       }
-      
+
       // Stop idle monitoring while in background
       this.stopIdleMonitoring();
-      
+
     } else if (nextAppState === 'active') {
       console.log('🔍 [SecureApp] ========================================');
       console.log('🔍 [SecureApp] APP BECOMING ACTIVE');
       console.log('🔍 [SecureApp] isFirstLaunch:', this.isFirstLaunch);
       console.log('🔍 [SecureApp] Current state - needsBiometrics:', this.state.needsBiometrics, 'biometricVerified:', this.state.biometricVerified);
       console.log('🔍 [SecureApp] ========================================');
-      
+
       // Update app state first
       this.setState({ appState: nextAppState });
-      
+
       // Wait a bit for AppState context to be available
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Get AppState context to check authentication
       const appStateContext = this.context;
       console.log('🔍 [SecureApp] AppState context available:', !!appStateContext);
       console.log('🔍 [SecureApp] Current mainPanelState:', appStateContext?.mainPanelState);
       console.log('🔍 [SecureApp] User authenticated:', appStateContext?.user?.isAuthenticated);
       console.log('🔍 [SecureApp] Has credentials:', appStateContext?.user?.apiCredentialsFound);
-      
+
       // On first active state after component mount:
       // Check isLogout flag to determine if biometrics should be shown
-      
+
       if (this.isFirstLaunch) {
         this.isFirstLaunch = false;
-        
+
         // Show loading screen while checking logout state
         console.log('⏳ [SecureApp] Checking logout state...');
         this.setState({ isLoading: true });
-        
+
         // Check if user logged out or never logged in
         const isLogoutFlag = await AsyncStorage.getItem('isLogout');
         const isLogout = isLogoutFlag === 'true' || isLogoutFlag === null; // true if logged out or never logged in
-        
+
         console.log('✅✅✅ [SecureApp] FIRST ACTIVE STATE after mount');
         console.log('✅ [SecureApp] isLogout flag:', isLogoutFlag, '=> isLogout:', isLogout);
-        
+
         if (isLogout) {
           // User logged out or never logged in - skip biometrics, show login
           console.log('✅ [SecureApp] User logged out or never logged in - skipping biometrics');
-          this.setState({ 
+          this.setState({
             isLoading: false,
-            needsBiometrics: false, 
-            biometricVerified: true 
+            needsBiometrics: false,
+            biometricVerified: true
           });
-          
+
           setTimeout(() => {
             if (appStateContext?.user?.isAuthenticated) {
               console.log('⏰ [SecureApp] Starting idle monitoring (user authenticated)');
@@ -289,29 +291,54 @@ class SecureApp extends Component {
           }, 500);
           return;
         } else {
-          // User was logged in before - require biometrics
-          console.log('🔐 [SecureApp] User was logged in - SHOWING BIOMETRICS (first launch)');
-          this.setState({ 
-            isLoading: false,
-            needsBiometrics: true, 
-            biometricVerified: false 
-          }, () => {
-            console.log('🚀 [SecureApp] Triggering biometric authentication after first launch...');
+          // User was logged in before - check if biometrics are enabled
+          const biometricsEnabledFlag = await AsyncStorage.getItem('biometricsEnabled');
+          // Default to true (enabled) if no preference is saved
+          const biometricsEnabled = biometricsEnabledFlag === null ? true : biometricsEnabledFlag === 'true';
+
+          console.log('🔐 [SecureApp] User was logged in - checking biometric settings');
+          console.log('🔐 [SecureApp] biometricsEnabled:', biometricsEnabled);
+
+          if (biometricsEnabled) {
+            // Biometrics enabled - require authentication
+            console.log('🔐 [SecureApp] Biometrics ENABLED - SHOWING BIOMETRICS (first launch)');
+            this.setState({
+              isLoading: false,
+              needsBiometrics: true,
+              biometricVerified: false
+            }, () => {
+              console.log('🚀 [SecureApp] Triggering biometric authentication after first launch...');
+              setTimeout(() => {
+                this.performBiometricAuth();
+              }, 300);
+            });
+          } else {
+            // Biometrics disabled - skip authentication
+            console.log('🔐 [SecureApp] Biometrics DISABLED - skipping authentication (first launch)');
+            this.setState({
+              isLoading: false,
+              needsBiometrics: false,
+              biometricVerified: true
+            });
+
             setTimeout(() => {
-              this.performBiometricAuth();
-            }, 300);
-          });
+              if (appStateContext?.user?.isAuthenticated) {
+                console.log('⏰ [SecureApp] Starting idle monitoring (user authenticated)');
+                this.startIdleMonitoring();
+              }
+            }, 500);
+          }
           return; // Return here to avoid duplicate trigger below
         }
       }
-      
+
       console.log('==========================================');
       console.log('🔄🔄🔄 [SecureApp] RESUME from background (not first launch)');
       console.log('🔄 [SecureApp] needsBiometrics:', this.state.needsBiometrics);
       console.log('🔄 [SecureApp] biometricVerified:', this.state.biometricVerified);
       console.log('🔄 [SecureApp] isFirstLaunch:', this.isFirstLaunch);
       console.log('==========================================');
-      
+
       // Check if biometric verification is needed
       if (this.state.needsBiometrics && !this.state.biometricVerified) {
         console.log('✅✅✅ [SecureApp] RESUME - Biometric verification REQUIRED');
@@ -322,12 +349,12 @@ class SecureApp extends Component {
         }, 300);
       } else {
         console.log('🔐 [SecureApp] RESUME - No biometric verification needed');
-        this.setState({ 
-          needsBiometrics: false, 
-          biometricVerified: true 
+        this.setState({
+          needsBiometrics: false,
+          biometricVerified: true
         });
       }
-      
+
       // Restart idle monitoring if user is authenticated
       setTimeout(() => {
         if (appStateContext?.user?.apiCredentialsFound) {
@@ -335,7 +362,7 @@ class SecureApp extends Component {
           this.startIdleMonitoring();
         }
       }, 500);
-      
+
       // Reset app state change time
       this.appStateChangeTime = null;
     } else {
@@ -348,17 +375,17 @@ class SecureApp extends Component {
   // Check credentials and redirect to login page if no credentials found
   checkCredentialsAndRedirect = () => {
     console.log('🔍 [SecureApp] Checking credentials status...');
-    
+
     const appStateContext = this.context;
     const hasCredentials = appStateContext?.user?.apiCredentialsFound;
     const isAuthenticated = appStateContext?.user?.isAuthenticated;
-    
+
     console.log('🔍 [SecureApp] Has credentials:', hasCredentials);
     console.log('🔍 [SecureApp] Is authenticated:', isAuthenticated);
-    
+
     if (!hasCredentials && !isAuthenticated) {
       console.log('🚪 [SecureApp] No credentials found - redirecting to login');
-      
+
       // Redirect to login page through AppState
       if (appStateContext?.changeState) {
         appStateContext.changeState('Login');
@@ -371,77 +398,78 @@ class SecureApp extends Component {
   performBiometricAuth = async () => {
     const { biometricInfo, isAuthenticating, needsBiometrics, biometricVerified } = this.state;
     const now = Date.now();
-    
+
     // Skip if biometric verification not needed
     if (!needsBiometrics && biometricVerified) {
       console.log('⚠️ [SecureApp] Biometric verification not needed, skipping...');
       return;
     }
-    
+
     // Prevent multiple simultaneous authentication attempts
     if (isAuthenticating) {
       console.log('⚠️ [SecureApp] Authentication already in progress, skipping...');
       return;
     }
-    
+
     // Prevent rapid authentication attempts (less than 2 seconds apart)
     if (now - this.lastAuthAttempt < 2000) {
       console.log('⚠️ [SecureApp] Authentication attempted too quickly, debouncing...');
       return;
     }
-    
+
     this.lastAuthAttempt = now;
-    
+
     try {
       console.log('🔐 [SecureApp] Starting biometric authentication');
       this.setState({ isAuthenticating: true, authError: null });
-      
+
       // Add a small delay to prevent rapid-fire authentication attempts
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Double-check state hasn't changed while we were waiting
       if (!this.state.needsBiometrics && this.state.biometricVerified) {
         console.log('⚠️ [SecureApp] Biometric verification no longer needed, cancelling auth');
         this.setState({ isAuthenticating: false });
         return;
       }
-      
+
       if (this.state.isAuthenticating === false) {
         console.log('⚠️ [SecureApp] Authentication cancelled while waiting');
         return;
       }
-      
+
       const authType = biometricAuth.getBiometricTypeDisplayName(biometricInfo.biometryType);
-      const result = await biometricAuth.authenticateWithBiometrics(
+      // Use authenticateWithBiometricsOrPasscode to automatically fall back to device passcode
+      const result = await biometricAuth.authenticateWithBiometricsOrPasscode(
         `Use ${authType} to access Solidi`
       );
-      
+
       console.log('🔐 [SecureApp] Biometric authentication result:', result);
-      
+
       if (result.success) {
         console.log('✅ [SecureApp] Biometric authentication successful');
-        
+
         // Check AppState credentials status
         const appStateContext = this.context;
         console.log('🔍 [SecureApp] After biometric success - AppState context:', !!appStateContext);
         console.log('🔍 [SecureApp] After biometric success - hasCredentials:', appStateContext?.user?.apiCredentialsFound);
         console.log('🔍 [SecureApp] After biometric success - isAuthenticated:', appStateContext?.user?.isAuthenticated);
-        
+
         // Clear fallback timer since auth succeeded
         if (this.authFallbackTimer) {
           clearTimeout(this.authFallbackTimer);
           this.authFallbackTimer = null;
         }
-        this.setState({ 
-          isAuthenticated: true, 
+        this.setState({
+          isAuthenticated: true,
           authError: null,
           biometricVerified: true,
           needsBiometrics: false
         });
-        
+
         // Biometric verification successful - credentials still exist, user can continue
         console.log('✅ [SecureApp] Biometric verification successful - app unlocked');
-        
+
         // Reload user data and portfolio after biometric authentication
         if (appStateContext) {
           console.log('🔄 [SecureApp] Reloading cached data after biometric auth...');
@@ -454,14 +482,14 @@ class SecureApp extends Component {
               await appStateContext.loadUserStatus();
               console.log('✅ [SecureApp] User status reloaded');
             }
-            
+
             // Reload portfolio/wallet balances (triggered by biometric pass)
             if (appStateContext.loadBalances) {
               console.log('💰 [SecureApp] Reloading portfolio balances...');
               await appStateContext.loadBalances();
               console.log('✅ [SecureApp] Balances reloaded');
             }
-            
+
             // Prices update automatically every 30s, no need to reload here
             console.log('✅ [SecureApp] All cached data refreshed after biometric auth');
           } catch (error) {
@@ -470,10 +498,10 @@ class SecureApp extends Component {
         } else {
           console.log('⚠️ [SecureApp] Cannot reload cached data - AppState context not available');
         }
-        
+
         // Start idle monitoring after successful authentication
         this.startIdleMonitoring();
-        
+
         // Navigate back to previous page if available
         if (this.context && this.context.stateHistoryList && this.context.stateHistoryList.length > 1) {
           console.log('🔙 [SecureApp] Navigating back to previous page after authentication');
@@ -500,7 +528,7 @@ class SecureApp extends Component {
   // Handle authentication button press
   attemptSystemAuthentication = async () => {
     const { biometricInfo } = this.state;
-    
+
     if (biometricInfo.available) {
       await this.performBiometricAuth();
     } else {
@@ -510,7 +538,7 @@ class SecureApp extends Component {
         this.setState({ isAuthenticated: true });
         // Reset idle timer after successful authentication
         this.resetIdleTimer();
-        
+
         // Navigate back to previous page if available
         if (this.context && this.context.stateHistoryList && this.context.stateHistoryList.length > 1) {
           setTimeout(() => {
@@ -531,12 +559,12 @@ class SecureApp extends Component {
     console.log('⏰ [SecureApp] Starting idle monitoring');
     const appStateContext = this.context;
     const hasCredentials = appStateContext?.user?.apiCredentialsFound;
-    
+
     if (!hasCredentials) {
       console.log('⏰ [SecureApp] No credentials - idle monitoring disabled');
       return;
     }
-    
+
     console.log('⏰ [SecureApp] Idle monitoring enabled (credentials exist)');
     this.resetIdleTimer();
   };
@@ -554,18 +582,18 @@ class SecureApp extends Component {
     if (this.idleTimeoutId) {
       clearTimeout(this.idleTimeoutId);
     }
-    
+
     // Only set timeout if user has credentials
     const appStateContext = this.context;
     const hasCredentials = appStateContext?.user?.apiCredentialsFound;
-    
+
     if (hasCredentials) {
       this.lastActivityTime = Date.now();
-      
+
       this.idleTimeoutId = setTimeout(() => {
         this.checkForIdleTimeout();
       }, this.idleTimeoutDuration);
-      
+
       console.log('⏰ [SecureApp] Idle timer reset, will check in', Math.round(this.idleTimeoutDuration / 1000), 'seconds');
     }
   };
@@ -573,38 +601,38 @@ class SecureApp extends Component {
   checkForIdleTimeout = () => {
     const now = Date.now();
     const timeSinceLastActivity = now - this.lastActivityTime;
-    
+
     console.log('⏰ [SecureApp] Checking idle timeout. Time since last activity:', Math.round(timeSinceLastActivity / 1000), 'seconds');
-    
+
     const appStateContext = this.context;
     const hasCredentials = appStateContext?.user?.apiCredentialsFound;
-    
+
     if (timeSinceLastActivity >= this.idleTimeoutDuration && hasCredentials) {
       console.log('🔐 [SecureApp] Idle timeout reached, requiring biometric verification');
-      
+
       // Check if user has credentials before requiring biometric check
       const appStateContext = this.context;
       const hasCredentials = appStateContext?.user?.apiCredentialsFound;
-      
+
       if (hasCredentials && this.state.biometricInfo.available) {
         // Set flag to require biometric check
-        this.setState({ 
+        this.setState({
           needsBiometrics: true,
           biometricVerified: false,
           authError: 'Session expired due to inactivity. Please authenticate again.',
           isAuthenticating: false
         });
-        
+
         // Trigger biometric authentication
         setTimeout(() => {
           if (!this.state.isAuthenticating) {
             this.performBiometricAuth();
           }
         }, 100);
-        
+
         // Stop monitoring until next authentication
         this.stopIdleMonitoring();
-        
+
         // Optionally show a notification or alert
         this.showIdleTimeoutMessage();
       } else {
@@ -629,7 +657,7 @@ class SecureApp extends Component {
   handleAuthSuccess = (authResult) => {
     console.log('✅ [SecureApp] Authentication successful:', authResult);
     this.setState({ isAuthenticated: true });
-    
+
     // You can add additional logic here, like logging the authentication event
     if (this.props.onAuthSuccess) {
       this.props.onAuthSuccess(authResult);
@@ -640,7 +668,7 @@ class SecureApp extends Component {
   handleLogout = () => {
     console.log('🔐 [SecureApp] User logged out');
     this.setState({ isAuthenticated: false });
-    
+
     if (this.props.onLogout) {
       this.props.onLogout();
     }
@@ -678,13 +706,13 @@ class SecureApp extends Component {
   };
 
   render() {
-    const { 
-      isAuthenticated, 
-      authRequired, 
-      showSetup, 
-      isLoading, 
-      biometricInfo, 
-      authError, 
+    const {
+      isAuthenticated,
+      authRequired,
+      showSetup,
+      isLoading,
+      biometricInfo,
+      authError,
       isAuthenticating,
       needsBiometrics,
       biometricVerified
@@ -706,14 +734,14 @@ class SecureApp extends Component {
       console.log('🎨 [SecureApp] Rendering loading screen');
       return (
         <View style={styles.container}>
-          <SolidiLoadingScreen 
+          <SolidiLoadingScreen
             fullScreen={true}
             message="Initializing..."
             size="medium"
           />
           {this.state.showManualAuth && (
             <View style={styles.manualAuthOverlay}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.authButton}
                 onPress={() => this.performBiometricAuth()}
               >
@@ -729,8 +757,8 @@ class SecureApp extends Component {
     if (!needsBiometrics || biometricVerified) {
       console.log('🎨 [SecureApp] Rendering main app (biometric verified or not needed)');
       return (
-        <View 
-          style={styles.container} 
+        <View
+          style={styles.container}
           onTouchStart={this.handleUserActivity}
           onTouchMove={this.handleUserActivity}
           onScrollBeginDrag={this.handleUserActivity}
@@ -744,10 +772,10 @@ class SecureApp extends Component {
     console.log('🎨 [SecureApp] Rendering BIOMETRIC VERIFICATION SCREEN');
     console.log('🎨 [SecureApp] needsBiometrics:', needsBiometrics, 'biometricVerified:', biometricVerified);
     console.log('🎨 [SecureApp] isAuthenticating:', isAuthenticating);
-    
+
     const authType = biometricAuth.getBiometricTypeDisplayName(biometricInfo.biometryType);
     const hasError = authError && !isAuthenticating;
-    
+
     // Show completely black screen with biometric overlay
     return (
       <View style={styles.container} onTouchStart={this.handleUserActivity}>
@@ -758,7 +786,7 @@ class SecureApp extends Component {
             <View style={styles.authCard}>
               <Text style={styles.errorTitle}>⚠️ Authentication Failed</Text>
               <Text style={styles.errorText}>{authError}</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.retryButton}
                 onPress={this.performBiometricAuth}
               >

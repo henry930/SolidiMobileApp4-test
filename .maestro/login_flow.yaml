@@ -1,0 +1,46 @@
+appId: com.solidimobileapp4test
+---
+# Login E2E Test Flow
+- launchApp
+- clearState
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: ".*Login.*|.*Email.*|.*Sign.*"
+    timeout: 10000
+
+# Take screenshot of initial screen
+- takeScreenshot: 01_initial_screen
+
+# Look for email input field and enter email
+- tapOn:
+    text: ".*Email.*|.*email.*"
+- inputText: "henry930@gmail.com"
+- hideKeyboard
+
+# Take screenshot after email entry
+- takeScreenshot: 02_email_entered
+
+# Look for password input field and enter password
+- tapOn:
+    text: ".*Password.*|.*password.*"
+- inputText: "DazzPow/930"
+- hideKeyboard
+
+# Take screenshot after password entry
+- takeScreenshot: 03_password_entered
+
+# Tap login/sign in button
+- tapOn:
+    text: ".*Login.*|.*Sign.*|.*Continue.*"
+
+# Wait for login to complete (looking for main app elements)
+- extendedWaitUntil:
+    visible: ".*Portfolio.*|.*Wallet.*|.*Balance.*|.*Home.*"
+    timeout: 15000
+
+# Take screenshot of logged in state
+- takeScreenshot: 04_logged_in
+
+# Verify we're logged in by checking for common elements
+- assertVisible: ".*Portfolio.*|.*Wallet.*|.*Balance.*|.*Home.*"

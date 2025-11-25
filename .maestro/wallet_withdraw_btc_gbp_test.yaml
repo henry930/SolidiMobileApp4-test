@@ -1,0 +1,125 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw E2E Test - BTC and GBP (Coordinate-Based)
+# Uses coordinates for maximum reliability
+
+# Step 1: Launch app
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_app_launched
+
+# Step 2: Navigate to Wallet tab
+- tapOn:
+    point: "17%,96%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 02_wallet_tab
+
+# Step 3: Wait for wallet to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 20000
+- takeScreenshot: 03_wallet_loaded
+
+# ========== TEST BTC WITHDRAWAL ==========
+# Step 4: Tap Withdraw button (coordinate: right side, near Deposit)
+- tapOn:
+    point: "75%,22%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 04_withdraw_dialog
+
+# Step 5: Tap first currency option (likely BTC if you have it)
+- tapOn:
+    point: "50%,35%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 05_first_currency_selected
+
+# Step 6: Enter amount in first visible input field
+- tapOn:
+    point: "50%,45%"
+- inputText: "0.0001"
+- hideKeyboard
+- hideKeyboard
+- takeScreenshot: 06_amount_entered
+
+# Step 7: Wait to see form
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 07_withdraw_form
+
+# Step 8: Scroll to see more of form
+- scroll
+- takeScreenshot: 08_form_scrolled
+
+# Step 9: Cancel (tap at bottom left where Cancel usually is)
+- tapOn:
+    point: "25%,85%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 09_cancelled
+
+# ========== TEST GBP WITHDRAWAL ==========
+# Step 10: Tap Withdraw again
+- tapOn:
+    point: "75%,22%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 10_withdraw_dialog_2
+
+# Step 11: Scroll down in dialog to find GBP
+- scroll
+- takeScreenshot: 11_scrolled_for_gbp
+
+# Step 12: Tap second/third currency option (likely GBP)
+- tapOn:
+    point: "50%,50%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 12_second_currency_selected
+
+# Step 13: Enter GBP amount
+- tapOn:
+    point: "50%,40%"
+- inputText: "10"
+- hideKeyboard
+- hideKeyboard
+- takeScreenshot: 13_gbp_amount_entered
+
+# Step 14: Wait to see GBP form
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 14_gbp_form
+
+# Step 15: Scroll to see bank account section
+- scroll
+- takeScreenshot: 15_gbp_scrolled
+
+# Step 16: Cancel
+- tapOn:
+    point: "25%,85%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 16_gbp_cancelled
+
+# Step 17: Final screenshot
+- takeScreenshot: 17_test_complete
+
+# Test completed!
+# Review screenshots to verify:
+# - Withdraw button works
+# - Currency selection works
+# - Amount input works
+# - Forms display correctly

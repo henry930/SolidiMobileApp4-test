@@ -1,0 +1,23 @@
+appId: co.solidi.mobile.test
+---
+# UI Hierarchy Inspector
+# Navigates to a screen and captures detailed information
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+
+# Navigate to Wallet screen
+- tapOn:
+    point: "60%,90%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+# Take screenshot for visual reference
+- takeScreenshot: wallet_screen
+
+# The hierarchy is automatically captured in Maestro's debug output
+# Check the test results folder for hierarchy information

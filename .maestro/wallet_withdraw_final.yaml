@@ -1,0 +1,201 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw E2E Test - BTC and GBP (Correct Navigation)
+# Navigates to 3rd tab (Wallet) and tests withdrawals
+
+# Step 1: Launch app
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_app_launched
+
+# Step 2: Navigate to Wallet tab (3rd icon in bottom menu - center position)
+- tapOn:
+    point: "50%,96%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 02_wallet_tab
+
+# Step 3: Wait for wallet to load - look for "Your Wallet" or "Withdraw"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 20000
+- takeScreenshot: 03_wallet_loaded
+
+# Step 4: Look for and tap "Withdraw" button
+- runFlow:
+    when:
+      visible: "Withdraw"
+    commands:
+      - tapOn: "Withdraw"
+      - takeScreenshot: 04a_withdraw_button_found
+
+# Fallback: try coordinate if text not found
+- runFlow:
+    when:
+      notVisible: "Select|Choose|Currency|Asset"
+    commands:
+      - tapOn:
+          point: "75%,22%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 04_withdraw_dialog
+
+# ========== TEST BTC WITHDRAWAL ==========
+# Step 5: Look for BTC in the dialog
+- runFlow:
+    when:
+      visible: "BTC|Bitcoin"
+    commands:
+      - tapOn: "BTC|Bitcoin"
+      - takeScreenshot: 05a_btc_tapped
+
+# Fallback: tap first option
+- runFlow:
+    when:
+      notVisible: "Amount|Address|Select"
+    commands:
+      - tapOn:
+          point: "50%,35%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 05_btc_selected
+
+# Step 6: Enter BTC amount
+- tapOn:
+    point: "50%,50%"
+- inputText: "0.0001"
+- hideKeyboard
+- takeScreenshot: 06_btc_amount
+
+# Step 7: Look for address selection or continue
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- scroll
+- takeScreenshot: 07_btc_form
+
+# Step 8: Try to find and tap Withdraw/Send/Continue button
+- runFlow:
+    when:
+      visible: "Withdraw|Send|Continue|Confirm"
+    commands:
+      - tapOn: "Withdraw|Send|Continue|Confirm"
+      - takeScreenshot: 08a_btc_submitted
+
+# Fallback: tap bottom right
+- runFlow:
+    when:
+      notVisible: "Success|Initiated|Confirmed"
+    commands:
+      - tapOn:
+          point: "75%,85%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 08_btc_result
+
+# Step 9: Dismiss any dialog
+- runFlow:
+    when:
+      visible: "OK|Close|Done"
+    commands:
+      - tapOn: "OK|Close|Done"
+
+- takeScreenshot: 09_btc_done
+
+# ========== TEST GBP WITHDRAWAL ==========
+# Step 10: Tap Withdraw again
+- runFlow:
+    when:
+      visible: "Withdraw"
+    commands:
+      - tapOn: "Withdraw"
+
+- runFlow:
+    when:
+      notVisible: "Select|Choose"
+    commands:
+      - tapOn:
+          point: "75%,22%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 10_withdraw_dialog_2
+
+# Step 11: Look for GBP
+- runFlow:
+    when:
+      visible: "GBP|British Pound|Pound|£"
+    commands:
+      - tapOn: "GBP|British Pound|Pound|£"
+      - takeScreenshot: 11a_gbp_tapped
+
+# Fallback: scroll and tap
+- runFlow:
+    when:
+      notVisible: "Amount|Bank"
+    commands:
+      - scroll
+      - tapOn:
+          point: "50%,45%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 11_gbp_selected
+
+# Step 12: Enter GBP amount
+- tapOn:
+    point: "50%,40%"
+- inputText: "10"
+- hideKeyboard
+- takeScreenshot: 12_gbp_amount
+
+# Step 13: Review form
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- scroll
+- takeScreenshot: 13_gbp_form
+
+# Step 14: Try to submit
+- runFlow:
+    when:
+      visible: "Withdraw|Send|Continue|Confirm"
+    commands:
+      - tapOn: "Withdraw|Send|Continue|Confirm"
+      - takeScreenshot: 14a_gbp_submitted
+
+# Fallback
+- runFlow:
+    when:
+      notVisible: "Success|Initiated"
+    commands:
+      - tapOn:
+          point: "75%,85%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 14_gbp_result
+
+# Step 15: Dismiss dialog
+- runFlow:
+    when:
+      visible: "OK|Close|Done"
+    commands:
+      - tapOn: "OK|Close|Done"
+
+- takeScreenshot: 15_complete
+
+# Test completed!
+# Review screenshots to verify withdrawals

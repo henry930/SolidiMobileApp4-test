@@ -1,0 +1,42 @@
+appId: com.solidimobileapp4test
+---
+# Check Biometric Setting Status
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+# If on login screen, log in
+- runFlow:
+    when:
+      visible: "Secure Login|Email Address"
+    commands:
+      - tapOn: "Email Address"
+      - inputText: "henry930@gmail.com"
+      - hideKeyboard
+      - tapOn: "Password"
+      - inputText: "DazzPow/930"
+      - hideKeyboard
+      - tapOn: "Sign In"
+      - extendedWaitUntil:
+          visible: "Wallet"
+          timeout: 15000
+
+# Navigate to Settings
+# Try to find the settings entry point based on previous knowledge or common patterns
+- runFlow:
+    when:
+      visible: "Wallet"
+    commands:
+      # Assuming there's a profile/settings icon or tab. 
+      # From UI dump earlier, we saw "" (user icon) which likely leads to profile/settings
+      - tapOn: "|.*Settings.*|.*Profile.*" 
+      - extendedWaitUntil:
+          visible: ".*Biometric.*"
+          timeout: 5000
+      - takeScreenshot: settings_page
+
+# Check status
+- takeScreenshot: biometric_status

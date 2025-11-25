@@ -1,0 +1,68 @@
+appId: com.solidimobileapp4test
+---
+# Registration E2E Test Flow
+- launchApp
+- clearState
+
+# Wait for initial screen
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 01_initial_screen
+
+# Look for Register/Sign Up button
+- runFlow:
+    when:
+      visible: ".*Register.*|.*Sign up.*|.*Create.*|.*New.*"
+    commands:
+      - tapOn: ".*Register.*|.*Sign up.*|.*Create.*|.*New.*"
+      - takeScreenshot: 02_register_tapped
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+
+# Wait for registration form
+- extendedWaitUntil:
+    visible: ".*Email.*|.*Name.*|.*Username.*|.*First.*"
+    timeout: 10000
+    optional: true
+- takeScreenshot: 03_registration_form
+
+# Try to fill in first field (usually name/username)
+- tapOn:
+    index: 0
+- inputText: "TestUser"
+- hideKeyboard
+- takeScreenshot: 04_field_1_entered
+
+# Try to fill in second field (usually email)
+- tapOn:
+    index: 1
+- inputText: "testuser@example.com"
+- hideKeyboard
+- takeScreenshot: 05_field_2_entered
+
+# Try to fill in third field (usually password)
+- tapOn:
+    index: 2
+- inputText: "TestPass123!"
+- hideKeyboard
+- takeScreenshot: 06_field_3_entered
+
+# Scroll down to see more fields if needed
+- scroll
+
+# Look for and tap register/submit button
+- runFlow:
+    when:
+      visible: ".*Register.*|.*Sign up.*|.*Submit.*|.*Create.*|.*Continue.*|.*Next.*"
+    commands:
+      - tapOn: ".*Register.*|.*Sign up.*|.*Submit.*|.*Create.*|.*Continue.*|.*Next.*"
+      - takeScreenshot: 07_submit_tapped
+
+# Wait for response
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+- takeScreenshot: 08_registration_result

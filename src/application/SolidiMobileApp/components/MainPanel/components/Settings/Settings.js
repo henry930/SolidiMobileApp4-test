@@ -31,7 +31,7 @@ import misc from 'src/util/misc';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('Settings');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 
 
@@ -40,7 +40,7 @@ let Settings = () => {
 
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
-  let [biometricsEnabled, setBiometricsEnabled] = useState(false);
+  let [biometricsEnabled, setBiometricsEnabled] = useState(true); // Default to enabled
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
 
@@ -52,14 +52,14 @@ let Settings = () => {
 
 
   // Initial setup.
-  useEffect( () => {
+  useEffect(() => {
     // Log user data immediately when component mounts
     console.log('⚡ Settings component mounted - immediate user data check:');
     console.log('   AppState available:', !!appState);
     console.log('   User authenticated:', appState?.isAuthenticated);
     console.log('   User email (direct):', appState?.userInfo?.email || appState?.getUserInfo?.('email'));
     console.log('   User name (direct):', `${appState?.userInfo?.firstName || ''} ${appState?.userInfo?.lastName || ''}`);
-    
+
     setup();
     loadBiometricPreference();
   }, []); // Pass empty array so that this only runs once on mount.
@@ -67,9 +67,9 @@ let Settings = () => {
 
   let setup = async () => {
     try {
-      await appState.generalSetup({caller: 'Settings'});
+      await appState.generalSetup({ caller: 'Settings' });
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      
+
       // Load user profile data in background (non-blocking)
       console.log('⚙️ [Settings] Loading user profile data in background...');
       // Don't await - let it load in background so cached data shows immediately
@@ -79,13 +79,13 @@ let Settings = () => {
       }).catch(error => {
         console.error('❌ [Settings] Background user info reload failed:', error);
       });
-      
+
       appState.loadUserStatus().then(() => {
         console.log('✅ [Settings] User status reloaded in background');
       }).catch(error => {
         console.error('❌ [Settings] Failed to reload user status:', error);
       });
-      
+
       // 🔍 LOG ALL USER RECORDS AFTER LOGIN
       console.log('👤 ========== USER RECORDS IN SETTINGS PAGE ==========');
       console.log('🌐 AppState Available:', !!appState);
@@ -94,7 +94,7 @@ let Settings = () => {
         authToken: appState.authToken ? 'Present' : 'Missing',
         sessionActive: appState.sessionActive || false
       });
-      
+
       // Log all user info methods
       console.log('👤 User Info via getUserInfo methods:');
       const userInfoFields = ['firstName', 'lastName', 'email', 'id', 'username', 'phone', 'address', 'dateOfBirth', 'accountType', 'status'];
@@ -106,7 +106,7 @@ let Settings = () => {
           console.log(`   ${field}: [Error getting value]`);
         }
       });
-      
+
       // Log raw user data objects
       console.log('📋 Raw User Data Objects:');
       console.log('   appState.userInfo:', appState.userInfo);
@@ -114,29 +114,29 @@ let Settings = () => {
       console.log('   appState.user:', appState.user);
       console.log('   appState.profile:', appState.profile);
       console.log('   appState.account:', appState.account);
-      
+
       // Log session and state data
       console.log('🔧 Session & State Data:');
       console.log('   sessionId:', appState.sessionId);
       console.log('   sessionData:', appState.sessionData);
       console.log('   stateData:', appState.stateData);
       console.log('   currentState:', appState.currentState);
-      
+
       // Log API and server info
       console.log('🌐 API & Server Info:');
       console.log('   apiUrl:', appState.apiUrl);
       console.log('   serverInfo:', appState.serverInfo);
       console.log('   connectionStatus:', appState.connectionStatus);
-      
+
       // Log all appState properties (careful with this one)
       console.log('🔍 All AppState Properties:');
       const appStateKeys = Object.keys(appState || {});
       console.log('   Available properties:', appStateKeys.slice(0, 20)); // Limit to first 20 to avoid overflow
-      
+
       console.log('👤 ================= END USER RECORDS =================');
-      
-      triggerRender(renderCount+1);
-    } catch(err) {
+
+      triggerRender(renderCount + 1);
+    } catch (err) {
       let msg = `Settings.setup: Error = ${err}`;
       console.log(msg);
       console.error('❌ Error in Settings setup:', err);
@@ -148,13 +148,13 @@ let Settings = () => {
     // Debug: Log the entire user.info.user object with safe access
     console.log('🔍 [Settings getUserName] Full user.info.user object:', appState.state?.user?.info?.user);
     console.log('🔍 [Settings getUserName] Keys in user.info.user:', Object.keys(appState.state?.user?.info?.user || {}));
-    
+
     let firstName = appState.getUserInfo('firstName');
     let lastName = appState.getUserInfo('lastName');
-    
+
     console.log('🔍 [Settings getUserName] firstName result:', firstName);
     console.log('🔍 [Settings getUserName] lastName result:', lastName);
-    
+
     if (firstName === '[loading]' || lastName === '[loading]') {
       // Show loading while fetching fresh data
       return 'Loading...';
@@ -166,7 +166,7 @@ let Settings = () => {
   let getUserEmail = () => {
     let email = appState.getUserInfo('email');
     console.log('🔍 [Settings getUserEmail] email result:', email);
-    
+
     if (email === '[loading]') {
       // Show loading while fetching fresh data
       return 'Loading...';
@@ -177,7 +177,8 @@ let Settings = () => {
   const loadBiometricPreference = async () => {
     try {
       const enabled = await AsyncStorage.getItem('biometricsEnabled');
-      setBiometricsEnabled(enabled === 'true');
+      // Default to true (enabled) if no preference is saved
+      setBiometricsEnabled(enabled === null ? true : enabled === 'true');
       console.log('📱 [Settings] Loaded biometric preference:', enabled);
     } catch (error) {
       console.error('❌ [Settings] Error loading biometric preference:', error);
@@ -189,7 +190,7 @@ let Settings = () => {
       await AsyncStorage.setItem('biometricsEnabled', value.toString());
       setBiometricsEnabled(value);
       console.log('📱 [Settings] Biometric preference saved:', value);
-      
+
       // Show feedback to user
       if (value) {
         console.log('✅ Biometric authentication enabled');
@@ -216,15 +217,15 @@ let Settings = () => {
               <Avatar.Icon
                 size={80}
                 icon="account"
-                style={{ 
+                style={{
                   marginBottom: 16,
-                  backgroundColor: materialTheme.colors.primaryContainer 
+                  backgroundColor: materialTheme.colors.primaryContainer
                 }}
                 color={materialTheme.colors.onPrimaryContainer}
               />
-              <Text 
-                variant="headlineSmall" 
-                style={{ 
+              <Text
+                variant="headlineSmall"
+                style={{
                   fontWeight: 'bold',
                   color: materialTheme.colors.onSurface,
                   marginBottom: 4
@@ -232,9 +233,9 @@ let Settings = () => {
               >
                 {getUserName()}
               </Text>
-              <Text 
-                variant="bodyMedium" 
-                style={{ 
+              <Text
+                variant="bodyMedium"
+                style={{
                   color: materialTheme.colors.onSurfaceVariant,
                   marginBottom: 16
                 }}
@@ -250,13 +251,13 @@ let Settings = () => {
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 0 }}>
             <List.Section>
-              <List.Subheader style={{ 
+              <List.Subheader style={{
                 color: materialTheme.colors.primary,
                 fontWeight: 'bold'
               }}>
                 Wallet & Finance
               </List.Subheader>
-              
+
               <List.Item
                 title="Wallet"
                 description="Manage deposits, withdrawals, and balances"
@@ -265,9 +266,9 @@ let Settings = () => {
                 onPress={() => { appState.changeState('Wallet'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Assets"
                 description="View your cryptocurrency and fiat balances"
@@ -284,13 +285,13 @@ let Settings = () => {
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 0 }}>
             <List.Section>
-              <List.Subheader style={{ 
+              <List.Subheader style={{
                 color: materialTheme.colors.primary,
                 fontWeight: 'bold'
               }}>
                 Account Settings
               </List.Subheader>
-              
+
               <List.Item
                 title="Personal Details"
                 description="Manage your personal information"
@@ -299,9 +300,9 @@ let Settings = () => {
                 onPress={() => { appState.changeState('PersonalDetails'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Biometric Authentication"
                 description={biometricsEnabled ? "Enabled" : "Disabled"}
@@ -315,9 +316,9 @@ let Settings = () => {
                 )}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Identity Verification"
                 description="Verify your identity for enhanced features"
@@ -326,9 +327,9 @@ let Settings = () => {
                 onPress={() => { appState.changeState('IdentityVerification'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Bank Account"
                 description="Manage your banking details"
@@ -337,9 +338,9 @@ let Settings = () => {
                 onPress={() => { appState.changeState('BankAccounts'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Solidi Account"
                 description="Terms & Conditions and Delete Account"
@@ -348,7 +349,7 @@ let Settings = () => {
                 onPress={() => { appState.changeState('SolidiAccount'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
 
             </List.Section>
           </Card.Content>
@@ -358,13 +359,13 @@ let Settings = () => {
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 0 }}>
             <List.Section>
-              <List.Subheader style={{ 
+              <List.Subheader style={{
                 color: materialTheme.colors.primary,
                 fontWeight: 'bold'
               }}>
                 Activity & Management
               </List.Subheader>
-              
+
               <List.Item
                 title="Transaction History"
                 description="View your trading and transaction history"
@@ -372,9 +373,9 @@ let Settings = () => {
                 onPress={() => { appState.changeState('History'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Address Book"
                 description="Manage your saved addresses and contacts"

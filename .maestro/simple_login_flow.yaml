@@ -1,0 +1,53 @@
+appId: com.solidimobileapp4test
+---
+# Login Flow Without Clear State
+- launchApp
+
+# Wait for current screen to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+# Check if already logged in (Wallet visible)
+- runFlow:
+    when:
+      visible: "Wallet"
+    commands:
+      - tapOn: "Wallet"
+      - takeScreenshot: already_logged_in
+
+# If not logged in, wait for login screen
+- extendedWaitUntil:
+    visible: "Secure Login|Email Address"
+    timeout: 10000
+    optional: true
+- takeScreenshot: 01_current_screen
+
+# Tap on Email Address field
+- tapOn:
+    text: "Email Address"
+- inputText: "henry930@gmail.com"
+- hideKeyboard
+- takeScreenshot: 02_email_entered
+
+# Tap on Password field  
+- tapOn:
+    text: "Password"
+- inputText: "DazzPow/930"
+- hideKeyboard
+- takeScreenshot: 03_password_entered
+
+# Tap Sign In button
+- tapOn:
+    text: "Sign In"
+- takeScreenshot: 04_signin_tapped
+
+# Wait for successful login
+- extendedWaitUntil:
+    visible: "Wallet"
+    timeout: 20000
+
+- takeScreenshot: 05_logged_in
+
+# Verify login
+- assertVisible: "Wallet"

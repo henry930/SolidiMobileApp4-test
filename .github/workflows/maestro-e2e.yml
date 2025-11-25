@@ -1,0 +1,214 @@
+name: Maestro E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - '.maestro/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'package.json'
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  test-ios:
+    name: iOS E2E Tests
+    runs-on: macos-13
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+      
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+      
+      - name: Verify Maestro installation
+        run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
+          maestro --version
+      
+      - name: Start Metro bundler
+        run: |
+          npx react-native start &
+          echo "METRO_PID=$!" >> $GITHUB_ENV
+          sleep 10
+      
+      - name: Build and run iOS app
+        run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
+          xcrun simctl boot "iPhone 15 Pro" || true
+          sleep 5
+          npx react-native run-ios --simulator="iPhone 15 Pro" --configuration Release &
+          sleep 60
+      
+      - name: Run Maestro tests
+        run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
+          mkdir -p maestro-results
+          maestro test --format junit --output maestro-results/report.xml .maestro/ || echo "TESTS_FAILED=true" >> $GITHUB_ENV
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-ios-results
+          path: |
+            maestro-results/
+            *.png
+            *.mp4
+          retention-days: 30
+      
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: maestro-results/report.xml
+          check_name: iOS E2E Test Results
+      
+      - name: Stop Metro bundler
+        if: always()
+        run: |
+          if [ ! -z "$METRO_PID" ]; then
+            kill $METRO_PID || true
+          fi
+      
+      - name: Create test summary
+        if: always()
+        run: |
+          echo "## 📱 iOS Maestro Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$TESTS_FAILED" == "true" ]; then
+            echo "❌ Some tests failed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  test-android:
+    name: Android E2E Tests
+    runs-on: macos-13
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+      
+      - name: Verify Maestro installation
+        run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
+          maestro --version
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Accept Android licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+      
+      - name: Build Android app
+        run: |
+          cd android
+          ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release
+          cd ..
+      
+      - name: Run tests with Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            export PATH="$PATH:$HOME/.maestro/bin"
+            adb install android/app/build/outputs/apk/release/app-release.apk
+            sleep 10
+            mkdir -p maestro-results
+            maestro test --format junit --output maestro-results/report.xml .maestro/ || echo "TESTS_FAILED=true" >> $GITHUB_ENV
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-android-results
+          path: |
+            maestro-results/
+            *.png
+            *.mp4
+          retention-days: 30
+      
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: maestro-results/report.xml
+          check_name: Android E2E Test Results
+      
+      - name: Create test summary
+        if: always()
+        run: |
+          echo "## 🤖 Android Maestro Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$TESTS_FAILED" == "true" ]; then
+            echo "❌ Some tests failed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          fi

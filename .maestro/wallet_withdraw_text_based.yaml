@@ -1,0 +1,161 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw E2E Test - Text-Based Element Detection
+# Uses actual text to find and click elements (no blind coordinates)
+
+# Step 1: Launch app
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_app_launched
+
+# Step 2: Navigate to Wallet tab by finding "Wallet" text
+- tapOn: "Wallet"
+- extendedWaitUntil:
+    visible: "Your Wallet|Total Portfolio"
+    timeout: 15000
+- takeScreenshot: 02_wallet_page
+
+# Step 3: Find and tap "Withdraw" button
+- tapOn: "Withdraw"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 03_withdraw_dialog
+
+# ========== TEST BTC WITHDRAWAL ==========
+# Step 4: Select BTC from the list
+- tapOn: "BTC"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 04_btc_selected
+
+# Step 5: Find "Select Asset" or asset dropdown if it exists
+- runFlow:
+    when:
+      visible: "Select Asset|Select cryptocurrency"
+    commands:
+      - tapOn: "Select Asset|Select cryptocurrency"
+      - extendedWaitUntil:
+          visible: "BTC"
+          timeout: 3000
+      - tapOn: "BTC"
+      - takeScreenshot: 05_btc_asset_confirmed
+
+# Step 6: Find amount input field and enter amount
+# Look for placeholder or label text
+- runFlow:
+    when:
+      visible: "Amount|Enter amount|0.0"
+    commands:
+      - tapOn: "Amount|Enter amount|0.0"
+
+- inputText: "0.0001"
+- hideKeyboard
+- takeScreenshot: 06_btc_amount_entered
+
+# Step 7: Find address selection
+- runFlow:
+    when:
+      visible: "Select|Address|Choose"
+    commands:
+      - tapOn: "Select|Address|Choose"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 07_btc_address_picker
+      # Tap first address in list
+      - tapOn:
+          index: 0
+      - takeScreenshot: 07b_btc_address_selected
+
+# Step 8: Review form
+- takeScreenshot: 08_btc_form_ready
+
+# Step 9: Find and tap Withdraw/Send button
+- tapOn: "Withdraw|Send|Confirm"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 09_btc_submitted
+
+# Step 10: Handle success dialog
+- runFlow:
+    when:
+      visible: "OK|Close|Done"
+    commands:
+      - tapOn: "OK|Close|Done"
+
+- takeScreenshot: 10_btc_complete
+
+# ========== TEST GBP WITHDRAWAL ==========
+# Step 11: Tap Withdraw button again
+- tapOn: "Withdraw"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 11_withdraw_dialog_2
+
+# Step 12: Select GBP
+- tapOn: "GBP"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 12_gbp_selected
+
+# Step 13: Enter GBP amount
+- runFlow:
+    when:
+      visible: "Amount|Enter amount"
+    commands:
+      - tapOn: "Amount|Enter amount"
+
+- inputText: "10"
+- hideKeyboard
+- takeScreenshot: 13_gbp_amount_entered
+
+# Step 14: Select bank account if needed
+- runFlow:
+    when:
+      visible: "Select|Bank|Account"
+    commands:
+      - tapOn: "Select|Bank|Account"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 14_gbp_bank_picker
+      # Tap first bank account
+      - tapOn:
+          index: 0
+      - takeScreenshot: 14b_gbp_bank_selected
+
+# Step 15: Review GBP form
+- takeScreenshot: 15_gbp_form_ready
+
+# Step 16: Submit GBP withdrawal
+- tapOn: "Withdraw|Send|Confirm"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 16_gbp_submitted
+
+# Step 17: Handle success dialog
+- runFlow:
+    when:
+      visible: "OK|Close|Done"
+    commands:
+      - tapOn: "OK|Close|Done"
+
+- takeScreenshot: 17_gbp_complete
+
+# Final screenshot
+- takeScreenshot: 18_test_complete
+
+# Test Summary:
+# ✅ Used text-based element detection
+# ✅ No blind coordinate taps
+# ✅ Tested BTC withdrawal (0.0001 BTC)
+# ✅ Tested GBP withdrawal (10 GBP)
+# ✅ Captured all steps with screenshots

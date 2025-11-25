@@ -1,0 +1,110 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw Test - Final Working Version (Robust Address Selection)
+# Flow: Select BTC -> Input Amount (0.001) -> Select Address (Robust)
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+
+# 1. Navigate to Wallet
+- tapOn:
+    point: "60%,90%"
+
+# Wait and check if we are on Wallet page
+- runFlow:
+    commands:
+        - tapOn:
+            point: "50%,50%"
+- extendedWaitUntil:
+    visible: "non_existent_element"
+    timeout: 3000
+    optional: true
+
+# Attempt 2: Even higher (88%) if needed
+- runFlow:
+    when:
+        notVisible: ".*Withdraw.*"
+    commands:
+        - tapOn:
+            point: "60%,88%"
+        - extendedWaitUntil:
+            visible: "non_existent_element"
+            timeout: 3000
+            optional: true
+
+# Attempt 3: Try text selector ".*Wallet.*"
+- runFlow:
+    when:
+        notVisible: ".*Withdraw.*"
+    commands:
+        - tapOn: ".*Wallet.*"
+        - extendedWaitUntil:
+            visible: "non_existent_element"
+            timeout: 3000
+            optional: true
+
+# Now try to find Withdraw
+- tapOn: ".*Withdraw.*"
+
+# Verify success
+- extendedWaitUntil:
+    visible: "BTC (Bitcoin)"
+    timeout: 10000
+
+# 2. Select BTC
+- tapOn: "BTC (Bitcoin)"
+
+# 3. Enter Amount (0.001)
+- tapOn:
+    id: "text-input-outline"
+- inputText: "0.001"
+- hideKeyboard
+
+# 4. Select Address (Robust)
+- tapOn: "Select a saved address.*"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+
+# Try tapping index 0 (might be header)
+- tapOn:
+    index: 0
+
+# If still open, try index 1 (first item)
+- runFlow:
+    when:
+        visible: "Select a saved address.*"
+    commands:
+        - tapOn:
+            index: 1
+
+# If still open, try tapping center of list area
+- runFlow:
+    when:
+        visible: "Select a saved address.*"
+    commands:
+        - tapOn:
+            point: "50%,50%"
+
+- extendedWaitUntil:
+    notVisible: "Select a saved address.*"
+    timeout: 5000
+
+# 5. Submit Withdrawal
+- tapOn: "Withdraw|Send|Confirm"
+# Fallback to coordinate if text not found
+- runFlow:
+    when:
+        notVisible: "Withdraw|Send|Confirm"
+    commands:
+        - tapOn:
+            point: "75%,85%"
+
+- extendedWaitUntil:
+    visible: "Success|Done|OK"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: withdraw_complete_001

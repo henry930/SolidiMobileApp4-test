@@ -1,0 +1,28 @@
+appId: co.solidi.mobile.test
+---
+# Verify App is Already Logged In Test
+
+# Launch app
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+# Take screenshot of current state
+- takeScreenshot: 00_current_app_state
+
+# Check if we're already logged in by looking for main app elements
+- extendedWaitUntil:
+    visible: "Wallet|Transfer|History|Settings"
+    timeout: 15000
+
+# Take screenshot
+- takeScreenshot: 01_main_screen_found
+
+# Verify we can see the Wallet tab
+- assertVisible: "Wallet"
+
+# Take final screenshot
+- takeScreenshot: 02_test_complete_already_logged_in

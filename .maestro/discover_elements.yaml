@@ -1,0 +1,33 @@
+appId: co.solidi.mobile.test
+---
+# Element Discovery Test
+# This test helps you discover elements by trying different selectors
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+
+# Navigate to Wallet
+- tapOn:
+    point: "60%,90%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+
+# Take screenshot to see what's on screen
+- takeScreenshot: 01_wallet_screen
+
+# Try to find elements by text (this will show what text exists)
+- assertVisible: ".*Withdraw.*"
+- takeScreenshot: 02_withdraw_visible
+
+# Try to tap and see what happens
+- tapOn: ".*Withdraw.*"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 03_withdraw_form
+
+# List all visible text by trying to find common elements
+# When these fail, the error message shows what elements ARE visible

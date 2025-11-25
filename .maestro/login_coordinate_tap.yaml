@@ -1,0 +1,54 @@
+appId: co.solidi.mobile.test
+---
+# Login E2E Test - Using Coordinate Tap for Sign In Button
+
+# Launch app
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000
+- takeScreenshot: 01_app_launched
+
+# Wait for login screen
+- extendedWaitUntil:
+    visible: "Secure Login"
+    timeout: 15000
+- takeScreenshot: 02_login_screen
+
+# Enter email
+- tapOn:
+    text: "Email Address"
+- inputText: "henry930@gmail.com"
+- hideKeyboard
+- takeScreenshot: 03_email_entered
+
+# Enter password
+- tapOn:
+    text: "Password"
+- inputText: "DazzPow/930"
+- hideKeyboard
+- takeScreenshot: 04_password_entered
+
+# Hide keyboard multiple times to ensure it's gone
+- hideKeyboard
+- hideKeyboard
+
+# Wait a moment for keyboard to fully dismiss
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+
+# Tap Sign In button using coordinates (center-bottom of screen)
+- tapOn:
+    point: "50%,85%"
+- takeScreenshot: 05_signin_tapped
+
+# Wait for successful login
+- extendedWaitUntil:
+    visible: "Wallet|Transfer"
+    timeout: 20000
+- takeScreenshot: 06_login_success
+
+# Verify we're logged in
+- assertVisible: "Wallet"
+- takeScreenshot: 07_test_complete_success

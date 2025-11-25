@@ -1,0 +1,68 @@
+appId: co.solidi.mobile.test
+---
+# Login Test - Wait for App to Fully Load
+
+# Launch app
+- launchApp
+
+# Wait longer for app to fully load (splash screen)
+- extendedWaitUntil:
+    visible: "Secure Login|Wallet|Transfer|History|Use Face ID|Skip"
+    timeout: 30000
+
+# Take screenshot of what we see
+- takeScreenshot: 01_app_loaded
+
+# If we see the main app (already logged in), test passes
+- runFlow:
+    when:
+      visible: "Wallet|Transfer"
+    commands:
+      - assertVisible: "Wallet"
+      - takeScreenshot: 02_already_logged_in_success
+
+# If we see biometric screen, skip it
+- runFlow:
+    when:
+      visible: "Skip"
+    commands:
+      - tapOn: "Skip"
+      - extendedWaitUntil:
+          visible: "Secure Login"
+          timeout: 10000
+
+# If we see login screen, perform login
+- runFlow:
+    when:
+      visible: "Secure Login"
+    commands:
+      # Enter email
+      - tapOn: "Email Address"
+      - inputText: "henry930@gmail.com"
+      - hideKeyboard
+      - takeScreenshot: 03_email_entered
+      
+      # Enter password
+      - tapOn: "Password"
+      - inputText: "DazzPow/930"
+      - hideKeyboard
+      - hideKeyboard
+      - takeScreenshot: 04_password_entered
+      
+      # Tap Sign In
+      - tapOn: "SIGN IN"
+      - takeScreenshot: 05_signin_tapped
+      
+      # Wait for login success
+      - extendedWaitUntil:
+          visible: "Wallet|Transfer"
+          timeout: 20000
+      - takeScreenshot: 06_login_success
+
+# Final verification - we should be logged in
+- extendedWaitUntil:
+    visible: "Wallet|Transfer"
+    timeout: 5000
+
+- assertVisible: "Wallet"
+- takeScreenshot: 07_test_complete

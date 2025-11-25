@@ -1,0 +1,5 @@
+appId: com.solidimobileapp4test
+---
+- launchApp
+- assertVisible: ".*Solidi.*"
+- takeScreenshot: launch_screen_android

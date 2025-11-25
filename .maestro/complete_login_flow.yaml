@@ -1,0 +1,60 @@
+appId: com.solidimobileapp4test
+---
+# Complete Logout and Login Flow
+- launchApp
+
+# Take screenshot of current state
+- takeScreenshot: 01_app_opened
+
+# Navigate to Settings (look for settings icon/button)
+- runFlow:
+    when:
+      visible: ".*Settings.*|.*setting.*|.*⚙.*"
+    commands:
+      - tapOn: ".*Settings.*|.*setting.*|.*⚙.*"
+      - takeScreenshot: 02_settings_opened
+      - extendedWaitUntil:
+          visible: ".*Logout.*|.*Log out.*|.*Sign out.*"
+          timeout: 5000
+
+# Tap logout button
+- runFlow:
+    when:
+      visible: ".*Logout.*|.*Log out.*|.*Sign out.*"
+    commands:
+      - tapOn: ".*Logout.*|.*Log out.*|.*Sign out.*"
+      - takeScreenshot: 03_logout_tapped
+
+# Wait for login screen to appear
+- extendedWaitUntil:
+    visible: ".*Login.*|.*Sign.*|.*Email.*|.*Username.*"
+    timeout: 10000
+- takeScreenshot: 04_login_screen
+
+# Enter email
+- tapOn:
+    index: 0
+- inputText: "henry930@gmail.com"
+- hideKeyboard
+- takeScreenshot: 05_email_entered
+
+# Enter password
+- tapOn:
+    index: 1
+- inputText: "DazzPow/930"
+- hideKeyboard
+- takeScreenshot: 06_password_entered
+
+# Tap login button
+- tapOn:
+    text: ".*Login.*|.*Sign.*|.*Submit.*|.*Continue.*"
+- takeScreenshot: 07_login_submitted
+
+# Wait for successful login (looking for main app elements)
+- extendedWaitUntil:
+    visible: ".*Trade.*|.*Assets.*|.*Wallet.*|.*Transfer.*|.*History.*"
+    timeout: 15000
+
+# Verify we're logged in
+- assertVisible: ".*Trade.*|.*Assets.*|.*Wallet.*"
+- takeScreenshot: 08_logged_in_success

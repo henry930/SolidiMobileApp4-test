@@ -1,0 +1,107 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw E2E Test - BTC and GBP
+# Based on actual Wallet page screenshot
+
+# Step 1: Launch app
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_launched
+
+# Step 2: Navigate to Wallet (3rd tab at 60%)
+- tapOn:
+    point: "60%,96%"
+- extendedWaitUntil:
+    visible: "Your Wallet"
+    timeout: 15000
+- takeScreenshot: 02_wallet_page
+
+# Step 3: Tap Withdraw button (right button, approximately 75% horizontal, 25% from top)
+- tapOn:
+    point: "75%,25%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 03_withdraw_clicked
+
+# Step 4: Select BTC
+- tapOn: "BTC"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 04_btc_selected
+
+# Step 5: Enter amount 0.0001
+- tapOn:
+    point: "50%,45%"
+- inputText: "0.0001"
+- hideKeyboard
+- takeScreenshot: 05_btc_amount
+
+# Step 6: Submit BTC withdrawal
+- tapOn:
+    point: "75%,85%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 06_btc_result
+
+# Step 7: Dismiss any dialog
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+
+- takeScreenshot: 07_btc_done
+
+# Step 8: Tap Withdraw again for GBP
+- tapOn:
+    point: "75%,25%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 08_withdraw_again
+
+# Step 9: Switch to Fiat tab
+- tapOn: "Fiat"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 09_fiat_tab
+
+# Step 10: Select GBP
+- tapOn: "GBP"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 10_gbp_selected
+
+# Step 11: Enter amount 10
+- tapOn:
+    point: "50%,40%"
+- inputText: "10"
+- hideKeyboard
+- takeScreenshot: 11_gbp_amount
+
+# Step 12: Submit GBP withdrawal
+- tapOn:
+    point: "75%,85%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 12_gbp_result
+
+# Step 13: Dismiss dialog
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+
+- takeScreenshot: 13_complete
+
+# Test completed!
+# Tested BTC (0.0001) and GBP (10) withdrawals

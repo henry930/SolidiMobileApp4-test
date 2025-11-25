@@ -1,0 +1,40 @@
+appId: co.solidi.mobile.test
+---
+# Accurate Login Flow Based on Real App UI
+- launchApp
+- clearState
+
+# Wait for login screen to appear
+- extendedWaitUntil:
+    visible: "Secure Login"
+    timeout: 10000
+- takeScreenshot: 01_login_screen
+
+# Tap on Email Address field
+- tapOn:
+    text: "Email Address"
+- inputText: "henry930@gmail.com"
+- hideKeyboard
+- takeScreenshot: 02_email_entered
+
+# Tap on Password field  
+- tapOn:
+    text: "Password"
+- inputText: "DazzPow/930"
+- hideKeyboard
+- takeScreenshot: 03_password_entered
+
+# Tap Sign In button
+- tapOn:
+    text: "Sign In"
+- takeScreenshot: 04_signin_tapped
+
+# Wait for successful login - looking for main app screen
+- extendedWaitUntil:
+    visible: "Wallet|Transfer|History"
+    timeout: 15000
+
+- takeScreenshot: 05_logged_in_success
+
+# Verify we're logged in
+- assertVisible: "Wallet"

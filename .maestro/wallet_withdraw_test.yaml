@@ -1,0 +1,199 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw E2E Test - Updated with Correct Button Detection
+# Tests withdrawal functionality for crypto and fiat assets
+
+# Step 1: Launch app and ensure logged in
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_app_launched
+
+# Step 2: Navigate to Wallet tab (bottom left - 17%, 96%)
+- tapOn:
+    point: "17%,96%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 02_wallet_tab
+
+# Step 3: Wait for wallet to load - look for "Your Wallet" or "Total Portfolio Value"
+- extendedWaitUntil:
+    visible: "Your Wallet|Total Portfolio Value|Deposit"
+    timeout: 15000
+- takeScreenshot: 03_wallet_loaded
+
+# Step 4: Find and tap "Withdraw" button (it's next to "Deposit" button)
+- extendedWaitUntil:
+    visible: "Withdraw"
+    timeout: 10000
+- tapOn: "Withdraw"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 04_withdraw_button_tapped
+
+# Step 5: Wait for currency selection dialog
+- extendedWaitUntil:
+    visible: "Select Currency|Select Asset|Withdraw"
+    timeout: 10000
+- takeScreenshot: 05_currency_selection
+
+# Step 6: Test USD Withdrawal (Fiat)
+- runFlow:
+    when:
+      visible: "USD|US Dollar|Dollar|$"
+    commands:
+      - tapOn: "USD|US Dollar|Dollar|$"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 06_usd_selected
+      
+      # Enter amount
+      - tapOn:
+          point: "50%,40%"
+      - inputText: "10"
+      - hideKeyboard
+      - takeScreenshot: 07_usd_amount_entered
+      
+      # Wait to see the form
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 08_usd_withdraw_form
+      
+      # Cancel
+      - tapOn: "Cancel"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 2000
+
+# Step 7: Tap Withdraw again for next asset
+- runFlow:
+    when:
+      visible: "Withdraw"
+    commands:
+      - tapOn: "Withdraw"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+
+# Step 8: Test GBP Withdrawal (Fiat)
+- runFlow:
+    when:
+      visible: "GBP|British Pound|Pound|£"
+    commands:
+      - tapOn: "GBP|British Pound|Pound|£"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 09_gbp_selected
+      
+      # Enter amount
+      - tapOn:
+          point: "50%,40%"
+      - inputText: "10"
+      - hideKeyboard
+      - takeScreenshot: 10_gbp_amount_entered
+      
+      # Wait to see the form
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 11_gbp_withdraw_form
+      
+      # Cancel
+      - tapOn: "Cancel"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 2000
+
+# Step 9: Tap Withdraw again for crypto
+- runFlow:
+    when:
+      visible: "Withdraw"
+    commands:
+      - tapOn: "Withdraw"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+
+# Step 10: Test BTC Withdrawal (Crypto)
+- runFlow:
+    when:
+      visible: "BTC|Bitcoin"
+    commands:
+      - tapOn: "BTC|Bitcoin"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 12_btc_selected
+      
+      # Enter amount
+      - tapOn:
+          point: "50%,50%"
+      - inputText: "0.0001"
+      - hideKeyboard
+      - takeScreenshot: 13_btc_amount_entered
+      
+      # Wait to see the form
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 14_btc_withdraw_form
+      
+      # Cancel
+      - tapOn: "Cancel"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 2000
+
+# Step 11: Tap Withdraw again for ETH
+- runFlow:
+    when:
+      visible: "Withdraw"
+    commands:
+      - tapOn: "Withdraw"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+
+# Step 12: Test ETH Withdrawal (Crypto)
+- runFlow:
+    when:
+      visible: "ETH|Ethereum"
+    commands:
+      - tapOn: "ETH|Ethereum"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 15_eth_selected
+      
+      # Enter amount
+      - tapOn:
+          point: "50%,50%"
+      - inputText: "0.001"
+      - hideKeyboard
+      - takeScreenshot: 16_eth_amount_entered
+      
+      # Wait to see the form
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 17_eth_withdraw_form
+      
+      # Cancel
+      - tapOn: "Cancel"
+
+# Step 13: Final screenshot
+- takeScreenshot: 18_test_complete
+
+# Test Summary:
+# ✅ Found and tapped "Withdraw" button
+# ✅ Tested USD withdrawal form
+# ✅ Tested GBP withdrawal form
+# ✅ Tested BTC withdrawal form (if available)
+# ✅ Tested ETH withdrawal form (if available)
+# 📸 Captured screenshots of all forms

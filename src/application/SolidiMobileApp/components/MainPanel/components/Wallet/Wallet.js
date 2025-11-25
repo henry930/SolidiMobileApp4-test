@@ -46,12 +46,12 @@ const cards = cardStyles;
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('Wallet');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 let Wallet = () => {
   let appState = useContext(AppStateContext);
   let theme = useTheme();
-  
+
   // Check authentication first
   if (!appState) {
     return (
@@ -60,14 +60,14 @@ let Wallet = () => {
       </View>
     );
   }
-  
+
   // Check if user is authenticated
   const isAuthenticated = appState.user?.isAuthenticated;
-  
+
   if (!isAuthenticated) {
     return (
-      <View style={{ 
-        flex: 1, 
+      <View style={{
+        flex: 1,
         backgroundColor: '#f5f5f5',
         justifyContent: 'center',
         alignItems: 'center',
@@ -86,26 +86,26 @@ let Wallet = () => {
           shadowRadius: 4,
           elevation: 3,
         }}>
-          <Text style={{ 
-            fontSize: 20, 
-            fontWeight: 'bold', 
+          <Text style={{
+            fontSize: 20,
+            fontWeight: 'bold',
             color: 'white',
             textAlign: 'center',
             marginBottom: 10
           }}>
             🔒 Authentication Required
           </Text>
-          <Text style={{ 
-            fontSize: 16, 
+          <Text style={{
+            fontSize: 16,
             color: 'white',
             textAlign: 'center'
           }}>
             Please login to access your wallet
           </Text>
         </View>
-        
-        <Text style={{ 
-          fontSize: 16, 
+
+        <Text style={{
+          fontSize: 16,
           color: '#666',
           textAlign: 'center',
           marginBottom: 30,
@@ -113,8 +113,8 @@ let Wallet = () => {
         }}>
           You need to be logged in to access{'\n'}your wallet and manage funds.
         </Text>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={{
             backgroundColor: '#007AFF',
             paddingHorizontal: 30,
@@ -131,18 +131,18 @@ let Wallet = () => {
             appState.setMainPanelState('Login');
           }}
         >
-          <Text style={{ 
-            color: 'white', 
-            fontWeight: 'bold', 
+          <Text style={{
+            color: 'white',
+            fontWeight: 'bold',
             fontSize: 16,
-            textAlign: 'center' 
+            textAlign: 'center'
           }}>
             Go to Login
           </Text>
         </TouchableOpacity>
-        
-        <Text style={{ 
-          fontSize: 12, 
+
+        <Text style={{
+          fontSize: 12,
           color: '#999',
           textAlign: 'center',
           marginTop: 20
@@ -152,37 +152,37 @@ let Wallet = () => {
       </View>
     );
   }
-  
+
   let [renderCount, triggerRender] = useState(0);
   let [isLoading, setIsLoading] = useState(true);
   let [depositAmount, setDepositAmount] = useState('');
   let [withdrawAmount, setWithdrawAmount] = useState('');
   let [selectedBalanceTab, setSelectedBalanceTab] = useState('crypto'); // 'crypto' or 'fiat'
-  
+
   // Currency selection dialog state
   let [showCurrencyDialog, setShowCurrencyDialog] = useState(false);
-  
+
   // Transfer Send modal state
   let [showTransferModal, setShowTransferModal] = useState(false);
-  
+
   // Withdraw modal state
   let [showWithdrawModal, setShowWithdrawModal] = useState(false);
   let [withdrawCurrency, setWithdrawCurrency] = useState('');
   let [withdrawToAddress, setWithdrawToAddress] = useState('');
   let [withdrawAmountInput, setWithdrawAmountInput] = useState('');
   let [isWithdrawing, setIsWithdrawing] = useState(false);
-  
+
   // Fiat withdrawal modal state
   let [showFiatWithdrawModal, setShowFiatWithdrawModal] = useState(false);
   let [fiatWithdrawCurrency, setFiatWithdrawCurrency] = useState('');
   let [fiatWithdrawAmount, setFiatWithdrawAmount] = useState('');
   let [isFiatWithdrawing, setIsFiatWithdrawing] = useState(false);
   let [selectedFiatAddress, setSelectedFiatAddress] = useState(''); // Selected bank account UUID
-  
+
   // Bank account data
   let [userBankAccount, setUserBankAccount] = useState(null);
   let [isLoadingBankAccount, setIsLoadingBankAccount] = useState(false);
-  
+
   let stateChangeID = appState.stateChangeID;
 
   let pageName = appState.pageName;
@@ -198,7 +198,7 @@ let Wallet = () => {
   useEffect(() => {
     const balanceData = getBalanceData();
     const hasBalance = Object.keys(balanceData).length > 0;
-    
+
     if (hasBalance && !isLoading) {
       console.log('🔄 WALLET EFFECT: Balance data available, recalculating portfolio...');
       console.log('🔄 WALLET EFFECT: Balance data:', JSON.stringify(balanceData, null, 2));
@@ -209,18 +209,18 @@ let Wallet = () => {
   let setup = async () => {
     try {
       console.log('🔄 Wallet: Starting setup...');
-      const generalSetupResult = await appState.generalSetup({caller: 'Wallet'});
+      const generalSetupResult = await appState.generalSetup({ caller: 'Wallet' });
       console.log('✅ Wallet: General setup complete');
-      
+
       // No need to load ticker - we use cached prices from AppState!
       console.log('� Wallet: Using cached crypto prices from AppState (no ticker load needed)');
-      
+
       // Load user balances
       try {
         console.log('🏦 Wallet: Loading balances from API...');
         let balanceResult = await appState.loadBalances();
         console.log('✅ Wallet: Balances loaded:', balanceResult);
-        
+
         // Calculate total portfolio value after loading balances
         let balanceData = getBalanceData();
         console.log('📊 WALLET: Calling calculateTotalPortfolioValue with balanceData:', JSON.stringify(balanceData, null, 2));
@@ -228,24 +228,24 @@ let Wallet = () => {
       } catch (error) {
         log('Wallet: Error loading balances:', error);
       }
-      
+
       // Load user's default bank account for GBP withdrawals
       try {
         console.log('\n' + '🏦'.repeat(60));
         console.log('[WALLET-SETUP] Loading default bank account for GBP...');
         setIsLoadingBankAccount(true);
-        
+
         console.log('[WALLET-SETUP] Calling appState.loadDefaultAccountForAsset("GBP")...');
         await appState.loadDefaultAccountForAsset('GBP');
-        
+
         console.log('[WALLET-SETUP] Calling appState.getDefaultAccountForAsset("GBP")...');
         const bankAccount = appState.getDefaultAccountForAsset('GBP');
-        
+
         console.log('[WALLET-SETUP] Bank account retrieved:', JSON.stringify(bankAccount, null, 2));
         console.log('[WALLET-SETUP] Bank account type:', typeof bankAccount);
         console.log('[WALLET-SETUP] Bank account is null:', bankAccount === null);
         console.log('[WALLET-SETUP] Bank account is undefined:', bankAccount === undefined);
-        
+
         if (bankAccount) {
           console.log('[WALLET-SETUP] ✅ Bank account loaded successfully');
           console.log('[WALLET-SETUP] Account name:', bankAccount.accountName);
@@ -255,7 +255,7 @@ let Wallet = () => {
         } else {
           console.log('[WALLET-SETUP] ⚠️ No bank account found (null or undefined)');
         }
-        
+
         setUserBankAccount(bankAccount);
         console.log('[WALLET-SETUP] setUserBankAccount called with:', bankAccount ? 'valid account' : 'null/undefined');
         console.log('🏦'.repeat(60) + '\n');
@@ -275,10 +275,10 @@ let Wallet = () => {
       }
 
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      
+
       setIsLoading(false);
       triggerRender(renderCount + 1);
-    } catch(err) {
+    } catch (err) {
       let msg = `Wallet.setup: Error = ${err}`;
       console.log(msg);
       setIsLoading(false);
@@ -289,31 +289,31 @@ let Wallet = () => {
   let getBalanceData = () => {
     let balanceData = appState.apiData?.balance || {};
     console.log('🏦 Wallet: Raw balance data from API:', balanceData);
-    
+
     // Transform API balance data to match UI expectations
     let transformedData = {};
-    
+
     // Get assets that actually have data in the API response (user's actual balances)
     // Only show assets where the user has a non-zero balance
     let availableAssets = Object.keys(balanceData).filter(asset => {
       let balance = parseFloat(balanceData[asset]) || 0;
       return balance > 0; // Only include assets with positive balance
     });
-    
+
     console.log('🏦 Wallet: Available assets with balance > 0:', availableAssets);
-    
+
     // If no assets found, return empty object (no balances to show)
     if (availableAssets.length === 0) {
       console.log('🏦 Wallet: No assets with positive balance');
       return {};
     }
-    
+
     availableAssets.forEach(asset => {
       let balance = balanceData[asset] || 0;
       let balanceNumber = 0;
-      
+
       console.log(`🏦 Processing ${asset}: raw balance = ${balance} (type: ${typeof balance})`);
-      
+
       try {
         balanceNumber = parseFloat(balance) || 0;
         console.log(`🏦 ${asset}: parsed balance = ${balanceNumber}`);
@@ -321,7 +321,7 @@ let Wallet = () => {
         log(`Error parsing balance for ${asset}:`, error);
         balanceNumber = 0;
       }
-      
+
       // For now, treat all balance as available (no reserved amounts from API)
       // This can be enhanced when API provides detailed balance breakdown
       transformedData[asset] = {
@@ -329,10 +329,10 @@ let Wallet = () => {
         reserved: 0,
         total: balanceNumber
       };
-      
+
       console.log(`🏦 ${asset}: final transformed data =`, transformedData[asset]);
     });
-    
+
     console.log('🏦 Wallet: Transformed balance data for UI:', transformedData);
     return transformedData;
   };
@@ -340,15 +340,15 @@ let Wallet = () => {
   // Format currency display
   let formatCurrency = (amount, currency) => {
     if (_.isNil(amount)) return '0.00';
-    
+
     try {
       let bigAmount = new Big(amount);
-      
+
       // For fiat currencies, show 2 decimal places
       if (['GBP', 'EUR', 'USD'].includes(currency)) {
         return bigAmount.toFixed(2);
       }
-      
+
       // For cryptocurrencies, show up to 8 decimal places (remove trailing zeros)
       return bigAmount.toFixed(8).replace(/\.?0+$/, '');
     } catch (error) {
@@ -382,18 +382,18 @@ let Wallet = () => {
       console.log('⚠️ WALLET: Portfolio calculation already in progress, skipping...');
       return;
     }
-    
+
     console.log('📊 WALLET WRAPPER: Starting portfolio calculation...');
     console.log('📊 WALLET WRAPPER: Balance data received:', JSON.stringify(balanceData, null, 2));
-    
+
     setIsCalculatingTotal(true);
-    
+
     try {
       // Use pure function from portfolioCalculator utility (now synchronous!)
       const result = calculatePortfolioValue(balanceData, appState);
-      
+
       console.log('📊 WALLET WRAPPER: Portfolio calculation result:', JSON.stringify(result, null, 2));
-      
+
       if (result.error) {
         console.log('❌ WALLET: Portfolio calculation failed:', result.error);
         setTotalPortfolioValue(0);
@@ -413,15 +413,15 @@ let Wallet = () => {
   let handleDeposit = async (currency) => {
     // Check if this is a crypto currency (not fiat)
     const isCrypto = isCryptoCurrency(currency);
-    
+
     if (isCrypto) {
       Alert.alert(
         'Crypto Deposit',
         `To deposit ${currency}, please use the Receive feature to get your wallet address.`,
         [
           { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Go to Receive', 
+          {
+            text: 'Go to Receive',
             onPress: () => appState.changeState('Receive')
           }
         ]
@@ -435,16 +435,16 @@ let Wallet = () => {
       `Choose your deposit method:`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Apple Pay', 
+        {
+          text: 'Apple Pay',
           onPress: () => handleApplePayDeposit(currency)
         },
-        { 
-          text: 'Apple Pay (Demo)', 
+        {
+          text: 'Apple Pay (Demo)',
           onPress: () => handleApplePayDemo(currency)
         },
-        { 
-          text: 'Bank Transfer', 
+        {
+          text: 'Bank Transfer',
           onPress: () => handleBankTransferDeposit(currency)
         }
       ]
@@ -454,7 +454,7 @@ let Wallet = () => {
   // Handle Apple Pay deposit
   let handleApplePayDeposit = async (currency) => {
     log('Apple Pay deposit requested for currency:', currency);
-    
+
     if (Platform.OS !== 'ios') {
       Alert.alert('Apple Pay Not Available', 'Apple Pay is only available on iOS devices.');
       return;
@@ -463,20 +463,20 @@ let Wallet = () => {
     try {
       // Step 1: Check if Apple Pay is available
       log('Checking Apple Pay availability...');
-      
+
       // Check multiple Apple Pay conditions
       // const canPay = await canMakePayments();
       const canPay = false; // Apple Pay disabled
       log('Apple Pay canMakePayments result:', canPay);
-      
+
       // Additional checks
       // const deviceSupport = await canMakePayments(['apple-pay']);
       const deviceSupport = false; // Apple Pay disabled
       log('Apple Pay device support:', deviceSupport);
-      
+
       if (!canPay) {
         Alert.alert(
-          'Apple Pay Not Available', 
+          'Apple Pay Not Available',
           'Apple Pay is not set up on this device. Please add a card to Wallet and try again.',
           [
             { text: 'Open Settings', onPress: () => log('User should open Settings > Wallet & Apple Pay') },
@@ -497,7 +497,7 @@ let Wallet = () => {
       // Step 3: Validate amount
       const amount = parseFloat(depositAmount);
       log('Amount entered:', depositAmount, 'Parsed:', amount);
-      
+
       if (isNaN(amount) || amount <= 0) {
         Alert.alert('Invalid Amount', 'Please enter a valid deposit amount.');
         return;
@@ -505,7 +505,7 @@ let Wallet = () => {
 
       // Step 4: Create payment request with simplified configuration
       log('Creating PaymentRequest for amount:', amount, 'currency:', currency);
-      
+
       // const paymentRequest = new PaymentRequest(
       throw new Error('Apple Pay functionality disabled - react-native-payments removed');
       /*
@@ -566,15 +566,15 @@ let Wallet = () => {
         stack: error.stack,
         code: error.code
       });
-      
+
       if (error.message === 'AbortError' || error.name === 'AbortError') {
         log('User cancelled Apple Pay');
         return;
       }
-      
+
       // Provide specific error messages based on error type
       let errorMessage = 'Unable to process Apple Pay payment.';
-      
+
       if (error.message.includes('not supported')) {
         errorMessage = 'Apple Pay is not supported on this device or iOS version.';
       } else if (error.message.includes('merchant')) {
@@ -586,14 +586,14 @@ let Wallet = () => {
       } else {
         errorMessage = `Apple Pay error: ${error.message}`;
       }
-      
+
       Alert.alert(
-        'Apple Pay Error', 
+        'Apple Pay Error',
         errorMessage,
         [
-          { 
-            text: 'Try Bank Transfer', 
-            onPress: () => handleBankTransferDeposit(currency) 
+          {
+            text: 'Try Bank Transfer',
+            onPress: () => handleBankTransferDeposit(currency)
           },
           { text: 'OK', style: 'cancel' }
         ]
@@ -604,7 +604,7 @@ let Wallet = () => {
   // Handle Apple Pay Demo (fallback for testing)
   let handleApplePayDemo = async (currency) => {
     log('Apple Pay Demo mode requested');
-    
+
     if (Platform.OS !== 'ios') {
       Alert.alert('Apple Pay Not Available', 'Apple Pay is only available on iOS devices.');
       return;
@@ -633,7 +633,7 @@ let Wallet = () => {
             onPress: async () => {
               // Simulate processing delay
               Alert.alert('Processing...', 'Please wait while we process your payment.');
-              
+
               setTimeout(() => {
                 Alert.alert(
                   'Payment Successful! 🎉',
@@ -690,7 +690,7 @@ let Wallet = () => {
 
       // In a real app, you would send the payment token to your backend
       // Your backend would then process it with a payment processor like Stripe
-      
+
       // For sandbox testing, we'll simulate the processing
       await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -719,7 +719,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
       // Trigger a refresh of balances (in a real app, this would update the balance)
       triggerRender(renderCount + 1);
-      
+
     } catch (error) {
       log('Apple Pay processing error:', error);
       Alert.alert('Payment Failed', 'Your Apple Pay payment could not be processed. Please try again.');
@@ -730,7 +730,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
   // Handle bank transfer deposit
   let handleBankTransferDeposit = async (currency) => {
     log('Bank transfer deposit requested for currency:', currency);
-    
+
     try {
       // Ensure deposit details are loaded for the currency
       if (currency === 'GBP') {
@@ -743,7 +743,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
           console.log('📨 CONSOLE: Response type:', typeof depositDetailsResult);
           console.log('📨 CONSOLE: Response JSON:', JSON.stringify(depositDetailsResult, null, 2));
           console.log('📨 CONSOLE: ===== END LOAD DEPOSIT DETAILS API RESPONSE =====');
-          
+
           log('Deposit details loaded for GBP');
           console.log('✅ CONSOLE: Deposit details loaded for GBP');
         } catch (error) {
@@ -757,8 +757,8 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
         `You will be redirected to a secure payment gateway to deposit ${currency} via bank transfer.`,
         [
           { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Continue to Payment', 
+          {
+            text: 'Continue to Payment',
             onPress: () => {
               try {
                 log('Navigating to MakePayment state for bank transfer');
@@ -795,7 +795,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     console.log('[WALLET] Currency:', currency);
     console.log('[WALLET] Navigating to Transfer Send page for withdrawal');
     console.log('🏦'.repeat(60) + '\n');
-    
+
     // Navigate to Transfer Send page (same component for all withdrawals)
     appState.changeState({
       mainPanelState: 'Transfer',
@@ -811,7 +811,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     console.log('[FIAT-WITHDRAW] Step 1: Validating input amount...');
     console.log('[FIAT-WITHDRAW] fiatWithdrawAmount:', fiatWithdrawAmount);
     console.log('[FIAT-WITHDRAW] fiatWithdrawCurrency:', fiatWithdrawCurrency);
-    
+
     if (!fiatWithdrawAmount) {
       console.log('[FIAT-WITHDRAW] ❌ ERROR: No amount provided');
       Alert.alert('Error', 'Please enter an amount');
@@ -822,7 +822,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     console.log('[FIAT-WITHDRAW] Parsed amount:', amount);
     console.log('[FIAT-WITHDRAW] Amount is NaN:', isNaN(amount));
     console.log('[FIAT-WITHDRAW] Amount <= 0:', amount <= 0);
-    
+
     if (isNaN(amount) || amount <= 0) {
       console.log('[FIAT-WITHDRAW] ❌ ERROR: Invalid amount (NaN or <= 0)');
       Alert.alert('Error', 'Please enter a valid amount');
@@ -831,16 +831,16 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
     console.log('[FIAT-WITHDRAW] ✅ Amount validation passed');
     console.log('[FIAT-WITHDRAW] Step 2: Checking user balance...');
-    
+
     // Check if user has sufficient balance
     const balanceData = getBalanceData();
     console.log('[FIAT-WITHDRAW] Balance data:', JSON.stringify(balanceData, null, 2));
-    
+
     const availableBalance = balanceData[fiatWithdrawCurrency]?.available || 0;
     console.log('[FIAT-WITHDRAW] Available balance for', fiatWithdrawCurrency, ':', availableBalance);
     console.log('[FIAT-WITHDRAW] Requested amount:', amount);
     console.log('[FIAT-WITHDRAW] Sufficient balance:', amount <= availableBalance);
-    
+
     if (amount > availableBalance) {
       console.log('[FIAT-WITHDRAW] ❌ ERROR: Insufficient balance');
       Alert.alert('Insufficient Balance', `You only have ${getCurrencySymbol(fiatWithdrawCurrency)}${formatCurrency(availableBalance.toString(), fiatWithdrawCurrency)} available.`);
@@ -853,7 +853,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
     console.log('[FIAT-WITHDRAW] userBankAccount is null:', userBankAccount === null);
     console.log('[FIAT-WITHDRAW] userBankAccount is undefined:', userBankAccount === undefined);
     console.log('[FIAT-WITHDRAW] userBankAccount is "[loading]":', userBankAccount === '[loading]');
-    
+
     // Check if bank account is set up
     if (!userBankAccount || userBankAccount === '[loading]') {
       console.log('[FIAT-WITHDRAW] ❌ ERROR: Bank account not set up or loading');
@@ -862,8 +862,8 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
         'Please set up your bank account details before making a withdrawal.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Add Bank Account', 
+          {
+            text: 'Add Bank Account',
             onPress: () => {
               console.log('[FIAT-WITHDRAW] User chose to add bank account');
               setShowFiatWithdrawModal(false);
@@ -904,14 +904,14 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       console.log('\n' + '📤'.repeat(60));
       console.log('[FIAT-WITHDRAW] ===== MAKING API CALL =====');
       console.log('[FIAT-WITHDRAW] API Route: POST /withdraw/' + fiatWithdrawCurrency);
-      
+
       // Build withdrawal parameters - ALL withdrawals require priority
       const withdrawParams = {
         volume: amount.toString(),
         address: selectedFiatAddress, // UUID from address book
         priority: 'MEDIUM' // SLOW, MEDIUM, FAST - required for ALL withdrawals
       };
-      
+
       console.log('[FIAT-WITHDRAW] Parameters:', withdrawParams);
       console.log('📤'.repeat(60) + '\n');
 
@@ -930,7 +930,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       console.log('[FIAT-WITHDRAW] Response is null:', result === null);
       console.log('[FIAT-WITHDRAW] Response is undefined:', result === undefined);
       console.log('[FIAT-WITHDRAW] Response JSON:', JSON.stringify(result, null, 2));
-      
+
       if (result && typeof result === 'object') {
         console.log('[FIAT-WITHDRAW] Response keys:', Object.keys(result));
         console.log('[FIAT-WITHDRAW] Has "error" property:', 'error' in result);
@@ -945,7 +945,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       console.log('📨'.repeat(60) + '\n');
 
       console.log('[FIAT-WITHDRAW] Step 5: Processing API response...');
-      
+
       // Check for success (same logic as crypto withdrawal)
       let isSuccess = false;
       let successMessage = '';
@@ -954,7 +954,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       if (result && result.error === null) {
         isSuccess = true;
         console.log('[FIAT-WITHDRAW] ✅ Top-level error is null - treating as success');
-        
+
         if (result?.data?.error && typeof result.data.error === 'string') {
           console.log('[FIAT-WITHDRAW] Found data.error string:', result.data.error);
           successMessage = `Your ${fiatWithdrawCurrency} withdrawal of ${getCurrencySymbol(fiatWithdrawCurrency)}${formatCurrency(amount.toString(), fiatWithdrawCurrency)} - ${result.data.error}`;
@@ -972,23 +972,23 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       }
 
       console.log('[FIAT-WITHDRAW] isSuccess:', isSuccess);
-      
+
       if (isSuccess) {
         console.log('[FIAT-WITHDRAW] Step 6: Showing success alert...');
         Alert.alert(
           'Withdrawal Initiated',
           successMessage,
           [
-            { 
-              text: 'View History', 
+            {
+              text: 'View History',
               onPress: () => {
                 console.log('[FIAT-WITHDRAW] User chose to view history');
                 setShowFiatWithdrawModal(false);
                 appState.changeState('History');
               }
             },
-            { 
-              text: 'OK', 
+            {
+              text: 'OK',
               onPress: () => {
                 console.log('[FIAT-WITHDRAW] User clicked OK');
                 setShowFiatWithdrawModal(false);
@@ -996,7 +996,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
             }
           ]
         );
-        
+
         console.log('[FIAT-WITHDRAW] Step 7: Refreshing balances...');
         // Refresh balances
         await setup();
@@ -1017,7 +1017,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       console.log('[FIAT-WITHDRAW] Full error object:', JSON.stringify(error, null, 2));
       console.error('[FIAT-WITHDRAW] Original error:', error);
       console.log('❌'.repeat(60) + '\n');
-      
+
       Alert.alert('Withdrawal Failed', 'An error occurred while processing your withdrawal');
     } finally {
       console.log('[FIAT-WITHDRAW] Step 8: Cleanup - setting isFiatWithdrawing to false');
@@ -1041,7 +1041,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
     try {
       setIsWithdrawing(true);
-      
+
       console.log('🏦 Starting crypto withdrawal...');
       console.log('🏦 Currency:', withdrawCurrency);
       console.log('🏦 Address UUID:', withdrawToAddress);
@@ -1076,14 +1076,14 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       console.log('📨 CONSOLE: Response is undefined:', result === undefined);
       console.log('📨 CONSOLE: Response JSON:', JSON.stringify(result, null, 2));
       console.log('📨 CONSOLE: ===== END CRYPTO WITHDRAW API RESPONSE =====');
-      
+
       console.log('🏦 Withdraw API result:', result);
       console.log('🏦 ===== DETAILED API RESPONSE ANALYSIS =====');
       console.log('🏦 Response type:', typeof result);
       console.log('🏦 Response is null:', result === null);
       console.log('🏦 Response is undefined:', result === undefined);
       console.log('🏦 Response stringified:', JSON.stringify(result, null, 2));
-      
+
       if (result && typeof result === 'object') {
         console.log('🏦 Response keys:', Object.keys(result));
         console.log('🏦 Has error property:', 'error' in result);
@@ -1092,7 +1092,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
         console.log('🏦 Error is null:', result.error === null);
         console.log('🏦 Error is undefined:', result.error === undefined);
         console.log('🏦 Error stringified:', JSON.stringify(result.error));
-        
+
         if (result.error && typeof result.error === 'string') {
           console.log('🏦 Error string length:', result.error.length);
           console.log('🏦 Error lowercase:', result.error.toLowerCase());
@@ -1100,7 +1100,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
           console.log('🏦 Contains "queued":', result.error.toLowerCase().includes('queued'));
           console.log('🏦 Contains "withdrawal":', result.error.toLowerCase().includes('withdrawal'));
         }
-        
+
         console.log('🏦 Has id property:', 'id' in result);
         console.log('🏦 ID value:', result.id);
         console.log('🏦 Has data property:', 'data' in result);
@@ -1116,7 +1116,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
         // Top-level error is null - this indicates success
         isSuccess = true;
         console.log('🏦 Top-level error is null - treating as success');
-        
+
         // Check for success message in data.error
         if (result?.data?.error && typeof result.data.error === 'string') {
           console.log('🏦 Using success message from data.error:', result.data.error);
@@ -1135,7 +1135,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
           successMessage,
           [{ text: 'OK', onPress: () => setShowWithdrawModal(false) }]
         );
-        
+
         // Refresh balances
         await setup();
       } else {
@@ -1169,17 +1169,17 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
     const { total } = balanceInfo;
     const gbpValue = calculateGBPValue(currency, total); // Use cached prices (instant!)
-    
+
     // Get current price from AppState cache
     const currentPrice = appState.getCryptoSellPrice(currency) || 0;
-    
+
     // Calculate 24h price change (mock data for now)
     const priceChange = Math.random() * 10 - 5; // Random between -5% and +5%
-    
+
     // Get crypto name mapping
     const cryptoNames = {
       'BTC': 'Bitcoin',
-      'ETH': 'Ethereum', 
+      'ETH': 'Ethereum',
       'XRP': 'Ripple',
       'LTC': 'Litecoin',
       'ADA': 'Cardano',
@@ -1225,7 +1225,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
   if (isLoading) {
     return (
-      <SolidiLoadingScreen 
+      <SolidiLoadingScreen
         message="Loading your wallet..."
         size="medium"
       />
@@ -1234,13 +1234,13 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
   return (
     <View style={layout.panelContainer}>
-      
-      <ScrollView 
+
+      <ScrollView
         style={layout.panelSubContainer}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ 
-          paddingBottom: 20, 
-          paddingHorizontal: 16 
+        contentContainerStyle={{
+          paddingBottom: 20,
+          paddingHorizontal: 16
         }}
       >
         {/* Wallet Overview Card */}
@@ -1249,7 +1249,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
             <Text variant="titleLarge" style={{ fontWeight: 'bold', marginBottom: 16 }}>
               Your Wallet
             </Text>
-            
+
             {/* Total Portfolio Value */}
             <View style={{ alignItems: 'center', marginBottom: 20 }}>
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4 }}>
@@ -1266,7 +1266,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                 )}
               </Text>
             </View>
-            
+
             {/* Action Buttons */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <Button
@@ -1285,6 +1285,8 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                 onPress={() => setShowTransferModal(true)}
                 style={{ flex: 1 }}
                 icon="minus"
+                testID="wallet-withdraw-button"
+                accessibilityLabel="Withdraw"
               >
                 Withdraw
               </Button>
@@ -1300,14 +1302,14 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                 Your Balances
               </Text>
             </View>
-            
+
             {/* Tab Navigation */}
             <View style={{ flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8 }}>
               <Button
                 mode={selectedBalanceTab === 'crypto' ? 'contained' : 'outlined'}
                 onPress={() => setSelectedBalanceTab('crypto')}
-                style={{ 
-                  flex: 1, 
+                style={{
+                  flex: 1,
                   marginRight: 8,
                   borderRadius: 20
                 }}
@@ -1318,7 +1320,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
               <Button
                 mode={selectedBalanceTab === 'fiat' ? 'contained' : 'outlined'}
                 onPress={() => setSelectedBalanceTab('fiat')}
-                style={{ 
+                style={{
                   flex: 1,
                   borderRadius: 20
                 }}
@@ -1327,9 +1329,9 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                 Fiat
               </Button>
             </View>
-            
+
             <Divider />
-            
+
             {/* Balance List */}
             <View>
               {getFilteredBalances(balanceData, selectedBalanceTab).map(([currency, balanceInfo]) => (
@@ -1359,7 +1361,7 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
             <Text variant="titleMedium" style={{ fontWeight: 'bold', marginBottom: 12 }}>
               Quick Actions
             </Text>
-            
+
             <List.Item
               title="View Transaction History"
               description="See all your deposits and withdrawals"
@@ -1368,9 +1370,9 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
               onPress={() => appState.changeState('History')}
               style={{ paddingHorizontal: 0 }}
             />
-            
+
             <Divider />
-            
+
             <List.Item
               title="Manage Bank Accounts"
               description="Add or update your banking details"
@@ -1383,11 +1385,11 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
         </Card>
 
         {/* Security Notice */}
-        <Surface style={{ 
-          padding: 16, 
-          marginTop: 16, 
+        <Surface style={{
+          padding: 16,
+          marginTop: 16,
           borderRadius: 8,
-          backgroundColor: theme.colors.primaryContainer 
+          backgroundColor: theme.colors.primaryContainer
         }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
             <List.Icon icon="shield-check" color={theme.colors.primary} />
@@ -1397,14 +1399,14 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
               </Text>
               <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer, marginTop: 4 }}>
                 All crypto deposits are stored in secure cold storage. Find out more about our security in our{' '}
-                <Text 
-                  style={{ 
-                    color: theme.colors.primary, 
+                <Text
+                  style={{
+                    color: theme.colors.primary,
                     textDecorationLine: 'underline',
                     fontWeight: 'bold'
                   }}
                   onPress={() => {
-                    Linking.openURL('https://www.solidi.co/blog/industry-leading-security/').catch(err => 
+                    Linking.openURL('https://www.solidi.co/blog/industry-leading-security/').catch(err =>
                       console.error('Error opening URL:', err)
                     );
                   }}
@@ -1469,9 +1471,9 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                       // Get OWNED crypto assets (balance > 0) for withdrawal
                       const ownedAssets = appState.getOwnedAssets ? appState.getOwnedAssets() : [];
                       const cryptoAssets = ownedAssets.filter(asset => isCryptoCurrency(asset));
-                      
+
                       console.log('🏦 Owned crypto assets for withdrawal:', cryptoAssets);
-                      
+
                       // Show asset picker
                       Alert.alert(
                         'Select Asset to Withdraw',
@@ -1495,52 +1497,52 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
                 {/* Address Selection */}
                 <View style={{ marginBottom: 20 }}>
-              <Text variant="titleMedium" style={{ marginBottom: 10 }}>
-                Select Destination Address
-              </Text>
-              <AddressBookPicker
-                selectedAsset={withdrawCurrency}
-                onAddressSelect={(address, selectedAddressData) => {
-                  console.log('🏦 Selected address:', address);
-                  console.log('🏦 Selected address data:', selectedAddressData);
-                  // Use the UUID from the address data for the API call
-                  let addressUUID = selectedAddressData?.id || selectedAddressData?.rawData?.uuid;
-                  console.log('🏦 Address UUID for API:', addressUUID);
-                  setWithdrawToAddress(addressUUID);
-                }}
-                label="Choose from Address Book"
-                placeholder="Select a saved address..."
-              />
-              {withdrawToAddress ? (
-                <Text variant="bodySmall" style={{ marginTop: 8, color: theme.colors.primary }}>
-                  ✓ Address selected
-                </Text>
-              ) : null}
-            </View>
+                  <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                    Select Destination Address
+                  </Text>
+                  <AddressBookPicker
+                    selectedAsset={withdrawCurrency}
+                    onAddressSelect={(address, selectedAddressData) => {
+                      console.log('🏦 Selected address:', address);
+                      console.log('🏦 Selected address data:', selectedAddressData);
+                      // Use the UUID from the address data for the API call
+                      let addressUUID = selectedAddressData?.id || selectedAddressData?.rawData?.uuid;
+                      console.log('🏦 Address UUID for API:', addressUUID);
+                      setWithdrawToAddress(addressUUID);
+                    }}
+                    label="Choose from Address Book"
+                    placeholder="Select a saved address..."
+                  />
+                  {withdrawToAddress ? (
+                    <Text variant="bodySmall" style={{ marginTop: 8, color: theme.colors.primary }}>
+                      ✓ Address selected
+                    </Text>
+                  ) : null}
+                </View>
 
-            {/* Amount Input */}
-            <View style={{ marginBottom: 20 }}>
-              <Text variant="titleMedium" style={{ marginBottom: 10 }}>
-                Amount to Withdraw
-              </Text>
-              <TextInput
-                style={{
-                  borderWidth: 1,
-                  borderColor: theme.colors.outline,
-                  borderRadius: 8,
-                  padding: 12,
-                  fontSize: 16,
-                  color: '#000000',
-                  backgroundColor: '#FFFFFF'
-                }}
-                placeholder={`Enter ${withdrawCurrency} amount`}
-                placeholderTextColor="#999999"
-                value={withdrawAmountInput}
-                onChangeText={setWithdrawAmountInput}
-                keyboardType="numeric"
-                autoCapitalize="none"
-              />
-            </View>
+                {/* Amount Input */}
+                <View style={{ marginBottom: 20 }}>
+                  <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                    Amount to Withdraw
+                  </Text>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: theme.colors.outline,
+                      borderRadius: 8,
+                      padding: 12,
+                      fontSize: 16,
+                      color: '#000000',
+                      backgroundColor: '#FFFFFF'
+                    }}
+                    placeholder={`Enter ${withdrawCurrency} amount`}
+                    placeholderTextColor="#999999"
+                    value={withdrawAmountInput}
+                    onChangeText={setWithdrawAmountInput}
+                    keyboardType="numeric"
+                    autoCapitalize="none"
+                  />
+                </View>
 
                 {/* Action Buttons */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
@@ -1571,8 +1573,8 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                     onPress={handleCryptoWithdraw}
                     disabled={isWithdrawing || !withdrawToAddress || !withdrawAmountInput}
                   >
-                    <Text style={{ 
-                      textAlign: 'center', 
+                    <Text style={{
+                      textAlign: 'center',
                       color: isWithdrawing ? theme.colors.onSurfaceVariant : theme.colors.onPrimary,
                       fontWeight: 'bold'
                     }}>
@@ -1623,160 +1625,160 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
 
                 {/* Amount Input */}
                 <View style={{ marginBottom: 20 }}>
-              <Text variant="titleMedium" style={{ marginBottom: 10 }}>
-                Amount to Withdraw
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text variant="titleLarge" style={{ marginRight: 8 }}>
-                  {getCurrencySymbol(fiatWithdrawCurrency)}
-                </Text>
-                <TextInput
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: theme.colors.outline,
-                    borderRadius: 8,
-                    padding: 12,
-                    fontSize: 16,
-                    color: '#000000',
-                    backgroundColor: '#FFFFFF'
-                  }}
-                  placeholder={`Enter amount`}
-                  placeholderTextColor="#999999"
-                  value={fiatWithdrawAmount}
-                  onChangeText={setFiatWithdrawAmount}
-                  keyboardType="decimal-pad"
-                  autoCapitalize="none"
-                />
-              </View>
-              {fiatWithdrawAmount && balanceData[fiatWithdrawCurrency] ? (
-                <Text variant="bodySmall" style={{ marginTop: 8, color: theme.colors.onSurfaceVariant }}>
-                  Available: {getCurrencySymbol(fiatWithdrawCurrency)}{formatCurrency(balanceData[fiatWithdrawCurrency].available.toString(), fiatWithdrawCurrency)}
-                </Text>
-              ) : null}
-            </View>
+                  <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                    Amount to Withdraw
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text variant="titleLarge" style={{ marginRight: 8 }}>
+                      {getCurrencySymbol(fiatWithdrawCurrency)}
+                    </Text>
+                    <TextInput
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: theme.colors.outline,
+                        borderRadius: 8,
+                        padding: 12,
+                        fontSize: 16,
+                        color: '#000000',
+                        backgroundColor: '#FFFFFF'
+                      }}
+                      placeholder={`Enter amount`}
+                      placeholderTextColor="#999999"
+                      value={fiatWithdrawAmount}
+                      onChangeText={setFiatWithdrawAmount}
+                      keyboardType="decimal-pad"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                  {fiatWithdrawAmount && balanceData[fiatWithdrawCurrency] ? (
+                    <Text variant="bodySmall" style={{ marginTop: 8, color: theme.colors.onSurfaceVariant }}>
+                      Available: {getCurrencySymbol(fiatWithdrawCurrency)}{formatCurrency(balanceData[fiatWithdrawCurrency].available.toString(), fiatWithdrawCurrency)}
+                    </Text>
+                  ) : null}
+                </View>
 
-            {/* Bank Account Selection */}
-            <View style={{ marginBottom: 20 }}>
-              <Text variant="titleMedium" style={{ marginBottom: 10 }}>
-                Bank Account
-              </Text>
-              {appState.getAddressBook(fiatWithdrawCurrency).length === 0 ? (
+                {/* Bank Account Selection */}
+                <View style={{ marginBottom: 20 }}>
+                  <Text variant="titleMedium" style={{ marginBottom: 10 }}>
+                    Bank Account
+                  </Text>
+                  {appState.getAddressBook(fiatWithdrawCurrency).length === 0 ? (
+                    <View style={{
+                      borderWidth: 1,
+                      borderColor: theme.colors.outline,
+                      borderRadius: 8,
+                      padding: 16,
+                      backgroundColor: theme.colors.surfaceVariant
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 }}>
+                        <Icon name="information" size={20} color={theme.colors.primary} style={{ marginRight: 8, marginTop: 2 }} />
+                        <View style={{ flex: 1 }}>
+                          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4, fontWeight: 'bold' }}>
+                            No bank accounts in address book
+                          </Text>
+                          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                            To withdraw {fiatWithdrawCurrency}, you need to add your bank account to the address book first.
+                          </Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: theme.colors.primary,
+                          padding: 12,
+                          borderRadius: 8,
+                          alignItems: 'center'
+                        }}
+                        onPress={() => {
+                          setShowFiatWithdrawModal(false);
+                          appState.changeState('AddressBookManagement');
+                        }}
+                      >
+                        <Text style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
+                          Add Bank Account to Address Book
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={{
+                      borderWidth: 1,
+                      borderColor: theme.colors.outline,
+                      borderRadius: 8,
+                      overflow: 'hidden'
+                    }}>
+                      {appState.getAddressBook(fiatWithdrawCurrency).map((account, index) => {
+                        // Parse address details
+                        console.log('[ADDRESS-DISPLAY] Raw account data:', account);
+                        console.log('[ADDRESS-DISPLAY] account.address value:', account.address);
+                        console.log('[ADDRESS-DISPLAY] account.address type:', typeof account.address);
+
+                        let addressDetails = {};
+                        try {
+                          addressDetails = JSON.parse(account.address);
+                          console.log('[ADDRESS-DISPLAY] Parsed addressDetails:', addressDetails);
+                        } catch (e) {
+                          console.log('[ADDRESS-DISPLAY] Error parsing address:', e);
+                          console.log('[ADDRESS-DISPLAY] Failed to parse:', account.address);
+                        }
+
+                        const isSelected = selectedFiatAddress === account.uuid;
+
+                        return (
+                          <TouchableOpacity
+                            key={account.uuid}
+                            style={{
+                              padding: 16,
+                              backgroundColor: isSelected ? theme.colors.primaryContainer : 'white',
+                              borderBottomWidth: index < appState.getAddressBook(fiatWithdrawCurrency).length - 1 ? 1 : 0,
+                              borderBottomColor: theme.colors.outline
+                            }}
+                            onPress={() => {
+                              setSelectedFiatAddress(account.uuid);
+                              console.log('[FIAT-WITHDRAW] Selected bank account:', account.uuid);
+                            }}
+                          >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <View style={{ flex: 1 }}>
+                                <Text variant="bodyLarge" style={{
+                                  fontWeight: isSelected ? 'bold' : 'normal',
+                                  color: isSelected ? theme.colors.onPrimaryContainer : '#000',
+                                  marginBottom: 4
+                                }}>
+                                  {account.name || addressDetails.accountname || addressDetails.accountName || 'Bank Account'}
+                                </Text>
+                                <Text variant="bodySmall" style={{
+                                  color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
+                                }}>
+                                  Sort Code: {addressDetails.sortcode || addressDetails.sortCode || 'N/A'} • Account: {addressDetails.accountnumber || addressDetails.accountNumber || 'N/A'}
+                                </Text>
+                              </View>
+                              {isSelected && (
+                                <Icon name="check-circle" size={24} color={theme.colors.primary} />
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+
+                {/* Processing Time Notice */}
                 <View style={{
-                  borderWidth: 1,
-                  borderColor: theme.colors.outline,
+                  backgroundColor: theme.colors.surfaceVariant,
+                  padding: 12,
                   borderRadius: 8,
-                  padding: 16,
-                  backgroundColor: theme.colors.surfaceVariant
+                  marginBottom: 20
                 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <Icon name="information" size={20} color={theme.colors.primary} style={{ marginRight: 8, marginTop: 2 }} />
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                    <Icon name="information" size={20} color={theme.colors.onSurfaceVariant} style={{ marginRight: 8, marginTop: 2 }} />
                     <View style={{ flex: 1 }}>
-                      <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4, fontWeight: 'bold' }}>
-                        No bank accounts in address book
-                      </Text>
                       <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                        To withdraw {fiatWithdrawCurrency}, you need to add your bank account to the address book first.
+                        Bank transfers typically take 1-3 business days to process.
                       </Text>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: theme.colors.primary,
-                      padding: 12,
-                      borderRadius: 8,
-                      alignItems: 'center'
-                    }}
-                    onPress={() => {
-                      setShowFiatWithdrawModal(false);
-                      appState.changeState('AddressBookManagement');
-                    }}
-                  >
-                    <Text style={{ color: theme.colors.onPrimary, fontWeight: 'bold' }}>
-                      Add Bank Account to Address Book
-                    </Text>
-                  </TouchableOpacity>
                 </View>
-              ) : (
-                <View style={{
-                  borderWidth: 1,
-                  borderColor: theme.colors.outline,
-                  borderRadius: 8,
-                  overflow: 'hidden'
-                }}>
-                  {appState.getAddressBook(fiatWithdrawCurrency).map((account, index) => {
-                    // Parse address details
-                    console.log('[ADDRESS-DISPLAY] Raw account data:', account);
-                    console.log('[ADDRESS-DISPLAY] account.address value:', account.address);
-                    console.log('[ADDRESS-DISPLAY] account.address type:', typeof account.address);
-                    
-                    let addressDetails = {};
-                    try {
-                      addressDetails = JSON.parse(account.address);
-                      console.log('[ADDRESS-DISPLAY] Parsed addressDetails:', addressDetails);
-                    } catch (e) {
-                      console.log('[ADDRESS-DISPLAY] Error parsing address:', e);
-                      console.log('[ADDRESS-DISPLAY] Failed to parse:', account.address);
-                    }
-                    
-                    const isSelected = selectedFiatAddress === account.uuid;
-                    
-                    return (
-                      <TouchableOpacity
-                        key={account.uuid}
-                        style={{
-                          padding: 16,
-                          backgroundColor: isSelected ? theme.colors.primaryContainer : 'white',
-                          borderBottomWidth: index < appState.getAddressBook(fiatWithdrawCurrency).length - 1 ? 1 : 0,
-                          borderBottomColor: theme.colors.outline
-                        }}
-                        onPress={() => {
-                          setSelectedFiatAddress(account.uuid);
-                          console.log('[FIAT-WITHDRAW] Selected bank account:', account.uuid);
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <View style={{ flex: 1 }}>
-                            <Text variant="bodyLarge" style={{ 
-                              fontWeight: isSelected ? 'bold' : 'normal',
-                              color: isSelected ? theme.colors.onPrimaryContainer : '#000',
-                              marginBottom: 4
-                            }}>
-                              {account.name || addressDetails.accountname || addressDetails.accountName || 'Bank Account'}
-                            </Text>
-                            <Text variant="bodySmall" style={{ 
-                              color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant
-                            }}>
-                              Sort Code: {addressDetails.sortcode || addressDetails.sortCode || 'N/A'} • Account: {addressDetails.accountnumber || addressDetails.accountNumber || 'N/A'}
-                            </Text>
-                          </View>
-                          {isSelected && (
-                            <Icon name="check-circle" size={24} color={theme.colors.primary} />
-                          )}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-
-            {/* Processing Time Notice */}
-            <View style={{ 
-              backgroundColor: theme.colors.surfaceVariant, 
-              padding: 12, 
-              borderRadius: 8,
-              marginBottom: 20 
-            }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                <Icon name="information" size={20} color={theme.colors.onSurfaceVariant} style={{ marginRight: 8, marginTop: 2 }} />
-                <View style={{ flex: 1 }}>
-                  <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                    Bank transfers typically take 1-3 business days to process.
-                  </Text>
-                </View>
-              </View>
-            </View>
 
                 {/* Action Buttons */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
@@ -1807,8 +1809,8 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
                     onPress={handleFiatWithdrawal}
                     disabled={isFiatWithdrawing || !fiatWithdrawAmount}
                   >
-                    <Text style={{ 
-                      textAlign: 'center', 
+                    <Text style={{
+                      textAlign: 'center',
                       color: isFiatWithdrawing ? theme.colors.onSurfaceVariant : theme.colors.onPrimary,
                       fontWeight: 'bold'
                     }}>
@@ -1837,9 +1839,9 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
           </Dialog.Title>
           <Dialog.Content>
             {/* Currency Options as List Items */}
-            <View style={{ 
-              borderWidth: 1, 
-              borderColor: '#E0E0E0', 
+            <View style={{
+              borderWidth: 1,
+              borderColor: '#E0E0E0',
               borderRadius: 8,
               backgroundColor: '#FFFFFF',
               marginTop: 8
@@ -1953,9 +1955,9 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
       >
         <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
           {/* Header with Close button */}
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
             backgroundColor: theme.colors.primary,
             paddingTop: Platform.OS === 'ios' ? 50 : 20,
             paddingBottom: 15,
@@ -1967,9 +1969,9 @@ Transaction ID: ${paymentToken.transactionIdentifier || 'SANDBOX_' + Date.now()}
               size={24}
               onPress={() => setShowTransferModal(false)}
             />
-            <Text style={{ 
-              color: '#FFFFFF', 
-              fontSize: 20, 
+            <Text style={{
+              color: '#FFFFFF',
+              fontSize: 20,
               fontWeight: 'bold',
               marginLeft: 8
             }}>

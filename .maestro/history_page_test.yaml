@@ -1,0 +1,106 @@
+appId: co.solidi.mobile.test
+---
+# History Page E2E Test
+# Tests Transaction History and Orders tabs with infinite scroll
+
+# Step 1: Launch app and ensure we're logged in
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000
+- takeScreenshot: 01_app_launched
+
+# Step 2: Navigate to History tab
+- extendedWaitUntil:
+    visible: "History"
+    timeout: 15000
+- tapOn: "History"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 02_history_tab_opened
+
+# Step 3: Verify we're on Transaction History by default
+- extendedWaitUntil:
+    visible: "Transaction History|Transactions"
+    timeout: 10000
+- takeScreenshot: 03_transaction_history_view
+
+# Step 4: Test infinite scroll on Transaction History
+# Scroll down multiple times to load more transactions
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 04_scroll_1
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 05_scroll_2
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 06_scroll_3
+
+# Scroll back to top
+- scrollUntilVisible:
+    element: "Transaction History|Transactions"
+    direction: UP
+- takeScreenshot: 07_scrolled_back_to_top
+
+# Step 5: Switch to Orders tab
+- tapOn:
+    text: "Orders"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 08_orders_tab_opened
+
+# Step 6: Verify Orders tab is showing
+- extendedWaitUntil:
+    visible: "Orders|Order History"
+    timeout: 10000
+- takeScreenshot: 09_orders_view
+
+# Step 7: Test infinite scroll on Orders
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 10_orders_scroll_1
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 11_orders_scroll_2
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 12_orders_scroll_3
+
+# Scroll back to top
+- scrollUntilVisible:
+    element: "Orders|Order History"
+    direction: UP
+- takeScreenshot: 13_orders_scrolled_back_to_top
+
+# Step 8: Switch back to Transaction History
+- tapOn:
+    text: "Transaction History|Transactions"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 14_back_to_transaction_history
+
+# Step 9: Verify we can still see transaction history
+- assertVisible: "Transaction History|Transactions"
+- takeScreenshot: 15_test_complete_success
+
+# Test passed! ✅

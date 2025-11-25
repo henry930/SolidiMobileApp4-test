@@ -1,0 +1,67 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw Test - Hybrid
+# Uses coordinates for navigation (proven to work) and text for actions (found in Studio)
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+
+# 1. Navigate to Wallet using coordinate (proven to work)
+- tapOn:
+    point: "60%,96%"
+
+# Wait for page load
+- extendedWaitUntil:
+    visible: "Withdraw"
+    timeout: 15000
+
+# 2. Tap Withdraw
+- tapOn: "Withdraw"
+- extendedWaitUntil:
+    visible: "BTC (Bitcoin)"
+    timeout: 5000
+
+# 3. Select BTC (if not already selected)
+- tapOn: "BTC (Bitcoin)"
+
+# 4. Select Address
+- tapOn: "Select a saved address.*"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+# Select the first address in the list
+- tapOn:
+    index: 0
+- extendedWaitUntil:
+    notVisible: "Select a saved address.*"
+    timeout: 3000
+
+# 5. Enter Amount
+- tapOn:
+    id: "text-input-outline"
+- inputText: "0.0001"
+- hideKeyboard
+
+# 6. Submit Withdrawal
+# Try finding the button by text, or fallback to bottom-right coordinate
+- runFlow:
+    when:
+        visible: "Withdraw|Send|Confirm"
+    commands:
+        - tapOn: "Withdraw|Send|Confirm"
+
+- runFlow:
+    when:
+        notVisible: "Withdraw|Send|Confirm"
+    commands:
+        - tapOn:
+            point: "75%,85%"
+
+- extendedWaitUntil:
+    visible: "Success|Done|OK"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: withdraw_success

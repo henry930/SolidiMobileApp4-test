@@ -1,0 +1,5 @@
+appId: co.solidi.mobile.test
+---
+- launchApp
+- assertVisible: ".*Solidi.*"
+- takeScreenshot: launch_screen

@@ -32,7 +32,7 @@ import { PaperProvider } from 'react-native-paper';
 
 // Internal imports
 import { AppStateProvider } from '../data';
-import { theme, darkTheme } from '../../constants';
+import { theme } from '../../constants';
 // Universal Theme System
 import { ThemeProvider, useTheme } from '../../styles/ThemeProvider';
 // Biometric Authentication
@@ -60,7 +60,7 @@ let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 // Inner App component that uses the theme
 const AppContent = () => {
-  const { theme: universalTheme, colors, isWeb, isDarkMode } = useTheme();
+  const { theme: universalTheme, colors, isWeb } = useTheme();
 
   const styles = StyleSheet.create({
     container: {
@@ -101,10 +101,10 @@ const AppContent = () => {
       <StatusBar
         translucent={true}
         backgroundColor="transparent"
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        barStyle="dark-content"
       />
       <View style={styles.container}>
-        <PaperProvider theme={isDarkMode ? darkTheme : theme}>
+        <PaperProvider theme={theme}>
           <SecureApp>
             {/* SecureApp just gates access, AppState handles authentication */}
             <AppStateProvider>

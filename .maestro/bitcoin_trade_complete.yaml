@@ -1,0 +1,81 @@
+appId: com.solidimobileapp4test
+---
+# Complete Bitcoin Trade Test
+- launchApp
+
+# Wait for app to fully load (may need biometric auth)
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 15000
+
+# Take screenshot of current state
+- takeScreenshot: 00_initial_state
+
+# Wait for main app to be ready (Trade tab should be visible)
+- extendedWaitUntil:
+    visible: "Trade"
+    timeout: 20000
+- takeScreenshot: 01_app_ready
+
+# Tap on Trade tab
+- tapOn:
+    text: "Trade"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 02_trade_screen
+
+# Look for Bitcoin - try different variations
+- runFlow:
+    when:
+      visible: "Bitcoin|BTC|bitcoin"
+    commands:
+      - tapOn: "Bitcoin|BTC|bitcoin"
+      - takeScreenshot: 03_bitcoin_selected
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 5000
+
+# Look for Buy button
+- runFlow:
+    when:
+      visible: "Buy|BUY"
+    commands:
+      - tapOn: "Buy|BUY"
+      - takeScreenshot: 04_buy_selected
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+
+# Try to find and tap amount field
+- tapOn:
+    index: 0
+- inputText: "0.001"
+- hideKeyboard
+- takeScreenshot: 05_amount_entered
+
+# Scroll down to see payment options
+- scroll
+- takeScreenshot: 06_after_scroll
+
+# Look for Use balance payment method
+- runFlow:
+    when:
+      visible: "Use balance|Balance"
+    commands:
+      - tapOn: "Use balance|Balance"
+      - takeScreenshot: 07_payment_selected
+
+# Confirm trade
+- runFlow:
+    when:
+      visible: "Confirm|Submit|Buy"
+    commands:
+      - tapOn: "Confirm|Submit|Buy"
+      - takeScreenshot: 08_confirmed
+
+# Wait for result
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 09_final_result

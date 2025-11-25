@@ -1,0 +1,63 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw Test - Robust Flow
+# Bypasses flaky "Withdraw" text check by using coordinate, then verifies with "BTC (Bitcoin)"
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+
+# 1. Navigate to Wallet
+- tapOn:
+    point: "60%,96%"
+    
+# Wait for page load (blind wait)
+- runFlow:
+    commands:
+        - tapOn:
+            point: "50%,50%"
+- extendedWaitUntil:
+    visible: "non_existent_element"
+    timeout: 5000
+    optional: true
+
+# 2. Tap Withdraw (Coordinate 75%, 25%)
+# We use coordinate because text matching "Withdraw" is failing in CI despite working in Studio
+- tapOn:
+    point: "75%,25%"
+
+# 3. Verify we are on the form by looking for "BTC (Bitcoin)"
+- extendedWaitUntil:
+    visible: "BTC (Bitcoin)"
+    timeout: 10000
+
+# 4. Select BTC (if not already selected)
+- tapOn: "BTC (Bitcoin)"
+
+# 5. Select Address
+- tapOn: "Select a saved address.*"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- tapOn:
+    index: 0
+- extendedWaitUntil:
+    notVisible: "Select a saved address.*"
+    timeout: 3000
+
+# 6. Enter Amount
+- tapOn:
+    id: "text-input-outline"
+- inputText: "0.0001"
+- hideKeyboard
+
+# 7. Submit
+- tapOn:
+    point: "75%,85%" # Bottom right confirm
+- extendedWaitUntil:
+    visible: "Success|Done|OK"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: withdraw_success

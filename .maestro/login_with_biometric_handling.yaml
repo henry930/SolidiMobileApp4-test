@@ -1,0 +1,63 @@
+appId: co.solidi.mobile.test
+---
+# Login Flow - Handles both fresh login and biometric unlock scenarios
+
+# Launch and clear state for fresh start
+- launchApp
+- clearState
+- launchApp
+
+# Wait for either login screen or biometric screen
+- extendedWaitUntil:
+    visible: "Secure Login|Use Face ID|Use Touch ID|Skip"
+    timeout: 15000
+- takeScreenshot: 01_app_launched
+
+# Check if we see biometric screen (user already logged in) and skip it
+- runFlow:
+    when:
+      visible: "Use Face ID|Use Touch ID"
+    commands:
+      # Skip biometric for now
+      - tapOn: "Skip"
+      - extendedWaitUntil:
+          visible: "Secure Login"
+          timeout: 10000
+
+# Now we should be at login screen
+- extendedWaitUntil:
+    visible: "Secure Login"
+    timeout: 10000
+- takeScreenshot: 02_login_screen
+
+# Tap on Email Address field
+- tapOn:
+    text: "Email Address"
+- inputText: "henry930@gmail.com"
+- hideKeyboard
+- takeScreenshot: 03_email_entered
+
+# Tap on Password field  
+- tapOn:
+    text: "Password"
+- inputText: "DazzPow/930"
+- hideKeyboard
+- takeScreenshot: 04_password_entered
+
+# Make sure keyboard is hidden
+- hideKeyboard
+
+# Tap Sign In button (all caps)
+- tapOn:
+    text: "SIGN IN"
+- takeScreenshot: 05_signin_tapped
+
+# Wait for successful login - looking for main app screen
+- extendedWaitUntil:
+    visible: "Wallet|Transfer|History"
+    timeout: 20000
+
+- takeScreenshot: 06_logged_in_success
+
+# Verify we're logged in
+- assertVisible: "Wallet"

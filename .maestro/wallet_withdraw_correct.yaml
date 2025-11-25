@@ -1,0 +1,83 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw Test - Correct Navigation
+# Wallet is 3rd tab at 60% (Home, Assets, Wallet, Transfer, History)
+
+# Step 1: Launch app
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_launched
+
+# Step 2: Navigate to Wallet (3rd tab at 60%)
+- tapOn:
+    point: "60%,96%"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 02_wallet_page
+
+# Step 3: Wait for Wallet to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 03_wallet_loaded
+
+# Step 4: Tap Withdraw button (try testID first, then text)
+- runFlow:
+    when:
+      visible:
+        id: "wallet-withdraw-button"
+    commands:
+      - tapOn:
+          id: "wallet-withdraw-button"
+      - takeScreenshot: 04a_withdraw_via_testid
+
+# Fallback: try text
+- runFlow:
+    when:
+      visible: "Withdraw"
+    commands:
+      - tapOn: "Withdraw"
+      - takeScreenshot: 04b_withdraw_via_text
+
+# Step 5: Wait for withdraw dialog
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 05_withdraw_dialog
+
+# Step 6: Look for BTC
+- runFlow:
+    when:
+      visible: "BTC"
+    commands:
+      - tapOn: "BTC"
+      - takeScreenshot: 06_btc_selected
+
+# Step 7: Enter amount
+- runFlow:
+    when:
+      visible: ".*"
+    commands:
+      - tapOn:
+          point: "50%,50%"
+      - inputText: "0.0001"
+      - hideKeyboard
+      - takeScreenshot: 07_btc_amount
+
+# Step 8: Try to submit
+- runFlow:
+    when:
+      visible: "Withdraw|Send|Confirm"
+    commands:
+      - tapOn: "Withdraw|Send|Confirm"
+      - takeScreenshot: 08_btc_submitted
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 09_result
+
+# Done!

@@ -1,0 +1,39 @@
+appId: com.solidimobileapp4test
+---
+# Logout Test Flow
+- launchApp
+- takeScreenshot: 01_app_state
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+# Look for menu, settings, or profile icon (common logout locations)
+- runFlow:
+    when:
+      visible: ".*Menu.*|.*Settings.*|.*Profile.*|.*Account.*"
+    commands:
+      - tapOn: ".*Menu.*|.*Settings.*|.*Profile.*|.*Account.*"
+      - takeScreenshot: 02_menu_opened
+
+# Look for logout/sign out button
+- runFlow:
+    when:
+      visible: ".*Logout.*|.*Log out.*|.*Sign out.*|.*Exit.*"
+    commands:
+      - tapOn: ".*Logout.*|.*Log out.*|.*Sign out.*|.*Exit.*"
+      - takeScreenshot: 03_logout_tapped
+
+# Alternative: Try swiping to find menu
+- swipe:
+    direction: LEFT
+    duration: 500
+- takeScreenshot: 04_after_swipe
+
+# Wait for logout to complete
+- extendedWaitUntil:
+    visible: ".*Login.*|.*Sign.*|.*Register.*|.*Welcome.*"
+    timeout: 10000
+
+- takeScreenshot: 05_logged_out

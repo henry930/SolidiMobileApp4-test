@@ -1,0 +1,155 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw Test - Debug with Screenshots
+# Captures screenshots at each step to see keyboard and address selection
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+
+# 1. Navigate to Wallet
+- tapOn:
+    point: "60%,90%"
+
+- runFlow:
+    commands:
+        - tapOn:
+            point: "50%,50%"
+- extendedWaitUntil:
+    visible: "non_existent_element"
+    timeout: 3000
+    optional: true
+
+- runFlow:
+    when:
+        notVisible: ".*Withdraw.*"
+    commands:
+        - tapOn:
+            point: "60%,88%"
+        - extendedWaitUntil:
+            visible: "non_existent_element"
+            timeout: 3000
+            optional: true
+
+- runFlow:
+    when:
+        notVisible: ".*Withdraw.*"
+    commands:
+        - tapOn: ".*Wallet.*"
+        - extendedWaitUntil:
+            visible: "non_existent_element"
+            timeout: 3000
+            optional: true
+
+# 2. Tap Withdraw
+- runFlow:
+    when:
+        visible: ".*Withdraw.*"
+    commands:
+        - tapOn: ".*Withdraw.*"
+
+- runFlow:
+    when:
+        notVisible: ".*Withdraw.*"
+    commands:
+        - tapOn:
+            point: "75%,25%"
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 01_withdraw_form
+
+# 3. Smart Asset Selection
+- runFlow:
+    when:
+        notVisible: "BTC (Bitcoin)"
+    commands:
+        - tapOn: ".*Asset.*|.*Currency.*" 
+        - extendedWaitUntil:
+            visible: "BTC (Bitcoin)"
+            timeout: 5000
+        - tapOn: "BTC (Bitcoin)"
+
+- runFlow:
+    when:
+        visible: "BTC (Bitcoin)"
+    commands:
+        - tapOn: "BTC (Bitcoin)"
+
+- takeScreenshot: 02_btc_selected
+
+# 4. Input Amount (0.001)
+- tapOn:
+    id: "text-input-outline"
+- eraseText
+- inputText: "0.001"
+- takeScreenshot: 03_amount_entered_keyboard_visible
+
+# 5. Dismiss Keyboard - Try multiple methods
+- hideKeyboard
+- takeScreenshot: 04_after_hideKeyboard
+
+# Tap top left corner
+- tapOn:
+    point: "10%,10%"
+- takeScreenshot: 05_after_tap_top_left
+
+# Wait longer
+- extendedWaitUntil:
+    visible: "non_existent_element"
+    timeout: 3000
+    optional: true
+
+# Tap title area
+- tapOn:
+    point: "50%,15%"
+- takeScreenshot: 06_after_tap_title
+
+# Wait again
+- extendedWaitUntil:
+    visible: "non_existent_element"
+    timeout: 2000
+    optional: true
+
+# 6. Try to select address
+- takeScreenshot: 07_before_address_selection
+- tapOn: "Select a saved address.*"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- takeScreenshot: 08_after_tap_address_dropdown
+
+# Tap center to select first address
+- tapOn:
+    point: "50%,50%"
+- takeScreenshot: 09_after_select_address
+
+# Wait for selection to register
+- extendedWaitUntil:
+    visible: "non_existent_element"
+    timeout: 2000
+    optional: true
+
+# 7. Submit Withdrawal
+- takeScreenshot: 10_before_submit
+- runFlow:
+    when:
+        visible: "Withdraw|Send|Confirm"
+    commands:
+        - tapOn: "Withdraw|Send|Confirm"
+
+- runFlow:
+    when:
+        notVisible: "Withdraw|Send|Confirm"
+    commands:
+        - tapOn:
+            point: "75%,85%"
+
+- extendedWaitUntil:
+    visible: "Success|Done|OK"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: 11_final_result

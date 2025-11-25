@@ -1,0 +1,54 @@
+appId: co.solidi.mobile.test
+---
+# Wallet Withdraw Test - Regex Selector
+# Uses regex for Withdraw to handle potential icons/whitespace
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+
+# Navigate to Wallet (60%, 96%)
+- tapOn:
+    point: "60%,96%"
+
+# Wait for page load
+- runFlow:
+    commands:
+        - tapOn:
+            point: "50%,50%"
+- extendedWaitUntil:
+    visible: "non_existent_element"
+    timeout: 5000
+    optional: true
+
+# Tap Withdraw using Regex
+- tapOn: ".*Withdraw.*"
+
+# Verify success
+- extendedWaitUntil:
+    visible: "BTC (Bitcoin)"
+    timeout: 10000
+
+# Continue flow
+- tapOn: "BTC (Bitcoin)"
+- tapOn: "Select a saved address.*"
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 3000
+- tapOn:
+    index: 0
+- extendedWaitUntil:
+    notVisible: "Select a saved address.*"
+    timeout: 3000
+- tapOn:
+    id: "text-input-outline"
+- inputText: "0.0001"
+- hideKeyboard
+- tapOn:
+    point: "75%,85%"
+- extendedWaitUntil:
+    visible: "Success|Done|OK"
+    timeout: 10000
+    optional: true
+- takeScreenshot: withdraw_success

@@ -15,7 +15,11 @@
     "web:build": "webpack --mode production",
     "web:dev": "webpack serve --mode development --open",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "maestro:test": "./run-maestro-tests.sh",
+    "maestro:test:ios": "./run-maestro-tests.sh ios",
+    "maestro:test:android": "./run-maestro-tests.sh android",
+    "maestro:test:flow": "./run-maestro-tests.sh auto"
   },
   "dependencies": {
     "@haskkor/react-native-pincode": "github:SolidiFX/react-native-pincode#a335e3064a69da4d09fbc509d7378803c7dbc440",
@@ -89,10 +93,12 @@
     "copy-webpack-plugin": "^13.0.1",
     "crypto-browserify": "^3.12.0",
     "css-loader": "^6.8.1",
+    "detox": "^20.46.0",
+    "detox-cli": "^20.0.0",
     "eslint": "9.1.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.3",
-    "jest": "29.7.0",
+    "jest": "^29.7.0",
     "metro": "^0.73.10",
     "metro-config": "^0.73.10",
     "metro-react-native-babel-preset": "0.77.0",

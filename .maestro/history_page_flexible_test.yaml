@@ -1,0 +1,112 @@
+appId: co.solidi.mobile.test
+---
+# History Page E2E Test - Flexible Tab Detection
+# Tests Transaction History and Orders tabs with infinite scroll
+
+# Step 1: Launch app and ensure we're logged in
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000
+- takeScreenshot: 01_app_launched
+
+# Step 2: Wait for main screen to load
+- extendedWaitUntil:
+    visible: "Wallet|Transfer"
+    timeout: 15000
+- takeScreenshot: 02_main_screen
+
+# Step 3: Try to navigate to History tab (try multiple approaches)
+# Approach 1: Tap by text
+- runFlow:
+    when:
+      visible: "History"
+    commands:
+      - tapOn: "History"
+
+# Approach 2: Tap at bottom right (where History tab usually is)
+- runFlow:
+    when:
+      notVisible: "Transaction History|Transactions|Orders"
+    commands:
+      - tapOn:
+          point: "85%,95%"
+
+# Wait for history screen to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 03_history_screen_opened
+
+# Step 4: Check if we're on Transaction History or Orders
+# Look for tab indicators
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: 04_current_view
+
+# Step 5: Test scrolling (works on whichever tab we're on)
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 05_scroll_1
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 06_scroll_2
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 07_scroll_3
+
+# Step 6: Try to find and tap the other tab
+# Look for tab switcher
+- runFlow:
+    when:
+      visible: "Orders"
+    commands:
+      - tapOn: "Orders"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 08_orders_tab
+
+# Or try Transaction History
+- runFlow:
+    when:
+      visible: "Transaction History|Transactions"
+    commands:
+      - tapOn: "Transaction History|Transactions"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 3000
+      - takeScreenshot: 09_transactions_tab
+
+# Step 7: Test scrolling on second tab
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 10_second_tab_scroll_1
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 11_second_tab_scroll_2
+
+- scroll
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 2000
+- takeScreenshot: 12_second_tab_scroll_3
+
+# Step 8: Final screenshot
+- takeScreenshot: 13_test_complete
+
+# Test completed! Check screenshots to verify both tabs and scrolling worked

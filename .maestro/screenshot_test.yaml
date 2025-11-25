@@ -1,0 +1,9 @@
+appId: com.solidimobileapp4test
+---
+# Fresh screenshot test
+- launchApp
+- takeScreenshot: fresh_app_launch
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+- takeScreenshot: after_5_seconds
