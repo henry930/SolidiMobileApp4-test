@@ -89,3 +89,10 @@ buck-out/
 # testing
 /coverage
 
+# only for local development
+/logs
+/scripts
+/docs
+
+# built production files
+/distribution
