@@ -37,6 +37,8 @@ import { theme } from '../../constants';
 import { ThemeProvider, useTheme } from '../../styles/ThemeProvider';
 // Biometric Authentication
 import SecureApp from '../../components/BiometricAuth/SecureApp';
+// Push Notifications
+import PushNotificationManager from '../../services/PushNotificationManager';
 
 // Disable Inspector completely in development
 if (__DEV__) {
@@ -94,6 +96,38 @@ const AppContent = () => {
     } catch (error) {
       console.log('❌ SplashScreen error:', error);
     }
+
+    // Initialize Push Notifications
+    const initPushNotifications = async () => {
+      try {
+        console.log('🔔 Initializing push notifications...');
+        // Setup listeners for incoming notifications
+        PushNotificationManager.setupNotificationListeners();
+
+        // Wait a bit for the Activity to be fully attached
+        setTimeout(async () => {
+          try {
+            // Request permission and get token
+            const hasPermission = await PushNotificationManager.requestPermission();
+            if (hasPermission) {
+              const token = await PushNotificationManager.getToken();
+              if (token) {
+                console.log('✅ Push notifications initialized successfully');
+                console.log('📱 FCM Token:', token);
+              }
+            } else {
+              console.log('⚠️ Push notification permission denied');
+            }
+          } catch (error) {
+            console.error('❌ Error requesting push notification permission:', error);
+          }
+        }, 2000); // Wait 2 seconds for Activity to be ready
+      } catch (error) {
+        console.error('❌ Error initializing push notifications:', error);
+      }
+    };
+
+    initPushNotifications();
   }, []);
 
   return (

@@ -137,6 +137,11 @@ dependencies {
     implementation("com.facebook.react:react-android")
     implementation("com.facebook.react:flipper-integration")
 
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-analytics'
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
@@ -156,3 +161,6 @@ project.ext.vectoricons = [
 ]
 */
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+// Google Services plugin for Firebase
+apply plugin: 'com.google.gms.google-services'

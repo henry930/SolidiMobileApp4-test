@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "752370325718",
+    "project_id": "solidi-mobile-app",
+    "storage_bucket": "solidi-mobile-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:752370325718:android:8914e73cb648b4fced9177",
+        "android_client_info": {
+          "package_name": "com.solidimobileapp4test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAN3GH2Nn7_xHEfnNaQhC0acNOrLYMx3G0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
