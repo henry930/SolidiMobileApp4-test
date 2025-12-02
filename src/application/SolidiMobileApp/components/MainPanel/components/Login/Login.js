@@ -451,6 +451,7 @@ let Login = () => {
               onPress={() => appState.changeState('Register')}
               style={{ alignSelf: 'flex-start', marginBottom: 8 }}
               icon="account-plus"
+              testID="register-button"
             >
               Create New Account
             </Button>

@@ -26,7 +26,7 @@ import { colors } from 'src/constants';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('ImageButton');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 
 
@@ -53,14 +53,14 @@ let ImageButton = ({
   let iconColor = colors.greyedOutIcon;
 
   // Check for arguments:
-  if (! _.isUndefined(styles.image) && ! _.isUndefined(styles.image.iconSize))
+  if (!_.isUndefined(styles.image) && !_.isUndefined(styles.image.iconSize))
     iconSize = styles.image.iconSize;
-  if (! _.isUndefined(styles.image) && ! _.isUndefined(styles.image.iconColor))
+  if (!_.isUndefined(styles.image) && !_.isUndefined(styles.image.iconColor))
     iconColor = styles.image.iconColor;
 
   // Add some default styling to the View.
   let styleView = defaultStyle.view;
-  if (! _.isNil(styles)) {
+  if (!_.isNil(styles)) {
     if (styles.view) {
       styleView = StyleSheet.flatten([styleView, styles.view]);
     }
@@ -75,17 +75,18 @@ let ImageButton = ({
       style={styles.touchable}
       activeOpacity={0.8}
       underlayColor="#111111"
+      testID={rest.testID}
       {...rest}
     >
       <View>
         <StyledView disabled={disabled} styles={styleView}>
-          { imageType === 'image' &&
+          {imageType === 'image' &&
             <StyledImage imageName={imageName} disabled={disabled} styles={styles.image} />
           }
-          { imageType === 'icon' &&
+          {imageType === 'icon' &&
             <Icon name={imageName} size={iconSize} color={iconColor} />
           }
-          { titleExists &&
+          {titleExists &&
             <StyledText disabled={disabled} styles={styles.text}>
               {title}
             </StyledText>

@@ -32,7 +32,7 @@ import misc from 'src/util/misc';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('CryptoContent');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 // Screen dimensions
 const { width: screenWidth } = Dimensions.get('window');
@@ -44,16 +44,16 @@ const OFFLINE_MODE = false;
 const generateMockCSVData = (asset, period) => {
   const basePrice = asset === 'BTC' ? 45000 : asset === 'ETH' ? 3000 : asset === 'LTC' ? 150 : 1000;
   const dataPoints = period === '1H' ? 12 : period === '2H' ? 12 : period === '1D' ? 24 : 50;
-  
+
   let csvData = 'timestamp,price\n';
-  
+
   for (let i = 0; i < dataPoints; i++) {
     const timestamp = Date.now() - (dataPoints - i) * 3600000; // hourly intervals
     const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
     const price = basePrice * (1 + variation);
     csvData += `${timestamp},${price.toFixed(2)}\n`;
   }
-  
+
   return csvData;
 };
 
@@ -62,10 +62,10 @@ const generateFallbackPriceData = (currentPrice, period) => {
   if (!currentPrice || currentPrice <= 0) {
     currentPrice = 45000; // Default fallback
   }
-  
+
   // Generate realistic number of data points for each period
   let dataPoints;
-  switch(period) {
+  switch (period) {
     case '1H':
       dataPoints = 60; // 1 minute intervals
       break;
@@ -90,30 +90,30 @@ const generateFallbackPriceData = (currentPrice, period) => {
     default:
       dataPoints = 100;
   }
-  
+
   const priceData = [];
   let currentPricePoint = currentPrice;
-  
+
   console.log(`🔧 Generating ${dataPoints} realistic price points for ${period} around £${currentPrice}`);
-  
+
   // Generate more realistic price movement with trends
   for (let i = 0; i < dataPoints; i++) {
     // Create small random walk instead of independent random values
     // Each point changes by at most ±0.5% from the previous point
     const maxChange = 0.005; // 0.5% max change per point
     const change = (Math.random() - 0.5) * maxChange * 2;
-    
+
     // Apply the change to the current price point
     currentPricePoint = currentPricePoint * (1 + change);
-    
+
     // Keep prices within reasonable bounds (±10% of original)
     const minPrice = currentPrice * 0.9;
     const maxPrice = currentPrice * 1.1;
     currentPricePoint = Math.max(minPrice, Math.min(maxPrice, currentPricePoint));
-    
+
     priceData.push(currentPricePoint);
   }
-  
+
   console.log(`✅ Generated realistic fallback data with ${priceData.length} points:`, {
     first: priceData[0].toFixed(2),
     last: priceData[priceData.length - 1].toFixed(2),
@@ -195,12 +195,12 @@ let CryptoContent = ({ onClose }) => {
     try {
       setIsLoadingPrices(true);
       setPriceDataError(null);
-      
+
       console.log(`📊 Fetching historic prices for ${asset}-${period}.csv`);
-      
+
       // Construct the CSV endpoint URL based on API documentation pattern
       const csvEndpoint = `${asset}-${period}.csv`;
-      
+
       // Use appState.privateMethod to make the API call
       if (!appState.privateMethod) {
         throw new Error('Private method not available - please ensure you are authenticated');
@@ -221,50 +221,50 @@ let CryptoContent = ({ onClose }) => {
         // Parse CSV string into array of price values
         const lines = response.trim().split('\n');
         const headers = lines[0].split(',');
-        
+
         console.log(`📊 CSV Headers: ${headers.join(', ')}`);
         console.log(`📊 CSV has ${lines.length - 1} data rows`);
-        
+
         // Find the price column (could be 'price', 'close', 'value', etc.)
-        const priceColumnIndex = headers.findIndex(header => 
+        const priceColumnIndex = headers.findIndex(header =>
           ['price', 'close', 'value', 'rate', 'last'].includes(header.toLowerCase().trim())
         );
-        
+
         // If no obvious price column, assume the second column (after timestamp/date)
         const actualPriceIndex = priceColumnIndex >= 0 ? priceColumnIndex : 1;
-        
+
         console.log(`📊 Using column index ${actualPriceIndex} (${headers[actualPriceIndex]}) for price data`);
-        
+
         parsedData = lines.slice(1).map((line, index) => {
           const values = line.split(',');
           const priceValue = values[actualPriceIndex]?.trim();
-          
+
           // Convert to number, handling different formats
           let price = parseFloat(priceValue);
           if (isNaN(price)) {
             console.warn(`⚠️ Invalid price value at line ${index + 2}: "${priceValue}"`);
             price = 0;
           }
-          
+
           return {
             timestamp: values[0]?.trim() || '',
             price: price,
             rawData: line // Keep original for debugging
           };
         }).filter(item => item.price > 0); // Filter out invalid prices
-        
+
       } else if (Array.isArray(response)) {
         // If response is already an array, try to extract price values
         parsedData = response.map((item, index) => {
           let price = 0;
-          
+
           // Try different property names for price
           if (typeof item === 'object' && item !== null) {
             price = item.price || item.close || item.value || item.rate || item.last || 0;
           } else if (typeof item === 'number') {
             price = item;
           }
-          
+
           return {
             timestamp: item.timestamp || item.date || index.toString(),
             price: parseFloat(price) || 0,
@@ -284,9 +284,9 @@ let CryptoContent = ({ onClose }) => {
       // Structure: historic_prices[market][period] = array of price values
       const market = `${asset}/GBP`;
       const priceArray = parsedData.map(item => item.price);
-      
+
       console.log(`📊 Storing ${priceArray.length} prices for ${market}/${period}:`, priceArray.slice(0, 5));
-      
+
       setHistoricPrices(prev => ({
         ...prev,
         [market]: {
@@ -296,7 +296,7 @@ let CryptoContent = ({ onClose }) => {
       }));
 
       console.log(`✅ Parsed ${parsedData.length} price data points for ${asset}-${period}`);
-      
+
     } catch (error) {
       console.error(`❌ Failed to fetch historic prices for ${asset}-${period}:`, error);
       console.log('📋 CSV Fetch Error Details:', {
@@ -316,13 +316,13 @@ let CryptoContent = ({ onClose }) => {
   useEffect(() => {
     const cryptoData = appState.selectedCrypto || {};
     const { asset = 'BTC' } = cryptoData;
-    
+
     // Get current price for fallback data generation
     const fallbackPrice = (() => {
       try {
         const tickerData = appState.apiData?.ticker;
         const assetPair = `${asset}/GBP`;
-        
+
         if (tickerData && tickerData[assetPair]) {
           const tickerInfo = tickerData[assetPair];
           if (tickerInfo.bid && tickerInfo.ask) {
@@ -342,7 +342,7 @@ let CryptoContent = ({ onClose }) => {
     // Check if we already have historic prices in appState
     const existingHistoricPrices = appState.apiData?.historic_prices;
     const market = `${asset}/GBP`;
-    
+
     console.log('🔍 Checking for existing historic prices:', {
       asset,
       period: selectedPeriod,
@@ -353,23 +353,23 @@ let CryptoContent = ({ onClose }) => {
       allMarketsAvailable: existingHistoricPrices ? Object.keys(existingHistoricPrices) : [],
       rawExistingData: existingHistoricPrices && existingHistoricPrices[market] && existingHistoricPrices[market][selectedPeriod] ? existingHistoricPrices[market][selectedPeriod] : null
     });
-    
+
     // Use existing data if available and contains valid data
     if (existingHistoricPrices && existingHistoricPrices[market] && existingHistoricPrices[market][selectedPeriod]) {
       const existingData = existingHistoricPrices[market][selectedPeriod];
-      
+
       // Check if the data contains meaningful values (not just [0] or empty)
-      const hasValidData = Array.isArray(existingData) && 
-                          existingData.length > 1 && 
-                          existingData.some(val => val > 0);
-      
+      const hasValidData = Array.isArray(existingData) &&
+        existingData.length > 1 &&
+        existingData.some(val => val > 0);
+
       console.log('📊 Existing data validation:', {
         dataLength: existingData.length,
         hasValidData,
         sampleValues: existingData.slice(0, 5),
         allValues: existingData
       });
-      
+
       if (hasValidData) {
         console.log('✅ Using existing historic prices from appState');
         setHistoricPrices(prev => ({
@@ -429,16 +429,16 @@ let CryptoContent = ({ onClose }) => {
   useEffect(() => {
     const checkAuthenticationAndTestAPI = async () => {
       console.log('=== CryptoContent Authentication & API Testing Started ===');
-      
+
       // Check authentication first
       console.log('1. Checking authentication status...');
       const isAuthenticated = appState.user?.isAuthenticated;
       const hasApiCredentials = appState.user?.apiCredentialsFound;
       const hasPrivateMethod = !!appState.privateMethod;
-      
+
       console.log('Authentication Status:', {
         isAuthenticated,
-        hasApiCredentials, 
+        hasApiCredentials,
         hasPrivateMethod,
         userEmail: appState.user?.email,
         bypassAuth: appState.bypassAuthentication // Check if auth is bypassed for dev
@@ -457,7 +457,7 @@ let CryptoContent = ({ onClose }) => {
       }
 
       console.log('✅ User authenticated - proceeding with API tests...');
-      
+
       try {
         // Test 1: Load Balance API
         console.log('\n2. Testing Balance API...');
@@ -501,7 +501,7 @@ let CryptoContent = ({ onClose }) => {
           // Test ticker endpoint directly (this is actually a public endpoint)
           console.log('Testing ticker endpoint directly...');
           const directTickerResponse = await appState.publicMethod({
-            httpMethod: 'GET', 
+            httpMethod: 'GET',
             apiRoute: 'ticker',
             params: {}
           });
@@ -517,9 +517,9 @@ let CryptoContent = ({ onClose }) => {
         console.log('\n5. Current API Data State:');
         console.log('apiData:', appState.apiData);
         console.log('selectedCrypto:', appState.selectedCrypto);
-        
+
         console.log('\n=== CryptoContent API Testing Completed ===\n');
-        
+
       } catch (error) {
         console.log('❌ API Testing failed:', error);
       }
@@ -539,7 +539,7 @@ let CryptoContent = ({ onClose }) => {
   // Manual refresh function for all API data
   const refreshAllData = async () => {
     console.log('🔄 Refreshing all API data...');
-    
+
     // Start all loading states
     setIsLoadingBalance(true);
     setIsLoadingTicker(true);
@@ -625,10 +625,10 @@ let CryptoContent = ({ onClose }) => {
     const fetchPrice = () => {
       try {
         console.log(`🔍 CryptoContent: Getting cached price for ${asset}...`);
-        
+
         // Use the same cached price as Assets page
         const cachedPrice = appState.getCryptoSellPrice(asset);
-        
+
         if (cachedPrice && cachedPrice > 0) {
           console.log(`✅ CryptoContent: Using cached price for ${asset}: £${cachedPrice.toFixed(2)}`);
           setFetchedPrice(cachedPrice);
@@ -643,10 +643,10 @@ let CryptoContent = ({ onClose }) => {
     };
 
     fetchPrice();
-    
+
     // Refresh price every 5 seconds to pick up cache updates
     const interval = setInterval(fetchPrice, 5000);
-    
+
     return () => clearInterval(interval);
   }, [asset]);
 
@@ -703,7 +703,7 @@ let CryptoContent = ({ onClose }) => {
     };
 
     const supply = assetSupplyData[asset] || { circulating: 'N/A', total: 'N/A' };
-    
+
     return {
       marketCap: `£${(currentPrice * parseFloat(supply.circulating.replace(/[MB]/g, '')) * (supply.circulating.includes('B') ? 1000000000 : 1000000)).toLocaleString()}`,
       volume24h: `£${(currentPrice * 0.05 * parseFloat(supply.circulating.replace(/[MB]/g, '')) * (supply.circulating.includes('B') ? 1000000000 : 1000000)).toLocaleString()}`,
@@ -755,7 +755,7 @@ let CryptoContent = ({ onClose }) => {
 
     // Update selected point
     setSelectedGraphPoint(pointData);
-    
+
     console.log('[GRAPH_TOUCH] Selected point:', {
       value: pointData.value,
       index: pointData.index,
@@ -771,8 +771,8 @@ let CryptoContent = ({ onClose }) => {
         <Card.Content style={{ padding: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <TouchableOpacity onPress={onClose} style={{ marginRight: 12 }}>
-              <IconButton 
-                icon="close" 
+              <IconButton
+                icon="close"
                 iconColor={materialTheme.colors.onSurface}
                 size={24}
               />
@@ -814,8 +814,8 @@ let CryptoContent = ({ onClose }) => {
 
           <View style={{ alignItems: 'center', marginBottom: 20 }}>
             <Text variant="displaySmall" style={{ fontWeight: '700', marginBottom: 4 }}>
-              {isLoadingTicker || currentPrice === null ? 'Loading...' : selectedGraphPoint 
-                ? `£${selectedGraphPoint.value.toLocaleString()}` 
+              {isLoadingTicker || currentPrice === null ? 'Loading...' : selectedGraphPoint
+                ? `£${selectedGraphPoint.value.toLocaleString()}`
                 : `£${currentPrice.toLocaleString()}`
               }
             </Text>
@@ -838,16 +838,16 @@ let CryptoContent = ({ onClose }) => {
                     const changeAmount = displayPrice - firstPrice;
                     const changePercent = firstPrice > 0 ? ((changeAmount / firstPrice) * 100).toFixed(2) : 0;
                     const isPositive = changeAmount >= 0;
-                    
+
                     return (
                       <>
-                        <Icon 
+                        <Icon
                           name={isPositive ? "trending-up" : "trending-down"}
                           size={20}
                           color={isPositive ? '#4CAF50' : '#F44336'}
                           style={{ marginRight: 4 }}
                         />
-                        <Text style={{ 
+                        <Text style={{
                           color: isPositive ? '#4CAF50' : '#F44336',
                           fontWeight: '600'
                         }}>
@@ -921,7 +921,7 @@ let CryptoContent = ({ onClose }) => {
             </View>
           )}
         </View>
-        
+
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text variant="bodyMedium" style={{ color: materialTheme.colors.onSurfaceVariant }}>
@@ -931,7 +931,7 @@ let CryptoContent = ({ onClose }) => {
               {isLoadingTicker ? 'Loading...' : marketData.marketCap}
             </Text>
           </View>
-          
+
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text variant="bodyMedium" style={{ color: materialTheme.colors.onSurfaceVariant }}>
               24h Volume
@@ -988,7 +988,7 @@ let CryptoContent = ({ onClose }) => {
   const renderPriceGraph = () => {
     const currentAsset = appState.selectedCrypto?.asset || 'BTC';
     const market = `${currentAsset}/GBP`;
-    
+
     // Structure the data in the format PriceGraph expects: historic_prices[market][period]
     const structuredPriceData = {
       [market]: historicPrices[market] || {}
@@ -1028,7 +1028,7 @@ let CryptoContent = ({ onClose }) => {
 
         {/* Error Display */}
         {priceDataError && (
-          <View style={{ 
+          <View style={{
             backgroundColor: materialTheme.colors.errorContainer,
             padding: 12,
             borderRadius: 8,
@@ -1049,8 +1049,8 @@ let CryptoContent = ({ onClose }) => {
         )}
 
         {/* Simple Chart with no background wrapper */}
-        <SimpleChart 
-          data={structuredPriceData[market] && structuredPriceData[market][selectedPeriod] ? 
+        <SimpleChart
+          data={structuredPriceData[market] && structuredPriceData[market][selectedPeriod] ?
             structuredPriceData[market][selectedPeriod].map((price, index) => ({
               value: typeof price === 'number' ? price : parseFloat(price) || 0,
               date: new Date(Date.now() - (structuredPriceData[market][selectedPeriod].length - index) * 3600000).toISOString().split('T')[0]
@@ -1064,8 +1064,8 @@ let CryptoContent = ({ onClose }) => {
           onPointSelected={handleGraphPointSelected}
         />
 
-          {/* Original PriceGraph (commented out for debugging) */}
-          {/* 
+        {/* Original PriceGraph (commented out for debugging) */}
+        {/* 
           <PriceGraph 
             assetBA={currentAsset}
             assetQA="GBP"
@@ -1075,17 +1075,17 @@ let CryptoContent = ({ onClose }) => {
           />
           */}
 
-          {/* Data Info */}
-          {structuredPriceData[market] && structuredPriceData[market][selectedPeriod] && structuredPriceData[market][selectedPeriod].length > 0 && (
-            <Text style={{ 
-              fontSize: 12, 
-              color: materialTheme.colors.onSurfaceVariant, 
-              textAlign: 'center',
-              marginTop: 8 
-            }}>
-              {structuredPriceData[market][selectedPeriod].length} data points • Last updated: {new Date().toLocaleTimeString()}
-            </Text>
-          )}
+        {/* Data Info */}
+        {structuredPriceData[market] && structuredPriceData[market][selectedPeriod] && structuredPriceData[market][selectedPeriod].length > 0 && (
+          <Text style={{
+            fontSize: 12,
+            color: materialTheme.colors.onSurfaceVariant,
+            textAlign: 'center',
+            marginTop: 8
+          }}>
+            {structuredPriceData[market][selectedPeriod].length} data points • Last updated: {new Date().toLocaleTimeString()}
+          </Text>
+        )}
       </View>
     );
   };
@@ -1096,11 +1096,11 @@ let CryptoContent = ({ onClose }) => {
         <Text variant="titleMedium" style={{ fontWeight: '600', marginBottom: 16 }}>
           About {name}
         </Text>
-        <Text variant="bodyMedium" style={{ 
-          lineHeight: 22, 
-          color: materialTheme.colors.onSurfaceVariant 
+        <Text variant="bodyMedium" style={{
+          lineHeight: 22,
+          color: materialTheme.colors.onSurfaceVariant
         }}>
-          {asset === 'BTC' ? 
+          {asset === 'BTC' ?
             "Bitcoin is the world's first cryptocurrency, created in 2009 by an unknown person or group using the pseudonym Satoshi Nakamoto. It operates on a decentralized peer-to-peer network without the need for a central authority or government. Bitcoin transactions are verified by network nodes through cryptography and recorded in a public distributed ledger called a blockchain." :
             `${name} is a digital cryptocurrency that operates on blockchain technology. It enables secure, decentralized transactions and has gained significant adoption in the cryptocurrency ecosystem.`
           }
@@ -1110,9 +1110,9 @@ let CryptoContent = ({ onClose }) => {
   );
 
   return (
-    <View style={{ 
-      flex: 1, 
-      backgroundColor: materialTheme.colors.background 
+    <View style={{
+      flex: 1,
+      backgroundColor: materialTheme.colors.background
     }}>
       {/* Overall Loading Banner */}
       {(isLoadingBalance || isLoadingTicker || isLoadingMarketStats || isLoadingPortfolio || isLoadingGeneral || isLoadingPrices) && (
@@ -1124,8 +1124,8 @@ let CryptoContent = ({ onClose }) => {
           justifyContent: 'center'
         }}>
           <Icon name="loading" size={16} color={materialTheme.colors.primary} />
-          <Text style={{ 
-            marginLeft: 8, 
+          <Text style={{
+            marginLeft: 8,
             color: materialTheme.colors.primary,
             fontSize: 14,
             fontWeight: '500'
@@ -1135,8 +1135,8 @@ let CryptoContent = ({ onClose }) => {
         </View>
       )}
 
-      <ScrollView 
-        style={{ flex: 1 }} 
+      <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
@@ -1158,7 +1158,7 @@ let CryptoContent = ({ onClose }) => {
           >
             Buy
           </Button>
-          
+
           <Button
             mode="contained"
             onPress={handleSell}
@@ -1167,34 +1167,7 @@ let CryptoContent = ({ onClose }) => {
           >
             Sell
           </Button>
-          
-          <View style={styles.sendMenuContainer}>
-            <Menu
-              visible={showSendMenu}
-              onDismiss={() => setShowSendMenu(false)}
-              anchor={
-                <FAB
-                  icon="dots-horizontal"
-                  size="small"
-                  onPress={() => setShowSendMenu(true)}
-                  style={[styles.tradingButton, styles.sendButton]}
-                />
-              }
-              contentStyle={styles.menuContent}
-            >
-              <Menu.Item 
-                onPress={handleSend} 
-                title="Send" 
-                leadingIcon="send"
-              />
-              <Divider />
-              <Menu.Item 
-                onPress={handleReceive} 
-                title="Receive" 
-                leadingIcon="download"
-              />
-            </Menu>
-          </View>
+
         </View>
       </Surface>
 

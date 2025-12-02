@@ -1,0 +1,153 @@
+appId: co.solidi.mobile.test
+---
+# Issue 77: Relax Name Validation Test
+# Verifies that the Address Book accepts diverse name formats including:
+# - Apostrophes (O'Brien)
+# - Chinese characters (楊國雄)
+# - Accents (Müller)
+# - Superscripts (MᶜN)
+# - Special characters & numbers (Æ A-Xii, 6ix9ine)
+
+# Wait for app to be ready
+- assertVisible: ".*"
+- takeScreenshot: 01_app_ready
+
+# Navigate to Settings -> Address Book -> Add Address
+- tapOn:
+    id: "header-settings-button"
+- extendedWaitUntil:
+    visible: "Wallet & Finance|Account Settings|Personal Details"
+    timeout: 10000
+- scroll
+- scroll
+- tapOn:
+    id: "settings-address-book-item"
+- extendedWaitUntil:
+    visible:
+      id: "address-book-root"
+    timeout: 10000
+- tapOn:
+    id: "address-book-add-tab"
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-1"
+    timeout: 10000
+
+# Select "Myself" (default) and go to Step 2
+- tapOn:
+    id: "recipient-option-myself"
+- scroll
+- tapOn:
+    id: "button-next"
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-2"
+    timeout: 10000
+- takeScreenshot: 02_step2_details
+
+# TEST 1: Apostrophe & Standard UK
+- tapOn:
+    id: "input-firstname"
+- eraseText: 50
+- inputText: "Jamie's"
+- hideKeyboard
+- tapOn:
+    id: "input-lastname"
+- eraseText: 50
+- inputText: "O'Brien"
+- hideKeyboard
+- takeScreenshot: 03_name_apostrophe
+- scroll
+- tapOn:
+    id: "button-next"
+# Verify we reached Step 3 (Asset Selection)
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-3"
+    timeout: 5000
+- takeScreenshot: 04_success_apostrophe
+# Go back to test next name
+- tapOn:
+    id: "button-back"
+
+# TEST 2: Chinese Characters
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-2"
+    timeout: 5000
+- tapOn:
+    id: "input-firstname"
+- eraseText: 50
+- inputText: "楊國雄"
+- hideKeyboard
+- tapOn:
+    id: "input-lastname"
+- eraseText: 50
+- inputText: "Chinese"
+- hideKeyboard
+- takeScreenshot: 05_name_chinese
+- scroll
+- tapOn:
+    id: "button-next"
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-3"
+    timeout: 5000
+- takeScreenshot: 06_success_chinese
+- tapOn:
+    id: "button-back"
+
+# TEST 3: Accents & European
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-2"
+    timeout: 5000
+- tapOn:
+    id: "input-firstname"
+- eraseText: 50
+- inputText: "Hélène"
+- hideKeyboard
+- tapOn:
+    id: "input-lastname"
+- eraseText: 50
+- inputText: "Müller"
+- hideKeyboard
+- takeScreenshot: 07_name_accents
+- scroll
+- tapOn:
+    id: "button-next"
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-3"
+    timeout: 5000
+- takeScreenshot: 08_success_accents
+- tapOn:
+    id: "button-back"
+
+# TEST 4: Superscripts & Special Chars
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-2"
+    timeout: 5000
+- tapOn:
+    id: "input-firstname"
+- eraseText: 50
+- inputText: "MᶜN"
+- hideKeyboard
+- tapOn:
+    id: "input-lastname"
+- eraseText: 50
+- inputText: "Æ A-Xii 6ix9ine"
+- hideKeyboard
+- takeScreenshot: 09_name_special
+- scroll
+- tapOn:
+    id: "button-next"
+- extendedWaitUntil:
+    visible:
+      id: "address-book-form-step-3"
+    timeout: 5000
+- takeScreenshot: 10_success_special
+
+# Final Success
+- takeScreenshot: 11_test_complete_success

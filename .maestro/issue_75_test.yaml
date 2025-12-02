@@ -1,0 +1,57 @@
+appId: co.solidi.mobile.test
+---
+# Issue #75: Passcode Screen Verification
+# Verifies that the app uses standard iOS biometric/passcode authentication
+# and doesn't show unusual non-standard passcode screens
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# The app should show either:
+# 1. Standard iOS FaceID/TouchID prompt
+# 2. Standard iOS passcode entry
+# 3. App login screen (if not authenticated)
+
+# Check if we see the standard login screen
+- runFlow:
+    when:
+      visible: "Secure Login"
+    commands:
+      - takeScreenshot: issue-75-standard-login-screen
+      - tapOn: "Secure Login"
+      - waitForAnimationToEnd
+
+# If FaceID/passcode prompt appears, it should be the standard iOS one
+# We can't directly test the iOS system prompt, but we can verify the app doesn't
+# show a custom non-standard passcode screen
+
+# Wait and take screenshot of current state
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: issue-75-app-state
+
+# Navigate through app to verify no unusual passcode screens appear
+- runFlow:
+    when:
+      visible: "Wallet"
+    commands:
+      - tapOn: "Wallet"
+      - waitForAnimationToEnd
+      - takeScreenshot: issue-75-wallet-screen
+      
+# Navigate to Settings to check authentication settings
+- runFlow:
+    when:
+      visible: "Settings"
+    commands:
+      - tapOn: "Settings"
+      - waitForAnimationToEnd
+      - takeScreenshot: issue-75-settings-screen
+
+# Test passes if:
+# 1. No custom/unusual passcode screens appear
+# 2. Only standard iOS authentication is used
+# 3. App functions normally

@@ -10,7 +10,6 @@ import { Button, ImageButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import ImageLookup from 'src/images';
 import { sharedStyles as styles, layoutStyles as layout, buttonStyles as buttons, textStyles as text } from 'src/styles';
-import { NotificationBellIcon } from 'src/components/NotificationInbox';
 
 
 
@@ -88,18 +87,15 @@ let Header = (props) => {
         activeOpacity={0.8}
       >
         <Text style={headerStyles.riskBannerText}>
-          ⚠️ Don't invest unless you're prepared to lose all the money you invest. This is a high-risk investment and you should not expect to be protected if something goes wrong. Take 2 mins to{' '}
+          Don't invest unless you're prepared to lose all the money you invest. This is a high-risk investment and you should not expect to be protected if something goes wrong. Take 2 mins to{' '}
           <Text style={headerStyles.learnMoreText}>learn more</Text>.
         </Text>
       </TouchableOpacity>
 
       {/* Main Header */}
       <View style={headerStyles.header}>
-        <View style={headerStyles.leftButtonWrapper}>
-          {/* Notification Bell Icon on the left side */}
-          {!hideSettingsButton && (
-            <NotificationBellIcon />
-          )}
+        <View style={headerStyles.sideButtonWrapper}>
+          {includeBackButton ? backButton : blankBackButton}
         </View>
         <TouchableOpacity
           style={headerStyles.logoWrapper}
@@ -108,10 +104,11 @@ let Header = (props) => {
         >
           <Image source={ImageLookup[logoImageName]} style={headerStyles.logo} />
         </TouchableOpacity>
-        <View style={headerStyles.rightButtonWrapper}>
+        <View style={headerStyles.sideButtonWrapper}>
           {!hideSettingsButton &&
             <ImageButton imageName='user' imageType='icon'
               styles={_styleSettingsButton}
+              testID="header-settings-button"
               onPress={() => {
                 // Check if user is authenticated to decide navigation
                 if (appState.user.isAuthenticated) {
@@ -138,7 +135,7 @@ const headerStyles = StyleSheet.create({
   riskBanner: {
     width: '100%',
     paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(8),
+    paddingVertical: scaledHeight(4),
     backgroundColor: colors.warning
   },
   riskBannerText: {
@@ -175,19 +172,10 @@ const headerStyles = StyleSheet.create({
     height: scaledHeight(30),
     resizeMode: 'contain'
   },
-  leftButtonWrapper: {
-    flexDirection: 'row',
+  sideButtonWrapper: {
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    width: scaledWidth(60),
-    paddingLeft: scaledWidth(10)
-  },
-  rightButtonWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    width: scaledWidth(60),
-    paddingRight: scaledWidth(10)
+    justifyContent: 'center',
+    width: scaledWidth(60)
   }
 });
 

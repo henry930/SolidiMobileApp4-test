@@ -7,22 +7,22 @@ if (typeof global.TextEncoder === 'undefined') {
         let charcode = str.charCodeAt(i);
         if (charcode < 0x80) utf8.push(charcode);
         else if (charcode < 0x800) {
-          utf8.push(0xc0 | (charcode >> 6), 
-                    0x80 | (charcode & 0x3f));
+          utf8.push(0xc0 | (charcode >> 6),
+            0x80 | (charcode & 0x3f));
         }
         else if (charcode < 0xd800 || charcode >= 0xe000) {
-          utf8.push(0xe0 | (charcode >> 12), 
-                    0x80 | ((charcode>>6) & 0x3f), 
-                    0x80 | (charcode & 0x3f));
+          utf8.push(0xe0 | (charcode >> 12),
+            0x80 | ((charcode >> 6) & 0x3f),
+            0x80 | (charcode & 0x3f));
         }
         else {
           i++;
-          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
-                              | (str.charCodeAt(i) & 0x3ff));
-          utf8.push(0xf0 | (charcode >>18), 
-                    0x80 | ((charcode>>12) & 0x3f), 
-                    0x80 | ((charcode>>6) & 0x3f), 
-                    0x80 | (charcode & 0x3f));
+          charcode = 0x10000 + (((charcode & 0x3ff) << 10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >> 18),
+            0x80 | ((charcode >> 12) & 0x3f),
+            0x80 | ((charcode >> 6) & 0x3f),
+            0x80 | (charcode & 0x3f));
         }
       }
       return new Uint8Array(utf8);
@@ -66,7 +66,7 @@ import { SolidiLoadingScreen } from 'src/components/shared';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('Transfer');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 let Transfer = ({ initialMode } = {}) => {
   console.log('🎯 CONSOLE: Transfer component initializing...');
@@ -113,7 +113,7 @@ let Transfer = ({ initialMode } = {}) => {
 
   // Address book modal state
   let [showAddressBookModal, setShowAddressBookModal] = useState(false);
-  
+
   // Address book selection modal state
   let [showAddressBookSelectionPage, setShowAddressBookSelectionPage] = useState(false);
 
@@ -126,7 +126,7 @@ let Transfer = ({ initialMode } = {}) => {
       log('Component error caught:', error);
       setComponentError(error.message || 'An error occurred');
     };
-    
+
     // Reset component error when transfer type changes
     setComponentError(null);
   }, [transferType, selectedAsset]);
@@ -154,20 +154,20 @@ let Transfer = ({ initialMode } = {}) => {
         if (appState.state && appState.state.mainPanelState) {
           const authState = appState.state.mainPanelState;
           log('🔐 Current auth state:', authState);
-          
+
           if (authState === 'AuthSetup' || authState === 'Login' || authState === 'Register') {
             log('❌ Not authenticated, redirecting to login');
             setInitializationError('Authentication required');
-            appState.changeState({mainPanelState: 'Login'});
+            appState.changeState({ mainPanelState: 'Login' });
             return;
           }
-          
+
           if (authState === 'RequestFailed') {
             log('❌ System in error state');
             setInitializationError('System error. Please try refreshing the app.');
             return;
           }
-          
+
           if (authState === 'Maintenance') {
             log('❌ System in maintenance mode');
             setInitializationError('System is under maintenance. Please try again later.');
@@ -186,7 +186,7 @@ let Transfer = ({ initialMode } = {}) => {
           console.log('📨 CONSOLE: Response type:', typeof feesResult);
           console.log('📨 CONSOLE: Response JSON:', JSON.stringify(feesResult, null, 2));
           console.log('📨 CONSOLE: ===== END FEES API RESPONSE =====');
-          
+
           setFeesLoaded(true);
           log('✅ Fees loaded successfully');
           console.log('✅ CONSOLE: Fees loaded successfully');
@@ -279,7 +279,7 @@ let Transfer = ({ initialMode } = {}) => {
             console.log('📨 CONSOLE: Response type:', typeof depositDetails);
             console.log('📨 CONSOLE: Response JSON:', JSON.stringify(depositDetails, null, 2));
             console.log('📨 CONSOLE: ===== END DEPOSIT DETAILS API RESPONSE =====');
-            
+
             log('✅ Deposit details loaded successfully');
             console.log('✅ CONSOLE: Deposit details loaded successfully');
             setDepositDetailsLoaded(true);
@@ -328,19 +328,19 @@ let Transfer = ({ initialMode } = {}) => {
           setWithdrawalFee('[error]');
           return;
         }
-        
+
         if (!appState.loadFees) {
           log('❌ loadFees method not available on appState');
           setWithdrawalFee('[error]');
           return;
         }
-        
+
         log('🔄 Loading fees for asset:', selectedAsset, 'priority:', selectedPriority);
-        
+
         // Reset fee state while loading
         setWithdrawalFee('[loading]');
         setFeesLoaded(false);
-        
+
         // Load fees from API
         console.log('🔄 CONSOLE: ===== LOADING FEES API CALL (Fee Effect) =====');
         console.log('📤 CONSOLE: About to call appState.loadFees() for fee calculation...');
@@ -350,10 +350,10 @@ let Transfer = ({ initialMode } = {}) => {
         console.log('📨 CONSOLE: Response type:', typeof loadFeesResult);
         console.log('📨 CONSOLE: Response JSON:', JSON.stringify(loadFeesResult, null, 2));
         console.log('📨 CONSOLE: ===== END FEES LOADING API RESPONSE =====');
-        
+
         // Mark fees as loaded
         setFeesLoaded(true);
-        
+
         // Get the specific fee for current asset and priority
         console.log('🔄 CONSOLE: ===== GETTING SPECIFIC FEE =====');
         console.log('📤 CONSOLE: About to call appState.getFee with:', {
@@ -371,24 +371,24 @@ let Transfer = ({ initialMode } = {}) => {
         console.log('📨 CONSOLE: Response type:', typeof fee);
         console.log('� CONSOLE: Response JSON:', JSON.stringify(fee, null, 2));
         console.log('📨 CONSOLE: ===== END GET FEE RESPONSE =====');
-        
+
         log('💰 Got fee from API:', fee);
         console.log('�💰 CONSOLE: Got fee from API:', fee);
-        
+
         // If current priority is not available, try to find an available one
         if (fee === '[loading]' || (typeof fee === 'string' && parseFloat(fee) < 0)) {
           log('🔄 Current priority unavailable, looking for alternatives...');
           const priorities = ['medium', 'high', 'low']; // API uses: low, medium, high
           let foundValidFee = null;
           let foundValidPriority = null;
-          
+
           for (const priority of priorities) {
             const testFee = appState.getFee({
               feeType: 'withdraw',
               asset: selectedAsset,
               priority: priority
             });
-            
+
             if (testFee !== '[loading]' && typeof testFee === 'string' && parseFloat(testFee) >= 0) {
               foundValidFee = testFee;
               foundValidPriority = priority;
@@ -396,7 +396,7 @@ let Transfer = ({ initialMode } = {}) => {
               break;
             }
           }
-          
+
           if (foundValidFee && foundValidPriority !== selectedPriority) {
             log(`🔄 Switching from ${selectedPriority} to ${foundValidPriority}`);
             setSelectedPriority(foundValidPriority);
@@ -407,13 +407,13 @@ let Transfer = ({ initialMode } = {}) => {
         } else {
           setWithdrawalFee(fee);
         }
-        
+
       } catch (error) {
         log('❌ Error loading fees:', error);
         setWithdrawalFee('[error]');
       }
     };
-    
+
     // Only load fees if we have a valid asset
     if (selectedAsset && appState) {
       loadFees();
@@ -425,17 +425,17 @@ let Transfer = ({ initialMode } = {}) => {
   // Helper function to check if a priority level is available for the current asset
   const isPriorityAvailable = (priority) => {
     if (!appState || !feesLoaded) return true; // Default to available while loading
-    
+
     try {
       const fee = appState.getFee({
         feeType: 'withdraw',
         asset: selectedAsset,
         priority: priority
       });
-      
+
       // Fee is unavailable if it's '[loading]', '[error]', or a negative value
       if (fee === '[loading]' || fee === '[error]') return false;
-      
+
       const feeValue = parseFloat(fee);
       return !isNaN(feeValue) && feeValue >= 0;
     } catch (error) {
@@ -456,7 +456,7 @@ let Transfer = ({ initialMode } = {}) => {
         try {
           let displayInfo = transferDataModel.getAssetDisplayInfo(asset);
           let displayString = displayInfo.label;
-          
+
           // Try to get asset icon from appState, but don't fail if it doesn't work
           let assetIcon = null;
           try {
@@ -469,7 +469,7 @@ let Transfer = ({ initialMode } = {}) => {
               console.log('📨 CONSOLE: Response type:', typeof iconResult);
               console.log('📨 CONSOLE: Response JSON:', JSON.stringify(iconResult, null, 2));
               console.log('📨 CONSOLE: ===== END ASSET ICON API RESPONSE =====');
-              
+
               // Only use icon if it's a proper image source (object), not a string
               if (iconResult && typeof iconResult === 'object') {
                 assetIcon = iconResult;
@@ -483,7 +483,7 @@ let Transfer = ({ initialMode } = {}) => {
             log('Error getting asset icon for', asset, ':', iconError);
             console.log('❌ CONSOLE: Error getting asset icon for', asset, ':', iconError);
           }
-          
+
           // Try to get additional info from appState
           try {
             if (appState?.getAssetInfo) {
@@ -495,7 +495,7 @@ let Transfer = ({ initialMode } = {}) => {
               console.log('📨 CONSOLE: Response type:', typeof info);
               console.log('📨 CONSOLE: Response JSON:', JSON.stringify(info, null, 2));
               console.log('📨 CONSOLE: ===== END ASSET INFO API RESPONSE =====');
-              
+
               if (info?.displayString) {
                 displayString = info.displayString;
                 console.log('✅ CONSOLE: Using displayString from asset info:', displayString);
@@ -504,16 +504,16 @@ let Transfer = ({ initialMode } = {}) => {
           } catch (infoError) {
             log('Error getting asset info for', asset, ':', infoError);
           }
-          
+
           let assetItem = {
             label: displayString,
             value: asset,
             fromBalanceAPI: false, // Will be set by generateSendAssetItems
           };
-          
+
           // TODO: Icon functionality disabled temporarily to prevent rendering issues
           // Icons will be re-enabled once the component rendering is stabilized
-          
+
           return assetItem;
         } catch (error) {
           log('Error processing asset item:', asset, error);
@@ -532,35 +532,35 @@ let Transfer = ({ initialMode } = {}) => {
   }
 
   // Generate asset items for dropdowns with enhanced error handling
-  let generateSendAssetItems = () => { 
+  let generateSendAssetItems = () => {
     try {
       console.log('\n' + '📤'.repeat(60));
       console.log('📤 [TRANSFER SEND] generateSendAssetItems CALLED');
       console.log('📤 [TRANSFER SEND] appState exists?', !!appState);
       console.log('📤 [TRANSFER SEND] appState.getOwnedAssets exists?', !!appState?.getOwnedAssets);
       console.log('📤 [TRANSFER SEND] appState.getAvailableAssets exists?', !!appState?.getAvailableAssets);
-      
+
       // Use getOwnedAssets() to get assets user OWNS (balance > 0)
       if (appState && appState.getOwnedAssets) {
         console.log('📤 [TRANSFER SEND] Getting OWNED assets from balance API...');
         let ownedAssets = appState.getOwnedAssets();
         console.log('📤 [TRANSFER SEND] Owned assets from balance API:', ownedAssets);
         console.log('📤 [TRANSFER SEND] Number of owned assets:', ownedAssets.length);
-        
+
         if (ownedAssets && ownedAssets.length > 0) {
           // Return ALL owned assets including both crypto AND fiat (BTC, GBP, etc.)
           console.log('✅ [TRANSFER SEND] All owned assets (crypto + fiat):', ownedAssets);
           console.log('📤 [TRANSFER SEND] ⚠️ USING: ✅ OWNED ASSETS LIST (balance > 0)');
           console.log('📤'.repeat(60) + '\n');
-          
+
           return deriveAssetItems(ownedAssets);
         }
       }
-      
+
       // Fallback: Try old method
       console.log('⚠️ [TRANSFER SEND] Balance API returned empty, trying old method...');
       if (appState?.getAssets) {
-        let withdrawalAssets = appState.getAssets({withdrawalEnabled: true});
+        let withdrawalAssets = appState.getAssets({ withdrawalEnabled: true });
         console.log('📤 [TRANSFER SEND] Old method assets:', withdrawalAssets);
         if (withdrawalAssets && withdrawalAssets.length > 0) {
           console.log('📤 [TRANSFER SEND] ⚠️ USING: ❌ HARDCODED LIST (old method)');
@@ -569,7 +569,7 @@ let Transfer = ({ initialMode } = {}) => {
           return deriveAssetItems(withdrawalAssets);
         }
       }
-      
+
       // Final fallback to data model
       console.log('❌ [TRANSFER SEND] All methods failed, using data model fallback');
       console.log('📤 [TRANSFER SEND] ⚠️ USING: ❌ HARDCODED LIST (data model)');
@@ -585,14 +585,14 @@ let Transfer = ({ initialMode } = {}) => {
     }
   }
 
-  let generateReceiveAssetItems = () => { 
+  let generateReceiveAssetItems = () => {
     try {
       // Use getAvailableAssets() to get all assets from the balance API
       if (appState?.getAvailableAssets) {
         console.log('🔄 CONSOLE: ===== GETTING AVAILABLE ASSETS FOR RECEIVE =====');
         let availableAssets = appState.getAvailableAssets();
         console.log('📨 CONSOLE: Available assets from balance API:', availableAssets);
-        
+
         if (availableAssets && availableAssets.length > 0) {
           // Filter to assets that have deposit enabled
           let depositAssets = availableAssets.filter(asset => {
@@ -604,28 +604,28 @@ let Transfer = ({ initialMode } = {}) => {
               return true;
             }
           });
-          
+
           console.log('✅ CONSOLE: Deposit-enabled assets:', depositAssets);
-          
+
           if (depositAssets.length > 0) {
             return deriveAssetItems(depositAssets);
           }
-          
+
           // If no deposit-enabled assets, use all available assets
           console.log('⚠️ CONSOLE: No deposit-enabled assets found, using all available');
           return deriveAssetItems(availableAssets);
         }
       }
-      
+
       // Fallback: Try old method
       if (appState?.getAssets) {
-        let depositAssets = appState.getAssets({depositEnabled: true});
+        let depositAssets = appState.getAssets({ depositEnabled: true });
         if (depositAssets && depositAssets.length > 0) {
           log('Using appState deposit assets (fallback method):', depositAssets);
           return deriveAssetItems(depositAssets);
         }
       }
-      
+
       // Final fallback to data model
       log('Using fallback deposit assets from data model');
       return TransferUtils.generateReceiveItems();
@@ -643,15 +643,15 @@ let Transfer = ({ initialMode } = {}) => {
   // Enhanced setup with better error handling and state management
   let setupRetryCount = 0;
   const MAX_SETUP_RETRIES = 5;
-  
+
   let setup = async () => {
     try {
       log('Setting up Transfer component, transferType:', transferType);
-      
+
       // Balance data is now loaded during authentication (cached)
-      await appState.generalSetup({caller: 'Transfer'});
+      await appState.generalSetup({ caller: 'Transfer' });
       log('Using cached balance data to generate asset items...');
-      
+
       // Generate asset items from cached balance data
       let newItems;
       if (transferType === 'send') {
@@ -661,14 +661,14 @@ let Transfer = ({ initialMode } = {}) => {
       }
       setItems(newItems);
       log('Asset items generated:', newItems.length, 'items');
-      
+
       // Check identity verification status
       const identityChecked = appState.getUserStatus('identityChecked');
       log('Identity verification status:', identityChecked);
-      
+
       if (identityChecked === '[loading]') {
         setIdentityVerified(null); // Still loading
-        
+
         // Prevent infinite retry loop
         if (setupRetryCount >= MAX_SETUP_RETRIES) {
           log('❌ Max retries reached for identity verification check, allowing access');
@@ -676,10 +676,10 @@ let Transfer = ({ initialMode } = {}) => {
           setupRetryCount = 0;
           return;
         }
-        
+
         setupRetryCount++;
         log(`🔄 Retrying identity verification check (${setupRetryCount}/${MAX_SETUP_RETRIES})...`);
-        
+
         // Load user status and retry
         appState.loadUserStatus().then(() => {
           setTimeout(setup, 1000); // Retry after 1 second
@@ -699,19 +699,19 @@ let Transfer = ({ initialMode } = {}) => {
         setupRetryCount = 0;
         log('Identity verification confirmed, allowing transfer features');
       }
-      
+
       // Close dropdown during setup to prevent conflicts
       setOpen(false);
-      
+
       // Regenerate items (reusing variable from above)
       if (transferType === 'send') {
         newItems = generateSendAssetItems();
       } else {
         newItems = generateReceiveAssetItems();
       }
-      
+
       log('Generated items:', newItems?.length || 0);
-      
+
       if (!newItems || newItems.length === 0) {
         log('No items generated, using emergency fallback');
         newItems = [
@@ -720,13 +720,13 @@ let Transfer = ({ initialMode } = {}) => {
           { label: 'British Pound (GBP)', value: 'GBP' },
         ];
       }
-      
+
       // Clear any existing error messages
       setErrorMessage('');
-      
+
       // Update items first
       setItems(newItems);
-      
+
       // Load deposit details for receive mode BEFORE rendering
       if (transferType === 'receive' && selectedAsset && appState?.loadDepositDetailsForAsset) {
         try {
@@ -742,7 +742,7 @@ let Transfer = ({ initialMode } = {}) => {
           setDepositDetailsLoaded(false);
         }
       }
-      
+
       // Then validate and update selected asset
       setTimeout(() => {
         try {
@@ -759,7 +759,7 @@ let Transfer = ({ initialMode } = {}) => {
           setSelectedAsset('BTC');
         }
       }, 100);
-      
+
     } catch (error) {
       log('Setup error:', error);
       // Emergency fallback
@@ -777,12 +777,12 @@ let Transfer = ({ initialMode } = {}) => {
   // Update items when transfer type changes with debounce
   useEffect(() => {
     log('Transfer type changed to:', transferType);
-    
+
     // Reset deposit details loaded state when switching away from receive
     if (transferType !== 'receive') {
       setDepositDetailsLoaded(false);
     }
-    
+
     // Use timeout to debounce rapid changes
     const timer = setTimeout(() => {
       try {
@@ -791,7 +791,7 @@ let Transfer = ({ initialMode } = {}) => {
         log('Error in transfer type change effect:', error);
       }
     }, 150);
-    
+
     return () => {
       clearTimeout(timer);
     };
@@ -806,7 +806,7 @@ let Transfer = ({ initialMode } = {}) => {
           setDepositDetailsLoaded(false);
           await appState.loadDepositDetailsForAsset(selectedAsset);
           console.log('✅ Deposit details loaded for:', selectedAsset);
-          
+
           // Set state to trigger re-render - more reliable than triggerRender on Android
           setDepositDetailsLoaded(true);
           // Also trigger render count for backward compatibility
@@ -816,7 +816,7 @@ let Transfer = ({ initialMode } = {}) => {
         }
       }
     };
-    
+
     loadDepositDetails();
   }, [transferType, selectedAsset]);
 
@@ -843,7 +843,7 @@ let Transfer = ({ initialMode } = {}) => {
         sendWithdrawAvailable: !!(appState && appState.sendWithdraw)
       });
       setErrorMessage('');
-      
+
       // Validate amount using data model
       console.log('📊 CONSOLE: ===== STEP 1: AMOUNT VALIDATION =====');
       log('📊 handleSend: Validating amount:', sendAmount, 'for asset:', selectedAsset);
@@ -858,18 +858,18 @@ let Transfer = ({ initialMode } = {}) => {
       }
       log('✅ handleSend: Amount validation passed');
       console.log('✅ CONSOLE: Amount validation passed');
-      
+
       // Simple validation: just check UUID exists
       if (!recipientAddressUUID) {
         log('❌ handleSend: No UUID - please select address from address book');
         setErrorMessage('Please select an address from your Address Book');
         return;
       }
-      
+
       log('✅ handleSend: UUID ready:', recipientAddressUUID);
-      
+
       setIsLoading(true);
-      
+
       const result = await appState.sendWithdraw({
         asset: selectedAsset,
         volume: sendAmount,
@@ -877,9 +877,9 @@ let Transfer = ({ initialMode } = {}) => {
         priority: selectedPriority,
         functionName: 'Transfer_handleSend'
       });
-      
+
       console.log('📨 CONSOLE: ===== STEP 8: API RESPONSE RECEIVED =====');
-      
+
       console.log('📨 CONSOLE: ===== DETAILED TRANSFER API RESPONSE ANALYSIS =====');
       log('📨 handleSend: Raw API response:', result);
       console.log('📨 CONSOLE: Raw API response:', result);
@@ -889,7 +889,7 @@ let Transfer = ({ initialMode } = {}) => {
       console.log('📨 CONSOLE: Response JSON:', JSON.stringify(result, null, 2));
       log('📊 handleSend: Response type:', typeof result);
       log('📊 handleSend: Response keys:', result ? Object.keys(result) : 'null/undefined');
-      
+
       // Log the exact response for debugging
       if (result && typeof result === 'object') {
         console.log('🔍 CONSOLE: Detailed response analysis:');
@@ -902,7 +902,7 @@ let Transfer = ({ initialMode } = {}) => {
         console.log('🔍 CONSOLE: Error is null:', result.error === null);
         console.log('🔍 CONSOLE: Error is undefined:', result.error === undefined);
         console.log('🔍 CONSOLE: Error stringified:', JSON.stringify(result.error));
-        
+
         if (result.error && typeof result.error === 'string') {
           console.log('🔍 CONSOLE: Error string length:', result.error.length);
           console.log('🔍 CONSOLE: Error lowercase:', result.error.toLowerCase());
@@ -910,12 +910,12 @@ let Transfer = ({ initialMode } = {}) => {
           console.log('🔍 CONSOLE: Contains "queued":', result.error.toLowerCase().includes('queued'));
           console.log('🔍 CONSOLE: Contains "withdrawal":', result.error.toLowerCase().includes('withdrawal'));
         }
-        
+
         console.log('🔍 CONSOLE: ID value:', result.id);
         console.log('🔍 CONSOLE: Data value:', result.data);
       }
       console.log('📨 CONSOLE: ===== END DETAILED TRANSFER RESPONSE ANALYSIS =====');
-      
+
       console.log('🔍 CONSOLE: ===== STEP 9: RESPONSE PROCESSING =====');
       if (result === 'DisplayedError') {
         log('❌ handleSend: Got DisplayedError from API');
@@ -923,26 +923,26 @@ let Transfer = ({ initialMode } = {}) => {
         setErrorMessage('Transaction failed. Please check your inputs and try again.');
         return;
       }
-      
+
       if (!result) {
         log('❌ handleSend: No response from API');
         console.log('❌ CONSOLE: No response from API');
         setErrorMessage('No response from server. Please try again.');
         return;
       }
-      
+
       // SIMPLIFIED LOGIC: Only check for clear success indicators
       // 1. sendWithdraw converts success messages to success=true format
       if (result?.success === true) {
         log('✅ handleSend: sendWithdraw converted success response');
         console.log('✅ CONSOLE: sendWithdraw converted success response');
-        
+
         let successMessage = result?.message || 'Withdrawal successful!';
         console.log('✅ CONSOLE: Success message:', successMessage);
-        
+
         // Success - show confirmation
         alert(`✅ ${successMessage}`);
-        
+
         // Clear form on successful send
         setSendAmount('');
         setRecipientAddress('');
@@ -951,14 +951,14 @@ let Transfer = ({ initialMode } = {}) => {
         setIsLoading(false);
         return;
       }
-      
+
       // 2. Legacy success: responses with ID and no error field
       if (result?.id && !result?.error) {
         log('✅ handleSend: Transaction successful with ID:', result.id);
         console.log('✅ CONSOLE: Transaction successful with ID:', result.id);
         // Success - show confirmation
         alert(`✅ Withdrawal successful! Transaction ID: ${result.id}`);
-        
+
         // Clear form on successful send
         setSendAmount('');
         setRecipientAddress('');
@@ -967,7 +967,7 @@ let Transfer = ({ initialMode } = {}) => {
         setIsLoading(false);
         return;
       }
-      
+
       // 3. Anything else with an error field is treated as an error
       if (result?.error) {
         log('❌ handleSend: API returned error:', result.error);
@@ -977,13 +977,13 @@ let Transfer = ({ initialMode } = {}) => {
         setErrorMessage(typeof result.error === 'string' ? result.error : 'Send failed');
         return;
       }
-      
+
       // 4. Fallback for truly unexpected response format
       log('⚠️ handleSend: Unexpected response format:', result);
       console.log('⚠️ CONSOLE: Unexpected response format:', result);
       console.log('⚠️ CONSOLE: Response does not match any expected success patterns');
       setErrorMessage('Unexpected response from server. Please check your transaction status.');
-      
+
     } catch (error) {
       console.log('💥 CONSOLE: ===== EXCEPTION CAUGHT =====');
       log('💥 handleSend: Exception caught:', error);
@@ -996,14 +996,14 @@ let Transfer = ({ initialMode } = {}) => {
       console.log('💥 CONSOLE: Error name:', error.name);
       log('💥 handleSend: Error toString:', error.toString());
       console.log('💥 CONSOLE: Error toString:', error.toString());
-      
+
       // Show detailed error message to user
       let errorMsg = `Failed to process send transaction: ${error.message || 'Unknown error'}`;
       if (error.message && error.message.includes('privateMethod')) {
         errorMsg += '\n\nThis appears to be an API authentication or connection issue.';
       }
       console.log('💥 CONSOLE: Final error message to user:', errorMsg);
-      
+
       setErrorMessage(errorMsg);
     } finally {
       console.log('🏁 CONSOLE: ===== CLEANUP =====');
@@ -1019,26 +1019,26 @@ let Transfer = ({ initialMode } = {}) => {
     log('🏠 handleAddressSelection: Address details:', addressDetails);
     console.log('🏠 CONSOLE: Address selected:', address);
     console.log('🏠 CONSOLE: Address details full object:', JSON.stringify(addressDetails, null, 2));
-    
+
     // Set the display address (wallet address)
     setRecipientAddress(address);
-    
+
     // Extract and set the UUID for API calls
     let addressUUID = addressDetails?.id || addressDetails?.rawData?.uuid;
     log('🏠 handleAddressSelection: Extracted UUID:', addressUUID);
     console.log('🏠 CONSOLE: Extracted UUID:', addressUUID);
     console.log('🏠 CONSOLE: addressDetails.id:', addressDetails?.id);
     console.log('🏠 CONSOLE: addressDetails.rawData?.uuid:', addressDetails?.rawData?.uuid);
-    
+
     if (!addressUUID) {
       console.error('❌ CONSOLE: WARNING - No UUID found in address details!');
       log('❌ WARNING: No UUID extracted from address selection');
     }
-    
+
     setRecipientAddressUUID(addressUUID || '');
-    
+
     setErrorMessage(''); // Clear any existing error messages
-    
+
     if (addressDetails) {
       log(`📝 Address selected: ${addressDetails.label || addressDetails.name} - ${address} (UUID: ${addressUUID})`);
       console.log(`📝 CONSOLE: Address selected: ${addressDetails.label || addressDetails.name} - ${address} (UUID: ${addressUUID})`);
@@ -1049,26 +1049,26 @@ let Transfer = ({ initialMode } = {}) => {
   let getReceiveAddress = () => {
     try {
       log('Getting receive address for asset:', selectedAsset);
-      
+
       // Try to get deposit details from appState
       if (appState?.getDepositDetailsForAsset) {
         try {
           const depositDetails = appState.getDepositDetailsForAsset(selectedAsset);
           console.log('📍 Deposit details from API:', depositDetails);
-          
+
           if (depositDetails && depositDetails !== '[loading]' && typeof depositDetails === 'object') {
             // Check for error
             if (depositDetails.error) {
               console.error('❌ API returned error:', depositDetails.error);
               return null;
             }
-            
+
             // For crypto, use address field
             if (depositDetails.address) {
               console.log('✅ Got address from API:', depositDetails.address);
               return depositDetails.address;
             }
-            
+
             // For fiat (GBP), you might want to format account details differently
             if (depositDetails.accountNumber) {
               console.log('✅ Got bank account from API:', depositDetails.accountNumber);
@@ -1083,11 +1083,11 @@ let Transfer = ({ initialMode } = {}) => {
       } else {
         console.error('❌ appState.getDepositDetailsForAsset not available');
       }
-      
+
       // No fallback - return null to show that address must be loaded from API
       console.warn('⚠️ No deposit address available - API needs to be called');
       return null;
-      
+
     } catch (error) {
       console.error('Error getting receive address:', error);
       return null;
@@ -1101,7 +1101,7 @@ let Transfer = ({ initialMode } = {}) => {
         alert('No address available to copy');
         return;
       }
-      
+
       Clipboard.setString(text);
       alert('Address copied to clipboard!');
       log('Copied to clipboard:', text.substring(0, 10) + '...');
@@ -1122,8 +1122,8 @@ let Transfer = ({ initialMode } = {}) => {
           <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
             {componentError}
           </Text>
-          <Button 
-            mode="contained" 
+          <Button
+            mode="contained"
             onPress={() => {
               setComponentError(null);
               setSelectedAsset('BTC');
@@ -1142,7 +1142,7 @@ let Transfer = ({ initialMode } = {}) => {
     // Show loading screen while initializing
     if (isInitializing) {
       return (
-        <SolidiLoadingScreen 
+        <SolidiLoadingScreen
           message="Preparing transfer..."
           size="medium"
         />
@@ -1160,8 +1160,8 @@ let Transfer = ({ initialMode } = {}) => {
             <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
               {initializationError}
             </Text>
-            <Button 
-              mode="contained" 
+            <Button
+              mode="contained"
               onPress={() => {
                 setInitializationError(null);
                 setIsInitializing(true);
@@ -1179,7 +1179,7 @@ let Transfer = ({ initialMode } = {}) => {
       // Still loading identity verification status
       return (
         <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
-          <SolidiLoadingScreen 
+          <SolidiLoadingScreen
             fullScreen={true}
             message="Checking verification status..."
             size="medium"
@@ -1199,8 +1199,8 @@ let Transfer = ({ initialMode } = {}) => {
             <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
               You need to complete identity verification before you can use transfer features.
             </Text>
-            <Button 
-              mode="contained" 
+            <Button
+              mode="contained"
               onPress={() => appState.changeState('IdentityVerification')}
               style={{ backgroundColor: '#1565C0' }}
             >
@@ -1214,585 +1214,598 @@ let Transfer = ({ initialMode } = {}) => {
     // Main Transfer page content
     return (
       <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
-        
+
         <KeyboardAwareScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ padding: 16 }}
           keyboardShouldPersistTaps='handled'
         >
-        
-        {/* Transfer Type Selector */}
-        <SegmentedButtons
-          value={transferType}
-          onValueChange={setTransferType}
-          buttons={[
-            {
-              value: 'send',
-              label: 'Send',
-              icon: 'upload',
-              style: transferType === 'send' ? { backgroundColor: '#1565C0' } : {},
-              labelStyle: transferType === 'send' ? { color: 'white' } : {}
-            },
-            {
-              value: 'receive',
-              label: 'Receive', 
-              icon: 'download',
-              style: transferType === 'receive' ? { backgroundColor: '#4CAF50' } : {},
-              labelStyle: transferType === 'receive' ? { color: 'white' } : {}
-            },
-          ]}
-          style={{ marginBottom: 16 }}
-        />
 
-        {/* Asset Selection with Enhanced Error Handling */}
-        <View style={{ zIndex: 5000, elevation: 10 }}>
-          <Card style={{ marginBottom: 16, elevation: 4 }}>
-            <Card.Content style={{ padding: 20 }}>
-              <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600' }}>
-                Select Asset
-              </Text>
-              
-              {(() => {
-                try {
-                  // Validate that we have valid items and selectedAsset
-                  if (!items || items.length === 0) {
+          {/* Transfer Type Selector */}
+          <SegmentedButtons
+            value={transferType}
+            onValueChange={setTransferType}
+            buttons={[
+              {
+                value: 'send',
+                label: 'Send',
+                icon: 'upload',
+                style: transferType === 'send' ? { backgroundColor: '#1565C0' } : {},
+                labelStyle: transferType === 'send' ? { color: 'white' } : {}
+              },
+              {
+                value: 'receive',
+                label: 'Receive',
+                icon: 'download',
+                style: transferType === 'receive' ? { backgroundColor: '#4CAF50' } : {},
+                labelStyle: transferType === 'receive' ? { color: 'white' } : {}
+              },
+            ]}
+            style={{ marginBottom: 16 }}
+          />
+
+          {/* Asset Selection with Enhanced Error Handling */}
+          <View style={{ zIndex: 5000, elevation: 10 }}>
+            <Card style={{ marginBottom: 16, elevation: 4 }}>
+              <Card.Content style={{ padding: 20 }}>
+                <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600' }}>
+                  Select Asset
+                </Text>
+
+                {(() => {
+                  try {
+                    // Validate that we have valid items and selectedAsset
+                    if (!items || items.length === 0) {
+                      return (
+                        <View style={{ padding: 20, alignItems: 'center' }}>
+                          <Text variant="bodyMedium" style={{ color: '#666' }}>
+                            Loading assets...
+                          </Text>
+                        </View>
+                      );
+                    }
+
+                    if (!selectedAsset || !items.some(item => item.value === selectedAsset)) {
+                      return (
+                        <View style={{ padding: 20, alignItems: 'center' }}>
+                          <Text variant="bodyMedium" style={{ color: '#F44336', marginBottom: 16 }}>
+                            Asset selection error
+                          </Text>
+                          <Button mode="outlined" onPress={() => setup()}>
+                            Reload Assets
+                          </Button>
+                        </View>
+                      );
+                    }
+
                     return (
-                      <View style={{ padding: 20, alignItems: 'center' }}>
-                        <Text variant="bodyMedium" style={{ color: '#666' }}>
-                          Loading assets...
-                        </Text>
-                      </View>
+                      <DropDownPicker
+                        open={open}
+                        value={selectedAsset}
+                        items={items}
+                        setOpen={setOpen}
+                        setValue={(callback) => {
+                          try {
+                            log('DropDownPicker setValue called');
+                            if (typeof callback === 'function') {
+                              const newValue = callback(selectedAsset);
+                              log('Setting new asset value:', newValue);
+                              setSelectedAsset(newValue);
+                            } else {
+                              log('Setting asset value directly:', callback);
+                              setSelectedAsset(callback);
+                            }
+                            // Clear any errors when asset changes
+                            setErrorMessage('');
+                          } catch (error) {
+                            log('Error in setValue:', error);
+                            setErrorMessage('Error selecting asset');
+                          }
+                        }}
+                        setItems={setItems}
+                        placeholder="Choose asset"
+                        style={{
+                          borderColor: materialTheme?.colors?.outline || '#ccc',
+                          backgroundColor: 'white'
+                        }}
+                        dropDownContainerStyle={{
+                          borderColor: materialTheme?.colors?.outline || '#ccc',
+                          elevation: 10,
+                          zIndex: 5000,
+                          backgroundColor: 'white'
+                        }}
+                        textStyle={{
+                          fontSize: 16,
+                          color: '#333'
+                        }}
+                        labelStyle={{
+                          fontSize: 16,
+                          color: '#333'
+                        }}
+                        zIndex={5000}
+                        zIndexInverse={1000}
+                        listMode="SCROLLVIEW"
+                        scrollViewProps={{
+                          nestedScrollEnabled: true
+                        }}
+                        onSelectItem={(item) => {
+                          try {
+                            log('Asset selected:', item);
+                            setErrorMessage('');
+                          } catch (error) {
+                            log('Error in onSelectItem:', error);
+                          }
+                        }}
+                      />
                     );
-                  }
-                  
-                  if (!selectedAsset || !items.some(item => item.value === selectedAsset)) {
+                  } catch (dropdownError) {
+                    log('Dropdown render error:', dropdownError);
                     return (
                       <View style={{ padding: 20, alignItems: 'center' }}>
                         <Text variant="bodyMedium" style={{ color: '#F44336', marginBottom: 16 }}>
-                          Asset selection error
+                          Asset dropdown unavailable
                         </Text>
                         <Button mode="outlined" onPress={() => setup()}>
-                          Reload Assets
+                          Reset
                         </Button>
                       </View>
                     );
                   }
-                  
-                  return (
-                    <DropDownPicker
-                      open={open}
-                      value={selectedAsset}
-                      items={items}
-                      setOpen={setOpen}
-                      setValue={(callback) => {
-                        try {
-                          log('DropDownPicker setValue called');
-                          if (typeof callback === 'function') {
-                            const newValue = callback(selectedAsset);
-                            log('Setting new asset value:', newValue);
-                            setSelectedAsset(newValue);
-                          } else {
-                            log('Setting asset value directly:', callback);
-                            setSelectedAsset(callback);
-                          }
-                          // Clear any errors when asset changes
-                          setErrorMessage('');
-                        } catch (error) {
-                          log('Error in setValue:', error);
-                          setErrorMessage('Error selecting asset');
-                        }
-                      }}
-                      setItems={setItems}
-                      placeholder="Choose asset"
-                      style={{ 
-                        borderColor: materialTheme?.colors?.outline || '#ccc',
-                        backgroundColor: 'white'
-                      }}
-                      dropDownContainerStyle={{ 
-                        borderColor: materialTheme?.colors?.outline || '#ccc',
-                        elevation: 10,
-                        zIndex: 5000,
-                        backgroundColor: 'white'
-                      }}
-                      textStyle={{
-                        fontSize: 16,
-                        color: '#333'
-                      }}
-                      labelStyle={{
-                        fontSize: 16,
-                        color: '#333'
-                      }}
-                      zIndex={5000}
-                      zIndexInverse={1000}
-                      listMode="SCROLLVIEW"
-                      scrollViewProps={{
-                        nestedScrollEnabled: true
-                      }}
-                      onSelectItem={(item) => {
-                        try {
-                          log('Asset selected:', item);
-                          setErrorMessage('');
-                        } catch (error) {
-                          log('Error in onSelectItem:', error);
-                        }
-                      }}
-                    />
-                  );
-                } catch (dropdownError) {
-                  log('Dropdown render error:', dropdownError);
-                  return (
-                    <View style={{ padding: 20, alignItems: 'center' }}>
-                      <Text variant="bodyMedium" style={{ color: '#F44336', marginBottom: 16 }}>
-                        Asset dropdown unavailable
-                      </Text>
-                      <Button mode="outlined" onPress={() => setup()}>
-                        Reset
-                      </Button>
-                    </View>
-                  );
-                }
-              })()}
-            </Card.Content>
-          </Card>
-        </View>
+                })()}
+              </Card.Content>
+            </Card>
+          </View>
 
-        {/* Send Form */}
-        {(() => {
-          console.log('🎯 Transfer: Checking if should render send form...');
-          console.log('🎯 Transfer: transferType is:', transferType);
-          console.log('🎯 Transfer: transferType === "send":', transferType === 'send');
-          return transferType === 'send';
-        })() && (
-          <Card style={{ marginBottom: 16, elevation: 1, zIndex: 50 }}>
-            <Card.Content style={{ padding: 20, zIndex: 50 }}>
-              <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600' }}>
-                Send {selectedAsset}
-              </Text>
-              
-              <TextInput
-                label="Amount"
-                mode="outlined"
-                value={sendAmount}
-                onChangeText={setSendAmount}
-                placeholder="0.00"
-                keyboardType="numeric"
-                style={{ marginBottom: 16 }}
-              />
-              
-              {/* Fee Display */}
-              <Surface style={{ 
-                padding: 12, 
-                borderRadius: 8, 
-                backgroundColor: '#f8f9fa',
-                marginBottom: 16,
-              }}>
-                <Text variant="bodyMedium" style={{ fontWeight: '500', marginBottom: 4 }}>
-                  Network Fee ({selectedPriority.charAt(0).toUpperCase() + selectedPriority.slice(1)}):
-                </Text>
-                <Text variant="bodyLarge" style={{ 
-                  color: withdrawalFee === '[loading]' || withdrawalFee === '[error]' ? '#666' : '#1565C0', 
-                  fontWeight: '600',
-                  fontStyle: withdrawalFee === '[loading]' || withdrawalFee === '[error]' ? 'italic' : 'normal'
-                }}>
-                  {withdrawalFee === '[loading]' ? 'Loading fee...' : 
-                   withdrawalFee === '[error]' ? 'Fee unavailable' : 
-                   `${withdrawalFee} ${selectedAsset}`}
-                </Text>
-              </Surface>
+          {/* Send Form */}
+          {(() => {
+            console.log('🎯 Transfer: Checking if should render send form...');
+            console.log('🎯 Transfer: transferType is:', transferType);
+            console.log('🎯 Transfer: transferType === "send":', transferType === 'send');
+            return transferType === 'send';
+          })() && (
+              <Card style={{ marginBottom: 16, elevation: 1, zIndex: 50 }}>
+                <Card.Content style={{ padding: 20, zIndex: 50 }}>
+                  <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600' }}>
+                    Send {selectedAsset}
+                  </Text>
 
-              {/* Priority Selector */}
-              <Text variant="bodyMedium" style={{ fontWeight: '500', marginBottom: 8 }}>
-                Transaction Priority:
-              </Text>
-              <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
-                {['low', 'medium', 'high'].map((priority) => {
-                  const isAvailable = isPriorityAvailable(priority);
-                  const isSelected = selectedPriority === priority;
-                  
-                  // Display labels (medium is shown as Medium, others capitalized normally)
-                  const displayLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
-                  
-                  return (
-                    <Button
-                      key={priority}
-                      mode={isSelected ? 'contained' : 'outlined'}
-                      onPress={() => {
-                        if (isAvailable) {
-                          log('Priority changed to:', priority);
-                          setSelectedPriority(priority);
-                        }
-                      }}
-                      disabled={!isAvailable}
-                      style={{ 
-                        flex: 1,
-                        opacity: isAvailable ? 1 : 0.5
-                      }}
-                      compact
-                    >
-                      {displayLabel}
-                      {!isAvailable && ' (N/A)'}
-                    </Button>
-                  );
-                })}
-              </View>
-              {/* Address Book status: show error or empty message */}
-              {(addressBookError || addressBookEmpty) && (
-                <View style={{ marginBottom: 12 }}>
-                  {addressBookError ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ color: '#cc0000' }}>Address book error: {addressBookError}</Text>
-                      <Button
-                        mode="text"
-                        onPress={async () => {
-                          try {
-                            console.log('🔄 Retrying loadAddressBook for asset:', selectedAsset);
-                            setAddressBookError(null);
-                            setAddressBookEmpty(false);
-                            if (appState && appState.loadAddressBook) {
-                              await appState.loadAddressBook(selectedAsset);
-                              // Trigger a refresh
-                              triggerRender(renderCount + 1);
+                  <TextInput
+                    label="Amount"
+                    mode="outlined"
+                    value={sendAmount}
+                    onChangeText={setSendAmount}
+                    placeholder="0.00"
+                    keyboardType="numeric"
+                    style={{ marginBottom: 16 }}
+                  />
+
+                  {/* Fee Display */}
+                  <Surface style={{
+                    padding: 12,
+                    borderRadius: 8,
+                    backgroundColor: '#f8f9fa',
+                    marginBottom: 16,
+                  }}>
+                    <Text variant="bodyMedium" style={{ fontWeight: '500', marginBottom: 4 }}>
+                      Network Fee ({selectedPriority.charAt(0).toUpperCase() + selectedPriority.slice(1)}):
+                    </Text>
+                    <Text variant="bodyLarge" style={{
+                      color: withdrawalFee === '[loading]' || withdrawalFee === '[error]' ? '#666' : '#1565C0',
+                      fontWeight: '600',
+                      fontStyle: withdrawalFee === '[loading]' || withdrawalFee === '[error]' ? 'italic' : 'normal'
+                    }}>
+                      {withdrawalFee === '[loading]' ? 'Loading fee...' :
+                        withdrawalFee === '[error]' ? 'Fee unavailable' :
+                          `${withdrawalFee} ${selectedAsset}`}
+                    </Text>
+                  </Surface>
+
+                  {/* Priority Selector */}
+                  <Text variant="bodyMedium" style={{ fontWeight: '500', marginBottom: 8 }}>
+                    Transaction Priority:
+                  </Text>
+                  <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
+                    {['low', 'medium', 'high'].map((priority) => {
+                      const isAvailable = isPriorityAvailable(priority);
+                      const isSelected = selectedPriority === priority;
+
+                      // Display labels (medium is shown as Medium, others capitalized normally)
+                      const displayLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
+
+                      return (
+                        <Button
+                          key={priority}
+                          mode={isSelected ? 'contained' : 'outlined'}
+                          onPress={() => {
+                            if (isAvailable) {
+                              log('Priority changed to:', priority);
+                              setSelectedPriority(priority);
                             }
-                          } catch (retryErr) {
-                            console.error('❌ Retry loadAddressBook failed:', retryErr);
-                            setAddressBookError(retryErr.message || 'Retry failed');
-                          }
-                        }}
-                      >
-                        Retry
-                      </Button>
-                    </View>
-                  ) : (
-                    <Text style={{ color: '#666666' }}>No saved addresses for {selectedAsset}. Use the + button to add one.</Text>
-                  )}
-                </View>
-              )}
-              
-              {/* Address Book Section */}
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginVertical: 8 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Choose from Address Book</Text>
-                  <TouchableOpacity
-                    style={styles.addressBookButton}
-                    onPress={() => setShowAddressBookSelectionPage(true)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.addressBookButtonContent}>
-                      {recipientAddress ? (
-                        <View style={styles.selectedAddressContainer}>
-                          <Text style={styles.selectedAddressLabel}>Selected Address:</Text>
-                          <Text style={styles.selectedAddressText} numberOfLines={1} ellipsizeMode="middle">
-                            {recipientAddress}
-                          </Text>
+                          }}
+                          disabled={!isAvailable}
+                          style={{
+                            flex: 1,
+                            opacity: isAvailable ? 1 : 0.5
+                          }}
+                          compact
+                        >
+                          {displayLabel}
+                          {!isAvailable && ' (N/A)'}
+                        </Button>
+                      );
+                    })}
+                  </View>
+                  {/* Address Book status: show error or empty message */}
+                  {(addressBookError || addressBookEmpty) && (
+                    <View style={{ marginBottom: 12 }}>
+                      {addressBookError ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={{ color: '#cc0000' }}>Address book error: {addressBookError}</Text>
+                          <Button
+                            mode="text"
+                            onPress={async () => {
+                              try {
+                                console.log('🔄 Retrying loadAddressBook for asset:', selectedAsset);
+                                setAddressBookError(null);
+                                setAddressBookEmpty(false);
+                                if (appState && appState.loadAddressBook) {
+                                  await appState.loadAddressBook(selectedAsset);
+                                  // Trigger a refresh
+                                  triggerRender(renderCount + 1);
+                                }
+                              } catch (retryErr) {
+                                console.error('❌ Retry loadAddressBook failed:', retryErr);
+                                setAddressBookError(retryErr.message || 'Retry failed');
+                              }
+                            }}
+                          >
+                            Retry
+                          </Button>
                         </View>
                       ) : (
-                        <Text style={styles.addressBookButtonPlaceholder}>
-                          Select a saved address...
-                        </Text>
+                        <Text style={{ color: '#666666' }}>No saved addresses for {selectedAsset}. Use the + button to add one.</Text>
                       )}
-                      <Icon name="chevron-down" size={20} color={colors.textSecondary} />
                     </View>
-                  </TouchableOpacity>
-                </View>
-                <IconButton
-                  icon="plus"
-                  size={20}
-                  mode="contained"
-                  onPress={() => {
-                    setShowAddressBookModal(true);
-                  }}
-                  style={{ 
-                    marginLeft: 8,
-                    marginTop: 22, // Align with the dropdown input
-                    backgroundColor: '#1565C0',
-                    height: 40,
-                    width: 40
-                  }}
-                  iconColor="white"
-                />
-              </View>
-              
-              {/* Read-only display of selected address */}
-              <View style={{ marginBottom: 16 }}>
-                <Text variant="titleSmall" style={{ marginBottom: 8, fontWeight: 'bold' }}>
-                  Selected Recipient Address
-                </Text>
-                {recipientAddress ? (
-                  <View style={{
-                    borderWidth: 1,
-                    borderColor: '#E0E0E0',
-                    borderRadius: 4,
-                    padding: 12,
-                    backgroundColor: '#F5F5F5',
-                    minHeight: 48
-                  }}>
-                    <Text variant="bodyMedium" style={{ color: '#666666' }}>
-                      {recipientAddress}
+                  )}
+
+                  {/* Address Book Section */}
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginVertical: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>Choose from Address Book</Text>
+                      <TouchableOpacity
+                        style={styles.addressBookButton}
+                        onPress={() => setShowAddressBookSelectionPage(true)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.addressBookButtonContent}>
+                          {recipientAddress ? (
+                            <View style={styles.selectedAddressContainer}>
+                              <Text style={styles.selectedAddressLabel}>Selected Address:</Text>
+                              <Text style={styles.selectedAddressText} numberOfLines={1} ellipsizeMode="middle">
+                                {recipientAddress}
+                              </Text>
+                            </View>
+                          ) : (
+                            <Text style={styles.addressBookButtonPlaceholder}>
+                              Select a saved address...
+                            </Text>
+                          )}
+                          <Icon name="chevron-down" size={20} color={colors.textSecondary} />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                    <IconButton
+                      icon="plus"
+                      size={20}
+                      mode="contained"
+                      onPress={() => {
+                        setShowAddressBookModal(true);
+                      }}
+                      style={{
+                        marginLeft: 8,
+                        marginTop: 22, // Align with the dropdown input
+                        backgroundColor: '#1565C0',
+                        height: 40,
+                        width: 40
+                      }}
+                      iconColor="white"
+                    />
+                  </View>
+
+                  {/* Read-only display of selected address */}
+                  <View style={{ marginBottom: 16 }}>
+                    <Text variant="titleSmall" style={{ marginBottom: 8, fontWeight: 'bold' }}>
+                      Selected Recipient Address
                     </Text>
-                    {recipientAddressUUID && (
-                      <Text variant="bodySmall" style={{ color: '#4CAF50', marginTop: 4 }}>
-                        ✓ From Address Book
-                      </Text>
+                    {recipientAddress ? (
+                      <View style={{
+                        borderWidth: 1,
+                        borderColor: '#E0E0E0',
+                        borderRadius: 4,
+                        padding: 12,
+                        backgroundColor: '#F5F5F5',
+                        minHeight: 48
+                      }}>
+                        <Text variant="bodyMedium" style={{ color: '#666666' }}>
+                          {recipientAddress}
+                        </Text>
+                        {recipientAddressUUID && (
+                          <Text variant="bodySmall" style={{ color: '#4CAF50', marginTop: 4 }}>
+                            ✓ From Address Book
+                          </Text>
+                        )}
+                      </View>
+                    ) : (
+                      <View style={{
+                        borderWidth: 1,
+                        borderColor: '#E0E0E0',
+                        borderRadius: 4,
+                        padding: 12,
+                        backgroundColor: '#FAFAFA',
+                        minHeight: 48
+                      }}>
+                        <Text variant="bodyMedium" style={{ color: '#999999', fontStyle: 'italic' }}>
+                          Please select an address from your Address Book above
+                        </Text>
+                      </View>
                     )}
                   </View>
-                ) : (
-                  <View style={{
-                    borderWidth: 1,
-                    borderColor: '#E0E0E0',
-                    borderRadius: 4,
-                    padding: 12,
-                    backgroundColor: '#FAFAFA',
-                    minHeight: 48
-                  }}>
-                    <Text variant="bodyMedium" style={{ color: '#999999', fontStyle: 'italic' }}>
-                      Please select an address from your Address Book above
-                    </Text>
-                  </View>
-                )}
-              </View>
-              
-              {errorMessage ? (
-                <HelperText type="error" visible={!!errorMessage} style={{ marginBottom: 16 }}>
-                  {errorMessage}
-                </HelperText>
-              ) : null}
-              
-              <Button 
-                mode="contained" 
-                onPress={handleSend}
-                loading={isLoading}
-                disabled={isLoading || !sendAmount.trim() || !recipientAddress.trim()}
-                style={{ 
-                  marginTop: 8,
-                  backgroundColor: '#1565C0'
-                }}
-                contentStyle={{ paddingVertical: 8 }}
-              >
-                {isLoading ? 'Processing...' : `Send ${selectedAsset}`}
-              </Button>
-            </Card.Content>
-          </Card>
-        )}
 
-        {/* Receive Form */}
-        {transferType === 'receive' && (
-          <Card style={{ marginBottom: 16, elevation: 1, zIndex: 100 }}>
-            <Card.Content style={{ padding: 20 }}>
-              <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600' }}>
-                Receive {selectedAsset}
-              </Text>
-              
-              {/* Enhanced QR Code with better error handling */}
-              <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                <Surface style={{ 
-                  padding: 16, 
-                  borderRadius: 12, 
-                  backgroundColor: 'white',
-                  elevation: 1 
-                }}>
-                  {(() => {
-                    // Show loading state if deposit details haven't been loaded yet
-                    if (!depositDetailsLoaded) {
-                      console.log('🔄 CONSOLE: QRCode - Deposit details not loaded yet, showing loading state');
-                      return (
-                        <View style={{
-                          width: scaledWidth(160),
-                          height: scaledWidth(160),
-                          backgroundColor: '#f0f0f0',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          borderRadius: 8,
-                          borderWidth: 1,
-                          borderColor: '#ddd',
+                  {errorMessage ? (
+                    <HelperText type="error" visible={!!errorMessage} style={{ marginBottom: 16 }}>
+                      {errorMessage}
+                    </HelperText>
+                  ) : null}
+
+                  <Button
+                    mode="contained"
+                    onPress={handleSend}
+                    loading={isLoading}
+                    disabled={isLoading || !sendAmount.trim() || !recipientAddress.trim()}
+                    style={{
+                      marginTop: 8,
+                      backgroundColor: '#1565C0'
+                    }}
+                    contentStyle={{ paddingVertical: 8 }}
+                  >
+                    {isLoading ? 'Processing...' : `Send ${selectedAsset}`}
+                  </Button>
+                </Card.Content>
+              </Card>
+            )}
+
+          {/* Receive Form */}
+          {transferType === 'receive' && (
+            <Card style={{ marginBottom: 16, elevation: 1, zIndex: 100 }}>
+              <Card.Content style={{ padding: 20 }}>
+                <Text variant="titleMedium" style={{ marginBottom: 16, fontWeight: '600' }}>
+                  Receive {selectedAsset}
+                </Text>
+
+                {/* QR Code - Only for crypto assets */}
+                {(() => {
+                  try {
+                    if (!appState?.getDepositDetailsForAsset) return null;
+                    const depositDetails = appState.getDepositDetailsForAsset(selectedAsset);
+
+                    // Only show QR code for crypto assets (those with address field)
+                    // Don't show for fiat currencies like GBP which use bank transfers
+                    if (!depositDetails || !depositDetails.address) {
+                      return null;
+                    }
+
+                    return (
+                      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                        <Surface style={{
+                          padding: 16,
+                          borderRadius: 12,
+                          backgroundColor: 'white',
+                          elevation: 1
                         }}>
-                          <Text variant="bodySmall" style={{ color: '#666', textAlign: 'center', marginBottom: 8 }}>
-                            QR Code
+                          {(() => {
+                            try {
+                              const address = depositDetails.address;
+                              console.log('🎨 CONSOLE: QRCode - Rendering with address:', address);
+
+                              // Validate address before generating QR code
+                              if (!address || address === 'undefined' || address === 'null' || address.length < 5) {
+                                throw new Error('Invalid address');
+                              }
+
+                              return (
+                                <QRCode
+                                  value={address}
+                                  size={scaledWidth(160)}
+                                  backgroundColor="white"
+                                  color="black"
+                                  logoSize={30}
+                                  logoBackgroundColor='transparent'
+                                />
+                              );
+                            } catch (error) {
+                              log('QR Code generation error:', error);
+                              console.error('❌ CONSOLE: QRCode generation error:', error);
+                              return (
+                                <View style={{
+                                  width: scaledWidth(160),
+                                  height: scaledWidth(160),
+                                  backgroundColor: '#f0f0f0',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  borderRadius: 8,
+                                  borderWidth: 1,
+                                  borderColor: '#ddd',
+                                }}>
+                                  <Text variant="bodySmall" style={{ color: '#666', textAlign: 'center', marginBottom: 8 }}>
+                                    QR Code
+                                  </Text>
+                                  <Text variant="bodySmall" style={{ color: '#666', textAlign: 'center' }}>
+                                    Address Loading...
+                                  </Text>
+                                </View>
+                              );
+                            }
+                          })()}
+                        </Surface>
+                      </View>
+                    );
+                  } catch (error) {
+                    log('Error rendering QR code section:', error);
+                    return null;
+                  }
+                })()}
+
+                {/* Enhanced Address/Bank Details Display */}
+                {(() => {
+                  try {
+                    if (!appState?.getDepositDetailsForAsset) return null;
+                    const depositDetails = appState.getDepositDetailsForAsset(selectedAsset);
+
+                    if (!depositDetails || depositDetails === '[loading]' || typeof depositDetails !== 'object') {
+                      return (
+                        <View>
+                          <Text variant="bodyMedium" style={{ marginBottom: 8, fontWeight: '500' }}>
+                            {selectedAsset === 'GBP' ? 'Account Details:' : `Your ${selectedAsset} Address:`}
                           </Text>
-                          <Text variant="bodySmall" style={{ color: '#666', textAlign: 'center' }}>
-                            Loading Address...
-                          </Text>
+                          <Surface style={{ padding: 16, borderRadius: 8, backgroundColor: '#f8f9fa', marginBottom: 16, minHeight: 60, justifyContent: 'center' }}>
+                            <Text variant="bodyMedium" style={{ color: '#666', textAlign: 'center', fontStyle: 'italic' }}>
+                              Loading details...
+                            </Text>
+                          </Surface>
                         </View>
                       );
                     }
-                    
-                    try {
-                      const address = getReceiveAddress();
-                      console.log('🎨 CONSOLE: QRCode - Rendering with address:', address);
-                      
-                      // Validate address before generating QR code
-                      if (!address || address === 'undefined' || address === 'null' || address.length < 5) {
-                        throw new Error('Invalid address');
-                      }
-                      
+
+                    if (depositDetails.error) {
                       return (
-                        <QRCode
-                          value={address}
-                          size={scaledWidth(160)}
-                          backgroundColor="white"
-                          color="black"
-                          logoSize={30}
-                          logoBackgroundColor='transparent'
-                        />
-                      );
-                    } catch (error) {
-                      log('QR Code generation error:', error);
-                      console.error('❌ CONSOLE: QRCode generation error:', error);
-                      return (
-                        <View style={{
-                          width: scaledWidth(160),
-                          height: scaledWidth(160),
-                          backgroundColor: '#f0f0f0',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          borderRadius: 8,
-                          borderWidth: 1,
-                          borderColor: '#ddd',
-                        }}>
-                          <Text variant="bodySmall" style={{ color: '#666', textAlign: 'center', marginBottom: 8 }}>
-                            QR Code
-                          </Text>
-                          <Text variant="bodySmall" style={{ color: '#666', textAlign: 'center' }}>
-                            Address Loading...
-                          </Text>
+                        <View>
+                          <Text variant="bodyMedium" style={{ marginBottom: 8, fontWeight: '500', color: '#F44336' }}>Error loading details</Text>
+                          <Surface style={{ padding: 16, borderRadius: 8, backgroundColor: '#ffebee', marginBottom: 16 }}>
+                            <Text variant="bodyMedium" style={{ color: '#c62828', textAlign: 'center' }}>{depositDetails.error}</Text>
+                          </Surface>
                         </View>
                       );
                     }
-                  })()}
-                </Surface>
-              </View>
-              
-              {/* Enhanced Address Display */}
-              <Text variant="bodyMedium" style={{ marginBottom: 8, fontWeight: '500' }}>
-                Your {selectedAsset} Address:
-              </Text>
-              
-              <Surface style={{ 
-                padding: 16, 
-                borderRadius: 8, 
-                backgroundColor: '#f8f9fa',
-                marginBottom: 16,
-                minHeight: 60,
-                justifyContent: 'center',
-              }}>
-                {(() => {
-                  try {
-                    const address = getReceiveAddress();
-                    
-                    if (!address || address === 'undefined' || address === 'null') {
+
+                    // For crypto assets - show address
+                    if (depositDetails.address) {
                       return (
-                        <Text variant="bodyMedium" style={{ 
-                          color: '#666',
-                          textAlign: 'center',
-                          fontStyle: 'italic'
-                        }}>
-                          Loading address...
-                        </Text>
+                        <View>
+                          <Text variant="bodyMedium" style={{ marginBottom: 8, fontWeight: '500' }}>Your {selectedAsset} Address:</Text>
+                          <Surface style={{ padding: 16, borderRadius: 8, backgroundColor: '#f8f9fa', marginBottom: 16, minHeight: 60, justifyContent: 'center' }}>
+                            <Text variant="bodyMedium" style={{ fontFamily: 'monospace', fontSize: normaliseFont(14), lineHeight: 20, textAlign: 'center', color: '#333' }}>
+                              {depositDetails.address}
+                            </Text>
+                          </Surface>
+                          <Button mode="outlined" onPress={() => copyToClipboard(depositDetails.address)} icon="content-copy" style={{ marginTop: 8 }} contentStyle={{ paddingVertical: 4 }}>
+                            Copy Address
+                          </Button>
+                        </View>
                       );
                     }
-                    
+
+                    // For fiat currencies (GBP, EUR, etc.) - show bank details
+                    const bankFields = [
+                      { key: 'accountName', label: 'Account Name' },
+                      { key: 'sortCode', label: 'Sort Code' },
+                      { key: 'accountNumber', label: 'Account Number' },
+                      { key: 'reference', label: 'Reference' },
+                      { key: 'IBAN', label: 'IBAN' },
+                      { key: 'BIC', label: 'BIC/SWIFT' },
+                    ];
+
+                    const availableFields = bankFields.filter(field => depositDetails[field.key]);
+
+                    if (availableFields.length === 0) {
+                      return (
+                        <View>
+                          <Text variant="bodyMedium" style={{ marginBottom: 8, fontWeight: '500' }}>Account Details:</Text>
+                          <Surface style={{ padding: 16, borderRadius: 8, backgroundColor: '#f8f9fa', marginBottom: 16 }}>
+                            <Text variant="bodyMedium" style={{ color: '#666', textAlign: 'center', fontStyle: 'italic' }}>No details available</Text>
+                          </Surface>
+                        </View>
+                      );
+                    }
+
                     return (
-                      <Text variant="bodyMedium" style={{ 
-                        fontFamily: 'monospace',
-                        fontSize: normaliseFont(14),
-                        lineHeight: 20,
-                        textAlign: 'center',
-                        color: '#333'
-                      }}>
-                        {address}
-                      </Text>
+                      <View>
+                        <Text variant="bodyMedium" style={{ marginBottom: 12, fontWeight: '500' }}>Account Details:</Text>
+                        {selectedAsset === 'GBP' && (
+                          <Surface style={{ padding: 12, borderRadius: 8, backgroundColor: '#e3f2fd', marginBottom: 16, borderWidth: 1, borderColor: '#2196F3' }}>
+                            <Text variant="bodySmall" style={{ color: '#1565C0', textAlign: 'center' }}>
+                              GBP deposits are processed instantly - your funds should arrive in less than 1 minute.
+                            </Text>
+                          </Surface>
+                        )}
+                        {availableFields.map((field) => (
+                          <Surface key={field.key} style={{ padding: 12, borderRadius: 8, backgroundColor: 'white', marginBottom: 12, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                              <Text variant="bodySmall" style={{ color: '#666', fontWeight: '500' }}>{field.label}:</Text>
+                              <IconButton icon="content-copy" size={16} onPress={() => copyToClipboard(depositDetails[field.key])} style={{ margin: 0 }} />
+                            </View>
+                            <Text variant="bodyMedium" style={{ fontFamily: field.key === 'accountName' ? undefined : 'monospace', fontSize: normaliseFont(14), color: '#333', fontWeight: 'bold' }}>
+                              {depositDetails[field.key]}
+                            </Text>
+                          </Surface>
+                        ))}
+                      </View>
                     );
                   } catch (error) {
-                    log('Error displaying address:', error);
+                    log('Error displaying deposit details:', error);
                     return (
-                      <Text variant="bodyMedium" style={{ 
-                        color: '#999',
-                        textAlign: 'center',
-                        fontStyle: 'italic'
-                      }}>
-                        Address unavailable
-                      </Text>
+                      <View>
+                        <Text variant="bodyMedium" style={{ marginBottom: 8, fontWeight: '500', color: '#F44336' }}>Error</Text>
+                        <Surface style={{ padding: 16, borderRadius: 8, backgroundColor: '#ffebee', marginBottom: 16 }}>
+                          <Text variant="bodyMedium" style={{ color: '#c62828', textAlign: 'center' }}>Unable to load details</Text>
+                        </Surface>
+                      </View>
                     );
                   }
                 })()}
-              </Surface>
-              
-              <Button 
-                mode="outlined" 
-                onPress={() => {
-                  const address = getReceiveAddress();
-                  copyToClipboard(address);
-                }}
-                icon="content-copy"
-                style={{ marginTop: 8 }}
-                contentStyle={{ paddingVertical: 4 }}
-                disabled={(() => {
-                  try {
-                    const address = getReceiveAddress();
-                    return !address || address === 'undefined' || address === 'null' || address.includes('loading') || address.includes('unavailable');
-                  } catch (error) {
-                    return true;
-                  }
-                })()}
-              >
-                {(() => {
-                  try {
-                    const address = getReceiveAddress();
-                    if (!address || address === 'undefined' || address === 'null' || address.includes('loading')) {
-                      return 'Address Loading...';
-                    }
-                    if (address.includes('unavailable')) {
-                      return 'Address Unavailable';
-                    }
-                    return 'Copy Address';
-                  } catch (error) {
-                    return 'Copy Address';
-                  }
-                })()}
-              </Button>
-            </Card.Content>
-          </Card>
-        )}
+              </Card.Content>
+            </Card>
+          )}
 
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
 
-      {/* Address Book Modal */}
-      <AddressBookModal
-        visible={showAddressBookModal}
-        onClose={() => setShowAddressBookModal(false)}
-        selectedAsset={selectedAsset}
-        onAddressAdded={async (newAddress) => {
-          log('New address added:', newAddress);
-          // Force refresh the address book picker
-          if (appState && appState.loadAddressBook) {
-            try {
-              // Add a small delay to ensure API completion
-              setTimeout(async () => {
-                await appState.loadAddressBook();
-                // Trigger a state change to refresh components
-                triggerRender(renderCount + 1);
-              }, 500);
-            } catch (error) {
-              log('Error refreshing address book after add:', error);
+        {/* Address Book Modal */}
+        <AddressBookModal
+          visible={showAddressBookModal}
+          onClose={() => setShowAddressBookModal(false)}
+          selectedAsset={selectedAsset}
+          onAddressAdded={async (newAddress) => {
+            log('New address added:', newAddress);
+            // Force refresh the address book picker
+            if (appState && appState.loadAddressBook) {
+              try {
+                // Add a small delay to ensure API completion
+                setTimeout(async () => {
+                  await appState.loadAddressBook();
+                  // Trigger a state change to refresh components
+                  triggerRender(renderCount + 1);
+                }, 500);
+              } catch (error) {
+                log('Error refreshing address book after add:', error);
+              }
             }
-          }
-        }}
-      />
+          }}
+        />
 
-      {/* Address Book Selection Page */}
-      <AddressBookSelectionPage
-        visible={showAddressBookSelectionPage}
-        onClose={() => setShowAddressBookSelectionPage(false)}
-        selectedAsset={selectedAsset}
-        onSelectAddress={(address, details) => {
-          handleAddressSelection(address, details);
-        }}
-      />
-    </View>
-  );
-  
+        {/* Address Book Selection Page */}
+        <AddressBookSelectionPage
+          visible={showAddressBookSelectionPage}
+          onClose={() => setShowAddressBookSelectionPage(false)}
+          selectedAsset={selectedAsset}
+          onSelectAddress={(address, details) => {
+            handleAddressSelection(address, details);
+          }}
+        />
+      </View>
+    );
+
   } catch (renderError) {
     log('Transfer component render error:', renderError);
-    
+
     // Return emergency fallback UI
     return (
       <View style={[sharedStyles.container, { backgroundColor: sharedColors.background }]}>
@@ -1803,8 +1816,8 @@ let Transfer = ({ initialMode } = {}) => {
           <Text variant="bodyMedium" style={{ marginBottom: 20, textAlign: 'center', color: '#666' }}>
             The transfer feature is temporarily unavailable. Please try again later.
           </Text>
-          <Button 
-            mode="contained" 
+          <Button
+            mode="contained"
             onPress={() => {
               try {
                 setComponentError(null);

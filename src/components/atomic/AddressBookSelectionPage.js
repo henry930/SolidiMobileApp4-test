@@ -1,16 +1,16 @@
 // React imports
 import React, { useState, useContext, useEffect } from 'react';
-import { 
-  Text, 
-  StyleSheet, 
-  View, 
-  ScrollView, 
-  TouchableOpacity, 
-  Modal, 
+import {
+  Text,
+  StyleSheet,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
   SafeAreaView,
   Dimensions,
   FlatList,
-  Alert 
+  Alert
 } from 'react-native';
 import { Title, IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -23,21 +23,21 @@ import AppStateContext from 'src/application/data';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('AddressBookSelectionPage');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 const { height: screenHeight } = Dimensions.get('window');
 
 let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAsset }) => {
   // Get app state for API access
   let appState = useContext(AppStateContext);
-  
+
   // Component state
   let [addresses, setAddresses] = useState([]);
   let [filteredAddresses, setFilteredAddresses] = useState([]);
   let [loading, setLoading] = useState(false);
   let [error, setError] = useState(null);
   let [isInitializing, setIsInitializing] = useState(true);
-  
+
   // Asset filter state
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -64,7 +64,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
     try {
       setIsInitializing(true);
       setError(null);
-      
+
       // Step 1: Check if AppState is available
       if (!appState) {
         setError('Loading application state...');
@@ -72,7 +72,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
       }
 
       // Step 2: Setup general app state
-      await appState.generalSetup({caller: 'AddressBookSelectionPage'});
+      await appState.generalSetup({ caller: 'AddressBookSelectionPage' });
 
       // Step 3: Check if API client is available
       if (!appState?.apiClient) {
@@ -89,7 +89,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
 
       // Step 5: Load address book data
       await loadAddresses();
-      
+
       setIsInitializing(false);
 
     } catch (error) {
@@ -103,9 +103,9 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
     try {
       setLoading(true);
       setError(null);
-      
+
       log('📖 Loading addresses for selection...');
-      
+
       if (!appState?.apiClient) {
         throw new Error('API client not available. Please ensure you are logged in.');
       }
@@ -117,14 +117,26 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
       }
 
       // Load addresses for each supported asset using live API calls
-      const assets = ['BTC', 'ETH', 'GBP'];
+      let assets = ['BTC', 'ETH', 'GBP'];
+
+      // Use dynamic assets if available
+      if (appState && appState.getAvailableAssets) {
+        const dynamicAssets = appState.getAvailableAssets();
+        if (dynamicAssets && dynamicAssets.length > 0) {
+          assets = dynamicAssets;
+          // Ensure GBP is included
+          if (!assets.includes('GBP')) {
+            assets = [...assets, 'GBP'];
+          }
+        }
+      }
       const allAddresses = [];
 
       for (const asset of assets) {
         try {
           if (appState.loadAddressBook) {
             const addressBookResult = await appState.loadAddressBook(asset);
-            
+
             // Process the addresses from appState.loadAddressBook result
             if (addressBookResult && Array.isArray(addressBookResult) && addressBookResult.length > 0) {
               // Add asset type to each address for easier management
@@ -157,15 +169,15 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
       if (selectedAssets.length > 0 && !selectedAssets.includes(address.assetType)) {
         return false;
       }
-      
+
       // Type filter
       if (selectedTypes.length > 0 && !selectedTypes.includes(address.type)) {
         return false;
       }
-      
+
       return true;
     });
-    
+
     setFilteredAddresses(filtered);
   };
 
@@ -173,7 +185,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
   const getCryptoIcon = (assetType) => {
     const iconMap = {
       'BTC': 'bitcoin',
-      'ETH': 'ethereum', 
+      'ETH': 'ethereum',
       'GBP': 'currency-gbp',
       'USD': 'currency-usd',
       'EUR': 'currency-eur',
@@ -218,7 +230,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
         // For GBP bank accounts (NEW FORMAT)
         if (parsed.sortcode && parsed.accountnumber) {
           const sortCode = parsed.sortcode;
-          const formattedSortCode = sortCode.length === 6 
+          const formattedSortCode = sortCode.length === 6
             ? `${sortCode.slice(0, 2)}-${sortCode.slice(2, 4)}-${sortCode.slice(4, 6)}`
             : sortCode;
           return `Sort Code: ${formattedSortCode}, Account: ${parsed.accountnumber}`;
@@ -231,7 +243,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
       // For GBP bank accounts (NEW FORMAT)
       if (addressData.sortcode && addressData.accountnumber) {
         const sortCode = addressData.sortcode;
-        const formattedSortCode = sortCode.length === 6 
+        const formattedSortCode = sortCode.length === 6
           ? `${sortCode.slice(0, 2)}-${sortCode.slice(2, 4)}-${sortCode.slice(4, 6)}`
           : sortCode;
         return `Sort Code: ${formattedSortCode}, Account: ${addressData.accountnumber}`;
@@ -243,12 +255,12 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
 
   let handleAddressSelection = (address) => {
     // Parse the address data for selection
-    const addressData = typeof address.address === 'string' 
-      ? JSON.parse(address.address) 
+    const addressData = typeof address.address === 'string'
+      ? JSON.parse(address.address)
       : address.address;
-    
+
     const actualAddress = extractAddress(addressData);
-    
+
     log('📍 Address selected:', {
       name: address.name,
       address: actualAddress,
@@ -257,7 +269,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
       uuid: address.uuid,
       id: address.id
     });
-    
+
     // Call the selection callback
     if (onSelectAddress) {
       onSelectAddress(actualAddress, {
@@ -269,25 +281,25 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
         rawData: address // Include the full address object with uuid
       });
     }
-    
+
     // Close the modal
     onClose();
   };
 
   let renderAddressItem = (item) => {
-    const addressData = typeof item.address === 'string' 
-      ? JSON.parse(item.address) 
+    const addressData = typeof item.address === 'string'
+      ? JSON.parse(item.address)
       : item.address;
-    
+
     const cryptoIcon = getCryptoIcon(item.assetType);
     const addressTypeIcon = getAddressTypeIcon(item.type);
     const actualAddress = extractAddress(addressData);
-    
+
     // Ensure actualAddress is always a string
     const displayAddress = String(actualAddress || 'Invalid address');
-    
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         key={`${item.assetType}-${item.name}`}
         style={styles.addressItemContainer}
         onPress={() => handleAddressSelection(item)}
@@ -295,7 +307,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
         <View style={styles.addressIconSection}>
           <Icon name={cryptoIcon} size={32} color={getAssetColor(item.assetType)} />
         </View>
-        
+
         <View style={styles.addressMainContent}>
           <View style={styles.addressHeaderRow}>
             <Text style={styles.addressName}>{item.name}</Text>
@@ -303,23 +315,23 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
               <Icon name={addressTypeIcon} size={14} color={colors.mediumGray} />
             </View>
           </View>
-          
+
           <Text style={styles.addressValue} numberOfLines={1} ellipsizeMode="middle">
             {displayAddress}
           </Text>
-          
+
           {/* For GBP bank accounts, show account holder name */}
           {addressData.accountname && (
             <Text style={styles.addressOwner}>
               Account Holder: {addressData.accountname}
             </Text>
           )}
-          
+
           {/* For businesses */}
           {addressData.business && (
             <Text style={styles.addressBusiness}>{addressData.business}</Text>
           )}
-          
+
           {/* For individuals (crypto addresses) */}
           {addressData.firstname && addressData.lastname && (
             <Text style={styles.addressOwner}>
@@ -327,7 +339,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
             </Text>
           )}
         </View>
-        
+
         <View style={styles.addressSelectSection}>
           <Icon name="chevron-right" size={20} color={colors.mediumGray} />
         </View>
@@ -349,8 +361,8 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
 
   // Asset filter toggle
   const toggleAssetFilter = (asset) => {
-    setSelectedAssets(prev => 
-      prev.includes(asset) 
+    setSelectedAssets(prev =>
+      prev.includes(asset)
         ? prev.filter(a => a !== asset)
         : [...prev, asset]
     );
@@ -358,8 +370,8 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
 
   // Type filter toggle
   const toggleTypeFilter = (type) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) 
+    setSelectedTypes(prev =>
+      prev.includes(type)
         ? prev.filter(t => t !== type)
         : [...prev, type]
     );
@@ -380,11 +392,11 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
               <Icon name="close" size={24} color={colors.darkGray} />
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.headerCenter}>
             <Title style={styles.title}>Select Address</Title>
           </View>
-          
+
           <View style={styles.headerRight}>
             {/* Placeholder for balance */}
           </View>
@@ -393,7 +405,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
         {/* Filters */}
         <View style={styles.filtersContainer}>
           {/* Asset Filter */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.filterButton}
             onPress={() => setShowAssetDropdown(!showAssetDropdown)}
           >
@@ -404,7 +416,7 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
           </TouchableOpacity>
 
           {/* Type Filter */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.filterButton}
             onPress={() => setShowTypeDropdown(!showTypeDropdown)}
           >
@@ -485,8 +497,8 @@ let AddressBookSelectionPage = ({ visible, onClose, onSelectAddress, selectedAss
           ) : filteredAddresses.length === 0 ? (
             <View style={styles.centerContainer}>
               <Text style={styles.emptyText}>
-                {addresses.length === 0 
-                  ? 'No addresses found. Add some addresses first.' 
+                {addresses.length === 0
+                  ? 'No addresses found. Add some addresses first.'
                   : 'No addresses match the current filters.'}
               </Text>
             </View>

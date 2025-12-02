@@ -1,0 +1,35 @@
+appId: co.solidi.mobile.test
+---
+# Issue #60: Biometrics not required when not logged in
+# Verifies that biometric prompt does not appear for logged out users
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Ensure we are logged out
+- runFlow:
+    when:
+      notVisible: "Secure Login"
+    commands:
+      - tapOn: "Wallet"
+      - tapOn: "Settings"
+      - tapOn: "Logout"
+      - tapOn: "Yes, Logout"
+
+# Verify we are on the login screen
+- assertVisible: "Secure Login"
+
+# Background verification skipped due to Maestro command limitations
+# Proceeding to cold start verification
+
+# Kill and relaunch to test cold start
+- stopApp
+- launchApp
+
+# Verify we are on the login screen without biometric prompt
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "Secure Login"

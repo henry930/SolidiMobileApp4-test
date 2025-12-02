@@ -1,0 +1,125 @@
+appId: co.solidi.mobile.test
+---
+# Issue 78: Address Book Asset Selection Validation Test
+# Verifies that users cannot proceed from Step 3 without selecting an asset
+
+# Launch app with clear state
+- launchApp:
+    clearState: true
+
+# Wait for Login screen
+- extendedWaitUntil:
+    visible: ".*Sign In.*"
+    timeout: 10000
+- takeScreenshot: 01_login_page
+
+# Login with test credentials
+- tapOn:
+    id: "input-email"
+- inputText: "henry+test@solidi.co"
+- tapOn:
+    id: "input-password"
+- inputText: "Test1234"
+- tapOn:
+    id: "login-button"
+
+# Handle biometric prompt if it appears
+- runFlow:
+    when:
+      visible: "Use Passcode"
+    commands:
+      - tapOn: "Use Passcode"
+
+# Wait for home screen
+- extendedWaitUntil:
+    visible: ".*Home.*|.*Wallet.*|.*Trade.*"
+    timeout: 15000
+- takeScreenshot: 02_logged_in
+
+# Navigate to Settings/Profile
+- tapOn:
+    id: "header-settings-button"
+- extendedWaitUntil:
+    visible: ".*Settings.*|.*Profile.*"
+    timeout: 5000
+- takeScreenshot: 03_settings_page
+
+# Scroll to Address Book option
+- scrollUntilVisible:
+    element:
+      text: "Address Book"
+    direction: DOWN
+- takeScreenshot: 04_found_address_book
+
+# Tap Address Book
+- tapOn:
+    text: "Address Book"
+- extendedWaitUntil:
+    visible: ".*Address Book.*"
+    timeout: 5000
+- takeScreenshot: 05_address_book_page
+
+# Tap "Add New Address" button
+- tapOn:
+    text: ".*Add.*Address.*"
+- extendedWaitUntil:
+    visible: "Step 1 of 6"
+    timeout: 5000
+- takeScreenshot: 06_step_1_recipient
+
+# Step 1: Select recipient (Myself)
+- tapOn:
+    id: "recipient-option-myself"
+- takeScreenshot: 07_selected_myself
+
+# Click Next to go to Step 2
+- tapOn:
+    id: "button-next"
+- extendedWaitUntil:
+    visible: "Step 2 of 6"
+    timeout: 5000
+- takeScreenshot: 08_step_2_details
+
+# Step 2: Details should be auto-filled, just click Next
+- tapOn:
+    id: "button-next"
+- extendedWaitUntil:
+    visible: "Step 3 of 6"
+    timeout: 5000
+- takeScreenshot: 09_step_3_asset_selection
+
+# Step 3: DO NOT select any asset
+# Verify "What asset are you withdrawing?" is visible
+- assertVisible: "What asset are you withdrawing?"
+
+# CRITICAL TEST: Try to click Next without selecting an asset
+# The button should be disabled
+- tapOn:
+    id: "button-next"
+
+# Wait a moment to see if anything happens
+- waitForAnimationToEnd
+
+# Take screenshot - should still be on Step 3
+- takeScreenshot: 10_still_on_step_3_no_asset
+
+# Verify we are STILL on Step 3 (validation working)
+- assertVisible: "Step 3 of 6"
+- assertVisible: "What asset are you withdrawing?"
+
+# Now select an asset (Bitcoin)
+- tapOn:
+    id: "asset-option-btc"
+- takeScreenshot: 11_selected_bitcoin
+
+# Now the Next button should work
+- tapOn:
+    id: "button-next"
+
+# Wait for Step 4
+- extendedWaitUntil:
+    visible: "Step 4 of 6"
+    timeout: 5000
+- takeScreenshot: 12_step_4_destination
+
+# Success - validation is working!

@@ -1,0 +1,102 @@
+appId: co.solidi.mobile.test
+---
+# Issue 88: XRP Destination Tag Display Test
+# Verifies that the destination tag is displayed for XRP receive functionality
+
+# Wait for app to be ready
+- assertVisible: ".*"
+- takeScreenshot: 01_app_ready
+
+# Handle login if needed
+- runFlow:
+    when:
+      visible: "Email|Password|Log in"
+    commands:
+      - tapOn: "Email"
+      - inputText: "johnqfish@foo.com"
+      - tapOn: "Password"
+      - inputText: "bigFish6"
+      - tapOn: "Log in"
+      - extendedWaitUntil:
+          visible: "Trade|Assets|Wallet|Transfer|History"
+          timeout: 15000
+
+# Handle biometric prompt if it appears
+- runFlow:
+    when:
+      visible: "Use.*biometric|Face ID|Touch ID|Cancel"
+    commands:
+      - tapOn: "Cancel|Not Now|Skip"
+
+# Wait for main app to load
+- extendedWaitUntil:
+    visible: "Transfer"
+    timeout: 10000
+- takeScreenshot: 02_logged_in
+
+# Navigate to Transfer page
+- tapOn:
+    text: "Transfer"
+- extendedWaitUntil:
+    visible: "Send|Receive"
+    timeout: 10000
+- takeScreenshot: 03_transfer_page
+
+# Switch to Receive tab
+- tapOn:
+    text: "Receive"
+- extendedWaitUntil:
+    visible: "Select Asset"
+    timeout: 5000
+- takeScreenshot: 04_receive_tab
+
+# Tap on the asset dropdown to open it
+- tapOn:
+    id: ".*dropdown.*|.*picker.*"
+    index: 0
+- extendedWaitUntil:
+    visible: "XRP|Ripple"
+    timeout: 5000
+- takeScreenshot: 05_dropdown_opened
+
+# Select XRP
+- tapOn:
+    text: "XRP.*Ripple|Ripple.*XRP"
+- extendedWaitUntil:
+    visible: "Your XRP Address|Address"
+    timeout: 15000
+- takeScreenshot: 06_xrp_selected
+
+# Wait for deposit details to load
+- extendedWaitUntil:
+    visible: "r[a-zA-Z0-9]{20,}"
+    timeout: 15000
+- takeScreenshot: 07_address_loaded
+
+# Scroll down to see destination tag
+- scroll
+- takeScreenshot: 08_scrolled_down
+
+# Verify destination tag is visible
+- assertVisible:
+    text: "Destination Tag"
+- takeScreenshot: 09_destination_tag_visible
+
+# Verify the destination tag value is shown (numeric)
+- assertVisible:
+    text: "[0-9]{5,}"
+- takeScreenshot: 10_destination_tag_value
+
+# Verify the warning message about QR code
+- assertVisible:
+    text: ".*QR code.*not include.*"
+- takeScreenshot: 11_warning_visible
+
+# Verify copy button for destination tag exists
+- assertVisible:
+    text: "Copy Destination Tag"
+- takeScreenshot: 12_copy_button_visible
+
+# Final success screenshot
+- takeScreenshot: 13_issue_88_success
+

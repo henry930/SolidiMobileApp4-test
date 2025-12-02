@@ -1118,11 +1118,7 @@ PODS:
     - React-Core
   - RNCClipboard (1.14.0):
     - React-Core
-  - RNCPushNotificationIOS (1.11.0):
-    - React-Core
   - RNDateTimePicker (8.5.0):
-    - React-Core
-  - RNDeviceInfo (10.14.0):
     - React-Core
   - RNDnsLookup (1.0.6):
     - React
@@ -1225,9 +1221,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
-  - "RNCPushNotificationIOS (from `../node_modules/@react-native-community/push-notification-ios`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
-  - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - RNDnsLookup (from `../node_modules/react-native-dns-lookup`)
   - RNFS (from `../node_modules/react-native-fs`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
@@ -1371,12 +1365,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
     :path: "../node_modules/@react-native-clipboard/clipboard"
-  RNCPushNotificationIOS:
-    :path: "../node_modules/@react-native-community/push-notification-ios"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
-  RNDeviceInfo:
-    :path: "../node_modules/react-native-device-info"
   RNDnsLookup:
     :path: "../node_modules/react-native-dns-lookup"
   RNFS:
@@ -1464,9 +1454,7 @@ SPEC CHECKSUMS:
   ReactCommon: 2ac9ca8094ebce1227cde40b4d8cac9234bed855
   RNCAsyncStorage: 23e56519cc41d3bade3c8d4479f7760cb1c11996
   RNCClipboard: 090462274cc05b02628bd158baf6d73c3abe8441
-  RNCPushNotificationIOS: 64218f3c776c03d7408284a819b2abfda1834bc8
   RNDateTimePicker: b5afe456eedb040a6c8099c5e5d17b3af4ef94af
-  RNDeviceInfo: 59344c19152c4b2b32283005f9737c5c64b42fba
   RNDnsLookup: 1afbfef1d1f9f9ba427b4afdd81c12c4790de3ff
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNKeychain: bfe3d12bf4620fe488771c414530bf16e88f3678

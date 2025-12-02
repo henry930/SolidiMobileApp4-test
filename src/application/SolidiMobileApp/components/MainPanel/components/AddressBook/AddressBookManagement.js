@@ -15,16 +15,16 @@ import OriginalAddressBook from './AddressBook';
 const AddressBookManagement = () => {
   // Get app state for API access
   let appState = useContext(AppStateContext);
-  
+
   // Tab navigation state
   const [activeTab, setActiveTab] = useState('list'); // 'add' or 'list'
-  
+
   // Asset filter state - now arrays for multi-select
   const [selectedAssets, setSelectedAssets] = useState([]); // ['BTC', 'ETH', 'GBP', etc.]
   const [selectedTypes, setSelectedTypes] = useState([]); // ['CRYPTO_HOSTED', 'CRYPTO_UNHOSTED', 'FIAT', etc.]
   const [showAssetDropdown, setShowAssetDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  
+
   // Address list state
   const [addresses, setAddresses] = useState([]);
   const [filteredAddresses, setFilteredAddresses] = useState([]);
@@ -42,7 +42,7 @@ const AddressBookManagement = () => {
 
   // Render trigger for state updates
   const [renderCount, setRenderCount] = useState(0);
-  
+
   // Timeout management
   const [currentTimeoutId, setCurrentTimeoutId] = useState(null);
   const [isMounted, setIsMounted] = useState(true);
@@ -55,7 +55,7 @@ const AddressBookManagement = () => {
   const getCryptoIcon = (assetType) => {
     const iconMap = {
       'BTC': 'bitcoin',
-      'ETH': 'ethereum', 
+      'ETH': 'ethereum',
       'GBP': 'currency-gbp',
       'USD': 'currency-usd',
       'EUR': 'currency-eur',
@@ -87,7 +87,7 @@ const AddressBookManagement = () => {
         if (addressData.sortcode && addressData.accountnumber) {
           // Format: "Sort Code: XX-XX-XX, Account: XXXXXXXX"
           const sortCode = addressData.sortcode;
-          const formattedSortCode = sortCode.length === 6 
+          const formattedSortCode = sortCode.length === 6
             ? `${sortCode.slice(0, 2)}-${sortCode.slice(2, 4)}-${sortCode.slice(4, 6)}`
             : sortCode;
           return `Sort Code: ${formattedSortCode}, Account: ${addressData.accountnumber}`;
@@ -101,7 +101,7 @@ const AddressBookManagement = () => {
         // Check if it's a GBP bank account after parsing
         if (parsed.sortcode && parsed.accountnumber) {
           const sortCode = parsed.sortcode;
-          const formattedSortCode = sortCode.length === 6 
+          const formattedSortCode = sortCode.length === 6
             ? `${sortCode.slice(0, 2)}-${sortCode.slice(2, 4)}-${sortCode.slice(4, 6)}`
             : sortCode;
           return `Sort Code: ${formattedSortCode}, Account: ${parsed.accountnumber}`;
@@ -143,7 +143,7 @@ const AddressBookManagement = () => {
         }
 
         // Step 2: Setup general app state
-        await appState.generalSetup({caller: 'AddressBookManagement'});
+        await appState.generalSetup({ caller: 'AddressBookManagement' });
 
         // Step 3: Check if API client is available
         if (!appState?.apiClient) {
@@ -160,7 +160,7 @@ const AddressBookManagement = () => {
 
         // Step 5: Load address book data initially (with live API calls)
         await loadAddressesInitially();
-        
+
         setDataLoaded(true);
         setIsInitializing(false);
 
@@ -183,17 +183,17 @@ const AddressBookManagement = () => {
   // Filter addresses based on selected assets and types
   useEffect(() => {
     let filtered = addresses;
-    
+
     // Filter by asset if any assets are selected
     if (selectedAssets.length > 0) {
       filtered = filtered.filter(address => selectedAssets.includes(address.assetType));
     }
-    
+
     // Filter by type if any types are selected
     if (selectedTypes.length > 0) {
       filtered = filtered.filter(address => selectedTypes.includes(address.type));
     }
-    
+
     setFilteredAddresses(filtered);
   }, [addresses, selectedAssets, selectedTypes]);
 
@@ -205,10 +205,20 @@ const AddressBookManagement = () => {
     }
   }, [addresses.length]);
 
-  // Get available asset types - hardcoded for reliability
+  // Get available asset types - dynamic from API
   const getAvailableAssets = () => {
-    const assets = ['BTC', 'ETH', 'GBP'];
-    return assets;
+    if (appState && appState.getAvailableAssets) {
+      const assets = appState.getAvailableAssets();
+      if (assets && assets.length > 0) {
+        // Ensure GBP is always included if not present (it's a base currency)
+        if (!assets.includes('GBP')) {
+          return [...assets, 'GBP'];
+        }
+        return assets;
+      }
+    }
+    // Fallback if API not ready
+    return ['BTC', 'ETH', 'GBP'];
   };
 
   // Get available address types - hardcoded for reliability
@@ -263,13 +273,13 @@ const AddressBookManagement = () => {
   const loadAddressesInitially = async () => {
     setIsLoading(true);
     setError('');
-    
+
     // Add timeout for initial load
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
       setError('Initial load is taking longer than expected. Please try refreshing.');
     }, 30000);
-    
+
     try {
       if (!appState?.apiClient) {
         throw new Error('API client not available. Please ensure you are logged in.');
@@ -282,14 +292,14 @@ const AddressBookManagement = () => {
       }
 
       // Load addresses for each supported asset using live API calls
-      const assets = ['BTC', 'ETH', 'GBP'];
+      const assets = getAvailableAssets();
       const allAddresses = [];
 
       for (const asset of assets) {
         try {
           if (appState.loadAddressBook) {
             const addressBookResult = await appState.loadAddressBook(asset);
-            
+
             // Process the addresses from appState.loadAddressBook result
             if (addressBookResult && Array.isArray(addressBookResult) && addressBookResult.length > 0) {
               // Add asset type to each address for easier management
@@ -308,14 +318,14 @@ const AddressBookManagement = () => {
       // Store the initially loaded data for future use
       setInitiallyLoadedAddresses(allAddresses);
       setAddresses(allAddresses);
-      
+
       if (allAddresses.length === 0) {
         // Don't treat an empty address list as an error — show the empty state instead
         setError('');
       } else {
         setError('');
       }
-      
+
     } catch (error) {
       setError(`Failed to load addresses: ${error.message}`);
     } finally {
@@ -329,7 +339,7 @@ const AddressBookManagement = () => {
   const loadAddresses = async () => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       // Use the initially loaded addresses instead of making new API calls
       if (initiallyLoadedAddresses.length > 0) {
@@ -338,7 +348,7 @@ const AddressBookManagement = () => {
       } else {
         setError('No initial data available. Please restart the app to load fresh data.');
       }
-      
+
     } catch (error) {
       setError(`Failed to refresh addresses: ${error.message}`);
     } finally {
@@ -349,7 +359,7 @@ const AddressBookManagement = () => {
 
   // Delete an address
   const deleteAddress = async (address) => {
-    
+
     Alert.alert(
       'Delete Address',
       `Are you sure you want to delete "${address.name}"?\n\nThis action cannot be undone.`,
@@ -364,12 +374,12 @@ const AddressBookManagement = () => {
           onPress: async () => {
             try {
               console.log('🗑️ [AddressBook] Deleting address:', address.uuid);
-              
+
               // Delete address using dedicated DELETE method
               const result = await appState.apiClient.privateDeleteMethod({
                 apiRoute: `addressBook/delete/${address.uuid}`
               });
-              
+
               console.log('🗑️ [AddressBook] Delete response:', result);
               console.log('🗑️ [AddressBook] Delete response type:', typeof result);
               console.log('🗑️ [AddressBook] Delete response JSON:', JSON.stringify(result, null, 2));
@@ -377,23 +387,23 @@ const AddressBookManagement = () => {
               console.log('🗑️ [AddressBook] result.data:', result?.data);
 
               // Check for success: either string "success" or {error: null, data: "success"}
-              const isSuccess = result === 'success' || 
-                               (result && result.error === null && result.data === 'success') ||
-                               (result && result.error === null);
-              
+              const isSuccess = result === 'success' ||
+                (result && result.error === null && result.data === 'success') ||
+                (result && result.error === null);
+
               if (isSuccess) {
                 console.log('✅ [AddressBook] Delete successful - clearing cache and updating UI');
-                
+
                 // Clear address book cache for this asset to force refresh
                 if (appState.clearAddressBookCache && typeof appState.clearAddressBookCache === 'function') {
                   appState.clearAddressBookCache(address.asset);
                 }
-                
+
                 // Update the initially loaded addresses to remove the deleted address
                 setInitiallyLoadedAddresses(prev => prev.filter(addr => addr.uuid !== address.uuid));
-                
+
                 Alert.alert('Success', 'Address deleted successfully.');
-                
+
                 // Trigger refresh using state change
                 setTimeout(() => {
                   setRefreshTrigger(prev => prev + 1);
@@ -440,22 +450,22 @@ const AddressBookManagement = () => {
     if (!item || typeof item !== 'object') {
       return null;
     }
-    
+
     const addressData = parseAddressData(item.address);
-    
+
     const cryptoIcon = getCryptoIcon(item.assetType);
     const addressTypeIcon = getAddressTypeIcon(item.type);
     const actualAddress = extractAddress(addressData);
-    
+
     // Ensure actualAddress is always a string
     const displayAddress = String(actualAddress || 'Invalid address');
-    
+
     return (
       <View style={styles.addressItemContainer}>
         <View style={styles.addressIconSection}>
           <Icon name={cryptoIcon} size={32} color={getAssetColor(item.assetType)} />
         </View>
-        
+
         <View style={styles.addressMainContent}>
           <View style={styles.addressHeaderRow}>
             <Text style={styles.addressName}>{item.name}</Text>
@@ -463,23 +473,23 @@ const AddressBookManagement = () => {
               <Icon name={addressTypeIcon} size={14} color={colors.mediumGray} />
             </View>
           </View>
-          
+
           <Text style={styles.addressValue} numberOfLines={1} ellipsizeMode="middle">
             {displayAddress}
           </Text>
-          
+
           {/* For GBP bank accounts, show account holder name */}
           {addressData.accountname && (
             <Text style={styles.addressOwner}>
               Account Holder: {addressData.accountname}
             </Text>
           )}
-          
+
           {/* For businesses */}
           {addressData.business && (
             <Text style={styles.addressBusiness}>{addressData.business}</Text>
           )}
-          
+
           {/* For individuals (crypto addresses) */}
           {addressData.firstname && addressData.lastname && (
             <Text style={styles.addressOwner}>
@@ -487,7 +497,7 @@ const AddressBookManagement = () => {
             </Text>
           )}
         </View>
-        
+
         <View style={styles.addressActionsSection}>
           <TouchableOpacity
             style={styles.actionButton}
@@ -495,7 +505,7 @@ const AddressBookManagement = () => {
           >
             <Icon name="content-copy" size={16} color={colors.primary} />
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.actionButton, styles.deleteActionButton]}
             onPress={() => deleteAddress(item)}
@@ -540,14 +550,14 @@ const AddressBookManagement = () => {
       <Icon name="alert-circle" size={80} color={colors.red} />
       <Text style={styles.errorTitle}>Failed to Load</Text>
       <Text style={styles.errorText}>{error}</Text>
-      
+
       {/* Show different action based on error type */}
       {error.includes('API client not available') ? (
         <View style={styles.errorActions}>
           <TouchableOpacity style={styles.retryButton} onPress={checkAPIClient}>
             <Text style={styles.retryButtonText}>Check API Client</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.retryButton, {backgroundColor: colors.mediumGray, marginTop: 10}]} onPress={loadAddresses}>
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.mediumGray, marginTop: 10 }]} onPress={loadAddresses}>
             <Text style={styles.retryButtonText}>Force Retry</Text>
           </TouchableOpacity>
           <Text style={styles.errorHint}>
@@ -559,7 +569,7 @@ const AddressBookManagement = () => {
           <Text style={styles.errorHint}>
             You need to log in with your Solidi account to view your address book.
           </Text>
-          <Text style={[styles.errorHint, {marginTop: 10, fontSize: normaliseFont(12)}]}>
+          <Text style={[styles.errorHint, { marginTop: 10, fontSize: normaliseFont(12) }]}>
             Your API credentials are not yet available. Please log in through the app's login process.
           </Text>
         </View>
@@ -578,7 +588,7 @@ const AddressBookManagement = () => {
       clearTimeout(currentTimeoutId);
       setCurrentTimeoutId(null);
     }
-    
+
     // Switch to list tab and reload initial data to include the new address
     setTimeout(() => {
       setActiveTab('list');
@@ -591,368 +601,369 @@ const AddressBookManagement = () => {
     <View style={styles.container}>
       {/* Show initialization loading screen first */}
       {isInitializing ? (
-        <View style={styles.initializingContainer}>
+        <View style={styles.initializingContainer} testID="address-book-loading">
           <Text style={styles.initializingTitle}>Loading Address Book</Text>
           <Text style={styles.initializingText}>Please wait while we load your addresses...</Text>
         </View>
-        ) : initializationError ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorTitle}>Failed to Load</Text>
-            <Text style={styles.errorText}>{initializationError}</Text>
-            <TouchableOpacity 
-              style={styles.retryButton}
-              onPress={() => {
-                setIsInitializing(true);
-                setInitializationError(null);
-                // Restart initialization
-                setTimeout(() => {
-                  const initializePage = async () => {
-                    try {
-                      setIsInitializing(true);
-                      setInitializationError(null);
+      ) : initializationError ? (
+        <View style={styles.errorContainer} testID="address-book-error">
+          <Text style={styles.errorTitle}>Failed to Load</Text>
+          <Text style={styles.errorText}>{initializationError}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => {
+              setIsInitializing(true);
+              setInitializationError(null);
+              // Restart initialization
+              setTimeout(() => {
+                const initializePage = async () => {
+                  try {
+                    setIsInitializing(true);
+                    setInitializationError(null);
 
-                      if (!appState) {
-                        setInitializationError('Loading application state...');
-                        setIsInitializing(false);
-                        return;
-                      }
-
-                      await appState.generalSetup({caller: 'AddressBookManagement'});
-
-                      if (!appState?.apiClient) {
-                        setInitializationError('API client not available. Please ensure you are logged in.');
-                        setIsInitializing(false);
-                        return;
-                      }
-
-                      const { apiKey, apiSecret } = appState.apiClient;
-                      if (!apiKey || !apiSecret || apiKey.length === 0 || apiSecret.length === 0) {
-                        setInitializationError('Please log in to view your address book. API credentials are required.');
-                        setIsInitializing(false);
-                        return;
-                      }
-
-                      await loadAddresses();
-                      setDataLoaded(true);
+                    if (!appState) {
+                      setInitializationError('Loading application state...');
                       setIsInitializing(false);
-
-                    } catch (error) {
-                      setInitializationError(error.message || 'Failed to initialize address book');
-                      setIsInitializing(false);
+                      return;
                     }
-                  };
-                  initializePage();
-                }, 100);
-              }}
-            >
-              <Text style={styles.retryButtonText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
+
+                    await appState.generalSetup({ caller: 'AddressBookManagement' });
+
+                    if (!appState?.apiClient) {
+                      setInitializationError('API client not available. Please ensure you are logged in.');
+                      setIsInitializing(false);
+                      return;
+                    }
+
+                    const { apiKey, apiSecret } = appState.apiClient;
+                    if (!apiKey || !apiSecret || apiKey.length === 0 || apiSecret.length === 0) {
+                      setInitializationError('Please log in to view your address book. API credentials are required.');
+                      setIsInitializing(false);
+                      return;
+                    }
+
+                    await loadAddresses();
+                    setDataLoaded(true);
+                    setIsInitializing(false);
+
+                  } catch (error) {
+                    setInitializationError(error.message || 'Failed to initialize address book');
+                    setIsInitializing(false);
+                  }
+                };
+                initializePage();
+              }, 100);
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
         <>
           {/* Tab Header */}
-          <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'list' && styles.activeTab]}
-          onPress={() => setActiveTab('list')}
-        >
-          <Icon 
-            name="format-list-bulleted" 
-            size={20} 
-            color={activeTab === 'list' ? colors.white : colors.mediumGray} 
-          />
-          <Text style={[styles.tabText, activeTab === 'list' && styles.activeTabText]}>
-            Address List
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'add' && styles.activeTab]}
-          onPress={() => {
-            setActiveTab('add');
-          }}
-        >
-          <Icon 
-            name="plus" 
-            size={20} 
-            color={activeTab === 'add' ? colors.white : colors.mediumGray} 
-          />
-          <Text style={[styles.tabText, activeTab === 'add' && styles.activeTabText]}>
-            Add Address
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.tabContainer} testID="address-book-root">
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'list' && styles.activeTab]}
+              onPress={() => setActiveTab('list')}
+            >
+              <Icon
+                name="format-list-bulleted"
+                size={20}
+                color={activeTab === 'list' ? colors.white : colors.mediumGray}
+              />
+              <Text style={[styles.tabText, activeTab === 'list' && styles.activeTabText]}>
+                Address List
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'add' && styles.activeTab]}
+              testID="address-book-add-tab"
+              onPress={() => {
+                setActiveTab('add');
+              }}
+            >
+              <Icon
+                name="plus"
+                size={20}
+                color={activeTab === 'add' ? colors.white : colors.mediumGray}
+              />
+              <Text style={[styles.tabText, activeTab === 'add' && styles.activeTabText]}>
+                Add Address
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Tab Content */}
           {activeTab === 'add' ? (
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
               <OriginalAddressBook onAddressAdded={handleAddressAdded} />
             </View>
           ) : (
             <View style={styles.listContainer}>
-          {/* List Header with Asset Filter */}
-          <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>Address Book</Text>
-            <Text style={styles.listSubtitle}>
-              {filteredAddresses.length} address{filteredAddresses.length !== 1 ? 'es' : ''}
-            </Text>
-            <TouchableOpacity
-              style={styles.refreshButton}
-              onPress={onRefresh}
-              disabled={isLoading}
-            >
-              <Icon 
-                name="refresh" 
-                size={18} 
-                color={isLoading ? colors.lightGray : colors.primary} 
-              />
-              <Text style={[styles.refreshButtonText, isLoading && styles.refreshButtonTextDisabled]}>
-                {isLoading ? 'Loading...' : 'Reload Cache'}
-              </Text>
-            </TouchableOpacity>
-            
-            {/* Force reload button if there are issues */}
-            {error && (
-              <TouchableOpacity
-                style={[styles.refreshButton, {backgroundColor: colors.mediumGray, marginLeft: 10}]}
-                onPress={() => {
-                  setAddresses([]); // Clear existing addresses
-                  setInitiallyLoadedAddresses([]); // Clear initially loaded data
-                  setError(''); // Clear error
-                  loadAddressesInitially(); // Force fresh load with live API calls
-                }}
-                disabled={isLoading}
-              >
-                <Icon 
-                  name="refresh-circle" 
-                  size={18} 
-                  color={isLoading ? colors.lightGray : colors.white} 
-                />
-                <Text style={[styles.refreshButtonText, {color: colors.white}]}>
-                  Reload Fresh
+              {/* List Header with Asset Filter */}
+              <View style={styles.listHeader}>
+                <Text style={styles.listTitle}>Address Book</Text>
+                <Text style={styles.listSubtitle}>
+                  {filteredAddresses.length} address{filteredAddresses.length !== 1 ? 'es' : ''}
                 </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Multi-Select Filter Row */}
-          <View style={styles.filterContainer}>
-            <View style={styles.filterHeaderRow}>
-              <Text style={styles.filterLabel}>Filter Addresses</Text>
-              <TouchableOpacity 
-                style={styles.clearFiltersButton}
-                onPress={clearAllFilters}
-              >
-                <Text style={styles.clearFiltersText}>Clear All</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.filterRowContainer}>
-              {/* Asset Filter Dropdown */}
-              <View style={styles.dropdownContainer}>
-                <TouchableOpacity 
-                  style={styles.dropdownButton}
-                  onPress={() => setShowAssetDropdown(!showAssetDropdown)}
+                <TouchableOpacity
+                  style={styles.refreshButton}
+                  onPress={onRefresh}
+                  disabled={isLoading}
                 >
-                  <Text style={styles.dropdownButtonText}>
-                    Assets {selectedAssets.length > 0 ? `(${selectedAssets.length})` : ''}
-                  </Text>
-                  <Icon 
-                    name={showAssetDropdown ? "chevron-up" : "chevron-down"} 
-                    size={16} 
-                    color={colors.mediumGray} 
+                  <Icon
+                    name="refresh"
+                    size={18}
+                    color={isLoading ? colors.lightGray : colors.primary}
                   />
+                  <Text style={[styles.refreshButtonText, isLoading && styles.refreshButtonTextDisabled]}>
+                    {isLoading ? 'Loading...' : 'Reload Cache'}
+                  </Text>
                 </TouchableOpacity>
-                
-                {showAssetDropdown && (
-                  <Modal
-                    visible={showAssetDropdown}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowAssetDropdown(false)}
+
+                {/* Force reload button if there are issues */}
+                {error && (
+                  <TouchableOpacity
+                    style={[styles.refreshButton, { backgroundColor: colors.mediumGray, marginLeft: 10 }]}
+                    onPress={() => {
+                      setAddresses([]); // Clear existing addresses
+                      setInitiallyLoadedAddresses([]); // Clear initially loaded data
+                      setError(''); // Clear error
+                      loadAddressesInitially(); // Force fresh load with live API calls
+                    }}
+                    disabled={isLoading}
                   >
-                    <TouchableWithoutFeedback onPress={() => setShowAssetDropdown(false)}>
-                      <View style={styles.modalOverlay}>
-                        <TouchableWithoutFeedback onPress={() => {}}>
-                          <View style={styles.modalDropdownContainer}>
-                            <View style={styles.dropdownContent}>
-                              <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
-                                {getAvailableAssets().map(asset => {
-                                  const count = addresses.filter(addr => addr.assetType === asset).length;
-                                  const isSelected = selectedAssets.includes(asset);
-                                  return (
-                                    <TouchableOpacity
-                                      key={asset}
-                                      style={[styles.dropdownItem, isSelected && styles.dropdownItemSelected]}
-                                      onPress={() => toggleAssetSelection(asset)}
-                                    >
-                                      <View style={styles.dropdownItemContent}>
-                                        <View style={[styles.assetBadge, { backgroundColor: getAssetColor(asset) }]}>
-                                          <Text style={styles.assetBadgeText}>{asset}</Text>
-                                        </View>
-                                        <Text style={styles.dropdownItemText}>({count})</Text>
-                                      </View>
-                                      {isSelected && (
-                                        <Icon name="check" size={16} color={colors.primary} />
-                                      )}
-                                    </TouchableOpacity>
-                                  );
-                                })}
-                              </ScrollView>
-                              <View style={styles.dropdownActions}>
-                                <TouchableOpacity
-                                  style={styles.modalDoneButton}
-                                  onPress={() => setShowAssetDropdown(false)}
-                                >
-                                  <Text style={styles.modalDoneButtonText}>Done</Text>
-                                </TouchableOpacity>
-                              </View>
-                            </View>
-                          </View>
-                        </TouchableWithoutFeedback>
-                      </View>
-                    </TouchableWithoutFeedback>
-                  </Modal>
+                    <Icon
+                      name="refresh-circle"
+                      size={18}
+                      color={isLoading ? colors.lightGray : colors.white}
+                    />
+                    <Text style={[styles.refreshButtonText, { color: colors.white }]}>
+                      Reload Fresh
+                    </Text>
+                  </TouchableOpacity>
                 )}
               </View>
 
-              {/* Type Filter Dropdown */}
-              <View style={styles.dropdownContainer}>
-                <TouchableOpacity 
-                  style={styles.dropdownButton}
-                  onPress={() => setShowTypeDropdown(!showTypeDropdown)}
-                >
-                  <Text style={styles.dropdownButtonText}>
-                    Types {selectedTypes.length > 0 ? `(${selectedTypes.length})` : ''}
-                  </Text>
-                  <Icon 
-                    name={showTypeDropdown ? "chevron-up" : "chevron-down"} 
-                    size={16} 
-                    color={colors.mediumGray} 
-                  />
-                </TouchableOpacity>
-                
-                {showTypeDropdown && (
-                  <Modal
-                    visible={showTypeDropdown}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowTypeDropdown(false)}
+              {/* Multi-Select Filter Row */}
+              <View style={styles.filterContainer}>
+                <View style={styles.filterHeaderRow}>
+                  <Text style={styles.filterLabel}>Filter Addresses</Text>
+                  <TouchableOpacity
+                    style={styles.clearFiltersButton}
+                    onPress={clearAllFilters}
                   >
-                    <TouchableWithoutFeedback onPress={() => setShowTypeDropdown(false)}>
-                      <View style={styles.modalOverlay}>
-                        <TouchableWithoutFeedback onPress={() => {}}>
-                          <View style={styles.modalDropdownContainer}>
-                            <View style={styles.dropdownContent}>
-                              <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
-                                {getAvailableTypes().map(type => {
-                                  const count = addresses.filter(addr => addr.type === type).length;
-                                  const isSelected = selectedTypes.includes(type);
-                                  return (
-                                    <TouchableOpacity
-                                      key={type}
-                                      style={[styles.dropdownItem, isSelected && styles.dropdownItemSelected]}
-                                      onPress={() => toggleTypeSelection(type)}
-                                    >
-                                      <View style={styles.dropdownItemContent}>
-                                        <Icon 
-                                          name={getAddressTypeIcon(type)} 
-                                          size={16} 
-                                          color={colors.mediumGray} 
-                                        />
-                                        <Text style={styles.dropdownItemText}>{type} ({count})</Text>
-                                      </View>
-                                      {isSelected && (
-                                        <Icon name="check" size={16} color={colors.primary} />
-                                      )}
-                                    </TouchableOpacity>
-                                  );
-                                })}
-                              </ScrollView>
-                              <View style={styles.dropdownActions}>
-                                <TouchableOpacity
-                                  style={styles.modalDoneButton}
-                                  onPress={() => setShowTypeDropdown(false)}
-                                >
-                                  <Text style={styles.modalDoneButtonText}>Done</Text>
-                                </TouchableOpacity>
-                              </View>
-                            </View>
-                          </View>
-                        </TouchableWithoutFeedback>
-                      </View>
-                    </TouchableWithoutFeedback>
-                  </Modal>
-                )}
-              </View>
-            </View>
-            
-            {/* Selected Filters Summary */}
-            {(selectedAssets.length > 0 || selectedTypes.length > 0) && (
-              <View style={styles.selectedFiltersContainer}>
-                <Text style={styles.selectedFiltersLabel}>Active Filters:</Text>
-                <View style={styles.selectedFiltersChips}>
-                  {selectedAssets.map(asset => (
-                    <View key={`asset-${asset}`} style={[styles.selectedChip, {borderColor: getAssetColor(asset)}]}>
-                      <Text style={styles.selectedChipText}>{asset}</Text>
-                    </View>
-                  ))}
-                  {selectedTypes.map(type => (
-                    <View key={`type-${type}`} style={styles.selectedChip}>
-                      <Text style={styles.selectedChipText}>{type}</Text>
-                    </View>
-                  ))}
+                    <Text style={styles.clearFiltersText}>Clear All</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-            )}
-          </View>
 
-          {/* Address List */}
-          <View style={styles.addressListWrapper}>
-          {waitingForClient ? (
-            <View style={styles.loadingState}>
-              <Icon name="clock-outline" size={60} color={colors.primary} />
-              <Text style={styles.loadingText}>Waiting for login...</Text>
-              <Text style={[styles.loadingText, {fontSize: 12, marginTop: 5}]}>
-                Please ensure you are logged in to access your address book
-              </Text>
-            </View>
-          ) : isLoading && filteredAddresses.length === 0 ? (
-            <View style={styles.loadingState}>
-              <Text style={styles.loadingText}>Loading addresses...</Text>
-            </View>
-          ) : error ? (
-            renderErrorState()
-          ) : filteredAddresses.length === 0 ? (
-            (selectedAssets.length === 0 && selectedTypes.length === 0) ? renderEmptyState() : (
-              <View style={styles.emptyState}>
-                <Icon name="filter" size={80} color={colors.lightGray} />
-                <Text style={styles.emptyStateTitle}>No Matching Addresses</Text>
-                <Text style={styles.emptyStateText}>
-                  No addresses found for the selected filters. Try adjusting your filter criteria.
-                </Text>
-              </View>
-            )
-          ) : (
-            <ScrollView 
-              style={{ height: 400 }}
-              showsVerticalScrollIndicator={true}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            >
-              {(filteredAddresses || []).map((item, index) => {
-                if (!item || typeof item !== 'object') {
-                  return null;
-                }
-                return (
-                  <View key={item?.uuid || `addr-${index}`}>
-                    {renderAddressItem({ item })}
+                <View style={styles.filterRowContainer}>
+                  {/* Asset Filter Dropdown */}
+                  <View style={styles.dropdownContainer}>
+                    <TouchableOpacity
+                      style={styles.dropdownButton}
+                      onPress={() => setShowAssetDropdown(!showAssetDropdown)}
+                    >
+                      <Text style={styles.dropdownButtonText}>
+                        Assets {selectedAssets.length > 0 ? `(${selectedAssets.length})` : ''}
+                      </Text>
+                      <Icon
+                        name={showAssetDropdown ? "chevron-up" : "chevron-down"}
+                        size={16}
+                        color={colors.mediumGray}
+                      />
+                    </TouchableOpacity>
+
+                    {showAssetDropdown && (
+                      <Modal
+                        visible={showAssetDropdown}
+                        transparent={true}
+                        animationType="fade"
+                        onRequestClose={() => setShowAssetDropdown(false)}
+                      >
+                        <TouchableWithoutFeedback onPress={() => setShowAssetDropdown(false)}>
+                          <View style={styles.modalOverlay}>
+                            <TouchableWithoutFeedback onPress={() => { }}>
+                              <View style={styles.modalDropdownContainer}>
+                                <View style={styles.dropdownContent}>
+                                  <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
+                                    {getAvailableAssets().map(asset => {
+                                      const count = addresses.filter(addr => addr.assetType === asset).length;
+                                      const isSelected = selectedAssets.includes(asset);
+                                      return (
+                                        <TouchableOpacity
+                                          key={asset}
+                                          style={[styles.dropdownItem, isSelected && styles.dropdownItemSelected]}
+                                          onPress={() => toggleAssetSelection(asset)}
+                                        >
+                                          <View style={styles.dropdownItemContent}>
+                                            <View style={[styles.assetBadge, { backgroundColor: getAssetColor(asset) }]}>
+                                              <Text style={styles.assetBadgeText}>{asset}</Text>
+                                            </View>
+                                            <Text style={styles.dropdownItemText}>({count})</Text>
+                                          </View>
+                                          {isSelected && (
+                                            <Icon name="check" size={16} color={colors.primary} />
+                                          )}
+                                        </TouchableOpacity>
+                                      );
+                                    })}
+                                  </ScrollView>
+                                  <View style={styles.dropdownActions}>
+                                    <TouchableOpacity
+                                      style={styles.modalDoneButton}
+                                      onPress={() => setShowAssetDropdown(false)}
+                                    >
+                                      <Text style={styles.modalDoneButtonText}>Done</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                </View>
+                              </View>
+                            </TouchableWithoutFeedback>
+                          </View>
+                        </TouchableWithoutFeedback>
+                      </Modal>
+                    )}
                   </View>
-                );
-              })}
-            </ScrollView>
-          )}
-          </View>
-          </View>
+
+                  {/* Type Filter Dropdown */}
+                  <View style={styles.dropdownContainer}>
+                    <TouchableOpacity
+                      style={styles.dropdownButton}
+                      onPress={() => setShowTypeDropdown(!showTypeDropdown)}
+                    >
+                      <Text style={styles.dropdownButtonText}>
+                        Types {selectedTypes.length > 0 ? `(${selectedTypes.length})` : ''}
+                      </Text>
+                      <Icon
+                        name={showTypeDropdown ? "chevron-up" : "chevron-down"}
+                        size={16}
+                        color={colors.mediumGray}
+                      />
+                    </TouchableOpacity>
+
+                    {showTypeDropdown && (
+                      <Modal
+                        visible={showTypeDropdown}
+                        transparent={true}
+                        animationType="fade"
+                        onRequestClose={() => setShowTypeDropdown(false)}
+                      >
+                        <TouchableWithoutFeedback onPress={() => setShowTypeDropdown(false)}>
+                          <View style={styles.modalOverlay}>
+                            <TouchableWithoutFeedback onPress={() => { }}>
+                              <View style={styles.modalDropdownContainer}>
+                                <View style={styles.dropdownContent}>
+                                  <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
+                                    {getAvailableTypes().map(type => {
+                                      const count = addresses.filter(addr => addr.type === type).length;
+                                      const isSelected = selectedTypes.includes(type);
+                                      return (
+                                        <TouchableOpacity
+                                          key={type}
+                                          style={[styles.dropdownItem, isSelected && styles.dropdownItemSelected]}
+                                          onPress={() => toggleTypeSelection(type)}
+                                        >
+                                          <View style={styles.dropdownItemContent}>
+                                            <Icon
+                                              name={getAddressTypeIcon(type)}
+                                              size={16}
+                                              color={colors.mediumGray}
+                                            />
+                                            <Text style={styles.dropdownItemText}>{type} ({count})</Text>
+                                          </View>
+                                          {isSelected && (
+                                            <Icon name="check" size={16} color={colors.primary} />
+                                          )}
+                                        </TouchableOpacity>
+                                      );
+                                    })}
+                                  </ScrollView>
+                                  <View style={styles.dropdownActions}>
+                                    <TouchableOpacity
+                                      style={styles.modalDoneButton}
+                                      onPress={() => setShowTypeDropdown(false)}
+                                    >
+                                      <Text style={styles.modalDoneButtonText}>Done</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                </View>
+                              </View>
+                            </TouchableWithoutFeedback>
+                          </View>
+                        </TouchableWithoutFeedback>
+                      </Modal>
+                    )}
+                  </View>
+                </View>
+
+                {/* Selected Filters Summary */}
+                {(selectedAssets.length > 0 || selectedTypes.length > 0) && (
+                  <View style={styles.selectedFiltersContainer}>
+                    <Text style={styles.selectedFiltersLabel}>Active Filters:</Text>
+                    <View style={styles.selectedFiltersChips}>
+                      {selectedAssets.map(asset => (
+                        <View key={`asset-${asset}`} style={[styles.selectedChip, { borderColor: getAssetColor(asset) }]}>
+                          <Text style={styles.selectedChipText}>{asset}</Text>
+                        </View>
+                      ))}
+                      {selectedTypes.map(type => (
+                        <View key={`type-${type}`} style={styles.selectedChip}>
+                          <Text style={styles.selectedChipText}>{type}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Address List */}
+              <View style={styles.addressListWrapper}>
+                {waitingForClient ? (
+                  <View style={styles.loadingState}>
+                    <Icon name="clock-outline" size={60} color={colors.primary} />
+                    <Text style={styles.loadingText}>Waiting for login...</Text>
+                    <Text style={[styles.loadingText, { fontSize: 12, marginTop: 5 }]}>
+                      Please ensure you are logged in to access your address book
+                    </Text>
+                  </View>
+                ) : isLoading && filteredAddresses.length === 0 ? (
+                  <View style={styles.loadingState}>
+                    <Text style={styles.loadingText}>Loading addresses...</Text>
+                  </View>
+                ) : error ? (
+                  renderErrorState()
+                ) : filteredAddresses.length === 0 ? (
+                  (selectedAssets.length === 0 && selectedTypes.length === 0) ? renderEmptyState() : (
+                    <View style={styles.emptyState}>
+                      <Icon name="filter" size={80} color={colors.lightGray} />
+                      <Text style={styles.emptyStateTitle}>No Matching Addresses</Text>
+                      <Text style={styles.emptyStateText}>
+                        No addresses found for the selected filters. Try adjusting your filter criteria.
+                      </Text>
+                    </View>
+                  )
+                ) : (
+                  <ScrollView
+                    style={{ height: 400 }}
+                    showsVerticalScrollIndicator={true}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                  >
+                    {(filteredAddresses || []).map((item, index) => {
+                      if (!item || typeof item !== 'object') {
+                        return null;
+                      }
+                      return (
+                        <View key={item?.uuid || `addr-${index}`}>
+                          {renderAddressItem({ item })}
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                )}
+              </View>
+            </View>
           )}
         </>
       )}
@@ -967,7 +978,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     position: 'relative',
   },
-  
+
   // Tab styles
   tabContainer: {
     flexDirection: 'row',
@@ -976,7 +987,7 @@ const styles = StyleSheet.create({
     margin: scaledWidth(10),
     padding: scaledWidth(3),
   },
-  
+
   tab: {
     flex: 1,
     flexDirection: 'row',
@@ -986,18 +997,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaledWidth(12),
     borderRadius: 6,
   },
-  
+
   activeTab: {
     backgroundColor: colors.primary,
   },
-  
+
   tabText: {
     fontSize: normaliseFont(14),
     fontWeight: '600',
     color: colors.mediumGray,
     marginLeft: scaledWidth(8),
   },
-  
+
   activeTabText: {
     color: colors.white,
   },

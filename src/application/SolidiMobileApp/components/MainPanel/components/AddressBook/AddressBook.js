@@ -10,7 +10,7 @@ import AppStateContext from 'src/application/data';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('AddressBook');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 /**
  * AddressBook Page Component
@@ -31,8 +31,19 @@ let AddressBook = (props) => {
   let setup = async () => {
     try {
       console.log('🔧 AddressBook: Calling appState.generalSetup...');
-      await appState.generalSetup({caller: 'AddressBook'});
+      await appState.generalSetup({ caller: 'AddressBook' });
       console.log('✅ AddressBook: generalSetup completed successfully');
+
+      // Load ticker data to get available crypto assets
+      // Ticker API provides all available cryptocurrencies
+      console.log('🔧 AddressBook: Loading ticker data for crypto asset list...');
+      try {
+        await appState.loadTicker();
+        console.log('✅ AddressBook: Ticker data loaded successfully');
+      } catch (tickerErr) {
+        console.log('⚠️ AddressBook: Ticker load failed, will use fallback assets:', tickerErr);
+      }
+
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       setRenderCount(renderCount + 1);
     } catch (err) {
@@ -44,7 +55,7 @@ let AddressBook = (props) => {
   // Handle successful address addition
   let handleSuccess = (addressData) => {
     log('✅ Address added successfully from page:', addressData);
-    
+
     // Navigate back or show success message
     if (appState && appState.changeState) {
       // Go back to profile or previous page
