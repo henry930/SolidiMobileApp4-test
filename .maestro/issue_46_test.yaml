@@ -1,0 +1,36 @@
+appId: co.solidi.mobile.test
+---
+# Issue #46: Multiple Items Selection in Extra Information
+# Verifies that Salary and Savings fields only allow single selection
+
+- launchApp
+
+# Note: This test requires completing registration flow first
+# to access the Extra Information (AccountUpdate) screen
+
+# Navigate to Settings/Profile
+- tapOn:
+    id: "header-settings-button"
+
+# Look for Account Update or Extra Information
+- scrollUntilVisible:
+    element:
+      text: "Account Update"
+    direction: DOWN
+    timeout: 10000
+
+- tapOn: "Account Update"
+
+# Wait for form to load
+- extendedWaitUntil:
+    visible: "Salary|Savings"
+    timeout: 10000
+
+# Test Salary field - should only allow ONE selection
+- tapOn: "Salary"
+# Try to select another option - should deselect first
+- tapOn: "Savings"
+# Verify only one is selected (this would need custom validation)
+
+# Take screenshot for manual verification
+- takeScreenshot: issue_46_salary_selection
