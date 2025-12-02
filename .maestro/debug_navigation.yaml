@@ -1,0 +1,59 @@
+appId: co.solidi.mobile.test
+---
+# Debug Navigation
+# Taps all tabs to find where Settings/Address Book is
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_app_launched
+
+# Login if needed
+- runFlow:
+    when:
+      visible: "Secure Login|Sign In"
+    commands:
+      - tapOn: "Email Address"
+      - inputText: "henry930@gmail.com"
+      - hideKeyboard
+      - tapOn: "Password"
+      - inputText: "DazzPow/930"
+      - hideKeyboard
+      - tapOn: "SIGN IN"
+      - extendedWaitUntil:
+          visible: "Wallet|Transfer|History"
+          timeout: 20000
+      - takeScreenshot: 01b_logged_in
+
+# Tap Tab 1 (10%)
+- tapOn:
+    point: "10%,90%"
+- takeScreenshot: 02_tab_1
+
+# Tap Tab 2 (30%)
+- tapOn:
+    point: "30%,90%"
+- takeScreenshot: 03_tab_2
+
+# Tap Tab 3 (50%)
+- tapOn:
+    point: "50%,90%"
+- takeScreenshot: 04_tab_3
+
+# Tap Tab 4 (70%)
+- tapOn:
+    point: "70%,90%"
+- takeScreenshot: 05_tab_4
+
+# Tap Tab 5 (90%)
+- tapOn:
+    point: "90%,90%"
+- takeScreenshot: 06_tab_5
+
+# Try to find Address Book text anywhere
+- runFlow:
+    when:
+      visible: "Address Book"
+    commands:
+      - takeScreenshot: 07_address_book_found

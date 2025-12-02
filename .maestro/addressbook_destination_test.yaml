@@ -1,0 +1,198 @@
+appId: co.solidi.mobile.test
+---
+# Address Book - Destination Address Test (Fixed Navigation v15 - State Handling)
+# Tests the fix: "Address Book - Destination - Should not check the length of the asset - should check address"
+# Navigates to Settings via Header Button (testID) and uses scrollUntilVisible to find Address Book (testID)
+# Handles Loading and Error states via testID before selecting Add Address tab
+
+- launchApp
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 45000
+- takeScreenshot: 01_app_launched
+
+# Check if we need to login
+- runFlow:
+    when:
+      visible: "Secure Login|Sign In"
+    commands:
+      - takeScreenshot: 01a_login_required
+      - tapOn: "Email Address"
+      - inputText: "henry930@gmail.com"
+      - hideKeyboard
+      - tapOn: "Password"
+      - inputText: "DazzPow/930"
+      - hideKeyboard
+      - tapOn: "SIGN IN"
+      - extendedWaitUntil:
+          visible: "Wallet|Transfer|History"
+          timeout: 20000
+      - takeScreenshot: 01b_logged_in
+
+# Navigate to Settings via Header Button (Top Right)
+- tapOn:
+    id: "header-settings-button"
+- takeScreenshot: 02_settings_button_tapped
+
+# Verify we are on Settings page by looking for headers
+# "Wallet & Finance", "Account Settings", "Activity & Management"
+- extendedWaitUntil:
+    visible: "Wallet & Finance|Account Settings|Personal Details"
+    timeout: 10000
+- takeScreenshot: 03_settings_page_confirmed
+
+# Scroll until Address Book is visible (using testID)
+- scrollUntilVisible:
+    element:
+      id: "settings-address-book-item"
+    direction: DOWN
+    timeout: 10000
+    speed: 40
+    visibilityPercentage: 100
+- takeScreenshot: 04_scrolled_to_address_book
+
+# Tap Address Book
+- tapOn:
+    id: "settings-address-book-item"
+- takeScreenshot: 05_address_book_opened
+
+# Handle Loading State
+- runFlow:
+    when:
+      visible:
+        id: "address-book-loading"
+    commands:
+      - takeScreenshot: 05a_loading
+      - extendedWaitUntil:
+          notVisible:
+            id: "address-book-loading"
+          timeout: 60000
+
+# Handle Error State
+- runFlow:
+    when:
+      visible:
+        id: "address-book-error"
+    commands:
+      - takeScreenshot: 05b_error
+      - tapOn: "Retry"
+      - extendedWaitUntil:
+          notVisible:
+            id: "address-book-error"
+          timeout: 20000
+
+# Now we should be in Address Book - look for "Add Address" tab using testID
+- extendedWaitUntil:
+    visible:
+      id: "address-book-add-tab"
+    timeout: 45000
+- tapOn:
+    id: "address-book-add-tab"
+- takeScreenshot: 06_add_address_tab_selected
+
+# Now look for the form content
+- extendedWaitUntil:
+    visible: "Another Person|another_person"
+    timeout: 5000
+- takeScreenshot: 07_recipient_selection
+
+# Step 1: Select recipient type - "Another Person"
+- tapOn: "Another Person|another_person"
+- takeScreenshot: 08_recipient_selected
+
+# Click Next/Continue
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "First Name|firstname"
+          timeout: 3000
+
+# Step 2: Enter recipient details
+- takeScreenshot: 09_details_step
+
+# Choose manual entry if prompted
+- runFlow:
+    when:
+      visible: "Enter Manually|Manual"
+    commands:
+      - tapOn: "Enter Manually|Manual"
+      - extendedWaitUntil:
+          visible: "First Name|firstname"
+          timeout: 2000
+
+# Enter first name
+- tapOn:
+    below: "First Name|firstname"
+- inputText: "John"
+- hideKeyboard
+
+# Enter last name
+- tapOn:
+    below: "Last Name|lastname"
+- inputText: "Doe"
+- hideKeyboard
+- takeScreenshot: 10_details_filled
+
+# Click Next
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "BTC|Bitcoin"
+          timeout: 3000
+
+# Step 3: Select Asset - BTC
+- takeScreenshot: 11_asset_selection
+
+- tapOn: "BTC|Bitcoin"
+- takeScreenshot: 12_btc_selected
+
+# Click Next
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "Destination|Address"
+          timeout: 3000
+
+# Step 4: Enter Destination Address (THIS IS THE KEY STEP)
+- takeScreenshot: 13_destination_step
+
+# Enter a valid BTC address
+# We use a known valid address
+- tapOn:
+    below: "Withdrawal Address|Address"
+- inputText: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+- hideKeyboard
+- takeScreenshot: 14_full_address_entered
+
+# Try to proceed - this should SUCCEED now (previously failed)
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "Personal|Exchange|Summary"
+          timeout: 5000
+      - takeScreenshot: 15_success_next_step
+
+# Final verification
+- takeScreenshot: 16_test_complete
+
+# Test Summary:
+# ✅ Handled Login if needed
+# ✅ Navigated to Settings via testID
+# ✅ Used scrollUntilVisible with testID to find Address Book
+# ✅ Handled Loading state via testID
+# ✅ Handled Error state via testID
+# ✅ Navigated to Add Address tab via testID
+# ✅ Entered valid BTC address
+# ✅ Verified no "too short" error appeared

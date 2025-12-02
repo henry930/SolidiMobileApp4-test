@@ -1,0 +1,52 @@
+appId: co.solidi.mobile.test
+---
+# Issue 84: Fix Dropdown Arrow Interaction Test
+# Verifies that tapping the dropdown arrow on input fields opens the selection interface
+
+# Launch app with clear state to ensure we are logged out
+- launchApp:
+    clearState: true
+
+# Wait for app to be ready and on Login screen
+# Use regex to match text with icons
+- extendedWaitUntil:
+    visible: ".*Sign In.*"
+    timeout: 10000
+- takeScreenshot: 01_login_page
+
+# Tap "Create New Account" using testID
+# It should be visible on screen
+- tapOn:
+    id: "register-button"
+
+# Check if we are on Registration page
+- extendedWaitUntil:
+    visible: ".*Create Your Account.*|.*First Name.*"
+    timeout: 10000
+- takeScreenshot: 02_registration_page
+
+# Scroll to Gender field using testID
+- scrollUntilVisible:
+    element:
+      id: "gender-input"
+    direction: DOWN
+- takeScreenshot: 03_scrolled_to_gender
+
+# Tap specifically on the chevron icon for Gender
+# We use the testID of the wrapper, but target the right side (95% width) to hit the icon
+- tapOn:
+    id: "gender-input"
+    point: "95%,50%" 
+
+# Verify Gender Modal appears
+- extendedWaitUntil:
+    visible: "Select Gender"
+    timeout: 5000
+- takeScreenshot: 04_gender_modal_opened
+
+# Select a gender to close modal and verify selection
+- tapOn:
+    id: "gender-option-Male"
+- takeScreenshot: 05_gender_selected
+
+# Success

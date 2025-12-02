@@ -1,0 +1,78 @@
+appId: co.solidi.mobile.test
+---
+# Issue #64: GBP Address Book Verification
+# Verifies that GBP bank accounts can be added to the Address Book
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Check if already logged in
+- runFlow:
+    when:
+      visible: "Secure Login"
+    commands:
+      - runFlow: accurate_login_flow.yaml
+
+# Wait for main screen
+- waitForAnimationToEnd
+
+# Navigate to Address Book
+- tapOn: "Address Book"
+- waitForAnimationToEnd
+
+# Tap Add button (assuming it's a tab or button)
+- tapOn: "Add" 
+- waitForAnimationToEnd
+
+# Step 1: Recipient - Select Myself
+- tapOn: "Myself"
+- tapOn: "Next →"
+
+# Step 2: Details - Confirm Name (Auto-filled)
+- tapOn: "Next →"
+
+# Step 3: Asset - Select GBP
+# We might need to scroll if it's not visible, but usually it is.
+# Using the testID we saw in the code: asset-option-gbp
+- tapOn: 
+    id: "asset-option-gbp"
+- tapOn: "Next →"
+
+# Step 4: Destination - Verify GBP Fields
+- assertVisible: "Account Name"
+- assertVisible: "Sort Code"
+- assertVisible: "Account Number"
+
+# Enter GBP Details
+- inputText: "John Doe"
+- tapOn: "Sort Code"
+- inputText: "123456" 
+# The code auto-formats 123456 to 12-34-56
+- tapOn: "Account Number"
+- inputText: "88776655"
+
+- tapOn: "Next →"
+
+# Step 5 is skipped for GBP, so we should be at Summary (Step 6)
+
+# Step 6: Summary
+- assertVisible: "Please review your information"
+- assertVisible: "John Doe"
+- assertVisible: "12-34-56"
+- assertVisible: "88776655"
+- assertVisible: "GBP"
+
+# Submit
+- tapOn: "Submit"
+
+# Verify Success
+# The mock might return success or we might just check for the alert
+- waitForAnimationToEnd
+- assertVisible: "Address Added Successfully!"
+- tapOn: "OK"
+
+# Take screenshot
+- takeScreenshot: issue-64-gbp-address-added

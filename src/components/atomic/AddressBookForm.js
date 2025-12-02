@@ -14,7 +14,7 @@ import AppStateContext from 'src/application/data';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('AddressBookForm');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 /**
  * AddressBookForm - Shared component for adding addresses to the address book
@@ -27,16 +27,16 @@ let {deb, dj, log, lj} = logger.getShortcuts(logger2);
  * @param {boolean} props.showHeader - Whether to show the title/header (default: true)
  * @param {boolean} props.standalone - Whether this is standalone page or modal (default: false)
  */
-let AddressBookForm = ({ 
-  selectedAsset = '', 
-  onSuccess, 
+let AddressBookForm = ({
+  selectedAsset = '',
+  onSuccess,
   onCancel,
   showHeader = true,
-  standalone = false 
+  standalone = false
 }) => {
   // Get app state for API access
   let appState = useContext(AppStateContext);
-  
+
   // Navigation state
   let [currentStep, setCurrentStep] = useState(1);
   let [formData, setFormData] = useState({
@@ -60,12 +60,13 @@ let AddressBookForm = ({
   let [manualInput, setManualInput] = useState(false); // For "another_person" option
   let [showContactPicker, setShowContactPicker] = useState(false); // Contact picker modal
   let [showVaspSearch, setShowVaspSearch] = useState(false); // VASP search modal
-  
+  let [assetSearchQuery, setAssetSearchQuery] = useState(''); // Asset search filter
+
   // API submission state
   let [isSubmitting, setIsSubmitting] = useState(false);
   let [submitError, setSubmitError] = useState('');
   let [submitStatus, setSubmitStatus] = useState('');
-  
+
   const lastSelectedAssetRef = useRef(selectedAsset);
 
   // Update asset when selectedAsset prop changes
@@ -78,7 +79,7 @@ let AddressBookForm = ({
 
   // State for dynamic asset options
   const [dynamicAssetOptions, setDynamicAssetOptions] = useState([]);
-  
+
   // Ensure API client is initialized and load balance data
   useEffect(() => {
     const initializeApiClient = async () => {
@@ -86,12 +87,12 @@ let AddressBookForm = ({
       console.log('🔧 AddressBookForm: appState exists?', !!appState);
       console.log('🔧 AddressBookForm: apiClient exists?', !!appState?.apiClient);
       console.log('🔧 AddressBookForm: apiClient.post exists?', !!appState?.apiClient?.post);
-      
+
       // If apiClient is not initialized, call generalSetup
       if (!appState?.apiClient?.post) {
         console.log('⚠️ AddressBookForm: API client not ready, calling generalSetup...');
         try {
-          await appState.generalSetup({caller: 'AddressBookForm'});
+          await appState.generalSetup({ caller: 'AddressBookForm' });
           console.log('✅ AddressBookForm: generalSetup completed');
         } catch (err) {
           console.error('❌ AddressBookForm: generalSetup failed:', err);
@@ -99,7 +100,7 @@ let AddressBookForm = ({
       } else {
         console.log('✅ AddressBookForm: API client already initialized');
       }
-      
+
       // Use cached balance data to populate asset options
       // Balance data is loaded during authentication
       try {
@@ -114,7 +115,7 @@ let AddressBookForm = ({
         setDynamicAssetOptions(getAssetOptions());
       }
     };
-    
+
     initializeApiClient();
   }, []); // Run once on mount
 
@@ -128,29 +129,51 @@ let AddressBookForm = ({
     { id: 6, title: 'Summary', subtitle: 'Review and confirm' }
   ];
 
-  // Asset options for dropdown - dynamically loaded from balance API
+  // Asset options for dropdown - dynamically loaded from ticker API
   const getAssetOptions = () => {
-    // Get available assets from balance API
-    let availableAssets = appState?.getAvailableAssets() || [];
-    
-    if (availableAssets && availableAssets.length > 0) {
-      // Map to asset options format with display names
-      return availableAssets.map(asset => {
-        let assetUpper = asset.toUpperCase();
-        let displayName = appState.getAssetInfo(asset)?.displayString || asset;
+    // Get available crypto assets from ticker API
+    // Ticker data format: {"BTC/GBP": {...}, "ETH/GBP": {...}, ...}
+    let tickerData = appState?.state?.apiData?.ticker || {};
+
+    console.log('🔍 DEBUG: Checking ticker data...');
+    console.log('🔍 DEBUG: appState exists?', !!appState);
+    console.log('🔍 DEBUG: appState.state exists?', !!appState?.state);
+    console.log('🔍 DEBUG: apiData exists?', !!appState?.state?.apiData);
+    console.log('🔍 DEBUG: ticker exists?', !!appState?.state?.apiData?.ticker);
+    console.log('🔍 DEBUG: ticker keys:', Object.keys(tickerData));
+    console.log('🔍 DEBUG: ticker keys count:', Object.keys(tickerData).length);
+
+
+    if (tickerData && Object.keys(tickerData).length > 0) {
+      console.log('📊 AddressBookForm: Using ticker data for asset list');
+
+      // Extract unique crypto assets from ticker pairs (e.g., "BTC/GBP" -> "BTC")
+      let cryptoAssets = new Set();
+      Object.keys(tickerData).forEach(pair => {
+        let [asset, quote] = pair.split('/');
+        cryptoAssets.add(asset.toLowerCase());
+      });
+
+      // Convert to array and map to asset options format
+      let assetList = Array.from(cryptoAssets);
+      console.log(`📊 Found ${assetList.length} crypto assets from ticker:`, assetList);
+
+      return assetList.map(asset => {
+        let displayName = appState.getAssetInfo(asset)?.displayString || asset.toUpperCase();
         return {
           id: asset.toLowerCase(),
           label: displayName
         };
-      });
+      }).sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically
     }
-    
-    // Fallback to hardcoded list if balance API not available
+
+    console.log('⚠️ AddressBookForm: No ticker data available, using fallback assets');
+    // Fallback to hardcoded list if ticker API not available
     return [
       { id: 'btc', label: 'Bitcoin (BTC)' },
       { id: 'eth', label: 'Ethereum (ETH)' },
       { id: 'usdt', label: 'Tether (USDT)' },
-      { id: 'usdc', label:'USD Coin (USDC)' },
+      { id: 'usdc', label: 'USD Coin (USDC)' },
       { id: 'bnb', label: 'Binance Coin (BNB)' },
       { id: 'gbp', label: 'British Pound (GBP)' }
     ];
@@ -185,12 +208,12 @@ let AddressBookForm = ({
     if (field === 'recipient') {
       if (value === 'myself') {
         console.log('=== AUTOFILL START ===');
-        
+
         // Check if user info is loaded
         const userInfoObject = appState?.user?.info?.user;
         console.log('AUTOFILL: userInfoObject:', JSON.stringify(userInfoObject, null, 2));
         console.log('AUTOFILL: isEmpty?', !userInfoObject || Object.keys(userInfoObject).length === 0);
-        
+
         // If user info is empty, try to load it
         if (!userInfoObject || Object.keys(userInfoObject).length === 0) {
           console.log('AUTOFILL: Loading user info...');
@@ -203,11 +226,11 @@ let AddressBookForm = ({
             }
           }
         }
-        
+
         // Get the names
         let userFirstName = '';
         let userLastName = '';
-        
+
         if (appState.getUserInfo) {
           const fn = appState.getUserInfo('firstname');
           const ln = appState.getUserInfo('lastname');
@@ -215,16 +238,16 @@ let AddressBookForm = ({
           if (fn && fn !== '[loading]') userFirstName = fn;
           if (ln && ln !== '[loading]') userLastName = ln;
         }
-        
+
         if (!userFirstName || !userLastName) {
           const userData = appState?.user?.info?.user || {};
           if (!userFirstName) userFirstName = userData.firstname || userData.firstName || '';
           if (!userLastName) userLastName = userData.lastname || userData.lastName || '';
         }
-        
+
         console.log('AUTOFILL: Final - firstName:', userFirstName, ', lastName:', userLastName);
         console.log('=== AUTOFILL END ===');
-        
+
         setFormData(prev => ({
           ...prev,
           recipient: value,
@@ -258,7 +281,7 @@ let AddressBookForm = ({
         [field]: value
       }));
     }
-    
+
     setErrorMessage(''); // Clear error on input
     setSubmitError(''); // Clear submit error on input
 
@@ -268,12 +291,12 @@ let AddressBookForm = ({
   let goToNextStep = () => {
     if (validateCurrentStep()) {
       let nextStep = currentStep + 1;
-      
+
       // Skip step 5 (wallet info) for GBP since it's not needed
       if (nextStep === 5 && formData.asset.toLowerCase() === 'gbp') {
         nextStep = 6;
       }
-      
+
       setCurrentStep(Math.min(nextStep, steps.length));
     } else {
       setTimeout(() => setErrorMessage(''), 3000);
@@ -282,17 +305,17 @@ let AddressBookForm = ({
 
   let goToPreviousStep = () => {
     let prevStep = currentStep - 1;
-    
+
     // Skip step 5 (wallet info) for GBP when going backwards
     if (prevStep === 5 && formData.asset.toLowerCase() === 'gbp') {
       prevStep = 4;
     }
-    
+
     // Reset manual input mode when going back to step 1
     if (prevStep === 1) {
       setManualInput(false);
     }
-    
+
     setCurrentStep(Math.max(prevStep, 1));
     setErrorMessage('');
   };
@@ -319,26 +342,23 @@ let AddressBookForm = ({
           setErrorMessage('Last name is required');
           return false;
         }
-        // More permissive validation - allow letters, numbers, spaces, and common punctuation
-        // Allows: letters (any language), numbers, spaces, hyphens, apostrophes, periods, commas, ampersands, parentheses
-        const nameRegex = /^[\p{L}\p{N}\s\-'.,&()]+$/u;
-        
-        if (!nameRegex.test(formData.firstName)) {
-          setErrorMessage(formData.recipient === 'another_business' ? 'Company name contains invalid characters' : 'First name contains invalid characters');
-          return false;
-        }
-        // Only validate lastName format if not a business
-        if (formData.recipient !== 'another_business' && !nameRegex.test(formData.lastName)) {
-          setErrorMessage('Last name contains invalid characters');
-          return false;
-        }
+        // Validation: Only check that fields are not empty
+        // We allow all characters to support international names, special characters, etc.
+        // As per requirements: "In general we should not try to limit characters like this - its a never ending problem."
         break;
 
       case 3:
+        console.log('🔍 [VALIDATION] Step 3 - Asset selection');
+        console.log('🔍 [VALIDATION] formData.asset:', formData.asset);
+        console.log('🔍 [VALIDATION] formData.asset type:', typeof formData.asset);
+        console.log('🔍 [VALIDATION] formData.asset.trim():', formData.asset ? formData.asset.trim() : 'N/A');
+
         if (!formData.asset || formData.asset.trim() === '') {
+          console.log('❌ [VALIDATION] Asset validation FAILED - no asset selected');
           setErrorMessage('Please select an asset');
           return false;
         }
+        console.log('✅ [VALIDATION] Asset validation PASSED');
         break;
 
       case 4:
@@ -367,12 +387,9 @@ let AddressBookForm = ({
             return false;
           }
         } else {
-          // Crypto address validation
-          if (!formData.withdrawAddress.trim()) {
-            setErrorMessage('Withdrawal address is required');
-            return false;
-          }
-          // No length validation - different cryptocurrencies have different address formats and lengths
+          // Crypto address - NO VALIDATION
+          // Per Issue #80: No validation API available, different cryptocurrencies have different address formats
+          // Validation will be handled server-side during actual withdrawal
         }
         break;
 
@@ -396,6 +413,32 @@ let AddressBookForm = ({
     return true;
   };
 
+  // Helper to check if Next button should be disabled
+  const isNextButtonDisabled = () => {
+    switch (currentStep) {
+      case 1: // Recipient
+        return !formData.recipient;
+      case 2: // Name
+        if (!formData.firstName.trim()) return true;
+        if (formData.recipient !== 'another_business' && !formData.lastName.trim()) return true;
+        return false;
+      case 3: // Asset
+        return !formData.asset || formData.asset.trim() === '';
+      case 4: // Destination
+        if (formData.asset.toLowerCase() === 'gbp') {
+          return !formData.accountName.trim() || !formData.sortCode.trim() || !formData.accountNumber.trim();
+        } else {
+          return !formData.withdrawAddress || formData.withdrawAddress.trim() === '';
+        }
+      case 5: // Wallet Type
+        if (!formData.destinationType) return true;
+        if (formData.destinationType === 'exchange' && !formData.exchangeName.trim()) return true;
+        return false;
+      default:
+        return false;
+    }
+  };
+
   // Handle QR code scan
   let handleQRCodeScanned = (data) => {
     log('QR Code scanned:', data);
@@ -406,10 +449,10 @@ let AddressBookForm = ({
   // Handle VASP selection from modal
   const handleVaspSelect = (vasp) => {
     console.log('✅ VASP selected:', vasp);
-    setFormData(prev => ({ 
-      ...prev, 
-      exchangeName: vasp.name || vasp.label || prev.exchangeName, 
-      vasp: vasp 
+    setFormData(prev => ({
+      ...prev,
+      exchangeName: vasp.name || vasp.label || prev.exchangeName,
+      vasp: vasp
     }));
     setShowVaspSearch(false);
   };
@@ -433,19 +476,19 @@ let AddressBookForm = ({
       log('📤 Submitting address to API:', formData);
       console.log('📤 CONSOLE: ===== SUBMITTING ADDRESS TO API =====');
       console.log('📤 CONSOLE: Form data:', JSON.stringify(formData, null, 2));
-      
+
       // Check if API client exists and initialize if needed
       console.log('🔍 Checking API client before submission...');
       console.log('🔍 appState exists?', !!appState);
       console.log('🔍 apiClient exists?', !!appState?.apiClient);
       console.log('🔍 apiClient.privateMethod exists?', !!appState?.apiClient?.privateMethod);
-      
+
       if (!appState || !appState.apiClient || typeof appState.apiClient.privateMethod !== 'function') {
         console.log('⚠️ API client not ready, calling generalSetup now...');
-        await appState.generalSetup({caller: 'AddressBookForm-Submit'});
+        await appState.generalSetup({ caller: 'AddressBookForm-Submit' });
         console.log('✅ generalSetup completed, checking again...');
         console.log('✅ apiClient.privateMethod exists now?', !!appState?.apiClient?.privateMethod);
-        
+
         if (!appState.apiClient || typeof appState.apiClient.privateMethod !== 'function') {
           throw new Error('API client could not be initialized');
         }
@@ -453,7 +496,7 @@ let AddressBookForm = ({
 
       // Determine address type based on asset and destination type
       let addressType;
-      
+
       if (formData.asset.toLowerCase() === 'gbp') {
         // GBP always uses BANK address type
         addressType = 'BANK';
@@ -472,7 +515,7 @@ let AddressBookForm = ({
 
       // Prepare the API payload
       let apiPayload;
-      
+
       if (formData.asset.toLowerCase() === 'gbp') {
         // For GBP, use bank account format with nested address structure (NEW API FORMAT)
         apiPayload = {
@@ -503,7 +546,7 @@ let AddressBookForm = ({
           dtag: null,
           vasp: formData.vasp ? (formData.vasp.id || formData.vasp) : null
         };
-        
+
         apiPayload = {
           name: `${formData.firstName} ${formData.lastName}`.trim() || formData.recipient,
           asset: formData.asset.toUpperCase(),
@@ -517,7 +560,7 @@ let AddressBookForm = ({
       console.log('📤 CONSOLE: API Route:', `addressBook/${formData.asset.toUpperCase()}/${addressType}`);
 
       // Create abort controller for this request
-      const abortController = appState.createAbortController({tag: 'addAddress'});
+      const abortController = appState.createAbortController({ tag: 'addAddress' });
 
       // Call the API using privateMethod
       const result = await appState.apiClient.privateMethod({
@@ -526,7 +569,7 @@ let AddressBookForm = ({
         params: apiPayload,
         abortController
       });
-      
+
       console.log('📨 CONSOLE: ===== API RESPONSE =====');
       console.log('📨 CONSOLE: Result:', JSON.stringify(result, null, 2));
       console.log('📨 CONSOLE: ===== END API RESPONSE =====');
@@ -544,13 +587,13 @@ let AddressBookForm = ({
         log('✅ Address added successfully:', result);
         console.log('📨 CONSOLE: Address added result:', JSON.stringify(result, null, 2));
         setSubmitStatus('✅ Address saved successfully!');
-        
+
         // Clear address book cache for this asset to force fresh data load
         if (appState.clearAddressBookCache && typeof appState.clearAddressBookCache === 'function') {
           console.log('🧹 CONSOLE: Clearing address book cache for', formData.asset);
           appState.clearAddressBookCache(formData.asset);
         }
-        
+
         // Reload address book to get fresh data with the new UUID
         if (appState.loadAddressBook && typeof appState.loadAddressBook === 'function') {
           console.log('🔄 CONSOLE: Reloading address book for', formData.asset);
@@ -561,7 +604,7 @@ let AddressBookForm = ({
             console.error('❌ CONSOLE: Failed to reload address book:', reloadError);
           }
         }
-        
+
         // Create appropriate success message based on asset type
         let successMessage;
         if (formData.asset.toLowerCase() === 'gbp') {
@@ -569,7 +612,7 @@ let AddressBookForm = ({
         } else {
           successMessage = `${formData.firstName} ${formData.lastName}'s ${formData.asset.toUpperCase()} address has been successfully added to your address book.\n\nAddress: ${formData.withdrawAddress.substring(0, 20)}...`;
         }
-        
+
         // Call success callback or show alert
         if (onSuccess) {
           setTimeout(() => {
@@ -581,7 +624,7 @@ let AddressBookForm = ({
             Alert.alert(
               'Address Added Successfully! ✅',
               successMessage,
-              [{ 
+              [{
                 text: 'OK',
                 onPress: () => {
                   // Reset form
@@ -598,14 +641,14 @@ let AddressBookForm = ({
     } catch (error) {
       log('❌ Error submitting address:', error);
       console.error('❌ CONSOLE: Error submitting address:', error);
-      
+
       let errorMsg = 'Failed to add address. Please try again.';
       if (error.message) {
         errorMsg = error.message;
       } else if (error.error) {
         errorMsg = error.error;
       }
-      
+
       setSubmitError(errorMsg);
       Alert.alert('Error', errorMsg);
     } finally {
@@ -638,9 +681,9 @@ let AddressBookForm = ({
     switch (currentStep) {
       case 1: // Recipient
         return (
-          <View style={styles.stepContainer}>
+          <View style={styles.stepContainer} testID="address-book-form-step-1">
             <Text style={styles.stepQuestion}>Please tell us who will receive this withdraw. It has 3 options:</Text>
-            
+
             <RadioButton.Group
               onValueChange={(value) => handleInputChange('recipient', value)}
               value={formData.recipient}
@@ -650,8 +693,9 @@ let AddressBookForm = ({
                 { id: 'another_person', text: 'Another Person' },
                 { id: 'another_business', text: 'Another Business' }
               ].map((option) => (
-                <TouchableOpacity 
-                  key={option.id} 
+                <TouchableOpacity
+                  key={option.id}
+                  testID={`recipient-option-${option.id}`}
                   style={[
                     styles.radioOption,
                     formData.recipient === option.id && styles.selectedRadioOption
@@ -673,14 +717,14 @@ let AddressBookForm = ({
 
       case 2: // Details
         return (
-          <View style={styles.stepContainer}>
+          <View style={styles.stepContainer} testID="address-book-form-step-2">
             {formData.recipient === 'myself' ? (
               // Auto-filled for myself (but editable)
               <>
                 <Text style={styles.stepQuestion}>
                   Your information has been auto-filled from your profile:
                 </Text>
-                
+
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>First Name</Text>
                   <TextInput
@@ -689,6 +733,7 @@ let AddressBookForm = ({
                     value={formData.firstName}
                     onChangeText={(value) => handleInputChange('firstName', value)}
                     autoCapitalize="words"
+                    testID="input-firstname"
                   />
                 </View>
 
@@ -700,9 +745,10 @@ let AddressBookForm = ({
                     value={formData.lastName}
                     onChangeText={(value) => handleInputChange('lastName', value)}
                     autoCapitalize="words"
+                    testID="input-lastname"
                   />
                 </View>
-                
+
                 <Text style={styles.helperText}>
                   ℹ️ Auto-filled from your account. You can edit if needed.
                 </Text>
@@ -713,10 +759,11 @@ let AddressBookForm = ({
                 <Text style={styles.stepQuestion}>
                   How would you like to add the recipient's details?
                 </Text>
-                
+
                 <TouchableOpacity
                   style={styles.contactOptionButton}
                   onPress={() => setManualInput(true)}
+                  testID="button-enter-manually"
                 >
                   <Text style={styles.contactOptionIcon}>✏️</Text>
                   <View style={styles.contactOptionTextContainer}>
@@ -724,12 +771,13 @@ let AddressBookForm = ({
                     <Text style={styles.contactOptionSubtitle}>Type the recipient's name</Text>
                   </View>
                 </TouchableOpacity>
-                
+
                 <Text style={styles.orDivider}>OR</Text>
-                
+
                 <TouchableOpacity
                   style={styles.contactOptionButton}
                   onPress={openContactPicker}
+                  testID="button-select-contacts"
                 >
                   <Text style={styles.contactOptionIcon}>📱</Text>
                   <View style={styles.contactOptionTextContainer}>
@@ -742,20 +790,21 @@ let AddressBookForm = ({
               // Manual input for another_person or another_business
               <>
                 <Text style={styles.stepQuestion}>
-                  {formData.recipient === 'another_business' 
+                  {formData.recipient === 'another_business'
                     ? 'Please supply the company name of the recipient. This must match exactly.'
                     : 'Please supply the firstname & lastname of the recipient. These must match exactly.'}
                 </Text>
-                
+
                 {formData.recipient === 'another_person' && (
                   <TouchableOpacity
                     style={styles.backToChoiceButton}
                     onPress={() => setManualInput(false)}
+                    testID="button-back-to-choice"
                   >
                     <Text style={styles.backToChoiceText}>← Back to selection</Text>
                   </TouchableOpacity>
                 )}
-                
+
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>
                     {formData.recipient === 'another_business' ? 'Company Name' : 'First Name'}
@@ -766,6 +815,7 @@ let AddressBookForm = ({
                     value={formData.firstName}
                     onChangeText={(value) => handleInputChange('firstName', value)}
                     autoCapitalize="words"
+                    testID="input-firstname-manual"
                   />
                 </View>
 
@@ -778,6 +828,7 @@ let AddressBookForm = ({
                       value={formData.lastName}
                       onChangeText={(value) => handleInputChange('lastName', value)}
                       autoCapitalize="words"
+                      testID="input-lastname-manual"
                     />
                   </View>
                 )}
@@ -787,14 +838,36 @@ let AddressBookForm = ({
         );
 
       case 3: // Asset
+        // Filter assets based on search query
+        const filteredAssetOptions = assetOptions.filter(asset =>
+          asset.label.toLowerCase().includes(assetSearchQuery.toLowerCase()) ||
+          asset.id.toLowerCase().includes(assetSearchQuery.toLowerCase())
+        );
+
         return (
-          <View style={styles.stepContainer}>
+          <View style={styles.stepContainer} testID="address-book-form-step-3">
             <Text style={styles.stepQuestion}>What asset are you withdrawing?</Text>
-            
+
+            {/* Search Input - show if more than 3 assets */}
+            {assetOptions.length > 3 && (
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search assets..."
+                  value={assetSearchQuery}
+                  onChangeText={setAssetSearchQuery}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  testID="asset-search-input"
+                />
+              </View>
+            )}
+
             <View style={styles.assetGrid}>
-              {assetOptions.map((asset) => (
+              {filteredAssetOptions.map((asset) => (
                 <TouchableOpacity
                   key={asset.id}
+                  testID={`asset-option-${asset.id}`}
                   style={[
                     styles.assetOption,
                     formData.asset === asset.id && styles.selectedAssetOption
@@ -810,6 +883,11 @@ let AddressBookForm = ({
                 </TouchableOpacity>
               ))}
             </View>
+
+            {/* No results message */}
+            {filteredAssetOptions.length === 0 && (
+              <Text style={styles.noResultsText}>No assets found matching "{assetSearchQuery}"</Text>
+            )}
           </View>
         );
 
@@ -822,13 +900,13 @@ let AddressBookForm = ({
             </View>
           );
         }
-        
+
         if (formData.asset.toLowerCase() === 'gbp') {
           // GBP bank account form
           return (
-            <View style={styles.stepContainer}>
+            <View style={styles.stepContainer} testID="address-book-form-step-4-gbp">
               <Text style={styles.stepQuestion}>Please provide the UK bank account details:</Text>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Account Name</Text>
                 <TextInput
@@ -837,6 +915,7 @@ let AddressBookForm = ({
                   value={formData.accountName}
                   onChangeText={(value) => handleInputChange('accountName', value)}
                   autoCapitalize="words"
+                  testID="input-account-name"
                 />
               </View>
 
@@ -859,6 +938,7 @@ let AddressBookForm = ({
                   }}
                   keyboardType="numeric"
                   maxLength={8}
+                  testID="input-sort-code"
                 />
                 <Text style={styles.inputHint}>Format: XX-XX-XX</Text>
               </View>
@@ -872,6 +952,7 @@ let AddressBookForm = ({
                   onChangeText={(value) => handleInputChange('accountNumber', value.replace(/\D/g, '').substring(0, 8))}
                   keyboardType="numeric"
                   maxLength={8}
+                  testID="input-account-number"
                 />
                 <Text style={styles.inputHint}>8 digits</Text>
               </View>
@@ -880,9 +961,9 @@ let AddressBookForm = ({
         } else {
           // Crypto address form
           return (
-            <View style={styles.stepContainer}>
+            <View style={styles.stepContainer} testID="address-book-form-step-4-crypto">
               <Text style={styles.stepQuestion}>What is the destination address for {formData.asset.toUpperCase()}?</Text>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Withdrawal Address</Text>
                 <TextInput
@@ -894,8 +975,9 @@ let AddressBookForm = ({
                   numberOfLines={3}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  testID="input-withdrawal-address"
                 />
-                
+
                 <TouchableOpacity
                   style={styles.qrButton}
                   onPress={() => setShowQRScanner(true)}
@@ -912,11 +994,11 @@ let AddressBookForm = ({
         if (formData.asset.toLowerCase() === 'gbp') {
           return null;
         }
-        
+
         return (
           <View style={styles.stepContainer}>
             <Text style={styles.stepQuestion}>Where is this address from?</Text>
-            
+
             <RadioButton.Group
               onValueChange={(value) => handleInputChange('destinationType', value)}
               value={formData.destinationType}
@@ -925,8 +1007,8 @@ let AddressBookForm = ({
                 { id: 'personal', text: 'My Personal Wallet' },
                 { id: 'exchange', text: 'An Exchange' }
               ].map((option) => (
-                <TouchableOpacity 
-                  key={option.id} 
+                <TouchableOpacity
+                  key={option.id}
                   style={[
                     styles.radioOption,
                     formData.destinationType === option.id && styles.selectedRadioOption
@@ -947,7 +1029,7 @@ let AddressBookForm = ({
             {formData.destinationType === 'exchange' && (
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Exchange Name</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.input, formData.vasp ? styles.inputSelected : null]}
                   onPress={() => setShowVaspSearch(true)}
                 >
@@ -955,12 +1037,12 @@ let AddressBookForm = ({
                     {formData.exchangeName || 'Tap to search for exchange'}
                   </Text>
                 </TouchableOpacity>
-                
+
                 {/* Show selected VASP indicator */}
                 {formData.vasp && (
                   <Text style={styles.vaspSelectedHint}>✓ Exchange selected from database</Text>
                 )}
-                
+
                 <Text style={styles.inputHint}>
                   Tap to search and select from our exchange database
                 </Text>
@@ -972,27 +1054,27 @@ let AddressBookForm = ({
       case 6: { // Summary
         const isGBP = formData.asset.toLowerCase() === 'gbp';
         const assetUpper = formData.asset.toUpperCase();
-        
+
         return (
           <View style={styles.stepContainer}>
             <Text style={styles.stepQuestion}>Please review your information:</Text>
-            
+
             <View style={styles.summaryContainer}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Recipient:</Text>
                 <Text style={styles.summaryValue}>{formData.recipient}</Text>
               </View>
-              
+
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Name:</Text>
                 <Text style={styles.summaryValue}>{formData.firstName} {formData.lastName}</Text>
               </View>
-              
+
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Asset:</Text>
                 <Text style={styles.summaryValue}>{assetUpper}</Text>
               </View>
-              
+
               {isGBP ? (
                 <>
                   <View style={styles.summaryRow}>
@@ -1033,7 +1115,7 @@ let AddressBookForm = ({
             <View style={styles.warningCard}>
               <Text style={styles.warningTitle}>⚠️ Important Notice</Text>
               <Text style={styles.warningText}>
-                Please verify {isGBP ? 'the bank account details are' : 'the wallet address is'} correct. 
+                Please verify {isGBP ? 'the bank account details are' : 'the wallet address is'} correct.
                 {!isGBP && ' Sending to an incorrect address may result in permanent loss of funds.'}
               </Text>
             </View>
@@ -1129,15 +1211,17 @@ let AddressBookForm = ({
             style={[styles.navButton, styles.backButton]}
             onPress={goToPreviousStep}
             disabled={isSubmitting}
+            testID="button-back"
           >
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
         )}
-        
+
         {currentStep === 1 && onCancel && (
           <TouchableOpacity
             style={[styles.navButton, styles.backButton]}
             onPress={onCancel}
+            testID="button-cancel"
           >
             <Text style={styles.backButtonText}>Cancel</Text>
           </TouchableOpacity>
@@ -1147,17 +1231,28 @@ let AddressBookForm = ({
 
         {!isLastStep() ? (
           <TouchableOpacity
-            style={[styles.navButton, styles.nextButton]}
+            style={[
+              styles.navButton,
+              styles.nextButton,
+              isNextButtonDisabled() && styles.disabledButton
+            ]}
             onPress={goToNextStep}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isNextButtonDisabled()}
+            testID="button-next"
           >
-            <Text style={styles.nextButtonText}>Next →</Text>
+            <Text style={[
+              styles.nextButtonText,
+              isNextButtonDisabled() && styles.disabledButtonText
+            ]}>
+              Next →
+            </Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             style={[styles.navButton, styles.submitButton]}
             onPress={submitAddress}
             disabled={isSubmitting}
+            testID="button-submit"
           >
             <Text style={styles.submitButtonText}>{isSubmitting ? 'Adding...' : 'Submit'}</Text>
           </TouchableOpacity>
@@ -1279,7 +1374,7 @@ const styles = StyleSheet.create({
     marginBottom: scaledHeight(20),
     lineHeight: scaledHeight(24),
   },
-  
+
   // Radio buttons
   radioOption: {
     flexDirection: 'row',
@@ -1365,6 +1460,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  searchContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  noResultsText: {
+    textAlign: 'center',
+    color: '#999999',
+    marginTop: 24,
+    fontSize: 16,
   },
   assetOption: {
     width: '48%',
@@ -1457,7 +1571,7 @@ const styles = StyleSheet.create({
     color: '#856404',
     lineHeight: scaledHeight(20),
   },
-  
+
   confirmationText: {
     fontSize: normaliseFont(14),
     color: colors.mediumGray,
@@ -1538,6 +1652,13 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: normaliseFont(16),
     fontWeight: '600',
+  },
+  disabledButton: {
+    backgroundColor: colors.lightGray,
+    opacity: 0.6,
+  },
+  disabledButtonText: {
+    color: colors.mediumGray,
   },
 
   // Contact selection styles

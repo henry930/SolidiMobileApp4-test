@@ -1,0 +1,27 @@
+appId: co.solidi.mobile.test
+---
+# Navigate to CryptoContent page - Simple approach
+
+# Wait for app
+- assertVisible: ".*"
+- takeScreenshot: 00_app_start
+
+# Wait a bit for data to load
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+# Look for Bitcoin anywhere on screen and tap it
+- tapOn:
+    text: "Bitcoin"
+    
+# Wait for CryptoContent page to load
+- extendedWaitUntil:
+    visible: "Buy"
+    timeout: 10000
+    
+- takeScreenshot: 01_crypto_content_page
+
+# Scroll to see bottom buttons
+- scroll
+- takeScreenshot: 02_crypto_content_bottom

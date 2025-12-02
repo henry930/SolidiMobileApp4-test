@@ -1,0 +1,6 @@
+appId: co.solidi.mobile.test
+---
+- launchApp
+- tapOn:
+    id: "header-settings-button"
+- takeScreenshot: debug_after_settings_click

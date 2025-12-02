@@ -1,0 +1,4 @@
+appId: co.solidi.mobile.test
+---
+- launchApp
+- takeScreenshot: debug_state

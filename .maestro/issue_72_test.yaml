@@ -1,0 +1,49 @@
+appId: co.solidi.mobile.test
+---
+# Issue #72: Address Book Empty State Verification
+# Verifies that the address book does not show misleading/alarming errors
+# when empty or loading
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Check if already logged in
+- runFlow:
+    when:
+      visible: "Secure Login"
+    commands:
+      - runFlow: accurate_login_flow.yaml
+
+# Wait for main screen
+- waitForAnimationToEnd
+
+# Navigate to Address Book
+- tapOn: "Address Book"
+- waitForAnimationToEnd
+
+# Verify that we DO NOT see the alarming error message
+# The issue was that it showed "Failed to Load" or similar when empty
+- assertNotVisible: "Failed to Load"
+- assertNotVisible: "Error"
+
+# Verify that we see either the list or the friendly empty state
+# We can't know for sure if the user has addresses, so we check for valid states
+- runFlow:
+    when:
+      visible: "No Addresses Yet"
+    commands:
+      - assertVisible: "Add your first address using the \"Add\" tab above"
+      - takeScreenshot: issue-72-empty-state
+
+- runFlow:
+    when:
+      notVisible: "No Addresses Yet"
+    commands:
+      # If not empty, we should see the list or filter options
+      - assertVisible: "Address List"
+      - takeScreenshot: issue-72-populated-state
+
+# Success if we reached here without asserting "Failed to Load"

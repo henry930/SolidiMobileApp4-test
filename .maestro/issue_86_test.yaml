@@ -1,0 +1,59 @@
+appId: co.solidi.mobile.test
+---
+# Issue #86: Blue Button Verification
+# Verifies that the "Next" button (Blue) functions correctly and reflects disabled state
+
+- launchApp
+
+
+# Navigate to Address Book
+- tapOn:
+    id: "header-settings-button"
+- extendedWaitUntil:
+    visible: "Activity & Management"
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: "menu-item-address-book"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 100
+    centerElement: true
+- tapOn:
+    id: "menu-item-address-book"
+- tapOn: "Add New Address"
+
+# Step 1: Recipient
+- assertVisible: "Recipient"
+# Verify Next button is disabled (tap should not advance)
+- tapOn: "Next"
+- assertVisible: "Recipient"
+
+# Select Recipient (Myself)
+- tapOn: "Myself"
+# Should auto-advance or enable Next?
+# Code says: setManualInput(false) -> updates formData.
+# Next button should be enabled.
+- tapOn: "Next"
+
+# Step 2: Details (Name)
+- assertVisible: "Details"
+# Name should be auto-filled if Myself, or empty.
+# If empty, Next disabled.
+# Let's assume empty for test user.
+- inputText: "Test"
+- tapOn: "Next"
+
+# Step 3: Asset
+- assertVisible: "Asset"
+# Verify Next button is disabled
+- tapOn: "Next"
+- assertVisible: "Asset"
+
+# Select Asset
+- tapOn: "Bitcoin"
+- tapOn: "Next"
+
+# Step 4: Destination
+- assertVisible: "Destination"
+

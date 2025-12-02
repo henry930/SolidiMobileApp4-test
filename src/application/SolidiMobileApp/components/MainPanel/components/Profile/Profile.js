@@ -32,7 +32,7 @@ import misc from 'src/util/misc';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('Profile');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 
 
@@ -53,16 +53,16 @@ let Profile = () => {
 
 
   // Initial setup.
-  useEffect( () => {
+  useEffect(() => {
     setup();
   }, []); // Pass empty array so that this only runs once on mount.
 
 
   let setup = async () => {
     try {
-      await appState.generalSetup({caller: 'Profile'});
+      await appState.generalSetup({ caller: 'Profile' });
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      
+
       // Reload user profile data when Profile page loads (cache refresh trigger)
       console.log('👤 [Profile] Reloading user profile data...');
       try {
@@ -73,9 +73,9 @@ let Profile = () => {
       } catch (error) {
         console.error('❌ [Profile] Failed to reload user data:', error);
       }
-      
-      triggerRender(renderCount+1);
-    } catch(err) {
+
+      triggerRender(renderCount + 1);
+    } catch (err) {
       let msg = `Profile.setup: Error = ${err}`;
       console.log(msg);
     }
@@ -86,7 +86,7 @@ let Profile = () => {
     let firstName = appState.getUserInfo('firstName');
     let lastName = appState.getUserInfo('lastName');
     let loading = firstName === '[loading]' || lastName === '[loading]';
-    
+
     if (loading) {
       // Use dummy data instead of showing "Loading..."
       return "John Doe";
@@ -119,15 +119,15 @@ let Profile = () => {
               <Avatar.Icon
                 size={80}
                 icon="account"
-                style={{ 
+                style={{
                   marginBottom: 16,
-                  backgroundColor: materialTheme.colors.primaryContainer 
+                  backgroundColor: materialTheme.colors.primaryContainer
                 }}
                 color={materialTheme.colors.onPrimaryContainer}
               />
-              <Text 
-                variant="headlineSmall" 
-                style={{ 
+              <Text
+                variant="headlineSmall"
+                style={{
                   fontWeight: 'bold',
                   color: materialTheme.colors.onSurface,
                   marginBottom: 4
@@ -135,9 +135,9 @@ let Profile = () => {
               >
                 {generateWelcomeMessage()}
               </Text>
-              <Text 
-                variant="bodyMedium" 
-                style={{ 
+              <Text
+                variant="bodyMedium"
+                style={{
                   color: materialTheme.colors.onSurfaceVariant,
                   marginBottom: 16
                 }}
@@ -145,8 +145,8 @@ let Profile = () => {
                 {getUserEmail()}
               </Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Chip 
-                  icon="account" 
+                <Chip
+                  icon="account"
                   compact
                   style={{ backgroundColor: materialTheme.colors.tertiaryContainer }}
                 >
@@ -161,13 +161,13 @@ let Profile = () => {
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 0 }}>
             <List.Section>
-              <List.Subheader style={{ 
+              <List.Subheader style={{
                 color: materialTheme.colors.primary,
                 fontWeight: 'bold'
               }}>
                 Activity & Management
               </List.Subheader>
-              
+
               <List.Item
                 title="Transaction History"
                 description="View your trading and transaction history"
@@ -176,9 +176,9 @@ let Profile = () => {
                 onPress={() => { appState.changeState('History'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Address Book"
                 description="Manage your saved withdrawal addresses"
@@ -186,6 +186,7 @@ let Profile = () => {
                 right={props => <List.Icon {...props} icon="chevron-right" />}
                 onPress={() => { appState.changeState('AddressBook'); }}
                 style={{ paddingVertical: 4 }}
+                testID="menu-item-address-book"
               />
             </List.Section>
           </Card.Content>
@@ -195,13 +196,13 @@ let Profile = () => {
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 0 }}>
             <List.Section>
-              <List.Subheader style={{ 
+              <List.Subheader style={{
                 color: materialTheme.colors.primary,
                 fontWeight: 'bold'
               }}>
                 Account Settings2
               </List.Subheader>
-              
+
               <List.Item
                 title="Personal Details"
                 description="Manage your personal information"
@@ -210,9 +211,9 @@ let Profile = () => {
                 onPress={() => { appState.changeState('PersonalDetails'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Identity Verification"
                 description="Verify your identity for enhanced features"
@@ -221,9 +222,9 @@ let Profile = () => {
                 onPress={() => { appState.changeState('IdentityVerification'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Bank Account"
                 description="Manage your banking details"
@@ -232,23 +233,23 @@ let Profile = () => {
                 onPress={() => { appState.changeState('BankAccounts'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Account Update"
                 description="Update your account information and preferences"
                 left={props => <List.Icon {...props} icon="account-edit" />}
                 right={props => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => { 
+                onPress={() => {
                   console.log('🔥 [Profile] Account Update button pressed!');
-                  appState.changeState('AccountUpdate'); 
+                  appState.changeState('AccountUpdate');
                 }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Security"
                 description="Password, PIN, and security settings"
@@ -265,13 +266,13 @@ let Profile = () => {
         <Card style={{ marginBottom: 16, elevation: 1 }}>
           <Card.Content style={{ padding: 0 }}>
             <List.Section>
-              <List.Subheader style={{ 
+              <List.Subheader style={{
                 color: materialTheme.colors.primary,
                 fontWeight: 'bold'
               }}>
                 Support & Information
               </List.Subheader>
-              
+
               <List.Item
                 title="Contact Us"
                 description="Get help and support"
@@ -280,9 +281,9 @@ let Profile = () => {
                 onPress={() => { appState.changeState('ContactUs'); }}
                 style={{ paddingVertical: 4 }}
               />
-              
+
               <Divider />
-              
+
               <List.Item
                 title="Terms & Conditions"
                 description="View our terms and conditions"
@@ -333,7 +334,7 @@ let Profile = () => {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
-            <Button 
+            <Button
               onPress={async () => {
                 setShowLogoutDialog(false);
                 try {
@@ -347,7 +348,7 @@ let Profile = () => {
             >
               Regular Logout
             </Button>
-            <Button 
+            <Button
               onPress={async () => {
                 setShowLogoutDialog(false);
                 try {

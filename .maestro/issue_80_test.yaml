@@ -1,0 +1,65 @@
+appId: co.solidi.mobile.test
+---
+# Issue #80: Address Validation Error
+# Tests that address validation incorrectly rejects valid BTC addresses
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Check if already logged in by looking for main screen elements
+- runFlow:
+    when:
+      visible: "Secure Login"
+    commands:
+      - runFlow: accurate_login_flow.yaml
+
+# Wait for main screen
+- waitForAnimationToEnd
+
+# Navigate to Address Book
+- tapOn: "Address Book"
+- waitForAnimationToEnd
+
+# Start adding new address
+- tapOn:
+    text: "Add New"
+    index: 0
+- waitForAnimationToEnd
+
+# Step 1: Recipient - Select "another_person"
+- tapOn: "another_person"
+- waitForAnimationToEnd
+- tapOn: "Next"
+- waitForAnimationToEnd
+
+# Step 2: Name - Enter manually
+- tapOn: "Enter Manually"
+- waitForAnimationToEnd
+- tapOn:
+    id: "input-firstname"
+- inputText: "Test"
+- tapOn:
+    id: "input-lastname"
+- inputText: "User"
+- tapOn: "Next"
+- waitForAnimationToEnd
+
+# Step 3: Asset - Select BTC
+- tapOn: "BTC"
+- waitForAnimationToEnd
+- tapOn: "Next"
+- waitForAnimationToEnd
+
+# Step 4: Address - Enter valid BTC address that triggers error
+- tapOn:
+    id: "input-withdrawal-address"
+- inputText: "rDz7z4dxfiN17re3gRsYF"
+- waitForAnimationToEnd
+
+# Take screenshot showing the error
+- takeScreenshot: issue-80-address-validation-error
+
+# The test documents the bug - address validation incorrectly rejects valid addresses

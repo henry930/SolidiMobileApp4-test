@@ -1,0 +1,30 @@
+appId: co.solidi.mobile.test
+---
+# Issue #67: Footer Menu Visibility Verification
+# Verifies that the footer menu items are visible
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Check if already logged in
+- runFlow:
+    when:
+      visible: "Secure Login"
+    commands:
+      - runFlow: accurate_login_flow.yaml
+
+# Wait for main screen
+- waitForAnimationToEnd
+
+# Verify that we see the footer menu items
+- assertVisible: "Trade"
+- assertVisible: "Assets"
+- assertVisible: "Wallet"
+- assertVisible: "Transfer"
+- assertVisible: "History"
+
+# Take a screenshot to visually confirm
+- takeScreenshot: issue-67-footer-menu

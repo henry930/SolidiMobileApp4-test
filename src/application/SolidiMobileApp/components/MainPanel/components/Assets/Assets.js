@@ -454,17 +454,17 @@ const Assets = () => {
         const market = `${asset}/GBP`;
 
         try {
-          // Get SELL price from AppState cache
-          const sellPrice = appState.getCryptoSellPrice(asset);
+          // Get BUY price from AppState cache (Assets page shows buy prices)
+          const buyPrice = appState.getCryptoBuyPrice(asset);
 
-          if (sellPrice && sellPrice > 0) {
+          if (buyPrice && buyPrice > 0) {
             newPrices[market] = {
-              price: sellPrice.toString(),
+              price: buyPrice.toString(),
               currency: 'GBP',
-              side: 'SELL',
+              side: 'BUY',
               cached: true
             };
-            console.log(`[CRYPTO-CACHE] 📱 ${market}: £${sellPrice.toFixed(2)}`);
+            console.log(`[CRYPTO-CACHE] 📱 ${market}: £${buyPrice.toFixed(2)}`);
           } else {
             console.log(`[CRYPTO-CACHE] 📱 ⚠️ ${market}: No price available`);
             newPrices[market] = {
@@ -500,7 +500,7 @@ const Assets = () => {
   // Get live price from AppState cache only
   function getAssetPrice(asset) {
     try {
-      console.log(`💰 Getting live price for ${asset} from /best_volume_price API...`);
+      console.log(`💰 Getting live price for ${asset} from /ticker API (cached)...`);
 
       const marketKey = `${asset}/GBP`;
       console.log(`🔍 Looking for market: ${marketKey}`);
@@ -520,7 +520,7 @@ const Assets = () => {
         // Check if we have a live price from the API
         if (priceData.price && priceData.price !== null) {
           const livePrice = parseFloat(priceData.price);
-          console.log(`✅ Using LIVE /best_volume_price API price for ${asset}: £${livePrice}`);
+          console.log(`✅ Using LIVE /ticker API price for ${asset}: £${livePrice}`);
           return livePrice;
         }
 

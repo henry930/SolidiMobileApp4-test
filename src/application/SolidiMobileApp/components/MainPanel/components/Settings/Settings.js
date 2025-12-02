@@ -382,6 +382,7 @@ let Settings = () => {
                 right={props => <List.Icon {...props} icon="chevron-right" />}
                 onPress={() => { appState.changeState('AddressBook'); }}
                 style={{ paddingVertical: 4 }}
+                testID="settings-address-book-item"
               />
             </List.Section>
           </Card.Content>

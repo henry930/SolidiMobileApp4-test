@@ -118,10 +118,18 @@ class SecureApp extends Component {
       console.log('🔍 [SecureApp] isLogoutFlag === "true":', isLogoutFlag === 'true');
       console.log('🔍 [SecureApp] isLogoutFlag === null:', isLogoutFlag === null);
       console.log('🔍 [SecureApp] Computed isLogout:', isLogout);
-      console.log('🔍 [SecureApp] Decision: Will', (isLogout || !biometricsEnabled) ? 'SKIP' : 'SHOW', 'biometrics');
+      // Check if we actually have credentials to unlock
+      // If no credentials exist, we shouldn't prompt for biometrics regardless of isLogout flag
+      const appStateContext = this.context;
+      const hasCredentials = appStateContext?.user?.apiCredentialsFound;
+
+      console.log('🔍 [SecureApp] Decision: Will', (isLogout || !biometricsEnabled || !hasCredentials) ? 'SKIP' : 'SHOW', 'biometrics');
+      console.log('🔍 [SecureApp] - isLogout:', isLogout);
+      console.log('🔍 [SecureApp] - biometricsEnabled:', biometricsEnabled);
+      console.log('🔍 [SecureApp] - hasCredentials:', hasCredentials);
       console.log('==========================================');
 
-      if (isLogout || !biometricsEnabled) {
+      if (isLogout || !biometricsEnabled || !hasCredentials) {
         // User logged out, never logged in, or biometrics disabled - skip biometrics
         console.log('❌❌❌ [SecureApp] SKIPPING BIOMETRICS - User logged out, never logged in, or biometrics disabled in Settings');
         this.setState({
@@ -215,10 +223,15 @@ class SecureApp extends Component {
       // Default to true (enabled) if no preference is saved
       const biometricsEnabled = biometricsEnabledFlag === null ? true : biometricsEnabledFlag === 'true';
 
-      console.log('🔐 [SecureApp] BACKGROUND - biometricsEnabled from Settings:', biometricsEnabled);
+      // Check if we actually have credentials to unlock
+      const appStateContext = this.context;
+      const hasCredentials = appStateContext?.user?.apiCredentialsFound;
 
-      // Require biometrics if user is logged in (isLogout=false) AND biometrics enabled
-      if (!isLogout && biometricsEnabled) {
+      console.log('🔐 [SecureApp] BACKGROUND - biometricsEnabled from Settings:', biometricsEnabled);
+      console.log('🔐 [SecureApp] BACKGROUND - hasCredentials:', hasCredentials);
+
+      // Require biometrics if user is logged in (isLogout=false) AND biometrics enabled AND credentials exist
+      if (!isLogout && biometricsEnabled && hasCredentials) {
         console.log('🔐🔐🔐 [SecureApp] BACKGROUND - User is logged in and biometrics enabled - Setting needsBiometrics = true');
         this.setState({
           appState: nextAppState,

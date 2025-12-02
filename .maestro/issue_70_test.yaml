@@ -1,0 +1,47 @@
+appId: co.solidi.mobile.test
+---
+# Issue #70: Dynamic Asset List Verification
+# Verifies that the address book loads without errors using the dynamic asset list
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Check if already logged in
+- runFlow:
+    when:
+      visible: "Secure Login"
+    commands:
+      - runFlow: accurate_login_flow.yaml
+
+# Wait for main screen
+- waitForAnimationToEnd
+
+# Navigate to Address Book
+- tapOn: "Address Book"
+- waitForAnimationToEnd
+
+# Verify that we DO NOT see any errors
+- assertNotVisible: "Failed to Load"
+- assertNotVisible: "Error"
+
+# Verify that we see either the list or the friendly empty state
+# This confirms that the dynamic asset loading didn't crash the page
+- runFlow:
+    when:
+      visible: "No Addresses Yet"
+    commands:
+      - assertVisible: "Add your first address using the \"Add\" tab above"
+      - takeScreenshot: issue-70-dynamic-assets-empty
+
+- runFlow:
+    when:
+      notVisible: "No Addresses Yet"
+    commands:
+      # If not empty, we should see the list or filter options
+      - assertVisible: "Address List"
+      - takeScreenshot: issue-70-dynamic-assets-populated
+
+# Success if we reached here without errors

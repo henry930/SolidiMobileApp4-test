@@ -32,26 +32,26 @@ const Register = () => {
       promotionsAndSpecialOffers: true,
     }
   });
-  
+
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [disableRegisterButton, setDisableRegisterButton] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
-  
+
   // Dropdown states
   const [gender, setGender] = useState('');
   const [citizenship, setCitizenship] = useState('');
   const [countryCode, setCountryCode] = useState('+44');
-  
+
   // Modal states for pickers
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [showCitizenshipModal, setShowCitizenshipModal] = useState(false);
   const [showCountryCodeModal, setShowCountryCodeModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  
+
   // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateOfBirthDate, setDateOfBirthDate] = useState(new Date(1990, 0, 1)); // Default: Jan 1, 1990
-  
+
   // Address lookup state
   const [addressList, setAddressList] = useState([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
@@ -105,11 +105,11 @@ const Register = () => {
     { label: '🇦🇺 +61 (Australia)', value: '+61' },
     { label: '🇯🇵 +81 (Japan)', value: '+81' }
   ];
-  
+
   const stateChangeID = appState.stateChangeID;
   const pageName = appState.pageName;
   const permittedPageNames = ['default'];
-  
+
   misc.confirmItemInArray('permittedPageNames', permittedPageNames, pageName, 'Register');
 
   useEffect(() => {
@@ -133,7 +133,7 @@ const Register = () => {
     console.log('🔍 showGenderPicker called');
     setShowGenderModal(true);
   };
-  
+
   const selectGender = (option) => {
     console.log('🔍 Gender selected:', option.value);
     setGender(option.value);
@@ -145,7 +145,7 @@ const Register = () => {
     console.log('🔍 showCitizenshipPicker called');
     setShowCitizenshipModal(true);
   };
-  
+
   const selectCitizenship = (option) => {
     console.log('🔍 Citizenship selected:', option.value, option.label);
     setCitizenship(option.value);
@@ -156,16 +156,16 @@ const Register = () => {
   // Date picker handler
   const onDateChange = (event, selectedDate) => {
     setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
-    
+
     if (selectedDate) {
       setDateOfBirthDate(selectedDate);
-      
+
       // Format date as DD/MM/YYYY
       const day = selectedDate.getDate().toString().padStart(2, '0');
       const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
       const year = selectedDate.getFullYear();
       const formattedDate = `${day}/${month}/${year}`;
-      
+
       setUserData({ ...userData, dateOfBirth: formattedDate });
     }
   };
@@ -178,13 +178,13 @@ const Register = () => {
   const onDateConfirm = (selectedDate) => {
     setShowDateModal(false);
     setDateOfBirthDate(selectedDate);
-    
+
     // Format date as DD/MM/YYYY
     const day = selectedDate.getDate().toString().padStart(2, '0');
     const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
     const year = selectedDate.getFullYear();
     const formattedDate = `${day}/${month}/${year}`;
-    
+
     setUserData({ ...userData, dateOfBirth: formattedDate });
   };
 
@@ -192,21 +192,21 @@ const Register = () => {
   const lookupPostcode = async (postcode) => {
     try {
       console.log('🔍 Looking up postcode:', postcode);
-      
+
       // Clean the postcode (remove spaces)
       const cleanPostcode = postcode.replace(/\s/g, '').toUpperCase();
-      
+
       if (cleanPostcode.length < 5) {
         Alert.alert('Invalid Postcode', 'Please enter a valid UK postcode');
         return;
       }
-      
+
       setIsLoadingAddresses(true);
-      
+
       // Using api.postcodes.io to validate and get area info first
       const validateResponse = await fetch(`https://api.postcodes.io/postcodes/${cleanPostcode}`);
       const validateData = await validateResponse.json();
-      
+
       if (validateData.status !== 200 || !validateData.result) {
         setIsLoadingAddresses(false);
         Alert.alert(
@@ -216,21 +216,21 @@ const Register = () => {
         );
         return;
       }
-      
+
       const postcodeInfo = validateData.result;
       console.log('✅ Postcode validated:', postcodeInfo);
-      
+
       // Now try to get real addresses using getAddress.io autocomplete (no API key needed for autocomplete)
       try {
         const autocompleteResponse = await fetch(
           `https://api.getaddress.io/autocomplete/${cleanPostcode}?all=true`
         );
-        
+
         const autocompleteData = await autocompleteResponse.json();
-        
+
         if (autocompleteData && autocompleteData.suggestions && autocompleteData.suggestions.length > 0) {
           console.log('✅ Found', autocompleteData.suggestions.length, 'addresses via autocomplete');
-          
+
           // Parse autocomplete suggestions
           const addresses = autocompleteData.suggestions.slice(0, 10).map(suggestion => {
             // Suggestions come as full address strings, split them intelligently
@@ -245,7 +245,7 @@ const Register = () => {
               fullAddress: suggestion.address
             };
           });
-          
+
           setAddressList(addresses);
           setIsLoadingAddresses(false);
           showAddressSelectionDialog(addresses);
@@ -254,7 +254,7 @@ const Register = () => {
       } catch (autocompleteError) {
         console.log('Autocomplete failed, trying alternative method:', autocompleteError.message);
       }
-      
+
       // Fallback: If autocomplete doesn't work, use Ideal Postcodes test API
       try {
         // Using Ideal Postcodes test key (limited to test postcodes only)
@@ -263,12 +263,12 @@ const Register = () => {
         const idealResponse = await fetch(
           `https://api.ideal-postcodes.co.uk/v1/postcodes/${cleanPostcode}?api_key=${testApiKey}`
         );
-        
+
         const idealData = await idealResponse.json();
-        
+
         if (idealData && idealData.result && idealData.result.length > 0) {
           console.log('✅ Found', idealData.result.length, 'addresses via Ideal Postcodes');
-          
+
           const addresses = idealData.result.map(addr => ({
             line1: addr.line_1 || '',
             line2: addr.line_2 || '',
@@ -280,7 +280,7 @@ const Register = () => {
               .filter(Boolean)
               .join(', ')
           }));
-          
+
           setAddressList(addresses);
           setIsLoadingAddresses(false);
           showAddressSelectionDialog(addresses);
@@ -289,7 +289,7 @@ const Register = () => {
       } catch (idealError) {
         console.log('Ideal Postcodes failed:', idealError.message);
       }
-      
+
       // If all APIs fail, create mock addresses based on the validated postcode
       console.log('⚠️ Using mock addresses - API lookups failed');
       const mockAddresses = [
@@ -318,25 +318,25 @@ const Register = () => {
           postcode: postcode
         }
       ];
-      
+
       setAddressList(mockAddresses);
       setIsLoadingAddresses(false);
-      
+
       Alert.alert(
         'Limited Results',
         'We could only generate sample addresses for this postcode. For real address lookup, please sign up for a free API key at getaddress.io or ideal-postcodes.co.uk',
         [
-          { 
+          {
             text: 'Use Sample Addresses',
             onPress: () => showAddressSelectionDialog(mockAddresses)
           },
-          { 
+          {
             text: 'Enter Manually',
             style: 'cancel'
           }
         ]
       );
-      
+
     } catch (error) {
       setIsLoadingAddresses(false);
       console.error('❌ Postcode lookup error:', error);
@@ -347,17 +347,17 @@ const Register = () => {
       );
     }
   };
-  
+
   // Show dialog with list of addresses to choose from
   const showAddressSelectionDialog = (addresses) => {
     setAddressList(addresses);
     setShowAddressModal(true);
   };
-  
+
   // Fill in the address fields when user selects an address
   const selectAddress = (address) => {
     console.log('✅ Address selected:', address);
-    
+
     setUserData({
       ...userData,
       address1: address.line1 || '',
@@ -367,7 +367,7 @@ const Register = () => {
       city: address.city || '',
       postalCode: address.postcode || ''
     });
-    
+
     // Show address fields after selection (so user can see what was filled)
     setShowManualAddress(true);
   };
@@ -376,7 +376,7 @@ const Register = () => {
     console.log('🔍 showCountryCodePicker called');
     setShowCountryCodeModal(true);
   };
-  
+
   const selectCountryCode = (option) => {
     console.log('🔍 Country code selected:', option.value, option.label);
     setCountryCode(option.value);
@@ -387,23 +387,23 @@ const Register = () => {
   const submitRegisterRequest = async () => {
     setDisableRegisterButton(true);
     setUploadMessage('Registering your details...');
-    
+
     console.log('🎯 [UI] Registration form submitted');
     console.log('🎯 [UI] Registration data:', userData);
 
     try {
       // Prepare data for submission
       const userData2 = { ...userData };
-      
+
       // Combine country code with mobile number for full international format
       if (userData2.mobileNumber && countryCode) {
         userData2.mobileNumber = countryCode + userData2.mobileNumber;
       }
-      
+
       // Ensure gender and citizenship are included
       userData2.gender = gender || userData2.gender;
       userData2.citizenship = citizenship || userData2.citizenship;
-      
+
       // Keep emailPreferences as object for API
       userData2.emailPreferences = userData.emailPreferences;
 
@@ -412,12 +412,12 @@ const Register = () => {
       // Call the actual register API
       console.log('📡 [UI] Calling appState.register() with real API');
       const result = await appState.register(userData2);
-      
+
       console.log('📡 [UI] Registration API result:', result);
 
       if (result.result === "SUCCESS") {
         console.log('✅ [UI] Registration successful!');
-        
+
         // Store registration data for verification process
         appState.registrationEmail = userData2.email;
         appState.registrationPhone = userData2.mobileNumber;
@@ -435,30 +435,30 @@ const Register = () => {
         // Reset UI state
         setUploadMessage('');
         setDisableRegisterButton(false);
-        
+
         // Redirect directly to registration completion page (no popup)
         appState.setMainPanelState({
           mainPanelState: 'RegistrationCompletion',
           pageName: 'default'
         });
-        
+
       } else if (result.result === "VALIDATION_ERROR") {
         console.log('❌ [UI] Registration validation errors:', result.details);
         let errorMessages = [];
         Object.keys(result.details).forEach(field => {
           errorMessages.push(`${field}: ${result.details[field]}`);
         });
-        
+
         Alert.alert(
           "Validation Error",
           errorMessages.join('\n'),
           [{ text: "OK" }]
         );
-        
+
       } else {
         // Handle other errors
         console.log('❌ [UI] Registration failed:', result);
-        
+
         Alert.alert(
           "Registration Failed",
           result.message || "Please try again later.",
@@ -468,7 +468,7 @@ const Register = () => {
 
     } catch (err) {
       console.error('❌ [UI] Registration error:', err);
-      
+
       Alert.alert(
         "Registration Error",
         "An unexpected error occurred. Please try again.",
@@ -492,340 +492,340 @@ const Register = () => {
 
   return (
     <>
-    <KeyboardAwareScrollView style={{ flex: 1, backgroundColor: materialTheme.colors.background }}>
-      <Title>Create Account</Title>
-      
-      <View style={{ padding: 16 }}>
-        
-        {/* Basic Information Card */}
-        <Card style={{ marginBottom: 16, elevation: 2 }}>
-          <Card.Content style={{ padding: 20 }}>
-            <Text variant="titleMedium" style={{ 
-              marginBottom: 20, 
-              color: materialTheme.colors.primary,
-              textAlign: 'center',
-              fontWeight: '600'
-            }}>
-              📝 Create Your Account
-            </Text>
+      <KeyboardAwareScrollView style={{ flex: 1, backgroundColor: materialTheme.colors.background }}>
+        <Title>Create Account</Title>
 
-            {/* Email Field */}
-            <TextInput
-              mode="outlined"
-              label="Email Address"
-              value={userData.email}
-              onChangeText={(value) => setUserData({...userData, email: value})}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="email" />}
-            />
+        <View style={{ padding: 16 }}>
 
-            {/* Password Field */}
-            <TextInput
-              mode="outlined"
-              label="Password"
-              value={userData.password}
-              onChangeText={(value) => setUserData({...userData, password: value})}
-              secureTextEntry={!passwordVisible}
-              autoCapitalize="none"
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="lock" />}
-              right={
-                <TextInput.Icon 
-                  icon={passwordVisible ? "eye-off" : "eye"}
-                  onPress={() => setPasswordVisible(!passwordVisible)}
-                />
-              }
-            />
+          {/* Basic Information Card */}
+          <Card style={{ marginBottom: 16, elevation: 2 }}>
+            <Card.Content style={{ padding: 20 }}>
+              <Text variant="titleMedium" style={{
+                marginBottom: 20,
+                color: materialTheme.colors.primary,
+                textAlign: 'center',
+                fontWeight: '600'
+              }}>
+                📝 Create Your Account
+              </Text>
 
-            {/* First Name */}
-            <TextInput
-              mode="outlined"
-              label="First Name"
-              value={userData.firstName}
-              onChangeText={(value) => setUserData({...userData, firstName: value})}
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="account" />}
-            />
-
-            {/* Last Name */}
-            <TextInput
-              mode="outlined"
-              label="Last Name"
-              value={userData.lastName}
-              onChangeText={(value) => setUserData({...userData, lastName: value})}
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="account" />}
-            />
-
-            {/* Gender Selector */}
-            <TouchableOpacity onPress={showGenderPicker} activeOpacity={0.7}>
+              {/* Email Field */}
               <TextInput
                 mode="outlined"
-                label="Gender"
-                value={gender || 'Tap to select'}
-                editable={false}
-                pointerEvents="none"
+                label="Email Address"
+                value={userData.email}
+                onChangeText={(value) => setUserData({ ...userData, email: value })}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
                 style={{ marginBottom: 16 }}
-                left={<TextInput.Icon icon="human-male-female" />}
-                right={<TextInput.Icon icon="chevron-down" />}
+                left={<TextInput.Icon icon="email" />}
               />
-            </TouchableOpacity>
 
-            {/* Date of Birth */}
-            <TouchableOpacity onPress={showDatePickerModal} activeOpacity={0.7}>
+              {/* Password Field */}
               <TextInput
                 mode="outlined"
-                label="Date of Birth"
-                value={userData.dateOfBirth || 'Tap to select date'}
-                editable={false}
-                pointerEvents="none"
-                placeholder="DD/MM/YYYY"
+                label="Password"
+                value={userData.password}
+                onChangeText={(value) => setUserData({ ...userData, password: value })}
+                secureTextEntry={!passwordVisible}
+                autoCapitalize="none"
                 style={{ marginBottom: 16 }}
-                left={<TextInput.Icon icon="calendar" />}
-                right={<TextInput.Icon icon="chevron-down" />}
+                left={<TextInput.Icon icon="lock" />}
+                right={
+                  <TextInput.Icon
+                    icon={passwordVisible ? "eye-off" : "eye"}
+                    onPress={() => setPasswordVisible(!passwordVisible)}
+                  />
+                }
               />
-            </TouchableOpacity>
 
-            {/* Citizenship Selector */}
-            <TouchableOpacity onPress={showCitizenshipPicker} activeOpacity={0.7}>
+              {/* First Name */}
               <TextInput
                 mode="outlined"
-                label="Country of Citizenship"
-                value={citizenshipOptions.find(c => c.value === citizenship)?.label || citizenship || 'Tap to select country'}
-                editable={false}
-                pointerEvents="none"
+                label="First Name"
+                value={userData.firstName}
+                onChangeText={(value) => setUserData({ ...userData, firstName: value })}
                 style={{ marginBottom: 16 }}
-                left={<TextInput.Icon icon="flag" />}
-                right={<TextInput.Icon icon="chevron-down" />}
+                left={<TextInput.Icon icon="account" />}
               />
-            </TouchableOpacity>
 
-          </Card.Content>
-        </Card>
+              {/* Last Name */}
+              <TextInput
+                mode="outlined"
+                label="Last Name"
+                value={userData.lastName}
+                onChangeText={(value) => setUserData({ ...userData, lastName: value })}
+                style={{ marginBottom: 16 }}
+                left={<TextInput.Icon icon="account" />}
+              />
 
-        {/* Contact Information Card */}
-        <Card style={{ marginBottom: 16, elevation: 2 }}>
-          <Card.Content style={{ padding: 20 }}>
-            <Text variant="titleMedium" style={{ 
-              marginBottom: 20, 
-              color: materialTheme.colors.primary,
-              fontWeight: '600'
-            }}>
-              📞 Contact Information
-            </Text>
-
-            {/* Phone Number */}
-            <Text variant="bodyMedium" style={{ marginBottom: 8, color: materialTheme.colors.onSurfaceVariant }}>
-              Mobile Number
-            </Text>
-            <View style={{ flexDirection: 'row', marginBottom: 16 }}>
-              <TouchableOpacity onPress={showCountryCodePicker} style={{ flex: 0.35, marginRight: 8 }}>
+              {/* Gender Selector */}
+              <TouchableOpacity onPress={showGenderPicker} activeOpacity={0.7} testID="gender-input">
                 <TextInput
                   mode="outlined"
-                  label="Country"
-                  value={countryCode || 'Tap to select'}
+                  label="Gender"
+                  value={gender || 'Tap to select'}
                   editable={false}
                   pointerEvents="none"
-                  right={<TextInput.Icon icon="chevron-down" />}
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="human-male-female" />}
+                  right={<TextInput.Icon icon="chevron-down" onPress={showGenderPicker} />}
                 />
               </TouchableOpacity>
-              <TextInput
-                mode="outlined"
-                label="Phone Number"
-                value={userData.mobileNumber}
-                onChangeText={(value) => setUserData({...userData, mobileNumber: value})}
-                keyboardType="phone-pad"
-                style={{ flex: 0.65 }}
-              />
-            </View>
 
-            {/* Postal Code - Moved to top */}
-            <View style={{ flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' }}>
-              <View style={{ flex: 1, marginRight: 8 }}>
+              {/* Date of Birth */}
+              <TouchableOpacity onPress={showDatePickerModal} activeOpacity={0.7}>
                 <TextInput
                   mode="outlined"
-                  label="Postal Code"
-                  value={userData.postalCode}
-                  onChangeText={(value) => setUserData({...userData, postalCode: value})}
-                  autoCapitalize="characters"
-                  placeholder="SW1A 1AA"
-                  left={<TextInput.Icon icon="map-marker" />}
+                  label="Date of Birth"
+                  value={userData.dateOfBirth || 'Tap to select date'}
+                  editable={false}
+                  pointerEvents="none"
+                  placeholder="DD/MM/YYYY"
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="calendar" />}
+                  right={<TextInput.Icon icon="chevron-down" onPress={showDatePickerModal} />}
+                />
+              </TouchableOpacity>
+
+              {/* Citizenship Selector */}
+              <TouchableOpacity onPress={showCitizenshipPicker} activeOpacity={0.7}>
+                <TextInput
+                  mode="outlined"
+                  label="Country of Citizenship"
+                  value={citizenshipOptions.find(c => c.value === citizenship)?.label || citizenship || 'Tap to select country'}
+                  editable={false}
+                  pointerEvents="none"
+                  style={{ marginBottom: 16 }}
+                  left={<TextInput.Icon icon="flag" />}
+                  right={<TextInput.Icon icon="chevron-down" onPress={showCitizenshipPicker} />}
+                />
+              </TouchableOpacity>
+
+            </Card.Content>
+          </Card>
+
+          {/* Contact Information Card */}
+          <Card style={{ marginBottom: 16, elevation: 2 }}>
+            <Card.Content style={{ padding: 20 }}>
+              <Text variant="titleMedium" style={{
+                marginBottom: 20,
+                color: materialTheme.colors.primary,
+                fontWeight: '600'
+              }}>
+                📞 Contact Information
+              </Text>
+
+              {/* Phone Number */}
+              <Text variant="bodyMedium" style={{ marginBottom: 8, color: materialTheme.colors.onSurfaceVariant }}>
+                Mobile Number
+              </Text>
+              <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+                <TouchableOpacity onPress={showCountryCodePicker} style={{ flex: 0.35, marginRight: 8 }}>
+                  <TextInput
+                    mode="outlined"
+                    label="Country"
+                    value={countryCode || 'Tap to select'}
+                    editable={false}
+                    pointerEvents="none"
+                    right={<TextInput.Icon icon="chevron-down" onPress={showCountryCodePicker} />}
+                  />
+                </TouchableOpacity>
+                <TextInput
+                  mode="outlined"
+                  label="Phone Number"
+                  value={userData.mobileNumber}
+                  onChangeText={(value) => setUserData({ ...userData, mobileNumber: value })}
+                  keyboardType="phone-pad"
+                  style={{ flex: 0.65 }}
                 />
               </View>
-              <Button
-                mode="contained"
-                onPress={() => lookupPostcode(userData.postalCode)}
-                disabled={!userData.postalCode || userData.postalCode.length < 5}
-                loading={isLoadingAddresses}
-                style={{ marginTop: 8 }}
-                icon="magnify"
-              >
-                {isLoadingAddresses ? 'Finding...' : 'Find'}
-              </Button>
-            </View>
 
-            {/* Manual Address Entry Toggle */}
-            {!showManualAddress && (
-              <TouchableOpacity 
-                onPress={() => setShowManualAddress(true)}
+              {/* Postal Code - Moved to top */}
+              <View style={{ flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' }}>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <TextInput
+                    mode="outlined"
+                    label="Postal Code"
+                    value={userData.postalCode}
+                    onChangeText={(value) => setUserData({ ...userData, postalCode: value })}
+                    autoCapitalize="characters"
+                    placeholder="SW1A 1AA"
+                    left={<TextInput.Icon icon="map-marker" />}
+                  />
+                </View>
+                <Button
+                  mode="contained"
+                  onPress={() => lookupPostcode(userData.postalCode)}
+                  disabled={!userData.postalCode || userData.postalCode.length < 5}
+                  loading={isLoadingAddresses}
+                  style={{ marginTop: 8 }}
+                  icon="magnify"
+                >
+                  {isLoadingAddresses ? 'Finding...' : 'Find'}
+                </Button>
+              </View>
+
+              {/* Manual Address Entry Toggle */}
+              {!showManualAddress && (
+                <TouchableOpacity
+                  onPress={() => setShowManualAddress(true)}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Text style={{
+                    color: materialTheme.colors.primary,
+                    textDecorationLine: 'underline',
+                    fontSize: 14
+                  }}>
+                    📝 Enter address manually
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Address Lines - Hidden by default, shown when manual entry selected or address filled */}
+              {(showManualAddress || userData.address1) && (
+                <>
+                  <TextInput
+                    mode="outlined"
+                    label="Address Line 1"
+                    value={userData.address1}
+                    onChangeText={(value) => setUserData({ ...userData, address1: value })}
+                    style={{ marginBottom: 16 }}
+                    left={<TextInput.Icon icon="home" />}
+                  />
+
+                  <TextInput
+                    mode="outlined"
+                    label="Address Line 2 (Optional)"
+                    value={userData.address2}
+                    onChangeText={(value) => setUserData({ ...userData, address2: value })}
+                    style={{ marginBottom: 16 }}
+                    left={<TextInput.Icon icon="home" />}
+                  />
+
+                  <TextInput
+                    mode="outlined"
+                    label="Address Line 3 (Optional)"
+                    value={userData.address3}
+                    onChangeText={(value) => setUserData({ ...userData, address3: value })}
+                    style={{ marginBottom: 16 }}
+                    left={<TextInput.Icon icon="home" />}
+                  />
+
+                  <TextInput
+                    mode="outlined"
+                    label="Address Line 4 (Optional)"
+                    value={userData.address4}
+                    onChangeText={(value) => setUserData({ ...userData, address4: value })}
+                    style={{ marginBottom: 16 }}
+                    left={<TextInput.Icon icon="home" />}
+                  />
+                </>
+              )}
+
+              <TextInput
+                mode="outlined"
+                label="City"
+                value={userData.city}
+                onChangeText={(value) => setUserData({ ...userData, city: value })}
                 style={{ marginBottom: 16 }}
-              >
-                <Text style={{ 
-                  color: materialTheme.colors.primary,
-                  textDecorationLine: 'underline',
-                  fontSize: 14
-                }}>
-                  📝 Enter address manually
-                </Text>
-              </TouchableOpacity>
-            )}
+                left={<TextInput.Icon icon="city" />}
+              />
 
-            {/* Address Lines - Hidden by default, shown when manual entry selected or address filled */}
-            {(showManualAddress || userData.address1) && (
-              <>
-                <TextInput
-                  mode="outlined"
-                  label="Address Line 1"
-                  value={userData.address1}
-                  onChangeText={(value) => setUserData({...userData, address1: value})}
-                  style={{ marginBottom: 16 }}
-                  left={<TextInput.Icon icon="home" />}
+            </Card.Content>
+          </Card>
+
+          {/* Email Preferences Card */}
+          <Card style={{ marginBottom: 24, elevation: 2 }}>
+            <Card.Content style={{ padding: 20 }}>
+              <Text variant="titleMedium" style={{
+                marginBottom: 16,
+                color: materialTheme.colors.primary,
+                fontWeight: '600'
+              }}>
+                📧 Email Preferences
+              </Text>
+
+              <View style={{ marginBottom: 12 }}>
+                <Checkbox.Item
+                  label="System announcements and security notifications"
+                  status={userData.emailPreferences?.systemAnnouncements ? 'checked' : 'unchecked'}
+                  onPress={() => setUserData({
+                    ...userData,
+                    emailPreferences: {
+                      ...userData.emailPreferences,
+                      systemAnnouncements: !userData.emailPreferences?.systemAnnouncements
+                    }
+                  })}
+                  mode="android"
                 />
+              </View>
 
-                <TextInput
-                  mode="outlined"
-                  label="Address Line 2 (Optional)"
-                  value={userData.address2}
-                  onChangeText={(value) => setUserData({...userData, address2: value})}
-                  style={{ marginBottom: 16 }}
-                  left={<TextInput.Icon icon="home" />}
+              <View style={{ marginBottom: 12 }}>
+                <Checkbox.Item
+                  label="News and feature updates"
+                  status={userData.emailPreferences?.newsAndFeatureUpdates ? 'checked' : 'unchecked'}
+                  onPress={() => setUserData({
+                    ...userData,
+                    emailPreferences: {
+                      ...userData.emailPreferences,
+                      newsAndFeatureUpdates: !userData.emailPreferences?.newsAndFeatureUpdates
+                    }
+                  })}
+                  mode="android"
                 />
+              </View>
 
-                <TextInput
-                  mode="outlined"
-                  label="Address Line 3 (Optional)"
-                  value={userData.address3}
-                  onChangeText={(value) => setUserData({...userData, address3: value})}
-                  style={{ marginBottom: 16 }}
-                  left={<TextInput.Icon icon="home" />}
+              <View>
+                <Checkbox.Item
+                  label="Promotions and special offers"
+                  status={userData.emailPreferences?.promotionsAndSpecialOffers ? 'checked' : 'unchecked'}
+                  onPress={() => setUserData({
+                    ...userData,
+                    emailPreferences: {
+                      ...userData.emailPreferences,
+                      promotionsAndSpecialOffers: !userData.emailPreferences?.promotionsAndSpecialOffers
+                    }
+                  })}
+                  mode="android"
                 />
+              </View>
 
-                <TextInput
-                  mode="outlined"
-                  label="Address Line 4 (Optional)"
-                  value={userData.address4}
-                  onChangeText={(value) => setUserData({...userData, address4: value})}
-                  style={{ marginBottom: 16 }}
-                  left={<TextInput.Icon icon="home" />}
-                />
-              </>
-            )}
-            
-            <TextInput
-              mode="outlined"
-              label="City"
-              value={userData.city}
-              onChangeText={(value) => setUserData({...userData, city: value})}
-              style={{ marginBottom: 16 }}
-              left={<TextInput.Icon icon="city" />}
-            />
+            </Card.Content>
+          </Card>
 
-          </Card.Content>
-        </Card>
-
-        {/* Email Preferences Card */}
-        <Card style={{ marginBottom: 24, elevation: 2 }}>
-          <Card.Content style={{ padding: 20 }}>
-            <Text variant="titleMedium" style={{ 
-              marginBottom: 16, 
-              color: materialTheme.colors.primary,
-              fontWeight: '600'
+          {/* Upload Message */}
+          {uploadMessage !== '' && (
+            <Text style={{
+              textAlign: 'center',
+              marginBottom: 16,
+              fontSize: 16,
+              color: materialTheme.colors.primary
             }}>
-              📧 Email Preferences
+              {uploadMessage}
             </Text>
+          )}
 
-            <View style={{ marginBottom: 12 }}>
-              <Checkbox.Item
-                label="System announcements and security notifications"
-                status={userData.emailPreferences?.systemAnnouncements ? 'checked' : 'unchecked'}
-                onPress={() => setUserData({
-                  ...userData, 
-                  emailPreferences: {
-                    ...userData.emailPreferences,
-                    systemAnnouncements: !userData.emailPreferences?.systemAnnouncements
-                  }
-                })}
-                mode="android"
-              />
-            </View>
+          {/* Register Button */}
+          <Button
+            mode="contained"
+            onPress={submitRegisterRequest}
+            disabled={disableRegisterButton}
+            style={{
+              paddingVertical: 8,
+              marginBottom: 20,
+              borderRadius: 8
+            }}
+            contentStyle={{ paddingVertical: 4 }}
+          >
+            {disableRegisterButton ? 'Creating Account...' : 'Create Account'}
+          </Button>
 
-            <View style={{ marginBottom: 12 }}>
-              <Checkbox.Item
-                label="News and feature updates"
-                status={userData.emailPreferences?.newsAndFeatureUpdates ? 'checked' : 'unchecked'}
-                onPress={() => setUserData({
-                  ...userData, 
-                  emailPreferences: {
-                    ...userData.emailPreferences,
-                    newsAndFeatureUpdates: !userData.emailPreferences?.newsAndFeatureUpdates
-                  }
-                })}
-                mode="android"
-              />
-            </View>
+        </View>
+      </KeyboardAwareScrollView>
 
-            <View>
-              <Checkbox.Item
-                label="Promotions and special offers"
-                status={userData.emailPreferences?.promotionsAndSpecialOffers ? 'checked' : 'unchecked'}
-                onPress={() => setUserData({
-                  ...userData, 
-                  emailPreferences: {
-                    ...userData.emailPreferences,
-                    promotionsAndSpecialOffers: !userData.emailPreferences?.promotionsAndSpecialOffers
-                  }
-                })}
-                mode="android"
-              />
-            </View>
-
-          </Card.Content>
-        </Card>
-
-        {/* Upload Message */}
-        {uploadMessage !== '' && (
-          <Text style={{ 
-            textAlign: 'center', 
-            marginBottom: 16, 
-            fontSize: 16, 
-            color: materialTheme.colors.primary 
-          }}>
-            {uploadMessage}
-          </Text>
-        )}
-
-        {/* Register Button */}
-        <Button
-          mode="contained"
-          onPress={submitRegisterRequest}
-          disabled={disableRegisterButton}
-          style={{ 
-            paddingVertical: 8, 
-            marginBottom: 20,
-            borderRadius: 8
-          }}
-          contentStyle={{ paddingVertical: 4 }}
-        >
-          {disableRegisterButton ? 'Creating Account...' : 'Create Account'}
-        </Button>
-
-      </View>
-    </KeyboardAwareScrollView>
-    
-    {/* Gender Selection Modal */}
+      {/* Gender Selection Modal */}
       <Portal>
         <Modal visible={showGenderModal} onDismiss={() => setShowGenderModal(false)} contentContainerStyle={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -837,6 +837,7 @@ const Register = () => {
                   key={index}
                   onPress={() => selectGender(option)}
                   style={styles.modalOption}
+                  testID={`gender-option-${option.value}`}
                 >
                   <Text style={styles.modalOptionText}>{option.label}</Text>
                 </Pressable>

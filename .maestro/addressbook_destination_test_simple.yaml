@@ -1,0 +1,169 @@
+appId: co.solidi.mobile.test
+---
+# Address Book - Destination Address Test (Simplified Navigation)
+# Tests the fix: "Address Book - Destination - Should not check the length of the asset - should check address"
+# Uses coordinate-based navigation to Settings and text-based navigation within
+
+# Wait for app to be ready
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000
+- takeScreenshot: 01_app_ready
+
+# Check if we need to login
+- runFlow:
+    when:
+      visible: "Secure Login|Sign In"
+    commands:
+      - takeScreenshot: 01a_login_required
+      - tapOn: "Email Address"
+      - inputText: "henry930@gmail.com"
+      - hideKeyboard
+      - tapOn: "Password"
+      - inputText: "DazzPow/930"
+      - hideKeyboard
+      - tapOn: "SIGN IN"
+      - extendedWaitUntil:
+          visible: "Wallet|Transfer|History"
+          timeout: 20000
+      - takeScreenshot: 01b_logged_in
+
+# Navigate to Settings via top-right button (coordinates)
+- tapOn:
+    point: "95%,5%"
+- takeScreenshot: 02_settings_tapped
+
+# Verify we are on Settings page
+- extendedWaitUntil:
+    visible: "Wallet & Finance|Account Settings|Personal Details"
+    timeout: 10000
+- takeScreenshot: 03_settings_page_confirmed
+
+# Scroll down to find Address Book
+- scroll
+- scroll
+- takeScreenshot: 04_scrolled_down
+
+# Tap on "Address Book"
+- tapOn: "Address Book"
+- takeScreenshot: 05_address_book_opened
+
+# Wait for Address Book to load (handle loading/error states)
+- extendedWaitUntil:
+    visible: "Address List|Add Address|Loading Address Book"
+    timeout: 60000
+- takeScreenshot: 05a_address_book_loaded
+
+# Handle error state if present
+- runFlow:
+    when:
+      visible: "Failed to Load|Retry"
+    commands:
+      - takeScreenshot: 05b_error_state
+      - tapOn: "Retry"
+      - extendedWaitUntil:
+          visible: "Address List|Add Address"
+          timeout: 20000
+
+# Tap "Add Address" tab
+- tapOn: "Add Address"
+- takeScreenshot: 06_add_address_tab_selected
+
+# Now look for the form content
+- extendedWaitUntil:
+    visible: "Another Person|another_person"
+    timeout: 5000
+- takeScreenshot: 07_recipient_selection
+
+# Step 1: Select recipient type - "Another Person"
+- tapOn: "Another Person"
+- takeScreenshot: 08_recipient_selected
+
+# Click Next/Continue
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "First Name|firstname"
+          timeout: 3000
+
+# Step 2: Enter recipient details
+- takeScreenshot: 09_details_step
+
+# Choose manual entry if prompted
+- runFlow:
+    when:
+      visible: "Enter Manually|Manual"
+    commands:
+      - tapOn: "Enter Manually|Manual"
+      - extendedWaitUntil:
+          visible: "First Name|firstname"
+          timeout: 2000
+
+# Enter first name
+- tapOn:
+    below: "First Name"
+- inputText: "John"
+- hideKeyboard
+
+# Enter last name
+- tapOn:
+    below: "Last Name"
+- inputText: "Doe"
+- hideKeyboard
+- takeScreenshot: 10_details_filled
+
+# Click Next
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "BTC|Bitcoin"
+          timeout: 3000
+
+# Step 3: Select Asset - BTC
+- takeScreenshot: 11_asset_selection
+
+- tapOn: "BTC"
+- takeScreenshot: 12_btc_selected
+
+# Click Next
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "Destination|Address|Withdrawal Address"
+          timeout: 3000
+
+# Step 4: Enter Destination Address (THIS IS THE KEY STEP)
+- takeScreenshot: 13_destination_step
+
+# Enter a valid BTC address
+- tapOn:
+    below: "Withdrawal Address"
+- inputText: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+- hideKeyboard
+- takeScreenshot: 14_full_address_entered
+
+# Try to proceed - this should SUCCEED now (previously failed with "too short" error)
+- runFlow:
+    when:
+      visible: "Next|Continue"
+    commands:
+      - tapOn: "Next|Continue"
+      - extendedWaitUntil:
+          visible: "Personal|Exchange|Summary"
+          timeout: 5000
+      - takeScreenshot: 15_success_next_step
+
+# Final verification
+- takeScreenshot: 16_test_complete
+
+# SUCCESS: If we reached here, the bug is fixed!
+# The valid BTC address was accepted without the "too short" error

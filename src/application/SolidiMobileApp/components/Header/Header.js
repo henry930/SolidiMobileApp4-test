@@ -16,14 +16,14 @@ import { sharedStyles as styles, layoutStyles as layout, buttonStyles as buttons
 
 let Header = (props) => {
 
-  let {style: styleArg} = props;
+  let { style: styleArg } = props;
   const insets = useSafeAreaInsets();
 
   let appState = useContext(AppStateContext);
 
   let logoImageName = 'solidi_logo_landscape_black_1924x493';
 
-    let statesWhereBackButtonIsHidden = [
+  let statesWhereBackButtonIsHidden = [
     'Trade',
     'PIN',
     'RegisterConfirm',
@@ -45,7 +45,7 @@ let Header = (props) => {
   let backButton = (
     <ImageButton imageName='chevron-left' imageType='icon'
       styles={styleBackButton}
-      onPress={ () => { appState.decrementStateHistory() } }
+      onPress={() => { appState.decrementStateHistory() }}
     />
   )
   let blankBackButton = <></>;
@@ -53,13 +53,13 @@ let Header = (props) => {
   // Check whether to include back button.
   let includeBackButton = false;
   if (appState.stateHistoryList.length > 1) {
-    if (! hideBackButton) {
+    if (!hideBackButton) {
       includeBackButton = true;
     }
   }
 
   // Check whether to include notification button. (this is not currently used).
-  let includeNotificationButton = ! hideBackButton;
+  let includeNotificationButton = !hideBackButton;
 
 
   let isSettingsButtonSelected = 'Settings' === appState.mainPanelState;
@@ -81,23 +81,23 @@ let Header = (props) => {
   return (
     <View style={[styleArg, headerStyles.container]}>
       {/* Risk Warning Banner */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={headerStyles.riskBanner}
         onPress={() => changeState('RiskSummary')}
         activeOpacity={0.8}
       >
         <Text style={headerStyles.riskBannerText}>
-          ⚠️ Don't invest unless you're prepared to lose all the money you invest. This is a high-risk investment and you should not expect to be protected if something goes wrong. Take 2 mins to{' '}
+          Don't invest unless you're prepared to lose all the money you invest. This is a high-risk investment and you should not expect to be protected if something goes wrong. Take 2 mins to{' '}
           <Text style={headerStyles.learnMoreText}>learn more</Text>.
         </Text>
       </TouchableOpacity>
-      
+
       {/* Main Header */}
       <View style={headerStyles.header}>
         <View style={headerStyles.sideButtonWrapper}>
           {includeBackButton ? backButton : blankBackButton}
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={headerStyles.logoWrapper}
           onPress={() => changeState('Home')}
           activeOpacity={0.8}
@@ -105,10 +105,11 @@ let Header = (props) => {
           <Image source={ImageLookup[logoImageName]} style={headerStyles.logo} />
         </TouchableOpacity>
         <View style={headerStyles.sideButtonWrapper}>
-          {! hideSettingsButton &&
+          {!hideSettingsButton &&
             <ImageButton imageName='user' imageType='icon'
               styles={_styleSettingsButton}
-              onPress={ () => { 
+              testID="header-settings-button"
+              onPress={() => {
                 // Check if user is authenticated to decide navigation
                 if (appState.user.isAuthenticated) {
                   changeState('Settings'); // Go to profile/settings page
@@ -134,7 +135,7 @@ const headerStyles = StyleSheet.create({
   riskBanner: {
     width: '100%',
     paddingHorizontal: scaledWidth(15),
-    paddingVertical: scaledHeight(8),
+    paddingVertical: scaledHeight(4),
     backgroundColor: colors.warning
   },
   riskBannerText: {

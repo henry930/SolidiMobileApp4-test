@@ -1,0 +1,41 @@
+appId: co.solidi.mobile.test
+---
+# Issue #56: Pagination/Infinite Scroll Verification
+# Verifies that transaction history and orders support infinite scroll
+
+- launchApp
+
+# Wait for app to load
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Navigate to History/Orders page
+# Assuming "History" or "Orders" is accessible from the main navigation or wallet
+# Based on code, it seems to be a component in MainPanel, possibly "History" tab
+- tapOn:
+    id: "footer-btn-Wallet"
+- tapOn:
+    id: "footer-btn-History"
+
+# Verify page loaded (check for common elements)
+- assertVisible: "History"
+
+# Check Transactions tab (default)
+# Just try to scroll, if it fails it fails
+- scrollUntilVisible:
+    element:
+      text: "Loading more..."
+    direction: DOWN
+    timeout: 5000
+    visibilityPercentage: 100
+    centerElement: true
+
+# Switch to Orders tab
+- tapOn: "Orders"
+- scrollUntilVisible:
+    element:
+      text: "Loading more..."
+    direction: DOWN
+    timeout: 5000
+    visibilityPercentage: 100
+    centerElement: true

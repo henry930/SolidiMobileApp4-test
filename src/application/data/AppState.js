@@ -3748,17 +3748,34 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.getTickerForMarket = (market) => {
       // Get the ticker price held in the appState.
       if (_.isUndefined(this.state.apiData.ticker[market])) return null;
-      if (_.isUndefined(this.state.apiData.ticker[market].price)) return null;
-      let price = this.state.apiData.ticker[market].price;
-      return { price };
+
+      let ticker = this.state.apiData.ticker[market];
+      let price = ticker.price;
+
+      // Fallback to bid if price is missing (API change)
+      if (_.isUndefined(price) && !_.isUndefined(ticker.bid)) {
+        price = ticker.bid;
+      }
+
+      if (_.isUndefined(price)) return null;
+      return price;
     }
 
 
     this.getPreviousTickerForMarket = (market) => {
       // Get the previous ticker price held in the appState.
       if (_.isUndefined(this.state.prevAPIData.ticker[market])) return null;
-      if (_.isUndefined(this.state.prevAPIData.ticker[market].price)) return null;
-      return this.state.prevAPIData.ticker[market].price;
+
+      let ticker = this.state.prevAPIData.ticker[market];
+      let price = ticker.price;
+
+      // Fallback to bid if price is missing
+      if (_.isUndefined(price) && !_.isUndefined(ticker.bid)) {
+        price = ticker.bid;
+      }
+
+      if (_.isUndefined(price)) return null;
+      return price;
     }
 
     this.loadHistoricPrices = async ({ market, period }) => {
@@ -4743,26 +4760,24 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log('[CRYPTO-CACHE] ✅ Using existing ticker data from apiData.ticker');
           response = this.state.apiData.ticker;
         } else {
-          // SPECIAL: Use www.solidi.co for ticker endpoint only
-          console.log('[CRYPTO-CACHE] 🌐 Creating temporary API client with www.solidi.co for /ticker');
-          const tickerApiClient = new SolidiRestAPIClientLibrary({
-            userAgent: this.state.userAgent,
-            apiKey: '',
-            apiSecret: '',
-            domain: 'www.solidi.co',
-            appStateRef: { current: this }
-          });
-
-          // Use public method for ticker
-          console.log('[CRYPTO-CACHE] 🔓 Using PUBLIC method for /ticker');
+          // Use standard public method for ticker (respects app environment)
+          console.log('[CRYPTO-CACHE] 🔓 Using standard PUBLIC method for /ticker');
           let tag = 'ticker';
-          let abortController = this.state.createAbortController({ tag, noAbort: false });
-          response = await tickerApiClient.publicMethod({
-            httpMethod: 'GET',
-            apiRoute: 'ticker',
-            params: {},
-            abortController
-          });
+          // Use the existing publicMethod from state if available, or apiClient
+          const publicMethod = this.state.publicMethod || (this.state.apiClient && this.state.apiClient.publicMethod);
+
+          if (publicMethod) {
+            let abortController = this.state.createAbortController({ tag, noAbort: false });
+            response = await publicMethod({
+              httpMethod: 'GET',
+              apiRoute: 'ticker',
+              params: {},
+              abortController
+            });
+          } else {
+            console.error('[CRYPTO-CACHE] ❌ No publicMethod available for ticker fetch');
+            response = null;
+          }
 
           console.log('[CRYPTO-CACHE] 📋 Response type:', typeof response);
           console.log('[CRYPTO-CACHE] 📋 Response:', response);
@@ -4823,8 +4838,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
             console.log(`[CRYPTO-CACHE] Processing ${market} (${cryptoSymbol}):`, JSON.stringify(tickerData, null, 2));
 
-            // Skip if not a GBP pair
-            if (quoteCurrency !== baseCurrency) {
+            // Skip if not a GBP/GBPX pair
+            if (quoteCurrency !== baseCurrency && quoteCurrency !== baseCurrency + 'X') {
               console.log(`[CRYPTO-CACHE] Skipping ${market} - not a ${baseCurrency} pair`);
               continue;
             }
@@ -4848,18 +4863,25 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               continue;
             }
 
-            let price;
+            let sellPrice; // What you get when selling (bid)
+            let buyPrice;  // What you pay when buying (ask)
 
-            // Check if we have bid/ask prices for mid-price calculation
+            // Check if we have bid/ask prices
             if (tickerData.bid && tickerData.ask) {
               const bid = parseFloat(tickerData.bid);
               const ask = parseFloat(tickerData.ask);
-              price = (bid + ask) / 2; // Mid-price
-              console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: bid=£${bid.toFixed(2)}, ask=£${ask.toFixed(2)}, mid=£${price.toFixed(2)}`);
+
+              // Sell price = bid (what you receive when selling)
+              // Buy price = ask (what you pay when buying)
+              sellPrice = bid;
+              buyPrice = ask;
+
+              console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: bid=£${bid.toFixed(2)} (sell), ask=£${ask.toFixed(2)} (buy)`);
             } else if (tickerData.price) {
               // Fallback to single price if bid/ask not available
-              price = parseFloat(tickerData.price);
-              console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: price=£${price.toFixed(2)} (no bid/ask available)`);
+              sellPrice = parseFloat(tickerData.price);
+              buyPrice = parseFloat(tickerData.price);
+              console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: price=£${sellPrice.toFixed(2)} (no bid/ask available)`);
             } else {
               console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: No price data available`);
               newRates.sellPrices[cryptoSymbol] = 0;
@@ -4868,15 +4890,16 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               continue;
             }
 
-            if (price && price > 0) {
-              // Calculate GBP value: balance × price
-              const gbpValue = balance * price;
+            if (sellPrice && sellPrice > 0 && buyPrice && buyPrice > 0) {
+              // Calculate GBP value using mid-price: balance × ((bid + ask) / 2)
+              const midPrice = (sellPrice + buyPrice) / 2;
+              const gbpValue = balance * midPrice;
 
-              newRates.sellPrices[cryptoSymbol] = price;
-              newRates.buyPrices[cryptoSymbol] = price;
+              newRates.sellPrices[cryptoSymbol] = sellPrice;
+              newRates.buyPrices[cryptoSymbol] = buyPrice;
               newRates.balancesInGBP[cryptoSymbol] = gbpValue;
 
-              console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: ${balance} × £${price.toFixed(2)} = £${gbpValue.toFixed(2)}`);
+              console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: ${balance} × £${midPrice.toFixed(2)} (mid) = £${gbpValue.toFixed(2)}`);
             } else {
               newRates.sellPrices[cryptoSymbol] = 0;
               newRates.buyPrices[cryptoSymbol] = 0;
@@ -4898,6 +4921,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         this.state.cryptoRatesLastUpdated = new Date();
 
         // Update cache timestamp
+        if (!this.state.cache) {
+          this.state.cache = { timestamps: {} };
+        }
+        if (!this.state.cache.timestamps) {
+          this.state.cache.timestamps = {};
+        }
         this.state.cache.timestamps.prices = Date.now();
         console.log('[CRYPTO-CACHE] Prices cached at:', new Date(this.state.cache.timestamps.prices).toISOString());
 

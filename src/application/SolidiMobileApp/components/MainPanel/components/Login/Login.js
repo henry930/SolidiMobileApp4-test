@@ -49,7 +49,7 @@ import { sharedStyles as styles, textStyles as text, formStyles as forms } from 
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('Login');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 
 
@@ -74,11 +74,11 @@ let Login = () => {
 
 
   // Initial setup.
-  useEffect( () => {
+  useEffect(() => {
     setup();
   }, []); // Pass empty array so that this only runs once on mount.
 
-    // AUTO-LOGIN DISABLED - Biometric authentication handles credential validation
+  // AUTO-LOGIN DISABLED - Biometric authentication handles credential validation
   // Auto-login effect - only trigger if we have credentials and user is not authenticated
   useEffect(() => {
     // DISABLED: Auto-login now handled by biometric authentication in SecureApp
@@ -113,12 +113,12 @@ let Login = () => {
     try {
       await appState.generalSetup();
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
-      
+
       // Load last used email from keychain for convenience
       await loadStoredEmail();
-      
-      triggerRender(renderCount+1);
-    } catch(err) {
+
+      triggerRender(renderCount + 1);
+    } catch (err) {
       let msg = `Login.setup: Error = ${err}`;
       console.log(msg);
     }
@@ -165,7 +165,7 @@ let Login = () => {
 
     try {
       console.log('🔑 [LOGIN] Attempting auto-login with cached credentials...');
-      
+
       // Check if we have valid API credentials
       if (!appState.user.apiCredentialsFound) {
         console.log('⚠️ [LOGIN] No cached credentials found for auto-login');
@@ -188,10 +188,10 @@ let Login = () => {
       if (result && result.success) {
         console.log('✅ [LOGIN] Auto-login successful');
         setUploadMessage('Welcome back! Signing you in...');
-        
+
         // Clear any previous error messages
         setErrorMessage('');
-        
+
         // Redirect to appropriate page after successful auto-login
         setTimeout(() => {
           appState.setMainPanelState({
@@ -199,13 +199,13 @@ let Login = () => {
             pageName: 'default'
           });
         }, 1000);
-        
+
       } else {
         console.log('❌ [LOGIN] Auto-login failed - credentials may be expired');
         setErrorMessage('Saved credentials expired. Please sign in again.');
         setUploadMessage('');
         setDisableLoginButton(false);
-        
+
         // Don't clear credentials - let user try manual login
         // The credentials will be cleared only if manual login also fails
         // await appState.logout(true); // REMOVED: Don't clear credentials on auto-login failure
@@ -216,7 +216,7 @@ let Login = () => {
       setErrorMessage('Auto-login failed. Please sign in manually.');
       setUploadMessage('');
       setDisableLoginButton(false);
-      
+
       // Don't clear credentials on error - let user try manual login
       // await appState.logout(true); // REMOVED: Don't clear credentials on error
     }
@@ -233,13 +233,13 @@ let Login = () => {
 
   let submitLoginRequest = async () => {
     let fName = `submitLoginRequest`;
-    console.log('🚀 [LOGIN] Manual login attempt started', { 
-      email: email ? 'provided' : 'missing', 
+    console.log('🚀 [LOGIN] Manual login attempt started', {
+      email: email ? 'provided' : 'missing',
       password: password ? 'provided' : 'missing',
       disableLoginButton,
-      apiCredentialsFound: appState.user.apiCredentialsFound 
+      apiCredentialsFound: appState.user.apiCredentialsFound
     });
-    
+
     // test data
     /*
     email = 'johnqfish@foo.com';
@@ -247,29 +247,29 @@ let Login = () => {
     */
     setDisableLoginButton(true);
     try {
-      if (! (email && password) ) {
+      if (!(email && password)) {
         let msg;
-        if (! email && password) {
+        if (!email && password) {
           msg = 'Email is required.';
-        } else if (email && ! password) {
+        } else if (email && !password) {
           msg = 'Password is required.';
         } else {
           msg = 'Email and password are required.';
         }
-        
+
         // Show error as popup alert
         Alert.alert(
           "Login Error",
           msg,
           [{ text: "OK", style: "default" }]
         );
-        
+
         setDisableLoginButton(false);
         return;
       }
       // Log in.
       setUploadMessage('Logging in...');
-      let output = await appState.login({email, password, tfa});
+      let output = await appState.login({ email, password, tfa });
       if (appState.stateChangeIDHasChanged(stateChangeID)) return;
       // Check for security blocks.
       if (output == 'TFA_REQUIRED') {
@@ -278,22 +278,22 @@ let Login = () => {
         setDisableLoginButton(false);
         return;
       }
-      
+
       // Store email for convenience on successful login (but not password for security)
       await storeEmail(email);
-      
+
       // Redirect to home page on successful login.
       appState.changeState('Home');
-    } catch(err) {
+    } catch (err) {
       logger.error(err);
-      
+
       // Show error as popup alert
       Alert.alert(
         "Login Error",
         err.message || "An error occurred during login. Please try again.",
         [{ text: "OK", style: "default" }]
       );
-      
+
       setUploadMessage('');
       setDisableLoginButton(false);
     }
@@ -303,14 +303,14 @@ let Login = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      
+
       <Title>
         Secure Login
       </Title>
 
       <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ 
+        contentContainerStyle={{
           padding: 16,
           backgroundColor: theme.colors.background
         }}
@@ -318,14 +318,14 @@ let Login = () => {
       >
 
         {/* Login Form Card */}
-        <Card style={{ 
+        <Card style={{
           marginBottom: 24,
           marginHorizontal: 16,
           elevation: 3
         }}>
           <Card.Content style={{ padding: 20 }}>
-            <Text variant="titleMedium" style={{ 
-              marginBottom: 20, 
+            <Text variant="titleMedium" style={{
+              marginBottom: 20,
               color: theme.colors.primary,
               textAlign: 'center',
               fontWeight: '600'
@@ -424,19 +424,19 @@ let Login = () => {
         </Card>
 
         {/* Additional Actions */}
-        <Card style={{ 
+        <Card style={{
           marginHorizontal: 16,
           elevation: 2
         }}>
           <Card.Content style={{ padding: 20 }}>
-            <Text variant="titleSmall" style={{ 
-              marginBottom: 16, 
+            <Text variant="titleSmall" style={{
+              marginBottom: 16,
               color: theme.colors.primary,
               fontWeight: '600'
             }}>
               Need Help?
             </Text>
-            
+
             <Button
               mode="text"
               onPress={() => appState.changeState('ResetPassword')}
@@ -445,16 +445,17 @@ let Login = () => {
             >
               Forgot Password?
             </Button>
-            
+
             <Button
               mode="text"
               onPress={() => appState.changeState('Register')}
               style={{ alignSelf: 'flex-start', marginBottom: 8 }}
               icon="account-plus"
+              testID="register-button"
             >
               Create New Account
             </Button>
-            
+
             <Button
               mode="text"
               onPress={() => appState.changeState('ContactUs')}
@@ -483,7 +484,7 @@ let Login = () => {
             alignItems: 'center',
             zIndex: 1000
           }}>
-            <SolidiLoadingScreen 
+            <SolidiLoadingScreen
               fullScreen={false}
               message="Signing you in..."
               size="large"
