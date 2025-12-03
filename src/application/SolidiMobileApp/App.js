@@ -102,16 +102,23 @@ const AppContent = () => {
     const initPushNotifications = async () => {
       try {
         console.log('🔔 Initializing push notifications...');
+        console.log('🔔 Calling setupNotificationListeners...');
         // Setup listeners for incoming notifications
         PushNotificationManager.setupNotificationListeners();
+        console.log('🔔 setupNotificationListeners done');
 
-        // Wait a bit for the Activity to be fully attached
-        setTimeout(async () => {
+        // Request permission and get token immediately (or with small delay)
+        const runInit = async () => {
           try {
-            // Request permission and get token
+            console.log('🔔 Requesting permission...');
             const hasPermission = await PushNotificationManager.requestPermission();
+            console.log('🔔 Permission result:', hasPermission);
+
             if (hasPermission) {
+              console.log('🔔 Getting token...');
               const token = await PushNotificationManager.getToken();
+              console.log('🔔 Token result:', token);
+
               if (token) {
                 console.log('✅ Push notifications initialized successfully');
                 console.log('📱 FCM Token:', token);
@@ -120,9 +127,12 @@ const AppContent = () => {
               console.log('⚠️ Push notification permission denied');
             }
           } catch (error) {
-            console.error('❌ Error requesting push notification permission:', error);
+            console.error('❌ Error in runInit:', error);
           }
-        }, 2000); // Wait 2 seconds for Activity to be ready
+        };
+
+        // Run immediately
+        runInit();
       } catch (error) {
         console.error('❌ Error initializing push notifications:', error);
       }
@@ -152,6 +162,9 @@ const AppContent = () => {
   );
 };
 
+import NotificationBanner from 'src/components/shared/NotificationBanner';
+import TestNotificationButton from 'src/components/shared/TestNotificationButton';
+
 let App = () => {
   log('========== start: helloWorld ==========');
 
@@ -159,9 +172,12 @@ let App = () => {
     <SafeAreaProvider>
       <ThemeProvider>
         <AppContent />
+        <NotificationBanner />
+        <TestNotificationButton />
       </ThemeProvider>
     </SafeAreaProvider>
   );
+
 };
 
 // Basic styles for container

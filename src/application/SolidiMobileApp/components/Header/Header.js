@@ -10,7 +10,7 @@ import { Button, ImageButton } from 'src/components/atomic';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import ImageLookup from 'src/images';
 import { sharedStyles as styles, layoutStyles as layout, buttonStyles as buttons, textStyles as text } from 'src/styles';
-
+import NotificationBellIcon from 'src/components/NotificationInbox/NotificationBellIcon';
 
 
 
@@ -36,6 +36,8 @@ let Header = (props) => {
   let statesWhereSettingsButtonIsHidden = [
     'RegisterConfirm',
     'RegisterConfirm2',
+    'Login',
+    'PINLogin'
   ]
   let hideSettingsButton = statesWhereSettingsButtonIsHidden.includes(appState.mainPanelState);
 
@@ -58,8 +60,15 @@ let Header = (props) => {
     }
   }
 
-  // Check whether to include notification button. (this is not currently used).
-  let includeNotificationButton = !hideBackButton;
+  // Check whether to include notification button.
+  // Show notification bell if back button is NOT shown, or if we want it always accessible
+  // For now, let's show it when back button is hidden (root screens) or alongside it if space permits
+  // User requested "left top corner".
+  let notificationButton = (
+    <View style={{ marginLeft: includeBackButton ? 8 : 0 }}>
+      <NotificationBellIcon />
+    </View>
+  );
 
 
   let isSettingsButtonSelected = 'Settings' === appState.mainPanelState;
@@ -94,8 +103,9 @@ let Header = (props) => {
 
       {/* Main Header */}
       <View style={headerStyles.header}>
-        <View style={headerStyles.sideButtonWrapper}>
-          {includeBackButton ? backButton : blankBackButton}
+        <View style={[headerStyles.sideButtonWrapper, { flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }]}>
+          {/* Always show notification bell unless in strict modes like PIN */}
+          {!pinMode && notificationButton}
         </View>
         <TouchableOpacity
           style={headerStyles.logoWrapper}

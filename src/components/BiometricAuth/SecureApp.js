@@ -6,6 +6,7 @@ import AppStateContext from '../../application/data';
 import SecureAppBridge from '../../util/SecureAppBridge';
 import { SolidiLoadingScreen } from '../shared';
 import PushNotificationService from '../../services/PushNotificationService';
+import PushNotificationManager from '../../services/PushNotificationManager';
 
 /**
  * SecureApp - Wrapper component that enforces authentication before app access
@@ -88,50 +89,8 @@ class SecureApp extends Component {
     console.log('🔄 [SecureApp] shouldInitializePushNotifications:', this.state.shouldInitializePushNotifications);
     console.log('🔄 [SecureApp] pushNotificationsInitialized:', this.state.pushNotificationsInitialized);
 
-    // Initialize push notifications after biometric auth (context not available in SecureApp, use AsyncStorage)
-    if (
-      this.state.shouldInitializePushNotifications &&
-      !this.state.pushNotificationsInitialized
-    ) {
-      console.log('📱 [SecureApp] ============================================');
-      console.log('📱 [SecureApp] Initializing push notifications after biometric auth');
-      console.log('📱 [SecureApp] ============================================');
-
-      try {
-        // Get user identifier from AsyncStorage since context is not available
-        const storedEmail = await AsyncStorage.getItem('email');
-        const storedUserId = await AsyncStorage.getItem('userId');
-        const userId = storedUserId || storedEmail || 'user-' + Date.now();
-
-        console.log('📱 [SecureApp] STARTING PUSH NOTIFICATION INITIALIZATION');
-        console.log('📱 [SecureApp] User ID:', userId);
-        console.log('📱 [SecureApp] Platform:', Platform.OS);
-        console.log('📱 [SecureApp] ============================================');
-
-        const pushResult = await PushNotificationService.initialize(userId);
-
-        console.log('📱 [SecureApp] ============================================');
-        console.log('📱 [SecureApp] Push notification initialization result:', pushResult);
-        console.log('📱 [SecureApp] ============================================');
-
-        this.setState({
-          pushNotificationsInitialized: true,
-          shouldInitializePushNotifications: false
-        });
-      } catch (error) {
-        console.error('❌ [SecureApp] ============================================');
-        console.error('❌ [SecureApp] Failed to initialize push notifications:', error);
-        console.error('❌ [SecureApp] Error message:', error.message);
-        console.error('❌ [SecureApp] Error stack:', error.stack);
-        console.error('❌ [SecureApp] ============================================');
-
-        // Mark as initialized even on error to prevent retry loops
-        this.setState({
-          pushNotificationsInitialized: true,
-          shouldInitializePushNotifications: false
-        });
-      }
-    }
+    // Push notification registration is now handled in AppState.js after successful login
+    // This ensures the correct userId (email) is used instead of a temporary ID
   }
 
   componentWillUnmount() {

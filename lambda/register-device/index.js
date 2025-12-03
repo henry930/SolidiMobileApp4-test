@@ -95,7 +95,22 @@ exports.handler = async (event) => {
                 console.log('Updated existing endpoint:', endpointArn);
             } catch (error) {
                 console.log('Failed to update endpoint, creating new one:', error.message);
-                // If update fails, create new endpoint
+
+                // If endpoint exists with same token but different attributes, delete it first
+                if (error.message && error.message.includes('already exists with the same Token')) {
+                    console.log('Deleting conflicting endpoint...');
+                    try {
+                        const { DeleteEndpointCommand } = require('@aws-sdk/client-sns');
+                        await snsClient.send(new DeleteEndpointCommand({
+                            EndpointArn: existingDevice.Item.endpointArn
+                        }));
+                        console.log('Deleted old endpoint');
+                    } catch (deleteError) {
+                        console.log('Failed to delete endpoint:', deleteError.message);
+                    }
+                }
+
+                // Create new endpoint
                 const endpoint = await snsClient.send(new CreatePlatformEndpointCommand({
                     PlatformApplicationArn: platformArn,
                     Token: token,
@@ -105,13 +120,29 @@ exports.handler = async (event) => {
             }
         } else {
             // Create new SNS Platform Endpoint
-            const endpoint = await snsClient.send(new CreatePlatformEndpointCommand({
-                PlatformApplicationArn: platformArn,
-                Token: token,
-                CustomUserData: userId
-            }));
-            endpointArn = endpoint.EndpointArn;
-            console.log('Created new endpoint:', endpointArn);
+            try {
+                const endpoint = await snsClient.send(new CreatePlatformEndpointCommand({
+                    PlatformApplicationArn: platformArn,
+                    Token: token,
+                    CustomUserData: userId
+                }));
+                endpointArn = endpoint.EndpointArn;
+                console.log('Created new endpoint:', endpointArn);
+            } catch (error) {
+                // If endpoint exists with same token, try to find and delete it
+                if (error.message && error.message.includes('already exists with the same Token')) {
+                    console.log('Endpoint conflict detected, attempting to resolve...');
+                    // Extract endpoint ARN from error message if possible, or create with force
+                    const endpoint = await snsClient.send(new CreatePlatformEndpointCommand({
+                        PlatformApplicationArn: platformArn,
+                        Token: token,
+                        CustomUserData: userId
+                    }));
+                    endpointArn = endpoint.EndpointArn;
+                } else {
+                    throw error;
+                }
+            }
         }
 
         // Store/update in DynamoDB

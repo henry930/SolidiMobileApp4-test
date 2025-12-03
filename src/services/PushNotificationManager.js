@@ -1,5 +1,5 @@
 import messaging from '@react-native-firebase/messaging';
-import { Platform, PermissionsAndroid, Alert } from 'react-native';
+import { Platform, PermissionsAndroid, Alert, DeviceEventEmitter } from 'react-native';
 
 class PushNotificationManager {
     constructor() {
@@ -93,23 +93,24 @@ class PushNotificationManager {
      */
     async sendTokenToBackend(userId, token) {
         try {
-            // TODO: Replace with your actual API endpoint
-            const apiEndpoint = 'https://your-api.com/register-device';
+            // AWS SNS API endpoint (same as iOS)
+            const API_BASE_URL = 'https://e80gxrvbm8.execute-api.us-east-1.amazonaws.com/dev';
 
-            const response = await fetch(apiEndpoint, {
+            const deviceInfo = {
+                token: token,  // Backend expects 'token' not 'deviceToken'
+                userId: userId,
+                deviceId: await import('react-native-device-info').then(m => m.default.getUniqueId()),
+                platform: Platform.OS,
+            };
+
+            console.log('📤 Registering Android device with backend:', deviceInfo);
+
+            const response = await fetch(`${API_BASE_URL}/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    userId,
-                    deviceToken: token,
-                    platform: Platform.OS,
-                    deviceInfo: {
-                        model: Platform.constants?.Model || 'unknown',
-                        version: Platform.Version,
-                    },
-                }),
+                body: JSON.stringify(deviceInfo),
             });
 
             if (!response.ok) {
@@ -117,9 +118,9 @@ class PushNotificationManager {
             }
 
             const data = await response.json();
-            console.log('Token registered with backend:', data);
+            console.log('✅ Android device registered successfully:', data);
         } catch (error) {
-            console.error('Error sending token to backend:', error);
+            console.error('❌ Error sending Android token to backend:', error);
             // Don't throw - allow app to continue even if backend registration fails
         }
     }
@@ -132,13 +133,16 @@ class PushNotificationManager {
         messaging().onMessage(async remoteMessage => {
             console.log('Foreground notification received:', remoteMessage);
 
-            // Show alert for foreground notifications
+            // Show custom banner for foreground notifications
             if (remoteMessage.notification) {
-                Alert.alert(
-                    remoteMessage.notification.title || 'Notification',
-                    remoteMessage.notification.body || '',
-                    [{ text: 'OK' }]
-                );
+                DeviceEventEmitter.emit('SHOW_NOTIFICATION_BANNER', {
+                    title: remoteMessage.notification.title || 'Notification',
+                    body: remoteMessage.notification.body || '',
+                    onPress: () => {
+                        console.log('Notification banner pressed');
+                        // Navigate or handle press
+                    }
+                });
             }
         });
 

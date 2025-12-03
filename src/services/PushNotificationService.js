@@ -1,5 +1,5 @@
 // Native iOS Push Notification Service (AWS SNS Only - No Firebase)
-import { Platform, Alert, PermissionsAndroid } from 'react-native';
+import { Platform, Alert, PermissionsAndroid, DeviceEventEmitter } from 'react-native';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import DeviceInfo from 'react-native-device-info';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -102,7 +102,7 @@ class PushNotificationService {
             console.warn('⚠️ Device token not available after 5 seconds');
             console.warn('⚠️ Will register when token arrives');
             // DEBUG: Show timeout alert
-            Alert.alert('Token Timeout', 'Device token not available after 5s wait');
+            // Alert.alert('Token Timeout', 'Device token not available after 5s wait');
             return false;
         }
 
@@ -126,7 +126,7 @@ class PushNotificationService {
             if (savedToken === this.deviceToken && savedUserId === userId) {
                 console.log('✅ Device already registered with same token and user, skipping registration');
                 // DEBUG: Show skipped alert
-                Alert.alert('Registration Skipped', 'Device already registered with same token/user');
+                // Alert.alert('Registration Skipped', 'Device already registered with same token/user');
                 return true;
             }
         }
@@ -226,17 +226,20 @@ class PushNotificationService {
             console.log('📱 FCM Token:', token);
 
             // Show token for debugging
-            Alert.alert('FCM Token', `Token: ${token.substring(0, 10)}...`);
+            // Alert.alert('FCM Token', `Token: ${token.substring(0, 10)}...`);
 
             this.onRegistered(token);
 
             // Set up message handlers
             messaging().onMessage(async remoteMessage => {
                 console.log('📬 FCM Message received (Foreground):', remoteMessage);
-                Alert.alert(
-                    remoteMessage.notification?.title || 'Notification',
-                    remoteMessage.notification?.body || ''
-                );
+                DeviceEventEmitter.emit('SHOW_NOTIFICATION_BANNER', {
+                    title: remoteMessage.notification?.title || 'Notification',
+                    body: remoteMessage.notification?.body || '',
+                    onPress: () => {
+                        console.log('Notification banner pressed');
+                    }
+                });
                 await this.saveNotification(remoteMessage);
             });
 
@@ -270,14 +273,14 @@ class PushNotificationService {
         PushNotificationIOS.addEventListener('register', (deviceToken) => {
             console.log('📱 [iOS Event] Register event fired');
             // DEBUG: Show token alert
-            Alert.alert('Token Received', `Token: ${deviceToken.substring(0, 10)}...`);
+            // Alert.alert('Token Received', `Token: ${deviceToken.substring(0, 10)}...`);
             this.onRegistered(deviceToken);
         });
 
         // Handle registration errors
         PushNotificationIOS.addEventListener('registrationError', (error) => {
             console.log('❌ [iOS Event] Registration error event fired');
-            Alert.alert('Registration Error', error.message);
+            // Alert.alert('Registration Error', error.message);
             this.onRegistrationError(error);
         });
 
@@ -435,10 +438,10 @@ class PushNotificationService {
             console.log('✅ Device registered successfully:', result);
 
             // DEBUG: Show success alert
-            Alert.alert(
-                'Registration Success',
-                `Device registered!\nToken: ${deviceToken.substring(0, 10)}...`
-            );
+            // Alert.alert(
+            //     'Registration Success',
+            //     `Device registered!\nToken: ${deviceToken.substring(0, 10)}...`
+            // );
 
             // Check if this is first registration
             const existingData = await AsyncStorage.getItem(STORAGE_KEY);
@@ -464,10 +467,10 @@ class PushNotificationService {
             console.error('❌ Failed to register device:', error);
 
             // DEBUG: Show error alert
-            Alert.alert(
-                'Registration Failed',
-                `Error: ${error.message}`
-            );
+            // Alert.alert(
+            //     'Registration Failed',
+            //     `Error: ${error.message}`
+            // );
 
             return false;
         }

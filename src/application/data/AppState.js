@@ -1880,14 +1880,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         // ===== PUSH NOTIFICATION INITIALIZATION (Phase 2) =====
         console.log('📱 ===== MAPPING DEVICE TO USER (Phase 2) =====');
         try {
-          const PushNotificationService = require('../../services/PushNotificationService').default;
           const userId = this.state.user.email || this.state.user.info?.user?.uuid || 'user-' + Date.now();
           console.log('📱 [Phase 2] Mapping device token to user:', userId);
-          // DEBUG: Show login success alert
-          const { Alert } = require('react-native');
-          Alert.alert('Login Success', `Starting Push Init for ${userId}`);
-          const pushResult = await PushNotificationService.updateUserMapping(userId);
-          console.log('📱 [Phase 2] User mapping result:', pushResult);
+
+          // Register for both iOS and Android
+          if (Platform.OS === 'ios') {
+            const PushNotificationService = require('../../services/PushNotificationService').default;
+            const pushResult = await PushNotificationService.updateUserMapping(userId);
+            console.log('📱 [Phase 2] iOS push notification result:', pushResult);
+          } else if (Platform.OS === 'android') {
+            const PushNotificationManager = require('../../services/PushNotificationManager').default;
+            const pushResult = await PushNotificationManager.registerDevice(userId);
+            console.log('📱 [Phase 2] Android push notification result:', pushResult);
+          }
         } catch (pushError) {
           console.error('❌ Failed to map device to user:', pushError);
           // Don't block login if push notifications fail
