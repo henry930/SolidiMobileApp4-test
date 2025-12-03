@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import NotificationStorageService from '../../storage/NotificationStorageService';
+import NotificationHistoryService from '../../services/NotificationHistoryService';
 import NotificationInbox from '../NotificationInbox/NotificationInbox';
 
-const NotificationBellIcon = () => {
+const NotificationBellIcon = ({ userId }) => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [inboxVisible, setInboxVisible] = useState(false);
 
@@ -50,10 +51,24 @@ const NotificationBellIcon = () => {
 
     const loadUnreadCount = async () => {
         try {
-            const count = await NotificationStorageService.getUnreadCount();
-            setUnreadCount(count);
+            if (userId) {
+                // Try to get unread count from API
+                const count = await NotificationHistoryService.getUnreadCount(userId);
+                setUnreadCount(count);
+            } else {
+                // Fallback to local storage
+                const count = await NotificationStorageService.getUnreadCount();
+                setUnreadCount(count);
+            }
         } catch (error) {
             console.error('Failed to load unread count:', error);
+            // Fallback to local storage on error
+            try {
+                const count = await NotificationStorageService.getUnreadCount();
+                setUnreadCount(count);
+            } catch (fallbackError) {
+                console.error('Failed to load unread count from local storage:', fallbackError);
+            }
         }
     };
 
@@ -87,6 +102,7 @@ const NotificationBellIcon = () => {
             <NotificationInbox
                 visible={inboxVisible}
                 onClose={handleClose}
+                userId={userId}
             />
         </>
     );

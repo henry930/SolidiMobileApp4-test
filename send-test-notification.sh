@@ -3,7 +3,7 @@
 # Test notification script for AWS Lambda
 # This sends a push notification to specified user(s)
 
-API_ENDPOINT="https://e80gxrvbm8.execute-api.us-east-1.amazonaws.com/dev/send"
+API_ENDPOINT="https://u4o3rayvl6.execute-api.us-east-1.amazonaws.com/dev/send"
 
 # Get userId from command line or use default
 USER_ID="${1:-user@example.com}"

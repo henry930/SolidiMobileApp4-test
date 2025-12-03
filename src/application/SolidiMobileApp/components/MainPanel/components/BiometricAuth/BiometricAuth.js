@@ -31,12 +31,12 @@ class BiometricAuth extends Component {
   // Handle successful authentication
   handleAuthSuccess = async (authInfo) => {
     console.log('✅ [BiometricAuth MainPanel] Authentication successful:', authInfo);
-
+    
     const appState = this.context;
     console.log('🔍 [BiometricAuth] About to initialize push notifications...');
     console.log('🔍 [BiometricAuth] AppState context:', appState);
     console.log('🔍 [BiometricAuth] User:', appState.state?.user);
-
+    
     // Initialize push notifications
     try {
       const userId = appState.state.user?.id || appState.state.user?.email || 'user-' + Date.now();
@@ -45,9 +45,9 @@ class BiometricAuth extends Component {
       console.log('📱 [BiometricAuth] User ID:', userId);
       console.log('📱 [BiometricAuth] Platform:', Platform.OS);
       console.log('📱 [BiometricAuth] ============================================');
-
-      const result = await PushNotificationService.updateUserMapping(userId);
-
+      
+      const result = await PushNotificationService.initialize(userId);
+      
       console.log('📱 [BiometricAuth] ============================================');
       console.log('📱 [BiometricAuth] Push notification initialization result:', result);
       console.log('📱 [BiometricAuth] ============================================');
@@ -59,7 +59,7 @@ class BiometricAuth extends Component {
       console.error('❌ [BiometricAuth] ============================================');
       // Don't block login if push notifications fail
     }
-
+    
     // Mark user as biometrically authenticated
     appState.setState(prevState => ({
       ...prevState,
@@ -69,7 +69,7 @@ class BiometricAuth extends Component {
         lastBiometricAuth: Date.now()
       }
     }));
-
+    
     // Navigate to appropriate screen based on user state
     if (appState.state.user.isAuthenticated) {
       // User has credentials, go to main app
@@ -89,9 +89,9 @@ class BiometricAuth extends Component {
   // Handle skipping authentication (for development/testing)
   handleSkip = () => {
     console.log('ℹ️ [BiometricAuth MainPanel] Authentication skipped');
-
+    
     const appState = this.context;
-
+    
     // Continue to main app without biometric authentication
     if (appState.state.user.isAuthenticated) {
       appState.setMainPanelState({

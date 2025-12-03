@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NotificationStorageService from '../storage/NotificationStorageService';
 
 // TODO: Replace with your actual API Gateway endpoint after deployment
-const API_BASE_URL = 'https://e80gxrvbm8.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE_URL = 'https://u4o3rayvl6.execute-api.us-east-1.amazonaws.com/dev';
 
 const STORAGE_KEY = '@push_notification_registered';
 

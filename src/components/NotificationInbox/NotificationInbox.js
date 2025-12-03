@@ -9,14 +9,19 @@ import {
     SafeAreaView,
     Alert,
     Platform,
+    ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import NotificationStorageService from '../../storage/NotificationStorageService';
+import NotificationHistoryService from '../../services/NotificationHistoryService';
 
-const NotificationInbox = ({ visible, onClose }) => {
+const NotificationInbox = ({ visible, onClose, userId }) => {
     const [notifications, setNotifications] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
+    const [lastKey, setLastKey] = useState(null);
 
     useEffect(() => {
         if (visible) {
@@ -26,31 +31,72 @@ const NotificationInbox = ({ visible, onClose }) => {
 
     const loadNotifications = async () => {
         try {
-            console.log('📬 [NotificationInbox] Loading notifications from storage...');
-            const data = await NotificationStorageService.getNotifications();
+            setLoading(true);
+            console.log('📬 [NotificationInbox] Loading notifications from API...');
+            console.log('📬 [NotificationInbox] userId:', userId);
 
-            // Ensure data is always an array
-            if (Array.isArray(data)) {
-                setNotifications(data);
-            } else {
-                console.warn('NotificationInbox: Invalid data format, using empty array');
+            if (!userId) {
+                console.warn('⚠️ [NotificationInbox] No userId provided, falling back to local storage');
+                const data = await NotificationStorageService.getNotifications();
+                setNotifications(Array.isArray(data) ? data : []);
+                return;
+            }
+
+            // Fetch from API
+            const result = await NotificationHistoryService.getNotifications(userId, 50);
+            
+            console.log(`✅ [NotificationInbox] Loaded ${result.count} notifications from API`);
+            setNotifications(result.notifications || []);
+            setHasMore(result.hasMore || false);
+            setLastKey(result.lastKey || null);
+
+        } catch (error) {
+            console.error('❌ [NotificationInbox] Failed to load notifications from API:', error);
+            
+            // Fallback to local storage
+            try {
+                console.log('📱 [NotificationInbox] Falling back to local storage...');
+                const data = await NotificationStorageService.getNotifications();
+                setNotifications(Array.isArray(data) ? data : []);
+            } catch (localError) {
+                console.error('❌ [NotificationInbox] Failed to load from local storage:', localError);
                 setNotifications([]);
             }
-        } catch (error) {
-            console.error('Failed to load notifications:', error);
-            // Set empty array on error to prevent crashes
-            setNotifications([]);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
+            setLastKey(null); // Reset pagination
             await loadNotifications();
         } catch (error) {
             console.error('Failed to refresh notifications:', error);
         } finally {
             setRefreshing(false);
+        }
+    };
+
+    const loadMore = async () => {
+        if (!hasMore || loading || !userId) return;
+
+        try {
+            setLoading(true);
+            console.log('📄 [NotificationInbox] Loading more notifications...');
+            
+            const result = await NotificationHistoryService.getNotifications(userId, 50, lastKey);
+            
+            setNotifications(prev => [...prev, ...(result.notifications || [])]);
+            setHasMore(result.hasMore || false);
+            setLastKey(result.lastKey || null);
+            
+            console.log(`✅ [NotificationInbox] Loaded ${result.count} more notifications`);
+        } catch (error) {
+            console.error('❌ [NotificationInbox] Failed to load more notifications:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -244,12 +290,45 @@ const NotificationInbox = ({ visible, onClose }) => {
 
                 {/* Notification List */}
                 <ScrollView style={{ flex: 1 }}>
-                    {notifications && notifications.length > 0 ? (
-                        notifications.map((item, index) => (
-                            <View key={item?.id || `notif-${index}`}>
-                                {renderNotification({ item })}
-                            </View>
-                        ))
+                    {loading && notifications.length === 0 ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#007AFF" />
+                            <Text style={styles.loadingText}>Loading notifications...</Text>
+                        </View>
+                    ) : notifications && notifications.length > 0 ? (
+                        <>
+                            {notifications.map((item, index) => (
+                                <View key={item?.id || `notif-${index}`}>
+                                    {renderNotification({ item })}
+                                </View>
+                            ))}
+                            
+                            {/* Load More Button */}
+                            {hasMore && (
+                                <TouchableOpacity
+                                    style={styles.loadMoreButton}
+                                    onPress={loadMore}
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <ActivityIndicator size="small" color="#007AFF" />
+                                    ) : (
+                                        <>
+                                            <Icon name="chevron-down" size={20} color="#007AFF" />
+                                            <Text style={styles.loadMoreText}>Load More</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                            
+                            {!hasMore && notifications.length > 0 && (
+                                <View style={styles.endMessageContainer}>
+                                    <Text style={styles.endMessageText}>
+                                        No more notifications
+                                    </Text>
+                                </View>
+                            )}
+                        </>
                     ) : (
                         renderEmpty()
                     )}
@@ -395,8 +474,45 @@ const styles = StyleSheet.create({
     },
     emptySubtext: {
         fontSize: 14,
-        color: '#CCC',
-        marginTop: 8,
+        color: '#999',
+        marginTop: 4,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 14,
+        color: '#666',
+    },
+    loadMoreButton: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+        margin: 16,
+        backgroundColor: '#FFF',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#007AFF',
+    },
+    loadMoreText: {
+        marginLeft: 8,
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#007AFF',
+    },
+    endMessageContainer: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    endMessageText: {
+        fontSize: 14,
+        color: '#999',
+        fontStyle: 'italic',
     },
 });
 

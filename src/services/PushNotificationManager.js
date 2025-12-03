@@ -94,7 +94,7 @@ class PushNotificationManager {
     async sendTokenToBackend(userId, token) {
         try {
             // AWS SNS API endpoint (same as iOS)
-            const API_BASE_URL = 'https://e80gxrvbm8.execute-api.us-east-1.amazonaws.com/dev';
+            const API_BASE_URL = 'https://u4o3rayvl6.execute-api.us-east-1.amazonaws.com/dev';
 
             const deviceInfo = {
                 token: token,  // Backend expects 'token' not 'deviceToken'

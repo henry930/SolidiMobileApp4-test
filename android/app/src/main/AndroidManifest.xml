@@ -34,11 +34,5 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
-
-      <!-- Default notification channel ID -->
-      <meta-data
-          android:name="com.google.firebase.messaging.default_notification_channel_id"
-          android:value="default_channel"
-          tools:replace="android:value"/>
     </application>
 </manifest>

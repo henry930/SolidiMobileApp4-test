@@ -95,11 +95,11 @@ class AuthScreen extends Component {
 
   // Handle successful authentication
   handleAuthSuccess = async (authInfo) => {
-    console.log('✅ [AuthScreen] ========================================');
-    console.log('✅ [AuthScreen] handleAuthSuccess called with:', authInfo);
-    console.log('✅ [AuthScreen] this.props.onAuthSuccess exists:', !!this.props.onAuthSuccess);
-    console.log('✅ [AuthScreen] ========================================');
-
+    console.log('✅ [AuthScreen] ============================================');
+    console.log('✅ [AuthScreen] handleAuthSuccess CALLED');
+    console.log('✅ [AuthScreen] authInfo:', authInfo);
+    console.log('✅ [AuthScreen] ============================================');
+    
     this.setState({
       isAuthenticating: false
     });
@@ -108,6 +108,17 @@ class AuthScreen extends Component {
     try {
       // Get user ID from props or storage
       const userId = this.props.userId || 'user-' + Date.now(); // Fallback to timestamp-based ID
+      console.log('📱 [AuthScreen] ============================================');
+      console.log('📱 [AuthScreen] STARTING PUSH NOTIFICATION INITIALIZATION');
+      console.log('📱 [AuthScreen] User ID:', userId);
+      console.log('📱 [AuthScreen] Platform:', require('react-native').Platform.OS);
+      console.log('📱 [AuthScreen] ============================================');
+      
+      const result = await PushNotificationService.initialize(userId);
+      
+      console.log('📱 [AuthScreen] ============================================');
+      console.log('📱 [AuthScreen] Push notification initialization result:', result);
+      console.log('📱 [AuthScreen] ============================================');
     } catch (error) {
       console.error('❌ [AuthScreen] ============================================');
       console.error('❌ [AuthScreen] Failed to initialize push notifications:', error);

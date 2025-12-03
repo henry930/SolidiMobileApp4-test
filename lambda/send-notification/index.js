@@ -55,7 +55,7 @@ exports.handler = async (event) => {
         }
 
         const results = [];
-        const tableName = process.env.DEVICE_TOKENS_TABLE || 'device-tokens';
+        const tableName = process.env.DEVICES_TABLE || 'device-tokens';
 
         // Process each user
         for (const userId of userIds) {

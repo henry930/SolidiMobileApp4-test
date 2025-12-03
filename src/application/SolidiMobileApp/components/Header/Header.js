@@ -64,9 +64,12 @@ let Header = (props) => {
   // Show notification bell if back button is NOT shown, or if we want it always accessible
   // For now, let's show it when back button is hidden (root screens) or alongside it if space permits
   // User requested "left top corner".
+  // Pass userId from appState to NotificationBellIcon
+  const userId = appState?.user?.email || null;
+  
   let notificationButton = (
     <View style={{ marginLeft: includeBackButton ? 8 : 0 }}>
-      <NotificationBellIcon />
+      <NotificationBellIcon userId={userId} />
     </View>
   );
 

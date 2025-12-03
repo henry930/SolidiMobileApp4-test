@@ -1,0 +1,38 @@
+appId: com.solidimobileapp4test
+---
+# Issue 85: Regulatory Warning Banner Optimization Test
+# Verifies that the regulatory warning banner is compliant (no icon) and visible
+
+- launchApp:
+    clearState: true
+
+# Wait for app to load - might show biometric or login screen
+- extendedWaitUntil:
+    visible: 
+      text: ".*"
+    timeout: 5000
+
+# If biometric prompt appears, cancel it to proceed
+- runFlow:
+    when:
+      visible: "Use Biometric.*|Fingerprint.*|Face ID.*"
+    commands:
+      - pressKey: back
+
+# Wait for the app to show either login or main screen with banner
+- extendedWaitUntil:
+    visible: "Don't invest unless.*|.*Sign In.*|.*Create.*"
+    timeout: 15000
+
+# Take screenshot of current state
+- takeScreenshot: 01_app_state
+
+# Verify the regulatory warning banner text is present (should be visible on most screens)
+- assertVisible: "Don't invest unless.*"
+
+# Verify the warning icon is NOT present - THIS IS THE KEY FIX
+- assertNotVisible: "⚠️.*"
+- assertNotVisible: ".*⚠️"
+
+# Take a screenshot for the report showing the compliant banner
+- takeScreenshot: 02_issue_85_banner_verified

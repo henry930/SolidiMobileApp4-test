@@ -6,7 +6,6 @@ import AppStateContext from '../../application/data';
 import SecureAppBridge from '../../util/SecureAppBridge';
 import { SolidiLoadingScreen } from '../shared';
 import PushNotificationService from '../../services/PushNotificationService';
-import PushNotificationManager from '../../services/PushNotificationManager';
 
 /**
  * SecureApp - Wrapper component that enforces authentication before app access
@@ -88,9 +87,51 @@ class SecureApp extends Component {
     console.log('🔄 [SecureApp] componentDidUpdate called');
     console.log('🔄 [SecureApp] shouldInitializePushNotifications:', this.state.shouldInitializePushNotifications);
     console.log('🔄 [SecureApp] pushNotificationsInitialized:', this.state.pushNotificationsInitialized);
+    
+    // Initialize push notifications after biometric auth (context not available in SecureApp, use AsyncStorage)
+    if (
+      this.state.shouldInitializePushNotifications &&
+      !this.state.pushNotificationsInitialized
+    ) {
+      console.log('📱 [SecureApp] ============================================');
+      console.log('📱 [SecureApp] Initializing push notifications after biometric auth');
+      console.log('📱 [SecureApp] ============================================');
 
-    // Push notification registration is now handled in AppState.js after successful login
-    // This ensures the correct userId (email) is used instead of a temporary ID
+      try {
+        // Get user identifier from AsyncStorage since context is not available
+        const storedEmail = await AsyncStorage.getItem('email');
+        const storedUserId = await AsyncStorage.getItem('userId');
+        const userId = storedUserId || storedEmail || 'user-' + Date.now();
+        
+        console.log('📱 [SecureApp] STARTING PUSH NOTIFICATION INITIALIZATION');
+        console.log('📱 [SecureApp] User ID:', userId);
+        console.log('📱 [SecureApp] Platform:', Platform.OS);
+        console.log('📱 [SecureApp] ============================================');
+        
+        const pushResult = await PushNotificationService.initialize(userId);
+        
+        console.log('📱 [SecureApp] ============================================');
+        console.log('📱 [SecureApp] Push notification initialization result:', pushResult);
+        console.log('📱 [SecureApp] ============================================');
+
+        this.setState({
+          pushNotificationsInitialized: true,
+          shouldInitializePushNotifications: false
+        });
+      } catch (error) {
+        console.error('❌ [SecureApp] ============================================');
+        console.error('❌ [SecureApp] Failed to initialize push notifications:', error);
+        console.error('❌ [SecureApp] Error message:', error.message);
+        console.error('❌ [SecureApp] Error stack:', error.stack);
+        console.error('❌ [SecureApp] ============================================');
+        
+        // Mark as initialized even on error to prevent retry loops
+        this.setState({
+          pushNotificationsInitialized: true,
+          shouldInitializePushNotifications: false
+        });
+      }
+    }
   }
 
   componentWillUnmount() {
@@ -131,18 +172,10 @@ class SecureApp extends Component {
       console.log('🔍 [SecureApp] isLogoutFlag === "true":', isLogoutFlag === 'true');
       console.log('🔍 [SecureApp] isLogoutFlag === null:', isLogoutFlag === null);
       console.log('🔍 [SecureApp] Computed isLogout:', isLogout);
-      // Check if we actually have credentials to unlock
-      // If no credentials exist, we shouldn't prompt for biometrics regardless of isLogout flag
-      const appStateContext = this.context;
-      const hasCredentials = appStateContext?.user?.apiCredentialsFound;
-
-      console.log('🔍 [SecureApp] Decision: Will', (isLogout || !biometricsEnabled || !hasCredentials) ? 'SKIP' : 'SHOW', 'biometrics');
-      console.log('🔍 [SecureApp] - isLogout:', isLogout);
-      console.log('🔍 [SecureApp] - biometricsEnabled:', biometricsEnabled);
-      console.log('🔍 [SecureApp] - hasCredentials:', hasCredentials);
+      console.log('🔍 [SecureApp] Decision: Will', (isLogout || !biometricsEnabled) ? 'SKIP' : 'SHOW', 'biometrics');
       console.log('==========================================');
 
-      if (isLogout || !biometricsEnabled || !hasCredentials) {
+      if (isLogout || !biometricsEnabled) {
         // User logged out, never logged in, or biometrics disabled - skip biometrics
         console.log('❌❌❌ [SecureApp] SKIPPING BIOMETRICS - User logged out, never logged in, or biometrics disabled in Settings');
         this.setState({
@@ -236,15 +269,10 @@ class SecureApp extends Component {
       // Default to true (enabled) if no preference is saved
       const biometricsEnabled = biometricsEnabledFlag === null ? true : biometricsEnabledFlag === 'true';
 
-      // Check if we actually have credentials to unlock
-      const appStateContext = this.context;
-      const hasCredentials = appStateContext?.user?.apiCredentialsFound;
-
       console.log('🔐 [SecureApp] BACKGROUND - biometricsEnabled from Settings:', biometricsEnabled);
-      console.log('🔐 [SecureApp] BACKGROUND - hasCredentials:', hasCredentials);
 
-      // Require biometrics if user is logged in (isLogout=false) AND biometrics enabled AND credentials exist
-      if (!isLogout && biometricsEnabled && hasCredentials) {
+      // Require biometrics if user is logged in (isLogout=false) AND biometrics enabled
+      if (!isLogout && biometricsEnabled) {
         console.log('🔐🔐🔐 [SecureApp] BACKGROUND - User is logged in and biometrics enabled - Setting needsBiometrics = true');
         this.setState({
           appState: nextAppState,
@@ -486,13 +514,11 @@ class SecureApp extends Component {
           clearTimeout(this.authFallbackTimer);
           this.authFallbackTimer = null;
         }
-
         this.setState({
           isAuthenticated: true,
           authError: null,
           biometricVerified: true,
-          needsBiometrics: false,
-          shouldInitializePushNotifications: true  // Trigger push notification initialization
+          needsBiometrics: false
         });
 
         // Biometric verification successful - credentials still exist, user can continue

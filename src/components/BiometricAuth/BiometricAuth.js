@@ -57,15 +57,13 @@ class BiometricAuth extends Component {
       const result = await biometricAuth.authenticateWithDeviceCredentials();
 
       if (result.success) {
-        console.log('✅ [BiometricAuth] Authentication successful');
+        console.log('✅ [BiometricAuth] Native authentication successful');
         console.log('🔍 [BiometricAuth] onSuccess callback exists:', !!onSuccess);
         this.setState({ isAuthenticating: false });
 
-        const authInfo = { method: 'native_biometric_or_pin', success: true };
-
         if (onSuccess) {
-          console.log('🔍 [BiometricAuth] Calling onSuccess callback with authInfo:', authInfo);
-          onSuccess(authInfo);
+          console.log('🔍 [BiometricAuth] Calling onSuccess callback...');
+          onSuccess();
           console.log('🔍 [BiometricAuth] onSuccess callback completed');
         }
         return { success: true, method: 'native_biometric_or_pin' };

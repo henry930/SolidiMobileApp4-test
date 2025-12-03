@@ -1,7 +1,7 @@
 {
   "environment": "dev",
   "region": "us-east-1",
-  "apiEndpoint": "https://e80gxrvbm8.execute-api.us-east-1.amazonaws.com/dev",
+  "apiEndpoint": "https://u4o3rayvl6.execute-api.us-east-1.amazonaws.com/dev",
   "registerFunction": "arn:aws:lambda:us-east-1:358157044493:function:dev-register-device",
   "sendFunction": "arn:aws:lambda:us-east-1:358157044493:function:dev-send-notification"
 }
