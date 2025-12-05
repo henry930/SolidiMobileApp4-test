@@ -3809,6 +3809,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.loadCurrency = async () => {
       console.log('🔄 [CURRENCY] Loading currency list from /v1/currency API...');
 
+      // Check if already cached
+      if (this.state.apiData.currency && this.state.cache?.timestamps?.currency) {
+        const cacheAge = Date.now() - this.state.cache.timestamps.currency;
+        const cacheAgeMinutes = Math.floor(cacheAge / 60000);
+        console.log(`✅ [CURRENCY] Using cached data (${cacheAgeMinutes} minutes old)`);
+        return this.state.apiData.currency;
+      }
+
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
         apiRoute: 'currency',
@@ -3838,6 +3846,16 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log(msg + " New data saved to appState. " + jd(data));
         this.state.apiData.currency = data;
       }
+
+      // Update cache timestamp
+      if (!this.state.cache) {
+        this.state.cache = { timestamps: {} };
+      }
+      if (!this.state.cache.timestamps) {
+        this.state.cache.timestamps = {};
+      }
+      this.state.cache.timestamps.currency = Date.now();
+      console.log('[CACHE] Currency data cached at:', new Date(this.state.cache.timestamps.currency).toISOString());
 
       return data;
     }
@@ -4177,6 +4195,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (!this.state.balancesLoaded) {
         console.log('[REG-CHECK] Calling loadBalances() for the first time...');
         let balanceData = await this.loadBalances();
+        console.log('[REG-CHECK] Balance data loaded:', balanceData ? 'Success' : 'Failed');
+
+        // Load currency list (Issue #79 - cache currency data at login)
+        console.log('[REG-CHECK] Calling loadCurrency() to cache currency list...');
+        await this.loadCurrency();
+        console.log('[REG-CHECK] Currency data loaded and cached');
+
+        // Check if user has any balances
+        const hasBalances = balanceData && Object.keys(balanceData).length > 0;
         this.state.balancesLoaded = true;
         console.log('[REG-CHECK] ✅ User balances loaded and cached');
         console.log('[REG-CHECK] Balance data returned:', balanceData);
