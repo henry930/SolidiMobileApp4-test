@@ -1702,6 +1702,65 @@ let Transfer = ({ initialMode } = {}) => {
                           <Button mode="outlined" onPress={() => copyToClipboard(depositDetails.address)} icon="content-copy" style={{ marginTop: 8 }} contentStyle={{ paddingVertical: 4 }}>
                             Copy Address
                           </Button>
+
+                          {/* Destination Tag Section - for XRP and similar assets */}
+                          {depositDetails.destinationTag && (
+                            <View style={{ marginTop: 24 }}>
+                              <Text variant="bodyMedium" style={{ marginBottom: 8, fontWeight: '500' }}>Destination Tag:</Text>
+                              <Surface style={{
+                                padding: 16,
+                                borderRadius: 8,
+                                backgroundColor: '#fff9c4',
+                                marginBottom: 16,
+                                minHeight: 60,
+                                justifyContent: 'center',
+                                borderWidth: 2,
+                                borderColor: '#fbc02d'
+                              }}>
+                                <Text variant="bodyLarge" style={{
+                                  fontFamily: 'monospace',
+                                  fontSize: normaliseFont(18),
+                                  lineHeight: 24,
+                                  textAlign: 'center',
+                                  color: '#333',
+                                  fontWeight: 'bold'
+                                }}>
+                                  {depositDetails.destinationTag}
+                                </Text>
+                              </Surface>
+                              <Button
+                                mode="contained"
+                                onPress={() => {
+                                  try {
+                                    Clipboard.setString(depositDetails.destinationTag);
+                                    alert('Destination tag copied to clipboard!');
+                                  } catch (error) {
+                                    alert('Failed to copy destination tag');
+                                  }
+                                }}
+                                icon="content-copy"
+                                style={{ marginTop: 8, backgroundColor: '#fbc02d' }}
+                                contentStyle={{ paddingVertical: 4 }}
+                                labelStyle={{ color: '#000' }}
+                              >
+                                Copy Destination Tag
+                              </Button>
+
+                              {/* Warning about QR code */}
+                              <Surface style={{
+                                padding: 12,
+                                borderRadius: 8,
+                                backgroundColor: '#ffebee',
+                                marginTop: 16,
+                                borderWidth: 1,
+                                borderColor: '#ef5350'
+                              }}>
+                                <Text variant="bodySmall" style={{ color: '#c62828', textAlign: 'center', lineHeight: 18 }}>
+                                  ⚠️ Please note: The QR code does not include the XRP destination tag. You must provide both the address and destination tag when receiving XRP.
+                                </Text>
+                              </Surface>
+                            </View>
+                          )}
                         </View>
                       );
                     }
