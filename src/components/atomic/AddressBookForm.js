@@ -101,6 +101,20 @@ let AddressBookForm = ({
         console.log('✅ AddressBookForm: API client already initialized');
       }
 
+      // Load currency list for asset options (Issue #79 fix)
+      try {
+        if (appState.loadCurrency) {
+          console.log('🔄 AddressBookForm: Loading currency list from /v1/currency API...');
+          await appState.loadCurrency();
+          console.log('✅ AddressBookForm: Currency list loaded');
+        } else {
+          console.log('⚠️ AddressBookForm: loadCurrency method not available');
+        }
+      } catch (err) {
+        console.error('❌ AddressBookForm: Failed to load currency list:', err);
+        // Continue anyway - will fall back to balance API
+      }
+
       // Use cached balance data to populate asset options
       // Balance data is loaded during authentication
       try {
