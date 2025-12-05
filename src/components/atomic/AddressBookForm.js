@@ -1217,9 +1217,9 @@ let AddressBookForm = ({
         style={styles.stepContent}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
+        keyboardDismissMode="interactive"
         showsVerticalScrollIndicator={true}
-        nestedScrollEnabled={true}
+        nestedScrollEnabled={false}
       >
         {renderStep()}
       </ScrollView>
