@@ -37,6 +37,9 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+# Enable modular headers for Swift pods
+use_modular_headers!
+
 target 'SolidiMobileApp4' do
   use_modular_headers!
   config = use_native_modules!
