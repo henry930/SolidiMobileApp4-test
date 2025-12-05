@@ -156,3 +156,7 @@ project.ext.vectoricons = [
 ]
 */
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+// Apply Google Services plugin - MUST be at the bottom of the file
+// This enables Firebase to auto-initialize from google-services.json
+apply plugin: 'com.google.gms.google-services'

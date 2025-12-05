@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solidi Notification Dashboard</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1,
+        h2 {
+            color: #111827;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.danger {
+            background-color: var(--danger);
+        }
+
+        button.danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #config-section {
+            background-color: #e0e7ff;
+            border: 1px solid #c7d2fe;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card" id="config-section">
+            <div class="form-group">
+                <label for="api-url">API URL</label>
+                <input type="text" id="api-url" value="https://u4o3rayvl6.execute-api.us-east-1.amazonaws.com/dev"
+                    placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label for="global-email-filter">Filter by Email (applies to all tabs)</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="email" id="global-email-filter" placeholder="e.g., henry930@gmail.com"
+                        style="flex: 1;">
+                    <button onclick="applyGlobalFilter()" style="padding: 8px 16px;">Apply Filter</button>
+                    <button onclick="clearGlobalFilter()" class="danger" style="padding: 8px 16px;">Clear</button>
+                </div>
+                <small style="color: #6b7280; margin-top: 4px; display: block;">Leave empty to show all records</small>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('send')">Send Notification</div>
+            <div class="tab" onclick="switchTab('devices')">Manage Devices</div>
+            <div class="tab" onclick="switchTab('history')">History</div>
+        </div>
+
+        <!-- SEND NOTIFICATION TAB -->
+        <div id="send-tab" class="tab-content">
+            <div class="card">
+                <h2>Send Notification</h2>
+                <div style="padding: 12px; background: #e0e7ff; border-radius: 4px; margin-bottom: 16px;">
+                    <strong>Recipient:</strong> <span id="recipient-display" style="color: #2563eb;">Set email filter
+                        above</span>
+                </div>
+                <div class="form-group">
+                    <label for="message-title">Title</label>
+                    <input type="text" id="message-title" value="Test Notification">
+                </div>
+                <div class="form-group">
+                    <label for="message-body">Message</label>
+                    <textarea id="message-body" rows="3"
+                        placeholder="Enter your message here...">Hello from the dashboard!</textarea>
+                </div>
+                <button onclick="sendNotification()" id="send-btn">Send Notification</button>
+                <div id="send-result" style="margin-top: 16px;"></div>
+            </div>
+        </div>
+
+        <!-- DEVICES TAB -->
+        <div id="devices-tab" class="tab-content hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Registered Devices</h2>
+                    <button onclick="loadDevices()">Refresh List</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="devices-table">
+                        <thead>
+                            <tr>
+                                <th>User ID (Email)</th>
+                                <th>Platform</th>
+                                <th>Device ID</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="history-tab" class="tab-content hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Notification History</h2>
+                    <button onclick="loadHistory()">Refresh History</button>
+                </div>
+                <div class="form-group">
+                    <label for="history-filter">Filter by User Email</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="history-filter" placeholder="Enter email to filter">
+                        <button onclick="loadHistory()">Filter</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User ID</th>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5">Click Refresh to load history</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let devices = [];
+        let globalEmailFilter = '';
+
+        // Initialize from localStorage
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedEmail = localStorage.getItem('dashboardEmailFilter');
+            if (savedEmail) {
+                document.getElementById('global-email-filter').value = savedEmail;
+                globalEmailFilter = savedEmail;
+            }
+            updateRecipientDisplay(); // Initialize recipient display
+        });
+
+        // Global Filter Functions
+        function applyGlobalFilter() {
+            const email = document.getElementById('global-email-filter').value.trim();
+            globalEmailFilter = email;
+            localStorage.setItem('dashboardEmailFilter', email);
+
+            // Update recipient display
+            updateRecipientDisplay();
+
+            // Reload current tab data
+            const activeTab = document.querySelector('.tab.active').textContent.toLowerCase();
+            if (activeTab.includes('devices')) loadDevices();
+            if (activeTab.includes('history')) loadHistory();
+        }
+
+        function updateRecipientDisplay() {
+            const display = document.getElementById('recipient-display');
+            if (globalEmailFilter) {
+                display.textContent = globalEmailFilter;
+                display.style.color = '#2563eb';
+            } else {
+                display.textContent = 'Set email filter above';
+                display.style.color = '#6b7280';
+            }
+        }
+
+        function clearGlobalFilter() {
+            document.getElementById('global-email-filter').value = '';
+            globalEmailFilter = '';
+            localStorage.removeItem('dashboardEmailFilter');
+
+            // Update recipient display
+            updateRecipientDisplay();
+
+            // Reload current tab data
+            const activeTab = document.querySelector('.tab.active').textContent.toLowerCase();
+            if (activeTab.includes('devices')) loadDevices();
+            if (activeTab.includes('history')) loadHistory();
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+
+            // Update recipient display when switching to send tab
+            if (tabName === 'send') {
+                updateRecipientDisplay();
+            }
+
+            if (tabName === 'devices') loadDevices();
+            if (tabName === 'history') loadHistory();
+        }
+
+        // API Helper
+        function getApiUrl() {
+            return document.getElementById('api-url').value.replace(/\/$/, '');
+        }
+
+        // Send Notification
+        async function sendNotification() {
+            const btn = document.getElementById('send-btn');
+            const resultDiv = document.getElementById('send-result');
+            const email = globalEmailFilter;
+            const title = document.getElementById('message-title').value;
+            const body = document.getElementById('message-body').value;
+
+            if (!email) {
+                resultDiv.innerHTML = `<div style="color: #dc2626; padding: 10px; background: #fee2e2; border-radius: 4px;">
+                    ⚠️ Please set an email filter above before sending notifications.
+                </div>`;
+                return;
+            }
+
+            if (!body) {
+                alert('Please enter a message');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            resultDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${getApiUrl()}/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: email,
+                        title: title,
+                        message: body
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `<div style="color: green; padding: 10px; background: #d1fae5; border-radius: 4px;">
+                        ✅ Sent successfully! <br>
+                        Sent: ${data.results[0].sent ? 'Yes' : 'No'} <br>
+                        Message: ${data.results[0].message || 'Delivered'}
+                    </div>`;
+                } else {
+                    throw new Error(data.message || 'Failed to send');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: red; padding: 10px; background: #fee2e2; border-radius: 4px;">
+                    ❌ Error: ${error.message}
+                </div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send Notification';
+            }
+        }
+
+        // Load Devices
+        async function loadDevices() {
+            const tbody = document.querySelector('#devices-table tbody');
+            tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+
+            try {
+                const response = await fetch(`${getApiUrl()}/devices`);
+                const data = await response.json();
+
+                if (data.success) {
+                    devices = data.devices;
+                    renderDevices(devices);
+                } else {
+                    throw new Error(data.message || 'Failed to load devices');
+                }
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="5" style="color: red;">Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function renderDevices(list) {
+            const tbody = document.querySelector('#devices-table tbody');
+
+            // Apply global email filter
+            let filteredList = list;
+            if (globalEmailFilter) {
+                filteredList = list.filter(device =>
+                    device.userId.toLowerCase().includes(globalEmailFilter.toLowerCase())
+                );
+            }
+
+            if (filteredList.length === 0) {
+                const message = globalEmailFilter
+                    ? `No devices found for "${globalEmailFilter}"`
+                    : 'No devices found';
+                tbody.innerHTML = `<tr><td colspan="5">${message}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filteredList.map(device => `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="text" value="${device.userId}" id="email-${device.deviceId}" style="width: 200px;">
+                            <button onclick="updateEmail('${device.userId}', '${device.deviceId}')" style="padding: 4px 8px; font-size: 12px;">Update</button>
+                        </div>
+                    </td>
+                    <td>${device.platform}</td>
+                    <td style="font-family: monospace; font-size: 12px;">${device.deviceId}</td>
+                    <td>${new Date(device.createdAt).toLocaleString()}</td>
+                    <td>
+                        <button class="danger" onclick="deleteDevice('${device.userId}', '${device.deviceId}')" style="padding: 4px 8px; font-size: 12px;">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Update Email (Re-map)
+        async function updateEmail(oldUserId, deviceId) {
+            const newUserId = document.getElementById(`email-${deviceId}`).value;
+            if (oldUserId === newUserId) return;
+
+            if (!confirm(`Are you sure you want to move this device from ${oldUserId} to ${newUserId}?`)) return;
+
+            // This is a hacky way to "update" - we delete the old one and let the user re-register, 
+            // OR ideally we'd have an update endpoint. 
+            // Since we don't have an update endpoint, we'll just alert the user for now that this requires re-registration logic
+            // But wait, we can't easily update the partition key (userId) in DynamoDB.
+            // We have to delete and re-create. But we don't have the token here to re-create.
+
+            alert("To change the email, you must delete this mapping and have the user log in with the new email on their device.");
+        }
+
+        // Delete Device
+        async function deleteDevice(userId, deviceId) {
+            if (!confirm(`Delete device for ${userId}?`)) return;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/device`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, deviceId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadDevices(); // Refresh
+                } else {
+                    alert('Failed to delete: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Load History
+        async function loadHistory() {
+            const tbody = document.querySelector('#history-table tbody');
+            const filterEmail = document.getElementById('history-filter').value || globalEmailFilter;
+
+            tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+
+            let url = `${getApiUrl()}/notifications`;
+            if (filterEmail) {
+                url += `?userId=${encodeURIComponent(filterEmail)}`;
+            }
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderHistory(data.notifications || [], filterEmail);
+                } else {
+                    throw new Error(data.message || 'Failed to load history');
+                }
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="5" style="color: red;">Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function renderHistory(list, filterEmail) {
+            const tbody = document.querySelector('#history-table tbody');
+            if (list.length === 0) {
+                const message = filterEmail
+                    ? `No notifications found for "${filterEmail}"`
+                    : 'No history found';
+                tbody.innerHTML = `<tr><td colspan="5">${message}</td></tr>`;
+                return;
+            }
+
+            // Sort by timestamp desc
+            list.sort((a, b) => b.timestamp - a.timestamp);
+
+            tbody.innerHTML = list.map(item => `
+                <tr>
+                    <td>${new Date(item.timestamp).toLocaleString()}</td>
+                    <td>${item.userId}</td>
+                    <td>${item.title || 'Notification'}</td>
+                    <td>${item.body || item.message || ''}</td>
+                    <td><span class="status active">Sent</span></td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+
+</html>

@@ -74,52 +74,52 @@ try {
   console.log('⚠️ [KEYCHAIN] Failed to load react-native-keychain, using MockKeychain:', error.message);
   // Use Mock Keychain with persistent AsyncStorage
   Keychain = {
-  getInternetCredentials: async (key) => {
-    console.log(`[MockKeychain] 🔍 getInternetCredentials called for key: ${key}`);
-    try {
-      const stored = await AsyncStorage.getItem(`keychain_${key}`);
-      console.log(`[MockKeychain] 📦 Raw stored value exists: ${!!stored}`);
-      if (stored) {
-        const { username, password } = JSON.parse(stored);
-        console.log(`[MockKeychain] ✅ Found credentials - username length: ${username?.length}, password length: ${password?.length}`);
-        return { username, password };
+    getInternetCredentials: async (key) => {
+      console.log(`[MockKeychain] 🔍 getInternetCredentials called for key: ${key}`);
+      try {
+        const stored = await AsyncStorage.getItem(`keychain_${key}`);
+        console.log(`[MockKeychain] 📦 Raw stored value exists: ${!!stored}`);
+        if (stored) {
+          const { username, password } = JSON.parse(stored);
+          console.log(`[MockKeychain] ✅ Found credentials - username length: ${username?.length}, password length: ${password?.length}`);
+          return { username, password };
+        }
+      } catch (error) {
+        console.log(`[MockKeychain] ❌ Error retrieving credentials:`, error);
       }
-    } catch (error) {
-      console.log(`[MockKeychain] ❌ Error retrieving credentials:`, error);
+      console.log(`[MockKeychain] ⚠️ No credentials found for key: ${key}`);
+      return { username: false, password: false };
+    },
+    setInternetCredentials: async (key, username, password) => {
+      console.log(`[MockKeychain] 💾 setInternetCredentials called for key: ${key}`);
+      console.log(`[MockKeychain] 📝 Storing username length: ${username?.length}, password length: ${password?.length}`);
+      try {
+        await AsyncStorage.setItem(`keychain_${key}`, JSON.stringify({ username, password }));
+        console.log(`[MockKeychain] ✅ Successfully stored credentials for key: ${key}`);
+
+        // Verify it was stored
+        const verify = await AsyncStorage.getItem(`keychain_${key}`);
+        console.log(`[MockKeychain] 🔍 Verification: stored data exists: ${!!verify}`);
+      } catch (error) {
+        console.log(`[MockKeychain] ❌ Error storing credentials:`, error);
+      }
+      return Promise.resolve();
+    },
+    resetInternetCredentials: async (key) => {
+      console.log(`[MockKeychain] resetInternetCredentials called for key: ${key}`);
+      console.log('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] ===== CREDENTIALS BEING DELETED FROM ASYNCSTORAGE =====');
+      console.log('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] Storage key:', `keychain_${key}`);
+      console.error('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] WHO CALLED THIS?');
+      console.trace('🔥🔥🔥🔥🔥 Stack trace:');
+      try {
+        await AsyncStorage.removeItem(`keychain_${key}`);
+        console.log(`[MockKeychain] ✅ Successfully removed credentials for key: ${key}`);
+        console.log('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] CREDENTIALS DELETED!');
+      } catch (error) {
+        console.log(`[MockKeychain] ❌ Error removing credentials:`, error);
+      }
+      return Promise.resolve();
     }
-    console.log(`[MockKeychain] ⚠️ No credentials found for key: ${key}`);
-    return { username: false, password: false };
-  },
-  setInternetCredentials: async (key, username, password) => {
-    console.log(`[MockKeychain] 💾 setInternetCredentials called for key: ${key}`);
-    console.log(`[MockKeychain] 📝 Storing username length: ${username?.length}, password length: ${password?.length}`);
-    try {
-      await AsyncStorage.setItem(`keychain_${key}`, JSON.stringify({ username, password }));
-      console.log(`[MockKeychain] ✅ Successfully stored credentials for key: ${key}`);
-      
-      // Verify it was stored
-      const verify = await AsyncStorage.getItem(`keychain_${key}`);
-      console.log(`[MockKeychain] 🔍 Verification: stored data exists: ${!!verify}`);
-    } catch (error) {
-      console.log(`[MockKeychain] ❌ Error storing credentials:`, error);
-    }
-    return Promise.resolve();
-  },
-  resetInternetCredentials: async (key) => {
-    console.log(`[MockKeychain] resetInternetCredentials called for key: ${key}`);
-    console.log('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] ===== CREDENTIALS BEING DELETED FROM ASYNCSTORAGE =====');
-    console.log('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] Storage key:', `keychain_${key}`);
-    console.error('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] WHO CALLED THIS?');
-    console.trace('🔥🔥🔥🔥🔥 Stack trace:');
-    try {
-      await AsyncStorage.removeItem(`keychain_${key}`);
-      console.log(`[MockKeychain] ✅ Successfully removed credentials for key: ${key}`);
-      console.log('🔥🔥🔥🔥🔥 [MOCK KEYCHAIN DELETE] CREDENTIALS DELETED!');
-    } catch (error) {
-      console.log(`[MockKeychain] ❌ Error removing credentials:`, error);
-    }
-    return Promise.resolve();
-  }
   };
 }
 
@@ -147,7 +147,7 @@ import ImageLookup from 'src/images';
 // Logger
 import logger from 'src/util/logger';
 let logger2 = logger.extend('AppState');
-let {deb, dj, log, lj} = logger.getShortcuts(logger2);
+let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
 // ===== BASIC CONSOLE TEST =====
 console.log('🎯 APPSTATE.JS LOADED - CONSOLE LOGGING IS WORKING! 🎯');
@@ -171,15 +171,15 @@ const storeCrashLog = (error, context) => {
     appVersion: '1.2.0',
     buildNumber: '33'
   };
-  
+
   crashLogs.push(crashLog);
   // Use original console.error to prevent infinite loop
   originalConsoleError(`🚨 [CRASH LOG ${crashLogs.length}] ${context}:`, error);
   originalConsoleError(`🚨 [CRASH LOG ${crashLogs.length}] Stack:`, error.stack);
-  
+
   // Try to send to server immediately
   sendCrashLogToServer(crashLog);
-  
+
   // Store in AsyncStorage for later retrieval
   try {
     AsyncStorage.setItem('app_crash_logs', JSON.stringify(crashLogs));
@@ -207,9 +207,9 @@ const sendCrashLogToServer = async (crashLog) => {
 const globalErrorHandler = (error, isFatal) => {
   console.error('🚨 [GLOBAL ERROR]', error);
   console.error('🚨 [GLOBAL ERROR] Fatal:', isFatal);
-  
+
   storeCrashLog(error, 'Global JavaScript Error');
-  
+
   if (isFatal) {
     console.error('🚨 [FATAL ERROR] App will attempt emergency recovery');
     emergencyMode = true;
@@ -220,7 +220,7 @@ const globalErrorHandler = (error, isFatal) => {
 const globalRejectionHandler = (event) => {
   console.error('🚨 [UNHANDLED PROMISE REJECTION]', event.reason);
   storeCrashLog(
-    new Error(`Unhandled Promise Rejection: ${event.reason}`), 
+    new Error(`Unhandled Promise Rejection: ${event.reason}`),
     'Unhandled Promise Rejection'
   );
 };
@@ -241,12 +241,12 @@ if (typeof global !== 'undefined') {
   console.error = (...args) => {
     // Call original console.error
     originalConsoleError.apply(console, args);
-    
+
     // Store as crash log if it looks like an error - but EXCLUDE our own crash logs to prevent infinite loop
-    if (args[0] && 
-        (args[0].includes('Error:') || args[0].includes('TypeError:') || args[0].includes('ReferenceError:')) &&
-        !args[0].includes('🚨 [CRASH LOG') &&
-        !args[0].includes('CRASH LOG')) {
+    if (args[0] &&
+      (args[0].includes('Error:') || args[0].includes('TypeError:') || args[0].includes('ReferenceError:')) &&
+      !args[0].includes('🚨 [CRASH LOG') &&
+      !args[0].includes('CRASH LOG')) {
       storeCrashLog(new Error(args.join(' ')), 'Console Error');
     }
   };
@@ -265,10 +265,10 @@ global.checkCredentialsCache = async () => {
   console.log('🔍 ========== CHECKING CREDENTIALS CACHE ==========');
   try {
     const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    
+
     const cacheData = await AsyncStorage.getItem('solidi_credentials_cache');
     console.log('📦 Cache data exists:', !!cacheData);
-    
+
     if (cacheData) {
       const parsed = JSON.parse(cacheData);
       console.log('✅ CACHE FILE FOUND!');
@@ -280,10 +280,10 @@ global.checkCredentialsCache = async () => {
     } else {
       console.log('❌ NO CACHE FILE FOUND');
     }
-    
+
     const allKeys = await AsyncStorage.getAllKeys();
     console.log('🗂️ All AsyncStorage keys:', allKeys);
-    
+
   } catch (error) {
     console.error('❌ Error:', error);
   }
@@ -348,7 +348,7 @@ let domains = {
   stag: 't10.solidi.co',
   prod: 'www.solidi.co',
 }
-if (! _.has(domains, appTier)) throw new Error(`Unrecognised app tier: ${appTier}`);
+if (!_.has(domains, appTier)) throw new Error(`Unrecognised app tier: ${appTier}`);
 let domain = domains[appTier];
 log(`${appTier} domain: ${domain}`);
 let autoLoginCredentials = {
@@ -363,7 +363,7 @@ let pinStorageKey = `PIN_${appTier}_${appName}_${domain}`;
 log(`- Keychain: apiCredentialsStorageKey = ${apiCredentialsStorageKey}`);
 log(`- Keychain: pinStorageKey = ${pinStorageKey}`);
 
-const graph_periods = ['2H','8H','1D','1W','1M','6M','1Y'];
+const graph_periods = ['2H', '8H', '1D', '1W', '1M', '6M', '1Y'];
 
 // Sample data for development mode
 const sampleData = {
@@ -379,23 +379,23 @@ const sampleData = {
   },
   assets: [
     {
-      "key": "BTC", "name": "Bitcoin", "decimal_places": 8, "group": "crypto", 
+      "key": "BTC", "name": "Bitcoin", "decimal_places": 8, "group": "crypto",
       "icon_url": "https://static.solidi.co/crypto_icons/BTC.png",
       "price_usd": "45250.50", "change_24h": "+2.35%", "is_active": true
     },
     {
       "key": "ETH", "name": "Ethereum", "decimal_places": 18, "group": "crypto",
-      "icon_url": "https://static.solidi.co/crypto_icons/ETH.png", 
+      "icon_url": "https://static.solidi.co/crypto_icons/ETH.png",
       "price_usd": "2850.75", "change_24h": "-1.20%", "is_active": true
     },
     {
       "key": "LTC", "name": "Litecoin", "decimal_places": 8, "group": "crypto",
-      "icon_url": "https://static.solidi.co/crypto_icons/LTC.png", 
+      "icon_url": "https://static.solidi.co/crypto_icons/LTC.png",
       "price_usd": "85.42", "change_24h": "+1.80%", "is_active": true
     },
     {
       "key": "XRP", "name": "Ripple", "decimal_places": 6, "group": "crypto",
-      "icon_url": "https://static.solidi.co/crypto_icons/XRP.png", 
+      "icon_url": "https://static.solidi.co/crypto_icons/XRP.png",
       "price_usd": "0.52", "change_24h": "-0.95%", "is_active": true
     },
     {
@@ -411,7 +411,7 @@ const sampleData = {
   ],
   markets: [
     {
-      "asset1": "BTC", "asset2": "GBP", "price": "36200.40", 
+      "asset1": "BTC", "asset2": "GBP", "price": "36200.40",
       "change_24h": "+2.30%", "volume_24h": "1250000", "is_active": true
     },
     {
@@ -453,7 +453,7 @@ class AppStateProvider extends Component {
     // Detect TestFlight build and enable safety measures
     const IS_TESTFLIGHT = !__DEV__ && Platform.OS === 'ios';
     const IS_PRODUCTION = !__DEV__;
-    
+
     console.log('🚀 [STARTUP] AppState constructor starting...');
     console.log('🔍 [ENV] Environment detection:', {
       isDev: __DEV__,
@@ -466,11 +466,11 @@ class AppStateProvider extends Component {
     this.emergencyState = {
       mainPanelState: 'Login',
       error: { message: '' },
-      user: { 
+      user: {
         isAuthenticated: false,
-        info: { 
-          user: null, 
-          user_status: null, 
+        info: {
+          user: null,
+          user_status: null,
           depositDetails: {
             GBP: {
               accountName: null,
@@ -525,16 +525,16 @@ class AppStateProvider extends Component {
     } catch (error) {
       console.error('🚨 [STARTUP CRASH] Constructor failed:', error);
       console.error('🚨 [STARTUP CRASH] Error stack:', error.stack);
-      
+
       // Send crash report to remote logging
       this.reportConstructorCrash(error);
-      
+
       // Set emergency state to prevent app termination
       this.state = this.emergencyState;
-      this.state.error = { 
-        message: `App startup failed: ${error.message}. Running in emergency mode.` 
+      this.state.error = {
+        message: `App startup failed: ${error.message}. Running in emergency mode.`
       };
-      
+
       console.log('🆘 [EMERGENCY] Emergency state activated to prevent crash');
       return; // Exit constructor early with emergency state
     }
@@ -543,7 +543,7 @@ class AppStateProvider extends Component {
   // Test critical operations that commonly fail in TestFlight
   testCriticalOperations = () => {
     console.log('🔧 [STARTUP] Testing critical operations...');
-    
+
     // Test platform detection
     const platformInfo = {
       OS: Platform.OS,
@@ -554,7 +554,7 @@ class AppStateProvider extends Component {
     // Test basic configuration
     const config = {
       domain: domain || 'unknown',
-      appTier: appTier || 'unknown', 
+      appTier: appTier || 'unknown',
       appVersion: appVersion || 'unknown',
       appName: appName || 'unknown'
     };
@@ -602,7 +602,7 @@ class AppStateProvider extends Component {
   testKeychainAccess = () => {
     try {
       console.log('🔐 [KEYCHAIN] Testing keychain access...');
-      
+
       // Log the storage keys that will be used
       console.log('🔐 [KEYCHAIN] Storage keys:', {
         api: apiCredentialsStorageKey,
@@ -612,7 +612,7 @@ class AppStateProvider extends Component {
       // Note: We can't do async operations in constructor, so we'll set up
       // a flag to test keychain access later in componentDidMount
       this.keychainTestPending = true;
-      
+
       console.log('✅ [KEYCHAIN] Keychain access test setup completed');
     } catch (error) {
       console.error('🔐 [KEYCHAIN ERROR] Keychain test setup failed:', error);
@@ -624,20 +624,20 @@ class AppStateProvider extends Component {
   initializeLocalStorage = async () => {
     try {
       console.log('💾 [LOCAL STORAGE] Initializing crash log storage...');
-      
+
       // Load existing crash logs
       const existingLogs = await AsyncStorage.getItem('app_crash_logs');
       if (existingLogs) {
         const logs = JSON.parse(existingLogs);
         console.log(`💾 [LOCAL STORAGE] Found ${logs.length} existing crash logs`);
-        
+
         // If there are crash logs from previous sessions, send them
         if (logs.length > 0) {
           console.log('📤 [LOCAL STORAGE] Sending previous crash logs to server...');
           this.sendStoredCrashLogs(logs);
         }
       }
-      
+
       // Initialize debugging info storage
       await this.storeDebugInfo('App initialized', {
         timestamp: new Date().toISOString(),
@@ -645,9 +645,9 @@ class AppStateProvider extends Component {
         appVersion: '1.2.0',
         buildNumber: '33'
       });
-      
+
       console.log('✅ [LOCAL STORAGE] Crash log storage initialized');
-      
+
     } catch (error) {
       console.error('❌ [LOCAL STORAGE] Failed to initialize storage:', error);
     }
@@ -662,19 +662,19 @@ class AppStateProvider extends Component {
         data,
         platform: Platform.OS
       };
-      
+
       const existingDebugLogs = await AsyncStorage.getItem('debug_info_logs') || '[]';
       const debugLogs = JSON.parse(existingDebugLogs);
       debugLogs.push(debugEntry);
-      
+
       // Keep only last 50 debug entries
       if (debugLogs.length > 50) {
         debugLogs.shift();
       }
-      
+
       await AsyncStorage.setItem('debug_info_logs', JSON.stringify(debugLogs));
       console.log(`💾 [DEBUG INFO] Stored: ${event}`);
-      
+
     } catch (error) {
       console.error('❌ [DEBUG INFO] Failed to store debug info:', error);
     }
@@ -693,12 +693,12 @@ class AppStateProvider extends Component {
         }),
         timeout: 10000
       });
-      
+
       console.log('✅ [LOCAL STORAGE] Stored crash logs sent successfully');
-      
+
       // Clear stored logs after successful send
       await AsyncStorage.removeItem('app_crash_logs');
-      
+
     } catch (error) {
       console.error('❌ [LOCAL STORAGE] Failed to send stored crash logs:', error);
     }
@@ -708,7 +708,7 @@ class AppStateProvider extends Component {
   saveLastVisitedPage = async (mainPanelState, pageName = 'default') => {
     try {
       console.log('💾 [LAST PAGE] Saving last visited page:', { mainPanelState, pageName });
-      
+
       // Don't save login/registration pages as "last visited"
       const excludedStates = ['Login', 'Registration', 'RegistrationCompletion', 'PINCreation', 'PINLogin'];
       if (excludedStates.includes(mainPanelState)) {
@@ -721,10 +721,10 @@ class AppStateProvider extends Component {
         pageName,
         timestamp: Date.now()
       };
-      
+
       await AsyncStorage.setItem('last_visited_page', JSON.stringify(lastPageData));
       console.log('✅ [LAST PAGE] Last visited page saved successfully');
-      
+
     } catch (error) {
       console.error('❌ [LAST PAGE] Failed to save last visited page:', error);
     }
@@ -734,7 +734,7 @@ class AppStateProvider extends Component {
   getLastVisitedPage = async () => {
     try {
       console.log('📖 [LAST PAGE] Retrieving last visited page...');
-      
+
       const stored = await AsyncStorage.getItem('last_visited_page');
       if (!stored) {
         console.log('📖 [LAST PAGE] No last visited page found, using default');
@@ -743,7 +743,7 @@ class AppStateProvider extends Component {
 
       const lastPageData = JSON.parse(stored);
       console.log('📖 [LAST PAGE] Retrieved last visited page:', lastPageData);
-      
+
       // Check if the stored page is not too old (7 days)
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
       if (Date.now() - lastPageData.timestamp > sevenDays) {
@@ -756,7 +756,7 @@ class AppStateProvider extends Component {
         mainPanelState: lastPageData.mainPanelState,
         pageName: lastPageData.pageName
       };
-      
+
     } catch (error) {
       console.error('❌ [LAST PAGE] Failed to retrieve last visited page:', error);
       return { mainPanelState: 'Home', pageName: 'default' };
@@ -782,22 +782,22 @@ class AppStateProvider extends Component {
       // Step 1: Basic setup
       console.log('🔄 [STARTUP] Step 1: Basic setup...');
       this.initializeBasicProperties();
-      
+
       // Step 2: State management functions
       console.log('🔄 [STARTUP] Step 2: State management functions...');
       this.initializeStateFunctions();
-      
+
       // Step 3: API and authentication functions
       console.log('🔄 [STARTUP] Step 3: API and authentication functions...');
       this.initializeAPIFunctions();
-      
+
       // Step 4: State object creation
       console.log('🔄 [STARTUP] Step 4: Creating state object...');
       this.initializeStateObject();
-      
+
       // Override setState to track authentication changes
       const originalSetState = this.setState.bind(this);
-      this.setState = function(updates, callback) {
+      this.setState = function (updates, callback) {
         if (updates && updates.user) {
           const oldAuth = this.state.user?.isAuthenticated;
           const newAuth = updates.user?.isAuthenticated;
@@ -808,17 +808,17 @@ class AppStateProvider extends Component {
         }
         return originalSetState(updates, callback);
       }.bind(this);
-      
+
       // Step 5: Mobile-specific initialization
       console.log('🔄 [STARTUP] Step 5: Mobile-specific initialization...');
       await this.initializeMobileFeatures();
-      
+
       // Step 6: Auto-login initialization (async - runs in background)
       console.log('🔄 [STARTUP] Step 6: Initializing auto-login...');
       this.initializeAutoLogin();
-      
+
       console.log('✅ [STARTUP] All initialization steps completed successfully');
-      
+
     } catch (error) {
       console.error('🚨 [STARTUP] Initialization step failed:', error);
       throw error; // Re-throw to be caught by main constructor try-catch
@@ -837,7 +837,7 @@ class AppStateProvider extends Component {
     // Set initial state to our configured state for testing
     this.initialMainPanelState = initialMainPanelState; // Use our testing configuration
     console.log('🎯 [AppState] Initial main panel state set to:', this.initialMainPanelState);
-    
+
     this.initialPageName = initialPageName;
 
     // Misc
@@ -851,7 +851,7 @@ class AppStateProvider extends Component {
     this.nonHistoryPanels = `
 Authenticate Login PIN
 `;
-    this.nonHistoryPanels = misc.splitStringIntoArray({s: this.nonHistoryPanels});
+    this.nonHistoryPanels = misc.splitStringIntoArray({ s: this.nonHistoryPanels });
   }
 
   // Step 2: Initialize state management functions
@@ -862,23 +862,23 @@ Authenticate Login PIN
     this.changeState = (stateName, pageName) => {
       let fName = 'changeState';
       console.log('🚀 [AppState] changeState called with:', stateName, pageName);
-      
+
       // We check for this error in setMainPanelState as well, but it's useful to have it occur here as well, for debugging purposes.
-      if (! mainPanelStates.includes(stateName)) {
+      if (!mainPanelStates.includes(stateName)) {
         var msg = `${fName}: Unrecognised stateName: ${JSON.stringify(stateName)}`
         console.log('❌ [AppState] Unrecognised stateName:', stateName);
         throw Error(msg);
       }
-      
+
       if (stateName === 'AccountUpdate') {
         console.log('🔥🔥🔥 [AppState] About to change to AccountUpdate state! 🔥🔥🔥');
         console.log('🎯 [AppState] Navigation triggered to AccountUpdate');
         console.log('🎯 [AppState] pageName:', pageName);
       }
-      
-      this.state.setMainPanelState({mainPanelState: stateName, pageName});
+
+      this.state.setMainPanelState({ mainPanelState: stateName, pageName });
       console.log('✅ [AppState] State change completed to:', stateName);
-      
+
       if (stateName === 'AccountUpdate') {
         console.log('🔥🔥🔥 [AppState] AccountUpdate state change COMPLETED! 🔥🔥🔥');
       }
@@ -888,7 +888,7 @@ Authenticate Login PIN
     this.logEntireStateHistory = () => {
       let msg = 'State history (most recent at the top):';
       let n = this.state.stateHistoryList.length;
-      for (let i=n-1; i>=0; i--) {
+      for (let i = n - 1; i >= 0; i--) {
         let entry = this.state.stateHistoryList[i];
         msg += `\n- ${jd(entry)}`;
       }
@@ -897,21 +897,21 @@ Authenticate Login PIN
 
 
     // Function for changing the mainPanelState.
-    this.setMainPanelState = (newState, stashed=false) => {
+    this.setMainPanelState = (newState, stashed = false) => {
       let fName = 'setMainPanelState';
-      let {mainPanelState: currentMainPanelState, pageName: currentPageName} = this.state;
-      let currentState = {mainPanelState: currentMainPanelState, pageName: currentPageName};
+      let { mainPanelState: currentMainPanelState, pageName: currentPageName } = this.state;
+      let currentState = { mainPanelState: currentMainPanelState, pageName: currentPageName };
       var msg = `${fName}: Current state = ${jd(currentState)}. Attempting to set state to: ${jd(newState)}.`;
       log(msg);
       //this.state.logEntireStateHistory();
-      let {mainPanelState, pageName} = newState;
-      if (_.isNil(mainPanelState) || ! mainPanelStates.includes(mainPanelState)) {
+      let { mainPanelState, pageName } = newState;
+      if (_.isNil(mainPanelState) || !mainPanelStates.includes(mainPanelState)) {
         var msg = `${fName}: Unknown mainPanelState: ${mainPanelState}`;
         log(msg);
         throw Error(msg);
       }
       if (_.isNil(pageName)) pageName = 'default';
-      newState = {mainPanelState, pageName};
+      newState = { mainPanelState, pageName };
       this.cancelTimers();
       this.abortAllRequests();
       let stateHistoryList = this.state.stateHistoryList;
@@ -926,10 +926,10 @@ Authenticate Login PIN
 PurchaseSuccessful PaymentNotMade SaleSuccessful SendSuccessful
 RegisterConfirm2 AccountUpdate
 `;
-      endJourneyList = misc.splitStringIntoArray({s: endJourneyList});
+      endJourneyList = misc.splitStringIntoArray({ s: endJourneyList });
       var msg = `${fName}: endJourneyList: ${jd(endJourneyList)} - Includes current state ? ${endJourneyList.includes(latestStoredState?.mainPanelState)}}`;
       //log(msg);
-      if (! _.isEmpty(latestStoredState)) {
+      if (!_.isEmpty(latestStoredState)) {
         // latestStoredState can be empty if we're testing and start on the Login page, which is not saved into the stateHistoryList.
         if (endJourneyList.includes(latestStoredState.mainPanelState)) {
           var msg = `${fName}: Arrived at end of a user journey: ${latestStoredState.mainPanelState}. Resetting state history.`;
@@ -946,7 +946,7 @@ RegisterConfirm2 AccountUpdate
       - pageName
       Don't store a reloaded stashed state in the history list.
       */
-      let storeHistoryState = (! stashed && ! this.nonHistoryPanels.includes(mainPanelState));
+      let storeHistoryState = (!stashed && !this.nonHistoryPanels.includes(mainPanelState));
       if (storeHistoryState) {
         let latestStoredState = stateHistoryList[stateHistoryList.length - 1];
         if (jd(newState) === jd(latestStoredState)) {
@@ -955,7 +955,7 @@ RegisterConfirm2 AccountUpdate
           var msg = `${fName}: Store new state history entry: ${jd(newState)}`;
           log(msg);
           stateHistoryList = stateHistoryList.concat(newState);
-          this.setState({stateHistoryList});
+          this.setState({ stateHistoryList });
         }
       }
       // Check if we need to authenticate prior to moving to this new state.
@@ -963,8 +963,8 @@ RegisterConfirm2 AccountUpdate
       // Allow public access states (Register, Login, Explore) to be accessible without authentication
       const isPublicAccessState = publicAccessStates.includes(mainPanelState);
       console.log(`🔍 AUTH CHECK: mainPanelState=${mainPanelState}, isPublicAccessState=${isPublicAccessState}, isAuthenticated=${this.state.user.isAuthenticated}, bypassAuthentication=${bypassAuthentication}`);
-      
-      if (! this.state.user.isAuthenticated && !bypassAuthentication && !isPublicAccessState) {
+
+      if (!this.state.user.isAuthenticated && !bypassAuthentication && !isPublicAccessState) {
         console.log(`🔒 AUTH: Blocking access to ${mainPanelState} - requires authentication`);
         if (this.state.authRequired.includes(mainPanelState)) {
           makeFinalSwitch = false;
@@ -980,11 +980,11 @@ RegisterConfirm2 AccountUpdate
       if (makeFinalSwitch) {
         // Global user validation check - run on every page change (except public pages and specific exclusions)
         const excludedPages = [
-          'Login', 
-          'Register', 
+          'Login',
+          'Register',
           'RegisterConfirm',
           'RegisterConfirm2',
-          'PIN', 
+          'PIN',
           'AccountUpdate',
           'Settings',
           'ForgotPassword',
@@ -992,7 +992,7 @@ RegisterConfirm2 AccountUpdate
           'VerificationCode',
           'CodeVerification'
         ];
-        
+
         // ===== TWO-LEVEL GLOBAL VALIDATION SYSTEM =====
         // LEVEL 1: Credentials Check - No credentials → Login page
         // LEVEL 2: User Status Check - Has credentials but needs forms → AccountReview modal
@@ -1003,31 +1003,31 @@ RegisterConfirm2 AccountUpdate
           isExcludedPage: excludedPages.includes(mainPanelState),
           mainPanelState: mainPanelState
         });
-        
+
         // LEVEL 1: Credentials/Authentication Check
         if (!isPublicAccessState && !excludedPages.includes(mainPanelState)) {
           if (!this.state.user.isAuthenticated) {
             console.log('❌ Level 1 Failed: No credentials/not authenticated - redirecting to Login');
-            this.setMainPanelState({mainPanelState: 'Login', pageName: 'default'});
+            this.setMainPanelState({ mainPanelState: 'Login', pageName: 'default' });
             return;
           }
-          
+
           // Additional check for API credentials
           if (!this.state.user.apiCredentialsFound) {
             console.log('❌ Level 1 Failed: No API credentials found - redirecting to Login');
-            this.setMainPanelState({mainPanelState: 'Login', pageName: 'default'});
+            this.setMainPanelState({ mainPanelState: 'Login', pageName: 'default' });
             return;
           }
-          
+
           // LEVEL 2: User Status Check (only if authenticated and has credentials)
           console.log('✅ Level 1 Passed: User is authenticated with credentials - checking user status...');
-          
+
           this.checkUserStatusRedirect().then(redirectTarget => {
             if (redirectTarget && redirectTarget !== mainPanelState) {
               console.log('❌ Level 2 Failed: User needs form completion');
               console.log('🔀 Redirecting from', mainPanelState, 'to', redirectTarget);
               // Redirect to the appropriate page (AccountReview modal)
-              this.setMainPanelState({mainPanelState: redirectTarget, pageName: 'default'});
+              this.setMainPanelState({ mainPanelState: redirectTarget, pageName: 'default' });
               return;
             } else {
               console.log('✅ Level 2 Passed: User status is valid, proceeding to', mainPanelState);
@@ -1044,8 +1044,8 @@ RegisterConfirm2 AccountUpdate
         let stateChangeID = this.state.stateChangeID + 1;
         var msg = `${fName}: New stateChangeID: ${stateChangeID} (mainPanelState = ${mainPanelState})`;
         log(msg);
-        this.setState({previousState: currentState, mainPanelState, pageName, stateChangeID});
-        
+        this.setState({ previousState: currentState, mainPanelState, pageName, stateChangeID });
+
         // Save last visited page for Face ID redirect (async, don't block UI)
         this.saveLastVisitedPage(mainPanelState, pageName).catch(error => {
           console.error('Failed to save last visited page:', error);
@@ -1103,7 +1103,7 @@ RegisterConfirm2 AccountUpdate
 
     this.resetStateHistory = () => {
       this.state.stateHistoryList = [];
-      if (! this.nonHistoryPanels.includes(this.initialMainPanelState)) {
+      if (!this.nonHistoryPanels.includes(this.initialMainPanelState)) {
         this.state.stateHistoryList = [{
           mainPanelState: this.initialMainPanelState,
           pageName: this.initialPageName,
@@ -1113,7 +1113,7 @@ RegisterConfirm2 AccountUpdate
       log(msg);
       // Technically, this function should only affect the history, but we use it as a shorthand for wiping the state's memory of previous states.
       this.state.deleteStashedState();
-      this.state.previousState = {mainPanelState: null, pageName: null};
+      this.state.previousState = { mainPanelState: null, pageName: null };
     }
 
 
@@ -1121,8 +1121,8 @@ RegisterConfirm2 AccountUpdate
       // Apart from setMainPanelState(), this is the only other basic function that changes the mainPanelState.
       let fName = 'decrementStateHistory';
       deb(`${fName}: Start`);
-      let {mainPanelState: currentMainPanelState, pageName: currentPageName} = this.state;
-      let currentState = {mainPanelState: currentMainPanelState, pageName: currentPageName};
+      let { mainPanelState: currentMainPanelState, pageName: currentPageName } = this.state;
+      let currentState = { mainPanelState: currentMainPanelState, pageName: currentPageName };
       deb(``);
       let stateHistoryList = this.state.stateHistoryList;
       if (stateHistoryList.length == 1) {
@@ -1132,10 +1132,10 @@ RegisterConfirm2 AccountUpdate
       this.cancelTimers();
       this.abortAllRequests();
       let previousStoredState = stateHistoryList[stateHistoryList.length - 2];
-      let {mainPanelState, pageName} = previousStoredState;
+      let { mainPanelState, pageName } = previousStoredState;
       if (stateHistoryList.length > 1) {
         stateHistoryList.pop();
-        this.setState({stateHistoryList});
+        this.setState({ stateHistoryList });
       }
       // If this state appears in the footerButtonList, set the footerIndex appropriately.
       // Note: This sets the index of the first button to be displayed in the footer. The highlighting of the selected button occurs separately.
@@ -1144,15 +1144,15 @@ RegisterConfirm2 AccountUpdate
         let index = footerButtonList.indexOf(mainPanelState);
         let steps = Math.floor(index / this.numberOfFooterButtonsToDisplay);
         let newFooterIndex = steps * this.numberOfFooterButtonsToDisplay;
-        lj({newFooterIndex});
+        lj({ newFooterIndex });
         this.setFooterIndex(newFooterIndex);
       }
       // Check if we need to authenticate prior to moving to this previous state.
       let makeFinalSwitch = true;
       // Allow public access states (Register, Login, Explore) to be accessible without authentication
       const isPublicAccessState = publicAccessStates.includes(mainPanelState);
-      
-      if (! this.state.user.isAuthenticated && !bypassAuthentication && !isPublicAccessState) {
+
+      if (!this.state.user.isAuthenticated && !bypassAuthentication && !isPublicAccessState) {
         if (this.state.authRequired.includes(mainPanelState)) {
           makeFinalSwitch = false;
           // Stash the previous state for later retrieval.
@@ -1166,7 +1166,7 @@ RegisterConfirm2 AccountUpdate
         let stateChangeID = this.state.stateChangeID + 1;
         var msg = `${fName}: currentState = ${jd(currentState)}. New stateChangeID: ${stateChangeID}. previousStoredState = ${jd(previousStoredState)}`
         log(msg);
-        this.setState({previousState: currentState, mainPanelState, pageName, stateChangeID});
+        this.setState({ previousState: currentState, mainPanelState, pageName, stateChangeID });
       }
     }
 
@@ -1177,7 +1177,7 @@ RegisterConfirm2 AccountUpdate
       if (newIndex < minIndex) newIndex = minIndex;
       if (newIndex > maxIndex) newIndex = maxIndex;
       if (newIndex !== this.state.footerIndex) {
-        this.setState({footerIndex: newIndex});
+        this.setState({ footerIndex: newIndex });
       }
     }
 
@@ -1190,9 +1190,9 @@ RegisterConfirm2 AccountUpdate
       try {
         log(`${fName}: Start`);
         let appState = this.state;
-        let {mainPanelState, pageName} = appState;
+        let { mainPanelState, pageName } = appState;
         // Current state is always stored, even if it's not saved in the stateHistoryList.
-        let currentState = {mainPanelState, pageName};
+        let currentState = { mainPanelState, pageName };
         let stateHistoryList = appState.stateHistoryList;
         let currentSavedState = stateHistoryList[stateHistoryList.length - 1];
         var msg = `${fName}: Current state: ${jd(currentState)} (current saved state: ${jd(currentSavedState)})`;
@@ -1206,12 +1206,12 @@ RegisterConfirm2 AccountUpdate
         */
         try {
           var extraInfoRequired = await appState.checkIfExtraInformationRequired();
-        } catch(err) {
+        } catch (err) {
           logger.error(err);
-          
+
           // Check if this is an authentication-related error
-          if (err.message && (err.message.includes('401') || err.message.includes('403') || 
-              err.message.includes('unauthorized') || err.message.includes('invalid'))) {
+          if (err.message && (err.message.includes('401') || err.message.includes('403') ||
+            err.message.includes('unauthorized') || err.message.includes('invalid'))) {
             logger.error('Authentication error during initialization, forcing logout');
             // Clear authentication and go to login instead of error state
             console.log('🔴 [AUTH CLEAR] Clearing authentication due to API error');
@@ -1225,7 +1225,7 @@ RegisterConfirm2 AccountUpdate
           } else {
             // For non-auth errors, provide option to recover
             logger.error('Non-authentication error during initialization');
-            return appState.switchToErrorState({message: `${String(err)} (Tap to retry login)`});
+            return appState.switchToErrorState({ message: `${String(err)} (Tap to retry login)` });
           }
         }
 
@@ -1246,14 +1246,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
         // Decision tree
         if (mainPanelState === 'Login') {
-          if (! appState.user.pin) {
+          if (!appState.user.pin) {
             nextStateName = 'PIN';
             nextPageName = 'choose';
           } else if (extraInfoRequired) {
             nextStateName = 'Trade'; // Redirect to index page instead of AccountUpdate
           } else if (appState.panels.buy.activeOrder) {
             nextStateName = 'ChooseHowToPay';
-          } else if (! _.isEmpty(appState.stashedState)) {
+          } else if (!_.isEmpty(appState.stashedState)) {
             return appState.loadStashedState();
           } else {
             nextStateName = 'Trade';
@@ -1265,7 +1265,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             nextStateName = 'Trade'; // Redirect to index page instead of AccountUpdate
           } else if (appState.panels.buy.activeOrder) {
             nextStateName = 'ChooseHowToPay';
-          } else if (! _.isEmpty(appState.stashedState)) {
+          } else if (!_.isEmpty(appState.stashedState)) {
             return appState.loadStashedState();
           } else {
             nextStateName = 'Trade';
@@ -1283,26 +1283,26 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         if (mainPanelState === 'AccountUpdate') {
           if (appState.panels.buy.activeOrder) {
             nextStateName = 'ChooseHowToPay';
-          } else if (! _.isEmpty(appState.stashedState)) {
+          } else if (!_.isEmpty(appState.stashedState)) {
             return appState.loadStashedState();
           } else {
             nextStateName = 'Trade';
           }
         }
 
-        if (! nextStateName) {
+        if (!nextStateName) {
           var msg = `${fName}: No next state found. Current state: ${jd(currentState)} (current saved state: ${jd(currentSavedState)})`;
-          appState.switchToErrorState({message: msg});
+          appState.switchToErrorState({ message: msg });
         }
 
-        let nextState = {mainPanelState: nextStateName, pageName: nextPageName};
+        let nextState = { mainPanelState: nextStateName, pageName: nextPageName };
         var msg = `${fName}: nextState = ${jd(nextState)}`;
         log(msg);
 
         // Change to next state.
         appState.setMainPanelState(nextState);
 
-      } catch(err) {
+      } catch (err) {
         var msg = `${fName}: ${String(err)}`;
         logger.error(msg);
         //appState.switchToErrorState({message: msg});
@@ -1317,7 +1317,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // 2023-03-16: We now check for "upgrade required" here.
       // Note: This method needs to be called in every page, so that the Android back button always works.
       // (Obviously the back button handler could be called separately, but that's less convenient overall.)
-      let {caller} = { ...optionalParams };
+      let { caller } = { ...optionalParams };
       let fName = `generalSetup`;
       let msg = `${fName}: Start`;
       if (caller) msg += ` (called from ${caller})`;
@@ -1347,35 +1347,35 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('🔍 APPSTATE: API client apiKey:', this.state.apiClient.apiKey);
         console.log('🔍 APPSTATE: API client apiSecret:', this.state.apiClient.apiSecret);
       }
-      
-      if (! this.state.apiClient) {
-        let {userAgent, domain} = this.state;
-        
+
+      if (!this.state.apiClient) {
+        let { userAgent, domain } = this.state;
+
         // ===== SIMPLIFIED APPSTATE API CLIENT CREATION =====
         console.log('🔥 APPSTATE: CREATING SOLIDI API CLIENT');
         console.log(`🌐 Domain: ${domain}`);
         // ===== SIMPLIFIED APPSTATE API CLIENT CREATION END =====
-        
+
         const newApiClient = new SolidiRestAPIClientLibrary({
-          userAgent, 
-          apiKey:'', 
-          apiSecret:'', 
+          userAgent,
+          apiKey: '',
+          apiSecret: '',
           domain,
           appStateRef: { current: this }
         });
-        
+
         // Update state properly to trigger React re-renders
         this.setState({ apiClient: newApiClient });
-        
+
         // Ensure the apiClient is immediately available in this.state
         this.state.apiClient = newApiClient;
-        
+
         console.log('✅ API CLIENT CREATED SUCCESSFULLY AND STATE UPDATED!');
       } else {
         console.log('⚠️ APPSTATE: API client already exists, skipping creation');
       }
       // Create CoinGecko API client for live crypto data
-      if (! this.state.coinGeckoAPI) {
+      if (!this.state.coinGeckoAPI) {
         this.state.coinGeckoAPI = new CoinGeckoAPI();
       }
       // OFFLINE MODE - Skip all network checks
@@ -1384,7 +1384,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         this.state.apiVersionLoaded = true;
         return;
       }
-      
+
       // We check for "upgrade required" on every screen load.
       try {
         await this.state.checkIfAppUpdateRequired();
@@ -1395,9 +1395,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           throw error;
         }
       }
-      
+
       // Load public info that rarely changes.
-      if (! this.state.apiVersionLoaded) {
+      if (!this.state.apiVersionLoaded) {
         try {
           await this.state.loadLatestAPIVersion();
           this.state.apiVersionLoaded = true;
@@ -1410,11 +1410,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           }
         }
       }
-      
+
       // Arguably we should double-check the API version here and not continue if it doesn't match.
       //let UpdateRequired = this.state.checkLatestAPIVersion();
       //lj({UpdateRequired});
-      
+
       try {
         await this.state.loadTerms();
       } catch (error) {
@@ -1424,8 +1424,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           throw error;
         }
       }
-      
-      if (! this.state.assetsInfoLoaded) {
+
+      if (!this.state.assetsInfoLoaded) {
         try {
           await this.state.loadAssetsInfo();
           this.state.assetsInfoLoaded = true;
@@ -1438,8 +1438,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           }
         }
       }
-      
-      if (! this.state.marketsLoaded) {
+
+      if (!this.state.marketsLoaded) {
         try {
           await this.state.loadMarkets();
           this.state.marketsLoaded = true;
@@ -1452,8 +1452,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           }
         }
       }
-      
-      if (! this.state.assetsIconsLoaded) {
+
+      if (!this.state.assetsIconsLoaded) {
         try {
           await this.state.loadAssetsIcons();
           this.state.assetsIconsLoaded = true;
@@ -1466,13 +1466,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           }
         }
       }
-      if (! this.state.ipAddressLoaded) {
+      if (!this.state.ipAddressLoaded) {
         try {
           let ipAddresses = await getIpAddressesForHostname(this.state.domain);
           let ipAddress = ipAddresses[0];
           log(`Domain IP address: ${ipAddress}`);
           this.state.ipAddressLoaded = true;
-        } catch(err) {
+        } catch (err) {
           logger.error(err);
           logger.error(`Unable to load IP address for hostname=${this.state.domain}, probably because of a poor or non-existent internet connection.`);
         }
@@ -1484,43 +1484,43 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           password: autoLoginCredentials['password']
         });
       }
-      
+
       // Note: Auto-login is now handled by initializeAutoLogin() during constructor
       // This ensures it runs on app startup, not just when generalSetup is called
     }
 
 
-    this.login = async ({email, password, tfa = ''}) => {
+    this.login = async ({ email, password, tfa = '' }) => {
       if (this.state.user.isAuthenticated) return;
-      
+
       // OFFLINE MODE - Skip API and directly login with mock credentials
       if (OFFLINE_MODE) {
         log(`[OFFLINE MODE] Mock login for email: ${email}`);
         let mockApiKey = "mock_api_key_for_testing_layouts_only";
         let mockApiSecret = "mock_api_secret_for_testing_layouts_only";
-        _.assign(this.state.user, {email, password});
-        await this.state.loginWithAPIKeyAndSecret({apiKey: mockApiKey, apiSecret: mockApiSecret});
+        _.assign(this.state.user, { email, password });
+        await this.state.loginWithAPIKeyAndSecret({ apiKey: mockApiKey, apiSecret: mockApiSecret });
         return "SUCCESS";
       }
-      
+
       // Create public API client.
-      let {userAgent, domain} = this.state;
-      
+      let { userAgent, domain } = this.state;
+
       // ===== SIMPLIFIED LOGIN API CLIENT CREATION =====
       console.log(' LOGIN: CREATING API CLIENT FOR LOGIN');
       console.log(`📧 Email: ${email}`);
       console.log(`🌐 Domain: ${domain}`);
       // ===== SIMPLIFIED LOGIN API CLIENT CREATION END =====
-      
+
       let apiClient = new SolidiRestAPIClientLibrary({
-        userAgent, 
-        apiKey:'', 
-        apiSecret:'', 
+        userAgent,
+        apiKey: '',
+        apiSecret: '',
         domain,
         appStateRef: { current: this }
       });
       this.state.apiClient = apiClient;
-      
+
       console.log('✅ LOGIN API CLIENT CREATED SUCCESSFULLY!');
       // Use the email and password to load the API Key and Secret from the server.
       let apiRoute = 'login_mobile' + `/${email}`;
@@ -1533,10 +1533,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           appTier,
         }
       };
-      let params = {password, tfa, optionalParams};
+      let params = { password, tfa, optionalParams };
       let abortController = this.state.createAbortController();
-      let data = await apiClient.publicMethod({httpMethod: 'POST', apiRoute, params, abortController});
-      
+      let data = await apiClient.publicMethod({ httpMethod: 'POST', apiRoute, params, abortController });
+
       // ===== LOGIN RESPONSE LOGGING =====
       console.log('🚀 LOGIN API RESPONSE:');
       console.log('📧 Email:', email);
@@ -1547,7 +1547,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
       log('LOGIN: Full API response received', data);
       // ===== LOGIN RESPONSE LOGGING END =====
-      
+
       // Issue: We may get a security block here, e.g.
       // {"error":{"code":400,"message":"Error in login","details":{"tfa_required":true}}}
       if (data.error) {
@@ -1562,57 +1562,57 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
       let keyNames = 'apiKey, apiSecret'.split(', ');
       // Future: if error is "cannot_parse_data", return a different error.
-      if (! misc.hasExactKeys('data', data, keyNames, 'submitLoginRequest')) {
+      if (!misc.hasExactKeys('data', data, keyNames, 'submitLoginRequest')) {
         console.log('❌ LOGIN VALIDATION FAILED: Missing required keys', keyNames);
         log('LOGIN: Validation failed - missing keys', { expected: keyNames, received: Object.keys(data) });
         throw Error('Invalid username or password.');
       }
-      let {apiKey, apiSecret} = data;
+      let { apiKey, apiSecret } = data;
       console.log('✅ LOGIN SUCCESS: API credentials extracted successfully');
-      _.assign(this.state.user, {email, password});
-      await this.state.loginWithAPIKeyAndSecret({apiKey, apiSecret});
+      _.assign(this.state.user, { email, password });
+      await this.state.loginWithAPIKeyAndSecret({ apiKey, apiSecret });
       return "SUCCESS";
     }
 
     this.register = async (registerData) => {
       const fName = 'register';
-      
+
       console.log(`${fName}: Starting registration for email: ${registerData.email}`);
-      
+
       // Validate input data first
       const validationErrors = this.validateRegistrationData(registerData);
       if (validationErrors && Object.keys(validationErrors).length > 0) {
         console.log(`${fName}: Validation errors:`, validationErrors);
         return { result: "VALIDATION_ERROR", details: validationErrors };
       }
-      
+
       console.log(`${fName}: Validation passed`);
-      
+
       // OFFLINE MODE - Skip API and return mock success
       if (OFFLINE_MODE) {
         console.log(`${fName}: [OFFLINE MODE] Mock registration for email: ${registerData.email}`);
-        return { 
-          result: "SUCCESS", 
+        return {
+          result: "SUCCESS",
           message: "Registration successful (offline mode)",
           data: { userId: 'mock_user_123', email: registerData.email }
         };
       }
-      
+
       // Create public API client for registration
-      let {userAgent, domain} = this.state;
-      
+      let { userAgent, domain } = this.state;
+
       console.log(`${fName}: Creating API client for registration`);
       console.log(`📧 Email: ${registerData.email}`);
       console.log(`🌐 Domain: ${domain}`);
-      
+
       let apiClient = new SolidiRestAPIClientLibrary({
-        userAgent, 
-        apiKey:'',     // Empty for public registration
-        apiSecret:'',  // Empty for public registration
+        userAgent,
+        apiKey: '',     // Empty for public registration
+        apiSecret: '',  // Empty for public registration
         domain,
         appStateRef: { current: this }
       });
-      
+
       // Prepare API route and parameters
       let apiRoute = 'register_new_user' + `/${registerData.email}`;
       let optionalParams = {
@@ -1625,7 +1625,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           timestamp: Date.now()
         }
       };
-      
+
       // Convert emailPreferences to array format
       let emailPreferences = [];
       if (registerData.emailPreferences) {
@@ -1635,7 +1635,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           }
         });
       }
-      
+
       // Only include fields expected by the registration API
       let params = {
         userData: {
@@ -1651,7 +1651,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         },
         optionalParams
       };
-      
+
       try {
         console.log(`${fName}: Making API call to ${apiRoute}`);
         let abortController = this.state.createAbortController();
@@ -1661,29 +1661,29 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           params,
           abortController
         });
-        
+
         console.log(`${fName}: API response received:`, data);
-        
+
         if (data.error) {
           console.log(`${fName}: Registration failed with error:`, data.error);
-          return { 
-            result: "ERROR", 
+          return {
+            result: "ERROR",
             error: data.error,
             message: data.error.message || "Registration failed"
           };
         }
-        
+
         console.log(`${fName}: Registration successful!`);
-        return { 
-          result: "SUCCESS", 
+        return {
+          result: "SUCCESS",
           message: "Registration successful. Please check your email.",
           data: data
         };
-        
+
       } catch (error) {
         console.error(`${fName}: Registration error:`, error);
-        return { 
-          result: "ERROR", 
+        return {
+          result: "ERROR",
           error: error,
           message: error.message || "Registration failed"
         };
@@ -1692,71 +1692,71 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.validateRegistrationData = (data) => {
       const errors = {};
-      
+
       // Email validation
       if (!data.email || !/\S+@\S+\.\S+/.test(data.email)) {
         errors.email = 'Valid email is required';
       }
-      
+
       // Password validation
       if (!data.password || data.password.length < 8) {
         errors.password = 'Password must be at least 8 characters';
       }
-      
+
       // Name validation
       if (!data.firstName || data.firstName.trim().length < 2) {
         errors.firstName = 'First name must be at least 2 characters';
       }
-      
+
       if (!data.lastName || data.lastName.trim().length < 2) {
         errors.lastName = 'Last name must be at least 2 characters';
       }
-      
+
       // Mobile number validation
       if (!data.mobileNumber || data.mobileNumber.length < 8) {
         errors.mobileNumber = 'Valid mobile number is required';
       }
-      
+
       // Date of birth validation (DD/MM/YYYY format)
       if (!data.dateOfBirth || !/^\d{2}\/\d{2}\/\d{4}$/.test(data.dateOfBirth)) {
         errors.dateOfBirth = 'Date of birth must be in DD/MM/YYYY format';
       }
-      
+
       // Gender validation
       if (!data.gender || !['Male', 'Female', 'Other'].includes(data.gender)) {
         errors.gender = 'Valid gender selection is required';
       }
-      
+
       // Citizenship validation (2-letter country code)
       if (!data.citizenship || data.citizenship.length !== 2) {
         errors.citizenship = 'Valid country selection is required';
       }
-      
+
       return Object.keys(errors).length > 0 ? errors : null;
     }
 
 
-    this.loginWithAPIKeyAndSecret = async ({apiKey, apiSecret}) => {
+    this.loginWithAPIKeyAndSecret = async ({ apiKey, apiSecret }) => {
       // This isn't really a "log in" function, it's more of a data-storage-and-gathering function.
       // Nonetheless, it installs the particular user's data at the "base" of the application data storage.
       // If we've arrived at this function, we've authenticated elsewhere.
-      
+
       // ===== USER AUTHENTICATION LOGGING =====
       console.log('🔐 SETTING UP AUTHENTICATED USER:');
       console.log('🆔 API Key:', apiKey);
       console.log('🔑 API Secret:', apiSecret ? `${apiSecret.substring(0, 12)}...` : 'NOT_PROVIDED');
       console.log('👤 Current user state before auth:', JSON.stringify(this.state.user, null, 2));
-      log('AUTHENTICATION: Starting loginWithAPIKeyAndSecret', { 
-        apiKey, 
+      log('AUTHENTICATION: Starting loginWithAPIKeyAndSecret', {
+        apiKey,
         apiSecretLength: apiSecret ? apiSecret.length : 0,
-        currentUserState: this.state.user 
+        currentUserState: this.state.user
       });
       // ===== USER AUTHENTICATION LOGGING END =====
-      
+
       // ===== CRITICAL FIX: Create new user object to change reference =====
       console.log('🔑🔑🔑 [AUTH FIX] SETTING isAuthenticated = true');
       console.log('🔑 [AUTH FIX] Current isAuthenticated value:', this.state.user.isAuthenticated);
-      
+
       // Create a new user object with updated authentication state
       // This changes the object reference so React Context detects the change
       const newUserObject = {
@@ -1764,13 +1764,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         isAuthenticated: true,
         apiCredentialsFound: true
       };
-      
+
       console.log('🔑 [AUTH SET] Creating new user object with isAuthenticated=true');
       console.log('🔑 [AUTH SET] Old user object reference:', this.state.user);
       console.log('🔑 [AUTH SET] New user object reference:', newUserObject);
-      
+
       this.state.user = newUserObject;
-      
+
       // Force a state update to propagate to all Context consumers
       this.setState({ user: newUserObject }, () => {
         console.log('🔑🔑🔑 [AUTH FIX] setState COMPLETED');
@@ -1778,20 +1778,20 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('🔑 [AUTH FIX] New apiCredentialsFound value:', this.state.user.apiCredentialsFound);
         console.log('🔑 [AUTH FIX] User object is:', this.state.user);
       });
-      
+
       apiClient = this.state.apiClient;
       // Store the API Key and Secret in the apiClient.
-      _.assign(apiClient, {apiKey, apiSecret});
+      _.assign(apiClient, { apiKey, apiSecret });
       // Store the API Key and Secret in the secure keychain storage.
       console.log('💾💾💾 [KEYCHAIN SAVE] About to SAVE credentials to persistent storage');
       console.log('💾💾💾 [KEYCHAIN SAVE] Storage key:', this.state.apiCredentialsStorageKey);
       console.trace('Stack trace:');
-      
+
       await Keychain.setInternetCredentials(this.state.apiCredentialsStorageKey, apiKey, apiSecret);
       console.log('💾💾💾 [KEYCHAIN SAVE] Credentials SAVED successfully');
       let msg = `apiCredentials stored in keychain with key = '${this.state.apiCredentialsStorageKey}')`;
       log(msg);
-      
+
       // PERSISTENT LOGIN: Store credentials in CACHE FILE for instant auto-login
       try {
         const cacheData = {
@@ -1808,18 +1808,21 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       } catch (cacheError) {
         console.log('⚠️ Failed to cache credentials:', cacheError);
       }
-      
+
       // PERSISTENT LOGIN: Store authentication state in AsyncStorage
       try {
+        const userIdForPush = this.state.user.email || this.state.user.info?.user?.uuid || 'unknown';
         await AsyncStorage.setItem('user_authenticated', 'true');
         await AsyncStorage.setItem('user_email', this.state.user.email || 'unknown');
+        await AsyncStorage.setItem('userId', userIdForPush); // Store userId for push notifications
         await AsyncStorage.setItem('isLogout', 'false'); // User is logged in
         console.log('💾 PERSISTENT LOGIN: Authentication state saved to AsyncStorage');
+        console.log('💾 PERSISTENT LOGIN: userId for push notifications:', userIdForPush);
         console.log('💾 PERSISTENT LOGIN: isLogout set to false');
       } catch (storageError) {
         console.log('⚠️ Failed to save auth state to AsyncStorage:', storageError);
       }
-      
+
       // Note: isAuthenticated and apiCredentialsFound are already set above via setState
       let msg2 = `Set isAuthenticated = true and apiCredentialsFound = true (via setState)`;
       log(msg2);
@@ -1827,7 +1830,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (appTier === 'dev') {
         log(`apiSecret: ${apiSecret}`);
       }
-      
+
       // ===== POST-AUTHENTICATION USER OBJECT LOGGING =====
       console.log('✅ USER AUTHENTICATED SUCCESSFULLY:');
       console.log('👤 Updated user state:', JSON.stringify(this.state.user, null, 2));
@@ -1839,7 +1842,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         storageKey: this.state.apiCredentialsStorageKey
       });
       // ===== POST-AUTHENTICATION USER OBJECT LOGGING END =====
-      
+
       // Load user stuff.
       if (OFFLINE_MODE) {
         log(`[OFFLINE MODE] Skipping loadInitialStuffAboutUser`);
@@ -1849,7 +1852,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         await this.state.loadInitialStuffAboutUser();
         console.log('✅ Initial user data loaded');
         log('AUTHENTICATION: Initial user data loaded');
-        
+
         // ===== FINAL USER STATE LOGGING AFTER COMPLETE LOGIN =====
         console.log('🎉 ===== LOGIN COMPLETE - FINAL USER STATE =====');
         console.log('🔐 Authentication Status:', this.state.user.isAuthenticated);
@@ -1871,12 +1874,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }, null, 2));
         console.log('🎉 ===== END LOGIN COMPLETE LOGGING =====');
         // ===== FINAL USER STATE LOGGING AFTER COMPLETE LOGIN END =====
-        
+
         // ===== POST-LOGIN NAVIGATION LOGIC =====
         console.log('🔍 ===== CHECKING POST-LOGIN NAVIGATION REQUIREMENTS =====');
         await this.checkPostLoginNavigation();
         console.log('🔍 ===== END POST-LOGIN NAVIGATION CHECK =====');
-        
+
         // ===== PUSH NOTIFICATION INITIALIZATION =====
         console.log('📱 ===== INITIALIZING PUSH NOTIFICATIONS =====');
         try {
@@ -1899,14 +1902,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       try {
         log("🔑 autoLoginWithStoredCredentials: Attempting auto-login with stored credentials");
         console.log("🔑 [AUTO-LOGIN] ========== STARTING AUTO-LOGIN ==========");
-        
+
         // Skip if already authenticated
         if (this.state.user.isAuthenticated) {
           log("🔑 autoLoginWithStoredCredentials: User already authenticated, skipping");
           console.log("✅ [AUTO-LOGIN] Already authenticated");
           return true;
         }
-        
+
         // STEP 1: Try to load from cache file FIRST (fastest method)
         console.log("🔑 [AUTO-LOGIN] STEP 1: Checking credentials cache file...");
         try {
@@ -1918,11 +1921,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             console.log("   - Email:", email || 'not cached');
             console.log("   - Cached at:", timestamp ? new Date(timestamp).toLocaleString() : 'unknown');
             console.log("   - API Key length:", apiKey?.length);
-            
+
             // Validate cache format
             if (apiKey && apiSecret && apiKey.length > 10 && apiSecret.length > 10) {
               console.log("🔑 [AUTO-LOGIN] Cache credentials valid, logging in...");
-              
+
               // Check if apiClient exists for validation
               if (this.state.apiClient) {
                 console.log("🔑 [AUTO-LOGIN] API client exists, validating credentials with server...");
@@ -1930,21 +1933,21 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
                 const tempApiClient = this.state.apiClient;
                 const originalApiKey = tempApiClient.apiKey;
                 const originalApiSecret = tempApiClient.apiSecret;
-                
+
                 tempApiClient.apiKey = apiKey;
                 tempApiClient.apiSecret = apiSecret;
-                
+
                 try {
                   // Validate credentials with the API before fully logging in
                   console.log("🔑 [AUTO-LOGIN] Validating cached credentials with server...");
                   const validationResult = await tempApiClient.validateCredentials();
-                  
+
                   if (validationResult && !validationResult.error) {
                     console.log("✅ [AUTO-LOGIN] Cached credentials validated, logging in...");
-                    
+
                     // Login directly with cached credentials (they're already in apiClient)
-                    await this.loginWithAPIKeyAndSecret({apiKey, apiSecret});
-                    
+                    await this.loginWithAPIKeyAndSecret({ apiKey, apiSecret });
+
                     if (this.state.user.isAuthenticated) {
                       console.log("✅ [AUTO-LOGIN] SUCCESS via cache file!");
                       return true;
@@ -1964,11 +1967,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               } else {
                 // No apiClient yet - skip validation and login directly
                 console.log("🔑 [AUTO-LOGIN] No API client yet, logging in directly (will create client)...");
-                
+
                 try {
                   // Login directly - this will create the apiClient
-                  await this.loginWithAPIKeyAndSecret({apiKey, apiSecret});
-                  
+                  await this.loginWithAPIKeyAndSecret({ apiKey, apiSecret });
+
                   if (this.state.user.isAuthenticated) {
                     console.log("✅ [AUTO-LOGIN] SUCCESS via cache file (no validation)!");
                     return true;
@@ -1977,7 +1980,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
                   console.log("❌ [AUTO-LOGIN] Login error:", loginError.message);
                 }
               }
-              
+
               console.log("⚠️ [AUTO-LOGIN] Cache login failed, trying Keychain...");
             } else {
               console.log("⚠️ [AUTO-LOGIN] Cache credentials invalid format");
@@ -1988,81 +1991,81 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         } catch (cacheError) {
           console.log("⚠️ [AUTO-LOGIN] Cache read error:", cacheError.message);
         }
-        
+
         // STEP 2: Fallback to Keychain if cache failed
         console.log("🔑 [AUTO-LOGIN] STEP 2: Checking Keychain...");
         let credentials = await Keychain.getInternetCredentials(this.state.apiCredentialsStorageKey);
-        
+
         if (credentials && credentials.username && credentials.password) {
           let apiKey = credentials.username;
           let apiSecret = credentials.password;
-          
+
           console.log("✅ [AUTO-LOGIN] Found credentials in Keychain");
           console.log("   - API Key length:", apiKey.length);
-          
+
           // Validate credentials format (basic check)
           if (!apiKey || !apiSecret || apiKey.length < 10 || apiSecret.length < 10) {
             log("🔑 autoLoginWithStoredCredentials: Invalid credential format");
             console.log("❌ [AUTO-LOGIN] Invalid format - skipping login");
             return false;
           }
-          
+
           log("🔑 autoLoginWithStoredCredentials: Found stored credentials, attempting login");
           log(`🔑 autoLoginWithStoredCredentials: API Key: ${apiKey}`);
           if (appTier === 'dev') {
             log(`🔑 autoLoginWithStoredCredentials: API Secret: ${apiSecret.substring(0, 20)}...`);
           }
-          
+
           console.log("🔑 [AUTO-LOGIN] Testing Keychain credentials with API...");
-          
+
           // Set credentials temporarily to test them
           const tempApiClient = this.state.apiClient;
           const originalApiKey = tempApiClient.apiKey;
           const originalApiSecret = tempApiClient.apiSecret;
-          
+
           tempApiClient.apiKey = apiKey;
           tempApiClient.apiSecret = apiSecret;
-          
+
           try {
             // Validate credentials with the API before fully logging in
             console.log("🔑 [AUTO-LOGIN] Validating Keychain credentials with server...");
             const validationResult = await tempApiClient.validateCredentials();
-            
+
             if (!validationResult || validationResult.error) {
               console.log("❌ [AUTO-LOGIN] Keychain credentials validation failed - skipping login");
               log("🔑 autoLoginWithStoredCredentials: Credentials validation failed");
-              
+
               // Restore original credentials
               tempApiClient.apiKey = originalApiKey;
               tempApiClient.apiSecret = originalApiSecret;
-              
+
               // Don't clear credentials - just return false
               return false;
             }
-            
+
             console.log("✅ [AUTO-LOGIN] Keychain credentials validated successfully");
           } catch (validationError) {
             console.log("❌ [AUTO-LOGIN] Credential validation error:", validationError.message);
             log(`🔑 autoLoginWithStoredCredentials: Validation error: ${validationError.message}`);
-            
+
             // Restore original credentials
             tempApiClient.apiKey = originalApiKey;
             tempApiClient.apiSecret = originalApiSecret;
-            
+
             // Don't clear credentials - just return false
             return false;
           }
-          
+
           console.log("🔑 [AUTO-LOGIN] Logging in with validated Keychain credentials...");
-          
+
           // Login with the stored credentials (they're already in apiClient from validation)
-          await this.loginWithAPIKeyAndSecret({apiKey, apiSecret});
-          
+          await this.loginWithAPIKeyAndSecret({ apiKey, apiSecret });
+
           // Verify login succeeded
           if (this.state.user.isAuthenticated) {
             log("🔑 autoLoginWithStoredCredentials: Auto-login successful!");
             console.log("✅ [AUTO-LOGIN] SUCCESS via Keychain!");
-            
+
             // Update cache file for next time
             const cacheData = {
               apiKey,
@@ -2072,14 +2075,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             };
             await AsyncStorage.setItem('solidi_credentials_cache', JSON.stringify(cacheData));
             console.log("💾 [AUTO-LOGIN] Credentials cached for next reload");
-            
+
             return true;
           } else {
             log("🔑 autoLoginWithStoredCredentials: Login failed despite no errors");
             console.log("❌ [AUTO-LOGIN] Login failed");
             return false;
           }
-          
+
         } else {
           log("🔑 autoLoginWithStoredCredentials: No stored credentials found");
           console.log("ℹ️ [AUTO-LOGIN] No credentials in Keychain");
@@ -2089,34 +2092,34 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       } catch (error) {
         log(`🔑 autoLoginWithStoredCredentials: Error during auto-login: ${error.message}`);
         console.error('❌ [AUTO-LOGIN] Error:', error);
-        
+
         // Don't clear credentials on error - they should only be cleared on explicit logout
         console.log("⚠️ [AUTO-LOGIN] Login failed but preserving credentials for manual login");
-        
+
         console.log("🔍 [AUTO-LOGIN] ========== END AUTO-LOGIN (FAILED) ==========");
         return false;
       }
     }
 
 
-    this.loginAsDifferentUser = async ({userID}) => {
+    this.loginAsDifferentUser = async ({ userID }) => {
       // Note: The PIN is local to the phone, so your own PIN will stay the same.
       // - You can't change the other user's PIN.
-      if (! this.getUserStatus('supportLevel2') === true) {
+      if (!this.getUserStatus('supportLevel2') === true) {
         // Don't throw a visible error.
         return;
       }
       if (userID === '') return;
-      if (! misc.isNumericString(userID)) return;
+      if (!misc.isNumericString(userID)) return;
       userID = Number(userID);
       if (userID < 0) return;
       log(`loginAsDifferentUser: Attempting to log in as userID = ${userID}.`);
       // Step 1: Save credentials of current user.
       log(`loginAsDifferentUser: Step 1: Save credentials of current user.`);
-      let {apiKey, apiSecret} = this.state.apiClient;
+      let { apiKey, apiSecret } = this.state.apiClient;
       log(`apiKey: ${apiKey}`);
       log(`apiSecret: ${apiSecret}`);
-      _.assign(this.state.originalUser, {apiKey, apiSecret});
+      _.assign(this.state.originalUser, { apiKey, apiSecret });
       // Step 2: Request credentials of new user.
       log(`loginAsDifferentUser: Step 2: Request credentials of new user.`);
       let data = await this.state.privateMethod({
@@ -2127,10 +2130,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       //lj({data});
       // Sample data:
       // "data":{"active":1,"apiKey":"Jh7L3AAcKwiqNdXGJ64kM6OIUcpQ9UEssowapmWCEhvCXCQmN6XuZAqH","apiSecret":"PXPUdrmU3XKnxZCDMuluYOXwcUSNoZpIxbQGayorbWEgOjhMF3Cgm3H0sjGsd081PLvssLKTBFhVuDM9wnxNNdpc","name":"default"}
-      ({apiKey, apiSecret} = data);
+      ({ apiKey, apiSecret } = data);
       //lj({apiKey, apiSecret})
       log(`loginAsDifferentUser: Step 3: Use new user's credentials to log in as that user.`);
-      await this.state.loginWithAPIKeyAndSecret({apiKey, apiSecret});
+      await this.state.loginWithAPIKeyAndSecret({ apiKey, apiSecret });
       if (this.state.stateChangeIDHasChanged(this.state.stateChangeID)) return;
       // We go to the user's history, instead of the Buy page, so that it's less likely that we accidentally create an order while using their account.
       this.state.changeState('History');
@@ -2141,12 +2144,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Prepare for cancelling requests if the user changes screen.
       // Note: Some API requests should not be aborted if we change screen, so we have an optional noAbort parameter.
       if (_.isNil(params)) params = {};
-      let {tag, noAbort} = params;
+      let { tag, noAbort } = params;
       let controller = new AbortController();
       controller.tag = tag;
       if (noAbort) return controller;
       // Get a random integer from 0 to 999999.
-      do { var controllerID = Math.floor(Math.random() * 10**6);
+      do {
+        var controllerID = Math.floor(Math.random() * 10 ** 6);
       } while (_.keys(this.state.abortControllers).includes(controllerID));
       this.state.abortControllers[controllerID] = controller;
       return controller;
@@ -2155,7 +2159,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.abortAllRequests = (params) => {
       if (_.isNil(params)) params = {};
-      let {tag} = params;
+      let { tag } = params;
       // If tag is supplied, only abort requests with this tag value.
       let controllers = this.state.abortControllers;
       //log({controllers})
@@ -2235,7 +2239,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.publicMethod = async (args) => {
       let fName = 'publicMethod';
-      let {functionName, httpMethod, apiRoute, params, keyNames, noAbort} = args;
+      let { functionName, httpMethod, apiRoute, params, keyNames, noAbort } = args;
       if (_.isNil(functionName)) functionName = '[Unspecified function]';
       if (_.isNil(httpMethod)) httpMethod = 'POST';
       if (_.isNil(apiRoute)) throw new Error('apiRoute required');
@@ -2243,18 +2247,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (_.isNil(keyNames)) keyNames = [];
       if (_.isNil(noAbort)) noAbort = false;
       if (this.state.mainPanelState === 'RequestFailed') return;
-      
+
       // OFFLINE MODE - Return mock data for layout testing
       if (OFFLINE_MODE) {
         log(`[OFFLINE MODE] Mocking API call: ${apiRoute}`);
         return this.getMockResponse(apiRoute, params);
       }
-      
+
       // Log API request details
       console.log(`🌐 [PUBLIC API REQUEST] ${httpMethod} ${apiRoute}`);
       console.log(`📤 [PUBLIC API REQUEST PARAMS]`, params);
       console.log(`🔧 [PUBLIC API FUNCTION]`, functionName);
-      
+
       // Safety check for apiClient
       if (!this.state.apiClient) {
         console.error(`❌ [PUBLIC API] apiClient is null for ${apiRoute} - attempting to create one`);
@@ -2263,11 +2267,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           throw new Error(`API client not available for ${apiRoute}`);
         }
       }
-      
+
       let tag = apiRoute.split('/')[0];
-      let abortController = this.state.createAbortController({tag, noAbort});
-      let data = await this.state.apiClient.publicMethod({httpMethod, apiRoute, params, abortController});
-      
+      let abortController = this.state.createAbortController({ tag, noAbort });
+      let data = await this.state.apiClient.publicMethod({ httpMethod, apiRoute, params, abortController });
+
       // Log API response details
       console.log(`📥 [PUBLIC API RESPONSE] ${httpMethod} ${apiRoute}`);
       console.log(`📊 [PUBLIC API RESPONSE DATA]`, data);
@@ -2275,7 +2279,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       //data = {'error': 503}; // dev
       if (_.has(data, 'error')) {
         let error = data.error;
-        
+
         // NEW LOGIC: If top-level error is null, treat as success (skip all error processing)
         if (error === null) {
           console.log(`✅ [PUBLIC API] Top-level error is null - treating as success for ${apiRoute}`);
@@ -2315,7 +2319,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log(`⚠️ [PUBLIC API] Full response data:`, data);
           return data;
         }
-        
+
         // Only return here if error is not null (meaning it's an actual error)
         if (error !== null) {
           return;
@@ -2325,7 +2329,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         if (keyNames.length > 0) {
           misc.confirmExactKeys('data', data, keyNames, functionName);
         }
-      } catch(err) {
+      } catch (err) {
         // Log the validation error but return the data instead of switching to error state
         console.log(`⚠️ [PUBLIC API] Key validation error for ${apiRoute}:`, String(err));
         console.log(`⚠️ [PUBLIC API] Expected keys:`, keyNames);
@@ -2338,7 +2342,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.privateMethod = async (args) => {
-      let {functionName, httpMethod, apiRoute, params, keyNames, noAbort} = args;
+      let { functionName, httpMethod, apiRoute, params, keyNames, noAbort } = args;
       if (_.isNil(functionName)) functionName = '[Unspecified function]';
       if (_.isNil(httpMethod)) httpMethod = 'POST';
       if (_.isNil(apiRoute)) throw new Error('apiRoute required');
@@ -2346,13 +2350,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (_.isNil(keyNames)) keyNames = [];
       if (_.isNil(noAbort)) noAbort = false;
       if (this.state.mainPanelState === 'RequestFailed') return;
-      
+
       // OFFLINE MODE - Return mock data for layout testing
       if (OFFLINE_MODE) {
         log(`[OFFLINE MODE] Mocking private API call: ${apiRoute}`);
         return this.getMockResponse(apiRoute, params);
       }
-      
+
       // Log API request details
       console.log(`🚀 [API REQUEST] ${httpMethod} ${apiRoute}`);
       console.log(`📤 [API REQUEST PARAMS]`, params);
@@ -2366,7 +2370,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         functionName
       }, null, 2));
       console.log(`�🔧 [API FUNCTION]`, functionName);
-      
+
       // Safety check for apiClient
       if (!this.state.apiClient) {
         console.error(`❌ [PRIVATE API] apiClient is null for ${apiRoute} - attempting to create one`);
@@ -2375,18 +2379,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           throw new Error(`API client not available for ${apiRoute}`);
         }
       }
-      
+
       let tag = apiRoute.split('/')[0];
-      let abortController = this.state.createAbortController({tag, noAbort});
-      let data = await this.state.apiClient.privateMethod({httpMethod, apiRoute, params, abortController});
-      
+      let abortController = this.state.createAbortController({ tag, noAbort });
+      let data = await this.state.apiClient.privateMethod({ httpMethod, apiRoute, params, abortController });
+
       // Log API response details
       console.log(`📥 [API RESPONSE] ${httpMethod} ${apiRoute}`);
       console.log(`📊 [API RESPONSE DATA]`, data);
       console.log(`📄 [RESPONSE JSON]`, JSON.stringify(data, null, 2));
       if (_.has(data, 'error')) {
         let error = data.error;
-        
+
         // NEW LOGIC: If top-level error is null, treat as success (skip all error processing)
         if (error === null) {
           console.log(`✅ [PRIVATE API] Top-level error is null - treating as success for ${apiRoute}`);
@@ -2430,7 +2434,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log(`⚠️ [PRIVATE API] Full response data:`, data);
           return data;
         }
-        
+
         // Only return here if error is not null (meaning it's an actual error)
         if (error !== null) {
           return;
@@ -2440,7 +2444,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         if (keyNames.length > 0) {
           misc.confirmExactKeys('data', data, keyNames, functionName);
         }
-      } catch(err) {
+      } catch (err) {
         // Log the validation error but return the data instead of switching to error state
         console.log(`⚠️ [PRIVATE API] Key validation error for ${apiRoute}:`, String(err));
         console.log(`⚠️ [PRIVATE API] Expected keys:`, keyNames);
@@ -2453,13 +2457,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     // Useful during development.
-    this.setAPIData = ({key, data}) => {
+    this.setAPIData = ({ key, data }) => {
       let msg = `setAPIData: set state.apiData.${key} to hold: ${JSON.stringify(data, null, 2)}`;
       log(msg);
       //log('setAPIData: ' + key);
-      let apiData = {...this.state.apiData}
+      let apiData = { ...this.state.apiData }
       apiData[key] = data;
-      this.setState({apiData});
+      this.setState({ apiData });
     }
 
 
@@ -2480,9 +2484,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // For public access states, skip credential checks
       const currentState = this.state.mainPanelState;
       const isCurrentStatePublic = publicAccessStates.includes(currentState);
-      
-      if (! this.state.user.apiCredentialsFound && !bypassAuthentication && !isCurrentStatePublic) {
-        if (! this.state.user.isAuthenticated) {
+
+      if (!this.state.user.apiCredentialsFound && !bypassAuthentication && !isCurrentStatePublic) {
+        if (!this.state.user.isAuthenticated) {
           log("authenticateUser (1) -> Authenticate");
           return this.state.changeState('Authenticate');
         }
@@ -2506,7 +2510,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.validateAuthentication = async (context = 'general') => {
       try {
         log(`🔐 validateAuthentication called from: ${context}`);
-        
+
         // Check if user is currently authenticated
         if (!this.state.user.isAuthenticated) {
           log('🔐 User not authenticated, redirecting to login');
@@ -2534,11 +2538,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           } catch (apiError) {
             log(`🔐 API validation error: ${apiError.message}`);
             // Check for authentication-related errors
-            if (apiError.status === 401 || apiError.status === 403 || 
-                apiError.message.includes('unauthorized') || 
-                apiError.message.includes('forbidden') ||
-                apiError.message.includes('token') ||
-                apiError.message.includes('credential')) {
+            if (apiError.status === 401 || apiError.status === 403 ||
+              apiError.message.includes('unauthorized') ||
+              apiError.message.includes('forbidden') ||
+              apiError.message.includes('token') ||
+              apiError.message.includes('credential')) {
               return this.forceRedirectToLogin(`Authentication error: ${apiError.message}`);
             }
             // For other errors, don't redirect but log the issue
@@ -2565,7 +2569,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('🚨 [FORCE REDIRECT TRACE] Reason:', reason);
         console.log('🚨 [FORCE REDIRECT TRACE] clearCredentials:', clearCredentials);
         console.log('🚨 [FORCE REDIRECT TRACE] Stack trace:', new Error().stack);
-        
+
         // IMPORTANT: Only clear credentials if explicitly requested
         // This prevents temporary API errors from wiping stored credentials
         if (clearCredentials) {
@@ -2621,19 +2625,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.handleAPIError = async (error, context = 'API call') => {
       try {
         log(`🔐 handleAPIError called from: ${context}, error: ${error.message}`);
-        
+
         // Check for authentication-related status codes
         const authErrorCodes = [401, 403];
         const authErrorMessages = ['unauthorized', 'forbidden', 'invalid token', 'expired', 'credential', 'authentication'];
-        
+
         const isAuthError = authErrorCodes.includes(error.status) ||
-                           authErrorMessages.some(msg => error.message.toLowerCase().includes(msg));
-        
+          authErrorMessages.some(msg => error.message.toLowerCase().includes(msg));
+
         if (isAuthError) {
           log(`🔐 Detected authentication error in API response: ${error.message}`);
           return this.forceRedirectToLogin(`API authentication error: ${error.message}`);
         }
-        
+
         // For non-auth errors, just log and return the error
         log(`🔐 Non-authentication API error: ${error.message}`);
         return error;
@@ -2648,19 +2652,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     // Periodically checks authentication status and validates credentials
     this.startAuthenticationMonitoring = () => {
       log('🔐 Starting authentication monitoring');
-      
+
       // Clear any existing timer
       if (this.authCheckTimer) {
         clearInterval(this.authCheckTimer);
       }
-      
+
       // Set up periodic authentication check (every 10 minutes, less aggressive)
       this.authCheckTimer = setInterval(async () => {
         try {
           // Only check basic authentication state, not API validity
           if (this.state.user.isAuthenticated && this.state.user.apiCredentialsFound) {
             log('🔐 Performing lightweight periodic authentication check');
-            
+
             // Just verify the basic auth state is consistent
             // Don't make API calls that could trigger false positives
             if (!this.state.apiClient || !this.state.apiClient.apiKey) {
@@ -2675,7 +2679,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           // Don't logout on periodic check errors - too disruptive
         }
       }, 10 * 60 * 1000); // Check every 10 minutes (less frequent)
-      
+
       // DON'T validate authentication on app resume - SecureApp already handles this
       // and validateAuthentication can clear credentials if API is temporarily unavailable
       // Let SecureApp handle credential checking and biometric authentication instead
@@ -2689,12 +2693,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     // Cleans up authentication monitoring timers and listeners
     this.stopAuthenticationMonitoring = () => {
       log('🔐 Stopping authentication monitoring');
-      
+
       if (this.authCheckTimer) {
         clearInterval(this.authCheckTimer);
         this.authCheckTimer = null;
       }
-      
+
       if (this.appStateSubscription) {
         this.appStateSubscription.remove();
         this.appStateSubscription = null;
@@ -2702,7 +2706,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.deletePIN = async (deleteFromKeychain=false) => {
+    this.deletePIN = async (deleteFromKeychain = false) => {
       // Delete the PIN in memory.
       this.state.user.pin = '';
       let msg = 'PIN deleted from app memory.';
@@ -2717,19 +2721,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.choosePIN = async () => {
       log("Start: choosePIN");
       // Deleting the PIN happens first, because it will affect the flow in subsequent pages.
-      await this.state.deletePIN(deleteFromKeychain=true);
+      await this.state.deletePIN(deleteFromKeychain = true);
       // If the app is locked, and the user has chosen to reset the PIN, then we need to log them out.
       // This ensures that they have to log in before they can choose a new PIN.
       if (this.state.appLocked) {
         await this.state.logout();
       }
       // If user hasn't logged in, they need to do so first.
-      if (! this.state.user.isAuthenticated && !bypassAuthentication) {
+      if (!this.state.user.isAuthenticated && !bypassAuthentication) {
         // We send them to the login page, which will ask them to choose a PIN afterwards.
-        return this.state.setMainPanelState({mainPanelState: 'Login'});
+        return this.state.setMainPanelState({ mainPanelState: 'Login' });
       }
       // If the app was not locked, and we are logged in, go directly to the choosePIN page.
-      this.state.setMainPanelState({mainPanelState: 'PIN', pageName: 'choose'});
+      this.state.setMainPanelState({ mainPanelState: 'PIN', pageName: 'choose' });
     }
 
 
@@ -2742,7 +2746,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let credentials = await Keychain.getInternetCredentials(this.state.pinStorageKey);
       // Example result:
       // {"password": "1111", "server": "SolidiMobileApp", "storage": "keychain", "username": "SolidiMobileApp"}
-      if (! credentials) {
+      if (!credentials) {
         log(`No PIN found in Keychain.`);
       } else {
         let pin = credentials.password;
@@ -2763,7 +2767,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('🔍 [CREDENTIALS CHECK] Storage key:', this.state.apiCredentialsStorageKey);
       console.log('🔥🔥🔥 [KEYCHAIN] About to call getInternetCredentials');
       console.trace('Stack trace:');
-      
+
       let credentials = null;
       try {
         credentials = await Keychain.getInternetCredentials(this.state.apiCredentialsStorageKey);
@@ -2776,7 +2780,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('🔥🔥🔥 [KEYCHAIN] Error:', keychainError);
         console.error('Keychain error:', keychainError);
       }
-      
+
       console.log('🔍 [CREDENTIALS CHECK] Result:', credentials ? 'FOUND' : 'NOT FOUND');
       //log({credentials});
       /* Example result:
@@ -2813,7 +2817,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       log(`No API credentials found in Keychain.`);
       console.log('⚠️⚠️⚠️ [CREDENTIALS CHECK] No API credentials found in keychain');
       console.log('🚨 [CREDENTIALS CHECK] Was previously true:', this.state.user.apiCredentialsFound);
-      
+
       // Always set to false when credentials are not found
       // If credentials were deleted, we MUST update the state
       console.log('🚨 [CREDENTIALS CHECK] Setting apiCredentialsFound = false AND isAuthenticated = false');
@@ -2834,7 +2838,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('🚨 [LOGOUT TRACE] WHO CALLED ME? Full stack trace:');
       console.log(new Error().stack);
       console.log('🚨🚨🚨 ========================================');
-      
+
       // Note: We don't ever delete the PIN from app memory or from the keychain.
       // Delete user's email and password from memory.
       this.state.user.email = '';
@@ -2842,7 +2846,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Delete user's API Key and Secret from memory only (preserve in keychain for persistent login)
       this.state.apiClient.apiKey = '';
       this.state.apiClient.apiSecret = '';
-      
+
       // Only clear stored credentials if explicitly requested (complete logout)
       if (clearStoredCredentials) {
         log("🔑 Clearing stored credentials for complete logout");
@@ -2853,7 +2857,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('🚨🚨🚨 [LOGOUT TRACE] ===== REMOVING CREDENTIALS FROM KEYCHAIN =====');
         await Keychain.resetInternetCredentials(this.state.apiCredentialsStorageKey);
         console.log('🔥🔥🔥 [KEYCHAIN DELETE #2] Credentials DELETED from keychain');
-        
+
         // PERSISTENT LOGIN: Clear credentials cache file
         try {
           await AsyncStorage.removeItem('solidi_credentials_cache');
@@ -2861,7 +2865,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         } catch (cacheError) {
           console.log('⚠️ Failed to clear credentials cache:', cacheError);
         }
-        
+
         // PERSISTENT LOGIN: Clear AsyncStorage authentication state
         try {
           await AsyncStorage.removeItem('user_authenticated');
@@ -2872,7 +2876,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         } catch (storageError) {
           console.log('⚠️ Failed to clear auth state from AsyncStorage:', storageError);
         }
-        
+
         // Clear authentication state
         this.state.user = {
           ...this.state.user,
@@ -2895,25 +2899,25 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
       // Reset AccountReview dismissal flag on logout
       this.state.user.accountReviewDismissed = false;
-      
+
       // Clear user data to prevent cached data from triggering alerts after logout
       console.log('🗑️ Clearing user data on logout to prevent cached status alerts');
       this.state.user.info = {
         user: {},
         user_status: {}
       };
-      
+
       // Clear address book refresh interval
       if (this.addressBookRefreshInterval) {
         console.log('🔄 Clearing address book refresh interval on logout');
         clearInterval(this.addressBookRefreshInterval);
         this.addressBookRefreshInterval = null;
       }
-      
+
       // Clear address book cache
       console.log('🗑️ Clearing address book cache on logout');
       this.state.apiData.address_book = {};
-      
+
       // Initialize cache timestamps for data refresh management
       this.state.cache = {
         timestamps: {
@@ -2929,13 +2933,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           balances: null         // No automatic refresh - manual triggers only
         }
       };
-      
+
       // Clear last visited page (only for complete logout)
       if (clearStoredCredentials) {
         console.log('🗑️ Clearing last visited page for complete logout');
         await this.clearLastVisitedPage();
       }
-      
+
       // Reset the state history and wipe any stashed state.
       this.state.resetStateHistory();
       log("Logout complete.");
@@ -2945,16 +2949,16 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       - We should return to being logged in as the original user.
       */
       let originalUser = this.state.originalUser;
-      if (! _.isNil(originalUser.apiKey) && ! _.isNil(originalUser.apiSecret)) {
+      if (!_.isNil(originalUser.apiKey) && !_.isNil(originalUser.apiSecret)) {
         if (_.has(originalUser, 'apiKey')) {
-          let {apiKey, apiSecret} = originalUser;
+          let { apiKey, apiSecret } = originalUser;
           log(`loginAsDifferentUser: Step 4: Load original user's credentials and log in.`);
           log(`loginAsDifferentUser: Step 4: Credentials: ${jd(originalUser)}`);
           this.state.originalUser = {
             apiKey: null,
             apiSecret: null,
           }
-          await this.state.loginWithAPIKeyAndSecret({apiKey, apiSecret});
+          await this.state.loginWithAPIKeyAndSecret({ apiKey, apiSecret });
           this.state.changeState('Settings');
           return;
         }
@@ -2993,7 +2997,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let currentTimerID = this.state.lockAppTimerID;
       //log(`- currentTimerID = ${currentTimerID}`);
       // If there's an active timer, stop it.
-      if (! _.isNil(currentTimerID)) {
+      if (!_.isNil(currentTimerID)) {
         clearTimeout(currentTimerID);
       }
       let waitTimeMinutes = 30;
@@ -3049,7 +3053,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.switchToErrorState = ({message}) => {
+    this.switchToErrorState = ({ message }) => {
       /* Future:
       - An error code.
       - Send an error report to an API route.
@@ -3057,8 +3061,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       log(`switchToErrorState: ${message}`);
       this.state.error.message = message;
       this.state.stashCurrentState();
-      let {mainPanelState, pageName} = this.state;
-      this.state.previousState = {mainPanelState, pageName};
+      let { mainPanelState, pageName } = this.state;
+      this.state.previousState = { mainPanelState, pageName };
       this.cancelTimers();
       this.abortAllRequests();
       this.state.changeState('Error');
@@ -3072,10 +3076,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('🔥🔥🔥 [ERROR RECOVERY] recoverFromErrorState called! clearCredentials=' + clearCredentials);
         console.trace('Called from:');
         log('🔧 Recovering from error state');
-        
+
         // Clear error state
         this.state.error.message = '';
-        
+
         // Clear authentication state but preserve credentials unless explicitly requested
         this.setState({
           user: {
@@ -3093,7 +3097,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         if (clearCredentials) {
           this.state.apiClient = null;
         }
-        
+
         // Clear stored credentials ONLY if explicitly requested
         if (clearCredentials) {
           try {
@@ -3107,14 +3111,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         } else {
           log('🔧 Preserving stored credentials - not clearing keychain');
         }
-        
+
         // Cancel any ongoing timers
         this.cancelTimers();
-        
+
         // Go to login state
         this.state.changeState('Login');
         log('🔧 Successfully recovered from error state');
-        
+
         return true;
       } catch (error) {
         log(`🔧 Error during recovery: ${error.message}`);
@@ -3130,14 +3134,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     /* Non API network methods */
 
 
-    this.loadTerms = async() => {
+    this.loadTerms = async () => {
       let terms = "";
       if (developmentModeBypass) {
         log(`loadTerms: Using sample data (development mode bypass enabled)`);
         terms = sampleData.terms;
       } else {
-        let {domain} = this.state;
-        let url = "https://"+domain+"/legal/terms.txt";
+        let { domain } = this.state;
+        let url = "https://" + domain + "/legal/terms.txt";
         log(`Loading terms from ${url}`);
         try {
           const response = await fetch(url);
@@ -3161,24 +3165,24 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.setMaintenanceMode = (inMaintenanceMode) => {
       log(`Setting maintenance mode to ${inMaintenanceMode}`);
-      this.setState({maintenanceMode: inMaintenanceMode});
+      this.setState({ maintenanceMode: inMaintenanceMode });
     }
 
-    this.checkMaintenanceMode = async (callback=null) => {
+    this.checkMaintenanceMode = async (callback = null) => {
       // Check if we can connect to Solidi.
       let data = await this.state.publicMethod({
         functionName: 'loadAPIVersion',
         apiRoute: 'api_latest_version',
         httpMethod: 'GET',
       });
-      if (data.error==503) {
-        if(!this.state.maintenanceMode) {
-            this.state.setMaintenanceMode(true);
+      if (data.error == 503) {
+        if (!this.state.maintenanceMode) {
+          this.state.setMaintenanceMode(true);
         }
       } else {
         this.state.setMaintenanceMode(false);
       }
-      if(callback) {
+      if (callback) {
         callback(this.state.maintenanceMode);
       }
       return this.state.maintenanceMode;
@@ -3187,7 +3191,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.checkIfAppUpdateRequired = async () => {
       let fName = 'checkIfAppUpdateRequired';
-      
+
       // Use sample data in development mode to bypass network issues
       let data;
       if (developmentModeBypass) {
@@ -3201,16 +3205,16 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         });
         if (data == 'DisplayedError') return;
       }
-      
+
       let expectedKeys = 'version minimumVersionRequired'.split(' ');
       let foundKeys = _.keys(data);
-      if (! _.isEqual(_.intersection(expectedKeys, foundKeys), expectedKeys)) {
+      if (!_.isEqual(_.intersection(expectedKeys, foundKeys), expectedKeys)) {
         if (developmentModeBypass) {
           log(`${fName}: Using fallback sample data due to missing keys`);
           data = sampleData.appVersion;
         } else {
           var msg = `${fName}: Missing expected key(s) in response data from API endpoint '/app_latest_version'. Expected: ${jd(expectedKeys)}; Found: ${jd(foundKeys)}`;
-          return this.state.switchToErrorState({message: msg});
+          return this.state.switchToErrorState({ message: msg });
         }
       }
       let latestAppVersion = data.version;
@@ -3233,7 +3237,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       //updateRequired = true; // dev
       log(`Update required: ${updateRequired}`);
       if (updateRequired) {
-        this.setState({appUpdateRequired: true});
+        this.setState({ appUpdateRequired: true });
         this.state.changeState('UpdateApp');
       }
     }
@@ -3252,7 +3256,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         });
         if (data == 'DisplayedError') return;
       }
-      
+
       let api_latest_version = _.has(data, 'api_latest_version') ? data.api_latest_version : null;
       this.state.apiData.api_latest_version = api_latest_version;
       log(`Latest API version: ${api_latest_version}`);
@@ -3262,10 +3266,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.checkLatestAPIVersion = () => {
       let storedAPIVersion = this.state.storedAPIVersion;
       let latestAPIVersion = this.state.apiData.api_latest_version;
-      if (! misc.isNumericString(latestAPIVersion)) return false;
+      if (!misc.isNumericString(latestAPIVersion)) return false;
       let check = latestAPIVersion !== storedAPIVersion;
       if (check) {
-        this.setState({appUpdateRequired: true});
+        this.setState({ appUpdateRequired: true });
       }
       let msg = `apiVersion in app: ${storedAPIVersion}. Latest apiVersion from API data: ${latestAPIVersion}. Update required = ${check}`;
       log(msg);
@@ -3449,14 +3453,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.getAssets = (params) => {
       let depositEnabled, withdrawEnabled;
       if (params) {
-        ({depositEnabled, withdrawEnabled} = params);
+        ({ depositEnabled, withdrawEnabled } = params);
       }
       let assets = _.keys(this.state.apiData.asset_info).sort();
       if (depositEnabled) {
-        assets = assets.filter( (x) => { return this.state.getAssetInfo(x).depositEnabled == 1 });
+        assets = assets.filter((x) => { return this.state.getAssetInfo(x).depositEnabled == 1 });
       }
       if (withdrawEnabled) {
-        assets = assets.filter( (x) => { return this.state.getAssetInfo(x).withdrawEnabled == 1 });
+        assets = assets.filter((x) => { return this.state.getAssetInfo(x).withdrawEnabled == 1 });
       }
       return assets;
     }
@@ -3475,7 +3479,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         });
         if (data == 'DisplayedError') return;
       }
-      
+
       // Tmp: For development:
       // Sample markets.
       let tmpData = false;
@@ -3498,15 +3502,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
 
       // Intialise the historic prices
-      for(var idx in data) {
+      for (var idx in data) {
         this.state.apiData.historic_prices[data[idx]] = {};
-        for(var idx2 in graph_periods) {
+        for (var idx2 in graph_periods) {
           this.state.apiData.historic_prices[data[idx]][graph_periods[idx2]] = [0];
         }
       }
 
       this.state.apiData.historic_prices['current'] = this.state.apiData.historic_prices["BTC/GBP"]["1D"];
-      await this.loadHistoricPrices({market:"BTC/GBP",period:"1D"});
+      await this.loadHistoricPrices({ market: "BTC/GBP", period: "1D" });
       return data;
     }
 
@@ -3550,7 +3554,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (data == 'DisplayedError') return;
       // If the data differs from existing data, save it.
       let msg = "Personal detail options loaded from server.";
-      if (jd(data) === jd(this.state.apiData.personal_detail_option )) {
+      if (jd(data) === jd(this.state.apiData.personal_detail_option)) {
         log(msg + " No change.");
       } else {
         log(msg + " New data saved to appState. " + jd(data));
@@ -3562,7 +3566,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.getPersonalDetailOptions = (detailName) => {
       // Should contain a list of options for each detailName. (e.g. "title").
       let result = this.state.apiData.personal_detail_option;
-      if (! _.has(result, detailName)) return ['[loading]'];
+      if (!_.has(result, detailName)) return ['[loading]'];
       return result[detailName];
     }
 
@@ -3587,7 +3591,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.getCountries = () => {
-      let defaultList = [{code: 'GB', name: 'United Kingdom'}];
+      let defaultList = [{ code: 'GB', name: 'United Kingdom' }];
       let countries = this.state.apiData.country;
       if (_.isEmpty(countries)) return defaultList;
       return countries;
@@ -3612,10 +3616,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let tmp1 = false;
       if (tmp1) {
         data = {
-          'BTC/GBP': {price: '2000.00'},
-          'ETH/GBP': {price: '100.00'},
-          'BTC/EUR': {price: '3000.00'},
-          'ETH/EUR': {price: '150.00'},
+          'BTC/GBP': { price: '2000.00' },
+          'ETH/GBP': { price: '100.00' },
+          'BTC/EUR': { price: '3000.00' },
+          'ETH/EUR': { price: '150.00' },
         }
       }
       // End Tmp
@@ -3655,12 +3659,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       try {
         log('Loading live prices from CoinGecko...');
         const coinGeckoData = await this.state.coinGeckoAPI.getSolidiAssetPrices();
-        
+
         if (coinGeckoData) {
           // Merge CoinGecko data with existing ticker data
           const existingTicker = this.state.apiData.ticker || {};
           const mergedData = { ...existingTicker };
-          
+
           // Add CoinGecko prices with additional metadata
           Object.keys(coinGeckoData).forEach(market => {
             mergedData[market] = {
@@ -3671,11 +3675,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               source: 'coingecko'
             };
           });
-          
+
           // Update ticker data
           this.state.prevAPIData.ticker = this.state.apiData.ticker;
           this.state.apiData.ticker = mergedData;
-          
+
           log(`CoinGecko prices loaded for ${Object.keys(coinGeckoData).length} markets`);
           return mergedData;
         } else {
@@ -3693,13 +3697,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       try {
         // Try Solidi API first
         const solidiData = await this.loadTicker();
-        
+
         // If Solidi API fails or returns limited data, supplement with CoinGecko
         if (!solidiData || Object.keys(solidiData).length < 2) {
           log('Solidi ticker data limited, supplementing with CoinGecko...');
           return await this.loadCoinGeckoPrices();
         }
-        
+
         // If Solidi API works, optionally still get CoinGecko for additional data
         if (developmentModeBypass) {
           const coinGeckoData = await this.state.coinGeckoAPI.getSolidiAssetPrices();
@@ -3713,7 +3717,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             });
           }
         }
-        
+
         return solidiData;
       } catch (error) {
         log(`Error in loadTickerWithCoinGecko: ${error.message}`);
@@ -3732,7 +3736,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (_.isUndefined(this.state.apiData.ticker[market])) return null;
       if (_.isUndefined(this.state.apiData.ticker[market].price)) return null;
       let price = this.state.apiData.ticker[market].price;
-      return {price};
+      return { price };
     }
 
 
@@ -3743,64 +3747,64 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       return this.state.prevAPIData.ticker[market].price;
     }
 
-    this.loadHistoricPrices = async({market, period}) => {
+    this.loadHistoricPrices = async ({ market, period }) => {
       console.log('[HIST_PRICE] 🚀 loadHistoricPrices CALLED - market:', market, 'period:', period);
-      
+
       //this.state.loadingPrices = true;
-      this.setState({loadingPrices: true});
+      this.setState({ loadingPrices: true });
       // Use production domain for public CSV files (not authentication-protected)
       let domain = "www.solidi.co";
-      let remotemarket = market.replace("/","-");
-      let url = "https://"+domain+"/"+remotemarket+"-"+period+".csv";
+      let remotemarket = market.replace("/", "-");
+      let url = "https://" + domain + "/" + remotemarket + "-" + period + ".csv";
       console.log('[HIST_PRICE] 📥 Fetching URL:', url);
-      
+
       const response = await fetch(url);
       console.log('[HIST_PRICE] Response status:', response.status, 'ok:', response.ok);
-      
+
       let prices = "";
-      if(response.ok) {
+      if (response.ok) {
         prices = await response.text();
         console.log('[HIST_PRICE] Response text length:', prices.length);
       } else {
         console.log('[HIST_PRICE] ❌ Fetch failed with status:', response.status);
       }
-      
+
       pricesX = prices.split("\n");
       console.log('[HIST_PRICE] Split into', pricesX.length, 'lines');
-      
-      if(pricesX.length> 2) {
+
+      if (pricesX.length > 2) {
         let floatPrices = [];
-        for(var idx in pricesX) {
-          if(pricesX[idx]!="") {
+        for (var idx in pricesX) {
+          if (pricesX[idx] != "") {
             floatPrices.push(parseFloat(pricesX[idx]));
           }
         }
         console.log('[HIST_PRICE] Parsed', floatPrices.length, 'float prices');
         console.log('[HIST_PRICE] Calling setHistoricPrices...');
-        this.setHistoricPrices({market, period, prices:floatPrices});
-        this.setState({graphPrices: floatPrices});
+        this.setHistoricPrices({ market, period, prices: floatPrices });
+        this.setState({ graphPrices: floatPrices });
       } else {
         console.log('[HIST_PRICE] ⚠️ Warning - got less than 2 prices for', market, period);
       }
-      this.setState({loadingPrices: false});
+      this.setState({ loadingPrices: false });
       console.log('[HIST_PRICE] ✅ loadHistoricPrices completed');
     }
 
-    this.setHistoricPrices = ({market, period, prices}) => {
+    this.setHistoricPrices = ({ market, period, prices }) => {
       console.log('[HIST_PRICE] 🔧 setHistoricPrices called - market:', market, 'period:', period, 'prices.length:', prices?.length);
       try {
         console.log('[HIST_PRICE] Market exists before:', !!this.state.apiData.historic_prices[market]);
-        
-        if(!this.state.apiData.historic_prices[market]) {
+
+        if (!this.state.apiData.historic_prices[market]) {
           this.state.apiData.historic_prices[market] = {};
           console.log('[HIST_PRICE] Created new market object for', market);
         }
-        
+
         this.state.apiData.historic_prices[market][period] = prices;
         console.log('[HIST_PRICE] Stored', prices.length, 'prices in', `[${market}][${period}]`);
-        
+
         this.state.apiData.historic_prices['current'] = this.state.apiData.historic_prices[market][period];
-        
+
         // Trigger a state update to notify listeners
         this.setState({
           apiData: {
@@ -3810,7 +3814,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             }
           }
         });
-        
+
         console.log('[HIST_PRICE] Final length:', this.state.apiData.historic_prices[market][period].length);
         console.log('[HIST_PRICE] ✅ setHistoricPrices completed successfully');
       } catch (e) {
@@ -3819,13 +3823,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
     }
 
-    this.setPrice = ({market, price}) => {
+    this.setPrice = ({ market, price }) => {
       // Useful during development.
       this.state.apiData.ticker[market].price = price;
     }
 
 
-    this.setPrevPrice = ({market, price}) => {
+    this.setPrevPrice = ({ market, price }) => {
       // Useful during development.
       this.state.prevAPIData.ticker[market].price = price;
     }
@@ -3839,7 +3843,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.getFullDecimalValue = ({asset, value, functionName}) => {
+    this.getFullDecimalValue = ({ asset, value, functionName }) => {
       // Add zeros to the value to get the full number of decimal places for the asset.
       if (_.isNil(functionName)) functionName = '[Unspecified location]';
       if (_.isNil(asset) || asset === '') {
@@ -3848,7 +3852,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
         return '';
       }
-      if (! misc.isNumericString(value)) {
+      if (!misc.isNumericString(value)) {
         if (value != '[loading]') {
           //deb(`${functionName}.getFullDecimalValue: value '${value}' is not a numeric string.`);
         }
@@ -3887,12 +3891,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         });
         if (data == 'DisplayedError') return;
       }
-      
+
       // The data is in base64. It turns out that an <Image/> can accept a base64 source, so need to convert it back to a bitmap.
       let loadedAssetsIcons = _.keys(data);
       // If the data differs from existing data, save it.
       let msg = `Asset icons loaded: ${loadedAssetsIcons.join(', ')}.`;
-      if (jd(data) === jd(this.state.apiData.asset_icon )) {
+      if (jd(data) === jd(this.state.apiData.asset_icon)) {
         log(msg + " No change.");
       } else {
         log(msg + " New data saved to appState.");
@@ -3911,7 +3915,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       } else if (loadedIcons.includes(asset)) {
         assetIcon = this.state.apiData.asset_icon[asset];
         let base64Icon = 'data:image/png;base64,' + assetIcon;
-        return {uri: base64Icon};
+        return { uri: base64Icon };
       }
       return assetIcon;
     }
@@ -3928,13 +3932,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('[REG-CHECK] ===== loadInitialStuffAboutUser CALLED =====');
       console.log('[REG-CHECK] This function loads user data and checks registration status');
       console.log('🔄'.repeat(60) + '\n');
-      
+
       // Future: If the security check results are negative, stop.
       console.log('[REG-CHECK] Step 1: Loading security checks...');
       await this.loadSecurityChecks();
       console.log('[REG-CHECK] ✅ Security checks loaded');
-      
-      if (! this.state.assetsInfoLoaded) {
+
+      if (!this.state.assetsInfoLoaded) {
         // This is needed for loading the deposit details & the default account.
         console.log('[REG-CHECK] Step 2: Loading assets info (first time)...');
         await this.state.loadAssetsInfo();
@@ -3943,38 +3947,38 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       } else {
         console.log('[REG-CHECK] Step 2: Assets info already loaded, skipping');
       }
-      
+
       // The following information can be changed by the user while the app is in use, so we reload it every time this function is called.
       console.log('[REG-CHECK] Step 3: Loading user info...');
       await this.loadUserInfo();
       console.log('[REG-CHECK] ✅ User info loaded');
-      
+
       console.log('[REG-CHECK] Step 4: Loading user status...');
       await this.loadUserStatus();
       console.log('[REG-CHECK] ✅ User status loaded');
-      
+
       console.log('[REG-CHECK] Step 5: Loading personal detail options...');
       await this.loadPersonalDetailOptions(); // Load dropdown options for Personal Details page
       console.log('[REG-CHECK] ✅ Personal detail options loaded');
-      
+
       console.log('[REG-CHECK] Step 6: Loading GBP deposit details...');
       await this.loadDepositDetailsForAsset('GBP');
       console.log('[REG-CHECK] ✅ GBP deposit details loaded');
-      
+
       console.log('[REG-CHECK] Step 7: Loading default GBP account...');
       await this.loadDefaultAccountForAsset('GBP');
       console.log('[REG-CHECK] ✅ Default GBP account loaded');
-      
+
       console.log('[REG-CHECK] Step 8: Starting crypto price updates...');
       // Start background crypto price updates after login
       this.state.startCryptoPriceUpdates();
       console.log('[REG-CHECK] ✅ Crypto price updates started');
-      
+
       console.log('[REG-CHECK] Step 9: Preloading address books for all assets...');
       // Load all address books to cache after authentication
       await this.loadAllAddressBooks();
       console.log('[REG-CHECK] ✅ Address books preloaded');
-      
+
       console.log('[REG-CHECK] Step 9b: Setting up periodic address book refresh...');
       // Clear any existing refresh interval
       if (this.addressBookRefreshInterval) {
@@ -3986,7 +3990,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         await this.loadAllAddressBooks();
       }, 5 * 60 * 1000); // Refresh every 5 minutes
       console.log('[REG-CHECK] ✅ Address book auto-refresh configured (every 5 minutes)');
-      
+
       // Step 10: Load user balances (cached for asset list generation across all components)
       console.log('\n' + '💰'.repeat(60));
       console.log('[REG-CHECK] Step 10: Loading user balances...');
@@ -4004,7 +4008,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('[REG-CHECK] Current cached assets:', Object.keys(this.state.apiData.balance || {}));
       }
       console.log('💰'.repeat(60) + '\n');
-      
+
       console.log('\n' + '✅'.repeat(60));
       console.log('[REG-CHECK] ===== loadInitialStuffAboutUser COMPLETED =====');
       console.log('✅'.repeat(60) + '\n');
@@ -4017,12 +4021,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('[REG-CHECK] ===== checkUserStatusRedirect CALLED =====');
         console.log('[REG-CHECK] This determines if user needs to complete registration steps');
         console.log('🔍'.repeat(60) + '\n');
-        
+
         console.log('[REG-CHECK] LEVEL 2: Checking user status for form completion requirements...');
-        
+
         // ===== AUTHENTICATION CHECKS FIRST =====
         console.log('[REG-CHECK] Phase 1: Authentication validation...');
-        
+
         // 1. Check if user is properly authenticated and logged in
         console.log('[REG-CHECK] Checking isAuthenticated:', this.state.user.isAuthenticated);
         if (!this.state.user.isAuthenticated) {
@@ -4030,20 +4034,20 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           return 'Login';
         }
         console.log('[REG-CHECK] ✅ User is authenticated');
-        
+
         console.log('[REG-CHECK] Checking apiCredentialsFound:', this.state.user.apiCredentialsFound);
         if (!this.state.user.apiCredentialsFound) {
           console.log('[REG-CHECK] ❌ No API credentials found - REDIRECT TO: Login');
           return 'Login';
         }
         console.log('[REG-CHECK] ✅ API credentials found');
-        
+
         // 2. Check for credential expiry (if applicable)
         // Add any credential expiry logic here if needed
-        
+
         console.log('[REG-CHECK] ✅ Phase 1 Complete: Authentication valid');
         console.log('[REG-CHECK] Phase 2: Checking account review dismissal...');
-        
+
         // Check if user has dismissed AccountReview modal
         console.log('[REG-CHECK] accountReviewDismissed flag:', this.state.user.accountReviewDismissed);
         if (this.state.user.accountReviewDismissed) {
@@ -4051,18 +4055,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log('🚫 [LEVEL 2] accountReviewDismissed flag is:', this.state.user.accountReviewDismissed);
           return null;
         }
-        
+
         const user = this.state.user?.info?.user;
-        
+
         // Only proceed if we have actual user data from the server
         if (!user || !user.email) {
           console.log('📭 [LEVEL 2] User data not loaded yet - skipping user status check');
           return null;
         }
-        
+
         const userCat = user?.cat;
         const userAppropriate = user?.appropriate;
-        
+
         console.log('═══════════════════════════════════════════════════');
         console.log('👤 [USER PROFILE VALUES] Current user status:');
         console.log('   📧 Email:', user?.email);
@@ -4074,7 +4078,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('   🔍 APPROPRIATE stringified:', JSON.stringify(userAppropriate));
         console.log('   �🚫 Account Review Dismissed:', this.state.user.accountReviewDismissed);
         console.log('═══════════════════════════════════════════════════');
-        
+
         // EARLY CHECK: If user has already passed, don't bother with other checks
         // CRITICAL: Only check appropriate status if cat is NOT null
         // If cat is null, user hasn't completed categorization yet, so appropriate status is invalid
@@ -4091,7 +4095,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
 
         // ===== CATEGORIZATION STATUS CHECKING =====
-        
+
         // 3. Check if user needs extra_information step
         // This comes BEFORE cat check because extra info must be completed first
         try {
@@ -4100,14 +4104,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             apiRoute: 'user/extra_information/check',
             params: {}
           });
-          
+
           console.log('═══════════════════════════════════════════════════');
           console.log('📊 [EXTRA INFO CHECK] API Result:');
           console.log('   Type:', Array.isArray(extraInfoData) ? 'Array' : typeof extraInfoData);
           console.log('   Length:', Array.isArray(extraInfoData) ? extraInfoData.length : 'N/A');
           console.log('   Data:', JSON.stringify(extraInfoData, null, 2));
           console.log('═══════════════════════════════════════════════════');
-          
+
           // If extra_information/check has options -> user needs to complete step 3
           if (extraInfoData && Array.isArray(extraInfoData) && extraInfoData.length > 0) {
             console.log('📋 [LEVEL 2] Extra information required - redirecting to RegistrationCompletion step 3');
@@ -4119,7 +4123,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log('⚠️ [LEVEL 2] Error checking extra information:', error.message);
           // Continue to other checks if API fails
         }
-        
+
         // 4. Check if user has 'cat' value (categorisation)
         // Use RegistrationCompletion to show timeline and handle form progression
         if (userCat === null || userCat === undefined) {
@@ -4132,7 +4136,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log('📋 [LEVEL 2] User appropriate is TBD - requires suitability form, redirecting to RegistrationCompletion');
           return 'RegistrationCompletion';
         }
-        
+
         // CRITICAL: Also check if appropriate is null/undefined when cat exists
         // This means user completed categorization but hasn't done suitability assessment yet
         if (userCat !== null && userCat !== undefined && (userAppropriate === null || userAppropriate === undefined)) {
@@ -4140,30 +4144,30 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log('📋 [LEVEL 2] This means user completed categorization but needs suitability assessment');
           return 'RegistrationCompletion';
         }
-        
+
         if (userAppropriate === 'FAILED1') {
           console.log('📋 [LEVEL 2] User appropriate is FAILED1 - requires suitability2 form, redirecting to RegistrationCompletion');
           return 'RegistrationCompletion';
         }
-        
+
         if (userAppropriate === 'FAILED2') {
           console.log('⚠️ [LEVEL 2] User appropriate is FAILED2 - checking coolEnd time');
-          
+
           // Check coolEnd time for 24-hour wait
           const coolEnd = user?.coolend;
           console.log('User coolEnd:', coolEnd);
-          
+
           if (coolEnd) {
             const coolEndTime = new Date(coolEnd);
             const currentTime = new Date();
             console.log('CoolEnd time:', coolEndTime.toISOString());
             console.log('Current time:', currentTime.toISOString());
-            
+
             if (currentTime < coolEndTime) {
               const waitTimeMs = coolEndTime.getTime() - currentTime.getTime();
               const waitHours = Math.ceil(waitTimeMs / (1000 * 60 * 60));
               console.log(`⏰ Still in cooling period. Wait ${waitHours} more hours`);
-              
+
               // Show popup and force logout
               Alert.alert(
                 '24 Hour Wait Required',
@@ -4189,7 +4193,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             return 'RegistrationCompletion';
           }
         }
-        
+
         if (userAppropriate === 'PASS' || userAppropriate === 'PASSED' || (userCat === 1 && userAppropriate === 1)) {
           console.log('🎉 [LEVEL 2] User appropriate is PASS/1 - registration complete!');
           console.log('🎉 [LEVEL 2] cat:', userCat, 'appropriate:', userAppropriate);
@@ -4198,7 +4202,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
         // If we reach here, it's an unexpected state
         console.log('⚠️ [LEVEL 2] Unexpected user state - cat:', userCat, 'appropriate:', userAppropriate);
-        
+
         // Default to no redirect for unexpected states to avoid infinite loops
         return null;
 
@@ -4214,18 +4218,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.shouldUseRegistrationCompletion = async () => {
       try {
         console.log('🔍 Checking if user should use RegistrationCompletion flow...');
-        
+
         // Check if this is a new registration that needs to complete verification steps
-        const isNewRegistration = this.state.registrationSuccess || 
-                                 this.state.registrationEmail ||
-                                 !this.state.user.emailVerified ||
-                                 !this.state.user.phoneVerified;
-        
+        const isNewRegistration = this.state.registrationSuccess ||
+          this.state.registrationEmail ||
+          !this.state.user.emailVerified ||
+          !this.state.user.phoneVerified;
+
         if (isNewRegistration) {
           console.log('📝 New registration detected - use RegistrationCompletion');
           return true;
         }
-        
+
         // For existing users, check if they need extra_information step
         // by checking if extra_information/check has options loaded
         try {
@@ -4234,14 +4238,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             apiRoute: 'user/extra_information/check',
             params: {}
           });
-          
+
           console.log('═══════════════════════════════════════════════════');
           console.log('📊 [EXTRA INFO CHECK] API Result:');
           console.log('   Type:', Array.isArray(extraInfoData) ? 'Array' : typeof extraInfoData);
           console.log('   Length:', Array.isArray(extraInfoData) ? extraInfoData.length : 'N/A');
           console.log('   Data:', JSON.stringify(extraInfoData, null, 2));
           console.log('═══════════════════════════════════════════════════');
-          
+
           // If extra_information/check has no options loaded -> step 4 (direct AccountReview)
           // If extra_information/check has options -> step 3 (RegistrationCompletion)
           if (!extraInfoData || !Array.isArray(extraInfoData) || extraInfoData.length === 0) {
@@ -4251,13 +4255,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             console.log('📋 Extra information options found - step 3 (RegistrationCompletion)');
             return true; // RegistrationCompletion flow
           }
-          
+
         } catch (error) {
           console.log('⚠️ Error checking extra information:', error.message);
           // Default to RegistrationCompletion for safety
           return true;
         }
-        
+
       } catch (error) {
         console.error('❌ Error in shouldUseRegistrationCompletion:', error);
         // Default to RegistrationCompletion for safety
@@ -4280,10 +4284,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.checkPostLoginNavigation = async () => {
       try {
         console.log('🔍 Checking post-login navigation requirements...');
-        
+
         // Use the shared user status check logic
         const redirectTarget = await this.checkUserStatusRedirect();
-        
+
         if (redirectTarget) {
           console.log('✅ Post-login navigation needed - redirecting to:', redirectTarget);
           this.changeState(redirectTarget);
@@ -4320,13 +4324,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log(msg + " New data saved to appState. " + jd(data));
         this.state.user.info.user = data;
       }
-      
+
       // Update cache timestamp (check if cache exists first)
       if (this.state.cache && this.state.cache.timestamps) {
         this.state.cache.timestamps.userInfo = Date.now();
         console.log('[CACHE] User info cached at:', new Date(this.state.cache.timestamps.userInfo).toISOString());
       }
-      
+
       // ===== DETAILED USER OBJECT LOGGING =====
       console.log('👤 ===== COMPLETE USER OBJECT AFTER LOGIN =====');
       console.log('🆔 User UUID:', data.uuid || 'NOT_PROVIDED');
@@ -4352,21 +4356,21 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log(JSON.stringify(data, null, 2));
       console.log('👤 ===== END USER OBJECT LOGGING =====');
       // ===== DETAILED USER OBJECT LOGGING END =====
-      
+
       return true;
     }
 
 
     this.getUserInfo = (detail) => {
       let details = this.state.user.info.user;
-      if (! _.has(details, detail)) {
+      if (!_.has(details, detail)) {
         return '[loading]';
       }
       return details[detail];
     }
 
 
-    this.setUserInfo = ({detail, value}) => {
+    this.setUserInfo = ({ detail, value }) => {
       this.state.user.info.user[detail] = value;
     }
 
@@ -4388,7 +4392,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         log(msg + " New data saved to appState. " + jd(data));
         this.state.user.info.user_status = data;
       }
-      
+
       // Update cache timestamp (check if cache exists first)
       if (this.state.cache && this.state.cache.timestamps) {
         this.state.cache.timestamps.userStatus = Date.now();
@@ -4400,7 +4404,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.getUserStatus = (detail) => {
       let details = this.state.user.info.user_status;
-      if (! _.has(details, detail)) {
+      if (!_.has(details, detail)) {
         return '[loading]';
       }
       return details[detail];
@@ -4412,7 +4416,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let funcName = 'loadDepositDetailsForAsset';
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
       let assets = this.state.getAssets();
-      if (! assets.includes(asset)) { console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); return; }
+      if (!assets.includes(asset)) { console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); return; }
       let data = await this.state.privateMethod({
         functionName: 'loadDepositDetailsForAsset',
         apiRoute: `deposit_details/${asset}`,
@@ -4431,13 +4435,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       {"error":"Could not retrieve deposit details"}
       */
       // If an error occurs, we don't raise it here. There are many currencies. At any given time, a coin subsystem may be down, and the server won't be able to return deposit details for it. This shouldn't cause the app to completely halt. Handle the lack of deposit details on the relevant page.
-     let details = data;
-      
+      let details = data;
+
       // Initialize depositDetails if it doesn't exist
       if (!this.state.user.info.depositDetails) {
         this.state.user.info.depositDetails = {};
       }
-      
+
       // If the data differs from existing data, save it.
       let msg = `Deposit details for asset=${asset} loaded from server.`;
       if (jd(details) === jd(this.state.user.info.depositDetails[asset])) {
@@ -4453,7 +4457,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let funcName = 'getDepositDetailsForAsset';
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
       let assets = this.state.getAssets();
-      if (! assets.includes(asset)) { return '[loading]'; }
+      if (!assets.includes(asset)) { return '[loading]'; }
       if (_.isUndefined(this.state.user.info.depositDetails)) return '[loading]';
       if (_.isUndefined(this.state.user.info.depositDetails[asset])) return '[loading]';
       let addressProperties = this.state.user.info.depositDetails[asset];
@@ -4466,27 +4470,27 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // We use these when the user sells an asset - they may choose to receive the payment into this account.
       let funcName = 'loadDefaultAccountForAsset';
       console.log(`🏦 [BANK ACCOUNT LOAD] Loading account for asset: ${asset}`);
-      
+
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
-      
+
       // Support both crypto assets and fiat currencies
       let assets = this.state.getAssets();
       let fiatCurrencies = ['GBP', 'USD', 'EUR']; // Common fiat currencies
       let validAssets = [...assets, ...fiatCurrencies];
-      
-      if (! validAssets.includes(asset)) { 
-        console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); 
-        return; 
+
+      if (!validAssets.includes(asset)) {
+        console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`);
+        return;
       }
-      
+
       let data = await this.state.privateMethod({
         functionName: 'loadDefaultAccountForAsset',
         apiRoute: `default_account/${asset}`,
       });
       if (data == 'DisplayedError') return;
-      
+
       console.log(`🏦 [BANK ACCOUNT LOAD] Received data:`, data);
-      
+
       // Example result for GBP:
       /*
       {"accountName":"Mr John Q Fish, Esq","sortCode":"83-44-05","accountNumber":"55566677"}
@@ -4494,12 +4498,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // If the data differs from existing data, save it.
       let account = data;
       let msg = `Default account for asset=${asset} loaded from server.`;
-      
+
       // Initialize defaultAccount if it doesn't exist
       if (_.isUndefined(this.state.user.info.defaultAccount)) {
         this.state.user.info.defaultAccount = {};
       }
-      
+
       if (jd(account) === jd(this.state.user.info.defaultAccount[asset])) {
         log(msg + " No change.");
       } else {
@@ -4512,13 +4516,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.getDefaultAccountForAsset = (asset) => {
       let funcName = 'getDefaultAccountForAsset';
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
-      
+
       // Support both crypto assets and fiat currencies
       let assets = this.state.getAssets();
       let fiatCurrencies = ['GBP', 'USD', 'EUR']; // Common fiat currencies
       let validAssets = [...assets, ...fiatCurrencies];
-      
-      if (! validAssets.includes(asset)) { return '[loading]'; }
+
+      if (!validAssets.includes(asset)) { return '[loading]'; }
       if (_.isUndefined(this.state.user.info.defaultAccount)) return '[loading]';
       if (_.isUndefined(this.state.user.info.defaultAccount[asset])) return '[loading]';
       let account = this.state.user.info.defaultAccount[asset];
@@ -4530,19 +4534,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       let funcName = 'updateDefaultAccountForAsset';
       console.log(`🏦 [BANK ACCOUNT UPDATE] Starting update for asset: ${asset}`);
       console.log(`🏦 [BANK ACCOUNT PARAMS]`, params);
-      
+
       if (_.isNil(asset)) { console.error(`${funcName}: Asset required`); return; }
-      
+
       // Support both crypto assets and fiat currencies
       let assets = this.state.getAssets();
       let fiatCurrencies = ['GBP', 'USD', 'EUR']; // Common fiat currencies
       let validAssets = [...assets, ...fiatCurrencies];
-      
-      if (! validAssets.includes(asset)) { 
-        console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`); 
-        return; 
+
+      if (!validAssets.includes(asset)) {
+        console.log(`${funcName}: ERROR: Unrecognised asset: ${asset}`);
+        return;
       }
-      
+
       let data = await this.state.privateMethod({
         apiRoute: `default_account/${asset}/update`,
         params,
@@ -4572,7 +4576,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.loadBalances = async () => {
       console.log('🔄💰 [LOAD BALANCES] Starting balance API call...');
-      let data = await this.state.privateMethod({httpMethod: 'POST', apiRoute: 'balance'});
+      let data = await this.state.privateMethod({ httpMethod: 'POST', apiRoute: 'balance' });
       if (data == 'DisplayedError') {
         console.log('❌💰 [LOAD BALANCES] Error loading balances - returning empty object');
         this.state.apiData.balance = {};
@@ -4582,15 +4586,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('💰 [LOAD BALANCES] Raw balance data:', JSON.stringify(data, null, 2));
       console.log('💰 [LOAD BALANCES] Assets found:', Object.keys(data || {}));
       console.log('💰 [LOAD BALANCES] Number of assets:', Object.keys(data || {}).length);
-      
+
       // Always save the data, even if it's empty or unchanged
       console.log('💰 [LOAD BALANCES] Saving balance data to appState.apiData.balance');
       this.state.apiData.balance = data || {};
-      
+
       let msg = "User balances loaded from server.";
       log(msg + " " + jd(data));
       console.log('💰 [LOAD BALANCES] Balance data saved. Assets:', Object.keys(this.state.apiData.balance));
-      
+
       return data || {};
     }
 
@@ -4616,17 +4620,17 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('🔍 Balance data exists?', !_.isUndefined(this.state.apiData.balance));
       console.log('🔍 balancesLoaded flag:', this.state.balancesLoaded);
       console.log('🔍 Full balance data:', JSON.stringify(this.state.apiData.balance, null, 2));
-      
+
       if (_.isUndefined(this.state.apiData.balance)) {
         console.log('❌ getAvailableAssets: Balance data is UNDEFINED');
         console.log('⚠️ getAvailableAssets: This means balance API was not called or failed');
         console.log('🔍'.repeat(60) + '\n');
         return [];
       }
-      
+
       // Return ALL assets from balance API (tradeable assets)
       let allAssets = Object.keys(this.state.apiData.balance);
-      
+
       console.log(`✅ getAvailableAssets: Found ${allAssets.length} total tradeable assets from balance API`);
       console.log(`✅ ALL TRADEABLE ASSETS:`, allAssets);
       console.log(`📌 Use Case: Trade, Assets, AddressBook pages`);
@@ -4645,21 +4649,21 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('💰 Balance data exists?', !_.isUndefined(this.state.apiData.balance));
       console.log('💰 balancesLoaded flag:', this.state.balancesLoaded);
       console.log('💰 Full balance data:', JSON.stringify(this.state.apiData.balance, null, 2));
-      
+
       if (_.isUndefined(this.state.apiData.balance)) {
         console.log('❌ getOwnedAssets: Balance data is UNDEFINED');
         console.log('⚠️ getOwnedAssets: This means balance API was not called or failed');
         console.log('💰'.repeat(60) + '\n');
         return [];
       }
-      
+
       // Filter to only assets with balance > 0 (owned assets)
       let allAssets = Object.keys(this.state.apiData.balance);
       let ownedAssets = allAssets.filter(asset => {
         const balance = parseFloat(this.state.apiData.balance[asset]);
         return !isNaN(balance) && balance > 0;
       });
-      
+
       console.log(`✅ getOwnedAssets: Found ${allAssets.length} total assets, ${ownedAssets.length} owned`);
       console.log(`✅ OWNED ASSETS (balance > 0):`, ownedAssets);
       console.log(`🚫 NOT OWNED (balance = 0):`, allAssets.filter(a => !ownedAssets.includes(a)));
@@ -4678,7 +4682,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           apiRoute: `best_volume_price/${currency}/GBP/SELL/quote/1`,
           params: {},
         });
-        
+
         if (response && response.data && response.data.price) {
           const pricePerUnit = parseFloat(response.data.price);
           if (pricePerUnit > 0) {
@@ -4702,24 +4706,24 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('[CRYPTO-CACHE] ========================================');
       console.log('[CRYPTO-CACHE] BACKGROUND UPDATE STARTED');
       console.log('[CRYPTO-CACHE] ========================================');
-      
+
       try {
         const newRates = {
           sellPrices: {},      // Mid-price (ask + bid) / 2 for selling
           buyPrices: {},       // Mid-price (ask + bid) / 2 for buying
           balancesInGBP: {}    // Pre-calculated balance values in GBP
         };
-        
+
         const baseCurrency = 'GBP';
         const balances = this.state.apiData?.balance || {};
-        
+
         console.log('[CRYPTO-CACHE] Will process only cryptocurrencies available in ticker response');
-        
+
         // Fetch ticker data which includes current market prices
         console.log('[CRYPTO-CACHE] Fetching /ticker...');
-        
+
         let response;
-        
+
         // First, try to use existing ticker data if available
         if (this.state.apiData?.ticker && Object.keys(this.state.apiData.ticker).length > 0) {
           console.log('[CRYPTO-CACHE] ✅ Using existing ticker data from apiData.ticker');
@@ -4728,89 +4732,89 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           // SPECIAL: Use www.solidi.co for ticker endpoint only
           console.log('[CRYPTO-CACHE] 🌐 Creating temporary API client with www.solidi.co for /ticker');
           const tickerApiClient = new SolidiRestAPIClientLibrary({
-            userAgent: this.state.userAgent, 
-            apiKey:'', 
-            apiSecret:'', 
+            userAgent: this.state.userAgent,
+            apiKey: '',
+            apiSecret: '',
             domain: 'www.solidi.co',
             appStateRef: { current: this }
           });
-          
+
           // Use public method for ticker
           console.log('[CRYPTO-CACHE] 🔓 Using PUBLIC method for /ticker');
           let tag = 'ticker';
-          let abortController = this.state.createAbortController({tag, noAbort: false});
+          let abortController = this.state.createAbortController({ tag, noAbort: false });
           response = await tickerApiClient.publicMethod({
-            httpMethod: 'GET', 
-            apiRoute: 'ticker', 
+            httpMethod: 'GET',
+            apiRoute: 'ticker',
             params: {},
             abortController
           });
-          
+
           console.log('[CRYPTO-CACHE] 📋 Response type:', typeof response);
           console.log('[CRYPTO-CACHE] 📋 Response:', response);
-          
+
           if (!response || response === 'DisplayedError') {
             console.log('[CRYPTO-CACHE] ❌ No valid response from public method, trying loadTicker instead...');
             // Fallback to loadTicker method which is known to work
             await this.loadTicker();
             response = this.state.apiData.ticker;
           }
-          
+
           // Handle case where response might have error property but data property with actual ticker data
           if (response && response.error === null && response.data) {
             console.log('[CRYPTO-CACHE] ✅ Response has data property, using that');
             response = response.data;
           }
         }
-        
+
         console.log('[CRYPTO-CACHE] ✅ Processing ticker data');
         console.log('[CRYPTO-CACHE] 📋 Ticker keys:', Object.keys(response || {}).join(', '));
         console.log('[CRYPTO-CACHE] 📋 Number of markets in ticker:', Object.keys(response || {}).length);
         console.log('[CRYPTO-CACHE] 📋 Full response dump:');
         console.log(JSON.stringify(response, null, 2));
-        
+
         // List each market individually
         Object.keys(response || {}).forEach(key => {
           console.log(`[CRYPTO-CACHE] 📋 Market "${key}":`, JSON.stringify(response[key]));
         });
-        
+
         // Check for error in response
         if (response && response.error) {
           console.log('[CRYPTO-CACHE] ❌ API returned error:', response.error);
           return null;
         }
-        
+
         // Process ticker data for each currency
         // Response format: {"BTC/GBP":{"price":"31712.51"},"ETH/GBP":{"price":"2324.00"},...}
         // Or potentially: {"BTC/GBP":{"bid":"31700.00","ask":"31725.00"},...}
-        
+
         // Extract cryptocurrencies from the ticker response keys
         const markets = Object.keys(response || {});
         console.log(`[CRYPTO-CACHE] Processing ${markets.length} markets from ticker`);
-        
+
         for (const market of markets) {
           try {
             const tickerData = response[market];
-            
+
             // Extract crypto symbol from market (handle XBT as BTC)
             const parts = market.split('/');
             if (parts.length !== 2) {
               console.log(`[CRYPTO-CACHE] Invalid market format: ${market}`);
               continue;
             }
-            
+
             const currency = parts[0];
             const quoteCurrency = parts[1];
             const cryptoSymbol = currency === 'XBT' ? 'BTC' : currency;
-            
+
             console.log(`[CRYPTO-CACHE] Processing ${market} (${cryptoSymbol}):`, JSON.stringify(tickerData, null, 2));
-            
+
             // Skip if not a GBP pair
             if (quoteCurrency !== baseCurrency) {
               console.log(`[CRYPTO-CACHE] Skipping ${market} - not a ${baseCurrency} pair`);
               continue;
             }
-            
+
             if (!tickerData) {
               console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: No ticker data available`);
               newRates.sellPrices[cryptoSymbol] = 0;
@@ -4818,10 +4822,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               newRates.balancesInGBP[cryptoSymbol] = 0;
               continue;
             }
-            
+
             // Use cryptoSymbol (BTC for both BTC and XBT) to get balance
             const balance = parseFloat(balances[cryptoSymbol]) || 0;
-            
+
             if (tickerData.error) {
               console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: ${tickerData.error}`);
               newRates.sellPrices[cryptoSymbol] = 0;
@@ -4829,9 +4833,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               newRates.balancesInGBP[cryptoSymbol] = 0;
               continue;
             }
-            
+
             let price;
-            
+
             // Check if we have bid/ask prices for mid-price calculation
             if (tickerData.bid && tickerData.ask) {
               const bid = parseFloat(tickerData.bid);
@@ -4849,15 +4853,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               newRates.balancesInGBP[cryptoSymbol] = 0;
               continue;
             }
-            
+
             if (price && price > 0) {
               // Calculate GBP value: balance × price
               const gbpValue = balance * price;
-              
+
               newRates.sellPrices[cryptoSymbol] = price;
               newRates.buyPrices[cryptoSymbol] = price;
               newRates.balancesInGBP[cryptoSymbol] = gbpValue;
-              
+
               console.log(`[CRYPTO-CACHE] ${cryptoSymbol}: ${balance} × £${price.toFixed(2)} = £${gbpValue.toFixed(2)}`);
             } else {
               newRates.sellPrices[cryptoSymbol] = 0;
@@ -4869,27 +4873,27 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             console.log(`[CRYPTO-CACHE] Error processing market ${market}:`, error.message);
           }
         }
-        
+
         // Add GBP balance (always 1:1)
         const gbpBalance = parseFloat(balances['GBP']) || 0;
         newRates.balancesInGBP['GBP'] = gbpBalance;
         console.log(`[CRYPTO-CACHE] GBP: £${gbpBalance.toFixed(2)} (base currency)`);
-        
+
         // Update state
         this.state.cryptoRates = newRates;
         this.state.cryptoRatesLastUpdated = new Date();
-        
+
         // Update cache timestamp
         this.state.cache.timestamps.prices = Date.now();
         console.log('[CRYPTO-CACHE] Prices cached at:', new Date(this.state.cache.timestamps.prices).toISOString());
-        
+
         console.log('[CRYPTO-CACHE] ========================================');
         console.log('[CRYPTO-CACHE] UPDATE COMPLETE ✅');
         console.log('[CRYPTO-CACHE] SELL Prices:', Object.keys(newRates.sellPrices).length);
         console.log('[CRYPTO-CACHE] BUY Prices:', Object.keys(newRates.buyPrices).length);
         console.log('[CRYPTO-CACHE] Balances Calculated:', Object.keys(newRates.balancesInGBP).length);
         console.log('[CRYPTO-CACHE] ========================================');
-        
+
         return newRates;
       } catch (error) {
         console.error('[CRYPTO-CACHE] ❌ Error updating crypto rates:', error);
@@ -4936,20 +4940,20 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     // Start background rate update interval (every 30 seconds)
     this.startCryptoPriceUpdates = () => {
       console.log('[CRYPTO-CACHE] 🚀 Starting background updates...');
-      
+
       // Initial fetch
       this.updateCryptoRates();
-      
+
       // Set up interval for automatic updates
       if (this.cryptoPriceUpdateInterval) {
         clearInterval(this.cryptoPriceUpdateInterval);
       }
-      
+
       this.cryptoPriceUpdateInterval = setInterval(() => {
         console.log('[CRYPTO-CACHE] 🔄 30-second interval triggered...');
         this.updateCryptoRates();
       }, 30000); // Update every 30 seconds
-      
+
       console.log('[CRYPTO-CACHE] ✅ Background updates started (30-second interval)');
     }
 
@@ -4963,7 +4967,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
     // ===== CACHE MANAGEMENT HELPERS =====
-    
+
     // Get cache status for all data types
     this.getCacheStatus = () => {
       const now = Date.now();
@@ -5006,7 +5010,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
       });
     };
-    
+
     // ===== END CACHE MANAGEMENT HELPERS =====
 
 
@@ -5023,7 +5027,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       - Price values do not include fees. Fee values are included separately.
       */
       let funcName = 'fetchPricesForASpecificVolume'
-      let {market, side, baseOrQuoteAsset, baseAssetVolume, quoteAssetVolume} = params;
+      let { market, side, baseOrQuoteAsset, baseAssetVolume, quoteAssetVolume } = params;
       if (_.isNil(market)) { console.error(`${funcName}: market required`); return; }
       if (_.isNil(side)) { console.error(`${funcName}: side required`); return; }
       if (_.isNil(baseOrQuoteAsset)) { console.error(`${funcName}: baseOrQuoteAsset required`); return; }
@@ -5036,7 +5040,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         params,
         functionName: funcName,
       });
-      lj({params});
+      lj({ params });
       if (data == 'DisplayedError') return 'DisplayedError';
       /* Example output:
 [
@@ -5056,13 +5060,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   }
 ]
       */
-     return data;
+      return data;
     }
 
 
     this.fetchBestPriceForASpecificVolume = async (params) => {
       let funcName = 'fetchBestPriceForASpecificVolume';
-      let {market, side, baseOrQuoteAsset, baseAssetVolume, quoteAssetVolume} = params;
+      let { market, side, baseOrQuoteAsset, baseAssetVolume, quoteAssetVolume } = params;
       if (_.isNil(market)) { console.error(`${funcName}: market required`); return; }
       if (_.isNil(side)) { console.error(`${funcName}: side required`); return; }
       if (_.isNil(baseOrQuoteAsset)) { console.error(`${funcName}: baseOrQuoteAsset required`); return; }
@@ -5074,7 +5078,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // The Buy page is accessible immediately without the user having logged in.
       // With a non-authenticated user, we call the public GET endpoint.
       let data;
-      if (! this.state.user.isAuthenticated && this.state.mainPanelState == 'Buy') {
+      if (!this.state.user.isAuthenticated && this.state.mainPanelState == 'Buy') {
         let assetVolume = (baseOrQuoteAsset == 'base') ? baseAssetVolume : quoteAssetVolume;
         let argString = '/' + side + '/' + baseOrQuoteAsset + '/' + assetVolume;
         data = await this.state.publicMethod({
@@ -5099,7 +5103,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.fetchOrderStatus = async ({orderID}) => {
+    this.fetchOrderStatus = async ({ orderID }) => {
       // "fetch" means "load from API & get value".
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
@@ -5118,7 +5122,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Possible status values: FILLED, SETTLED, CANCELLED
       let orderStatus = data.status;
       let knownStatuses = 'FILLED, SETTLED, CANCELLED'.split(', ');
-      if (! misc.itemInArray('knownStatuses', knownStatuses, orderStatus, 'fetchOrderStatus')) {
+      if (!misc.itemInArray('knownStatuses', knownStatuses, orderStatus, 'fetchOrderStatus')) {
         // Future: go to error page?
       }
       return orderStatus;
@@ -5126,20 +5130,20 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.sendBuyOrder = async (buyOrder) => {
-      if (! this.state.panels.buy.activeOrder) {
+      if (!this.state.panels.buy.activeOrder) {
         //log('No active BUY order. Leaving sendBuyOrder.');
-        return {result: 'NO_ACTIVE_ORDER'};
+        return { result: 'NO_ACTIVE_ORDER' };
       }
       // Ensure that this order only gets processed once.
       this.state.panels.buy.activeOrder = false;
       // Unpack and save the order.
-      let {volumeQA, volumeBA, assetQA, assetBA, paymentMethod} = buyOrder;
-      _.assign(this.state.panels.buy, {volumeQA, assetQA, volumeBA, assetBA});
+      let { volumeQA, volumeBA, assetQA, assetBA, paymentMethod } = buyOrder;
+      _.assign(this.state.panels.buy, { volumeQA, assetQA, volumeBA, assetBA });
       let market = assetBA + '/' + assetQA;
       let orderType = 'IMMEDIATE_OR_CANCEL';
       let msg = `Send order to server: [${market}] BUY ${volumeBA} ${assetBA} for ${volumeQA} ${assetQA} - ${orderType}`;
       log(msg);
-      
+
       // Enhanced logging for buy order comparison
       console.log('\n' + '🟢'.repeat(60));
       console.log('🚨 BUY ORDER DEBUG - ENHANCED LOGGING 🚨');
@@ -5151,7 +5155,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log(`   paymentMethod: ${paymentMethod}`);
       console.log(`🔍 Original buyOrder object:`, buyOrder);
       console.log('🟢'.repeat(60));
-      
+
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
         apiRoute: 'buy',
@@ -5164,13 +5168,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         },
         functionName: 'sendBuyOrder',
       });
-      
+
       // Enhanced response logging
       console.log('\n' + '🌟'.repeat(60));
       console.log('🚨 BUY ORDER RESPONSE - ENHANCED LOGGING 🚨');
       console.log(`📥 Response data:`, data);
       console.log('🌟'.repeat(60));
-      
+
       if (data == 'DisplayedError') return;
       //log(data)
       /*
@@ -5237,8 +5241,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.confirmPaymentOfBuyOrder = async (params) => {
-      let {orderID} = params;
-      let data = await this.state.privateMethod({httpMethod: 'POST', apiRoute: `order/${orderID}/user_has_paid`});
+      let { orderID } = params;
+      let data = await this.state.privateMethod({ httpMethod: 'POST', apiRoute: `order/${orderID}/user_has_paid` });
       /* Example response:
 {"result":"success"}
       */
@@ -5246,20 +5250,20 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.sendSellOrder = async (sellOrder) => {
-      if (! this.state.panels.sell.activeOrder) {
+      if (!this.state.panels.sell.activeOrder) {
         log('No active SELL order. Leaving sendSellOrder.');
-        return {result: 'NO_ACTIVE_ORDER'};
+        return { result: 'NO_ACTIVE_ORDER' };
       }
       // Ensure that this order only gets processed once.
       this.state.panels.sell.activeOrder = false;
       // Unpack and save the order.
-      let {volumeQA, volumeBA, assetQA, assetBA, paymentMethod} = sellOrder;
-      _.assign(this.state.panels.sell, {volumeQA, assetQA, volumeBA, assetBA});
+      let { volumeQA, volumeBA, assetQA, assetBA, paymentMethod } = sellOrder;
+      _.assign(this.state.panels.sell, { volumeQA, assetQA, volumeBA, assetBA });
       let market = assetBA + '/' + assetQA;
       let orderType = 'IMMEDIATE_OR_CANCEL';
       let msg = `Send order to server: [${market}] SELL ${volumeBA} ${assetBA} for ${volumeQA} ${assetQA} - ${orderType}`;
       log(msg);
-      
+
       // Enhanced logging for sell order debugging
       console.log('\n' + '🔴'.repeat(60));
       console.log('🚨 SELL ORDER DEBUG - ENHANCED LOGGING 🚨');
@@ -5271,7 +5275,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log(`   paymentMethod: ${paymentMethod}`);
       console.log(`🔍 Original sellOrder object:`, sellOrder);
       console.log('🔴'.repeat(60));
-      
+
       // Try the new format first (same as buy orders)
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
@@ -5285,28 +5289,28 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         },
         functionName: 'sendSellOrder',
       });
-      
+
       // Enhanced response logging
       console.log('\n' + '📡'.repeat(60));
       console.log('🚨 SELL ORDER RESPONSE (NEW FORMAT) - ENHANCED LOGGING 🚨');
       console.log(`📥 Response data:`, data);
       console.log('📡'.repeat(60));
-      
+
       // If the new format fails, try the old format that was shown in API testing
       if (data && data.error && data.error.includes('Could not execute SELL order')) {
         console.log('\n' + '🔄'.repeat(60));
         console.log('🚨 TRYING OLD FORMAT PARAMETERS FOR SELL ORDER 🚨');
-        
+
         // Calculate price from volumes (price = quoteAssetVolume / baseAssetVolume)
         let price = (parseFloat(volumeQA) / parseFloat(volumeBA)).toString();
         let currency_pair = `${assetBA.toLowerCase()}_${assetQA.toLowerCase()}`;
-        
+
         console.log(`📊 Old Format Parameters:`);
         console.log(`   amount: ${volumeBA}`);
         console.log(`   price: ${price}`);
         console.log(`   currency_pair: ${currency_pair}`);
         console.log('🔄'.repeat(60));
-        
+
         data = await this.state.privateMethod({
           httpMethod: 'POST',
           apiRoute: 'sell',
@@ -5317,13 +5321,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           },
           functionName: 'sendSellOrder_oldFormat',
         });
-        
+
         console.log('\n' + '⚡'.repeat(60));
         console.log('🚨 SELL ORDER RESPONSE (OLD FORMAT) - ENHANCED LOGGING 🚨');
         console.log(`📥 Response data:`, data);
         console.log('⚡'.repeat(60));
       }
-      
+
       if (data == 'DisplayedError') return;
       //log(data)
       /*
@@ -5358,30 +5362,30 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Fee API requires authentication, so use privateMethod
       console.log('🔄 loadFees: Starting fee loading...');
       console.log('🔍 loadFees: Calling privateMethod with apiRoute: fee');
-      
-      let response = await this.state.privateMethod({httpMethod: 'POST', apiRoute:'fee'});
+
+      let response = await this.state.privateMethod({ httpMethod: 'POST', apiRoute: 'fee' });
       console.log('📨 loadFees: Raw response:', response);
-      
+
       if (response == 'DisplayedError') {
         console.log('❌ loadFees: Got DisplayedError from privateMethod');
         return;
       }
-      
+
       if (!response) {
         console.log('❌ loadFees: No response from privateMethod');
         return;
       }
-      
+
       // Extract data from API response structure
       // The response IS the data directly from privateMethod
       let data = response;
       console.log('📊 loadFees: Using response as data:', data);
-      
+
       if (!data) {
         console.error('loadFees: No data found in API response:', response);
         return;
-      } 
-      
+      }
+
       /* Example data:
       {
         "GBP": {
@@ -5402,9 +5406,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           let lowFee = fees.withdraw.lowFee;
           let mediumFee = fees.withdraw.mediumFee;
           let highFee = fees.withdraw.highFee;
-          
+
           log(`${asset} raw fees - low: ${lowFee}, medium: ${mediumFee}, high: ${highFee}`);
-          
+
           // Fee handling:
           // - Fee value 0: withdrawal is FREE (include it)
           // - Fee value -1: option is NOT AVAILABLE (exclude it)
@@ -5413,13 +5417,13 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           let lowFeeValue = parseFloat(lowFee);
           let mediumFeeValue = parseFloat(mediumFee);
           let highFeeValue = parseFloat(highFee);
-          
+
           if (lowFeeValue >= 0) assetFees.low = lowFee;
           if (mediumFeeValue >= 0) assetFees.medium = mediumFee;
           if (highFeeValue >= 0) assetFees.high = highFee;
-          
+
           log(`${asset} processed fees:`, assetFees);
-          
+
           // Only add asset if it has at least one valid fee
           if (Object.keys(assetFees).length > 0) {
             withdrawFees[asset] = assetFees;
@@ -5427,14 +5431,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
       }
       let msg = "Withdrawal fee data loaded from server.";
-      
+
       log("🔍 COMPARISON DEBUG:");
       log("withdrawFees:", withdrawFees);
       log("this.state.fees.withdraw:", this.state.fees.withdraw);
       log("jd(withdrawFees):", jd(withdrawFees));
       log("jd(this.state.fees.withdraw):", jd(this.state.fees.withdraw));
       log("Are they equal?", jd(withdrawFees) === jd(this.state.fees.withdraw));
-      
+
       if (jd(withdrawFees) === jd(this.state.fees.withdraw)) {
         log(msg + " No change.");
       } else {
@@ -5447,7 +5451,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.getFee = ({feeType, asset, priority}) => {
+    this.getFee = ({ feeType, asset, priority }) => {
       // Get a fee held in the appState.
       // feeType options: deposit, withdraw.
       // priority options: low, medium, high.
@@ -5472,19 +5476,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.sendWithdraw = async ({asset, volume, address, priority, functionName}) => {
+    this.sendWithdraw = async ({ asset, volume, address, priority, functionName }) => {
       // address parameter must be UUID from address book, not actual wallet address
       // Priority must be one of: SLOW, MEDIUM, FAST
-      
+
       log(`🔄 sendWithdraw: Starting withdrawal - ${volume} ${asset} to address UUID: ${address} with priority ${priority}`);
       console.log(`🔄 CONSOLE: sendWithdraw starting - ${volume} ${asset} to UUID: ${address} with priority ${priority}`);
-      
+
       try {
         // Validate UUID format (basic check)
         if (!address || typeof address !== 'string') {
           throw new Error('Address UUID is required and must be a string');
         }
-        
+
         // Prepare parameters according to API documentation
         // Both crypto and fiat withdrawals use the same format:
         // - address: UUID from address book
@@ -5495,7 +5499,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           address: address, // UUID from address book
           priority: priority || 'MEDIUM' // Default to MEDIUM if not specified
         };
-        
+
         log('🔍 sendWithdraw: Calling privateMethod with params:', {
           httpMethod: 'POST',
           apiRoute: `withdraw/${asset}`,
@@ -5519,14 +5523,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('⚠️ CONSOLE: IMPORTANT - Address must be UUID from address book, not wallet address!');
         console.log('⚠️ CONSOLE: To add address to address book, use: POST /addressBook/{asset}/{network}');
         console.log('🌐 CONSOLE: ===== END API ENDPOINT DEBUG =====');
-        
+
         let data = await this.state.privateMethod({
           httpMethod: 'POST',
           apiRoute: `withdraw/${asset}`,
           params: params,
           functionName,
         });
-        
+
         log('📨 sendWithdraw: Raw response from privateMethod:', data);
         console.log('📨 CONSOLE: ===== API WITHDRAW RESPONSE DEBUG =====');
         console.log('📨 CONSOLE: Raw response from privateMethod:', data);
@@ -5544,26 +5548,26 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('📨 CONSOLE: ===== END API RESPONSE DEBUG =====');
         log('📊 sendWithdraw: Response type:', typeof data);
         log('📊 sendWithdraw: Response stringified:', JSON.stringify(data, null, 2));
-        
+
         // COMPREHENSIVE HANDLING FOR WITHDRAW API SUCCESS MESSAGES
         // The withdraw API can return success messages in various formats
         if (data && typeof data === 'object') {
-          
+
           // 1. Check for success messages in the "error" field (common withdraw API behavior)
           if (data.error && typeof data.error === 'string') {
             let errorMessage = data.error.toLowerCase();
-            
+
             // Comprehensive success message detection
-            let isSuccessMessage = errorMessage.includes('successfully') || 
-                                 errorMessage.includes('queued') ||
-                                 errorMessage.includes('withdrawal') ||
-                                 errorMessage.includes('processed') ||
-                                 errorMessage.includes('submitted') ||
-                                 errorMessage.includes('completed') ||
-                                 errorMessage.includes('confirmed') ||
-                                 errorMessage.includes('sent') ||
-                                 (errorMessage.includes('request') && errorMessage.includes('accepted'));
-            
+            let isSuccessMessage = errorMessage.includes('successfully') ||
+              errorMessage.includes('queued') ||
+              errorMessage.includes('withdrawal') ||
+              errorMessage.includes('processed') ||
+              errorMessage.includes('submitted') ||
+              errorMessage.includes('completed') ||
+              errorMessage.includes('confirmed') ||
+              errorMessage.includes('sent') ||
+              (errorMessage.includes('request') && errorMessage.includes('accepted'));
+
             if (isSuccessMessage) {
               console.log('✅ sendWithdraw: Detected success message in error field:', data.error);
               log('✅ sendWithdraw: Converting success message to proper success format:', data.error);
@@ -5576,7 +5580,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               };
             }
           }
-          
+
           // 2. Check for responses with ID and no error (classic success format)
           if (data.id && !data.error) {
             console.log('✅ sendWithdraw: Classic success response with ID:', data.id);
@@ -5589,7 +5593,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               originalResponse: data
             };
           }
-          
+
           // 3. Check for explicit success field
           if (data.success === true) {
             console.log('✅ sendWithdraw: Explicit success response');
@@ -5597,7 +5601,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             return data; // Already in correct format
           }
         }
-        
+
         /* Example successful response:
           {"id": 9094}
         */
@@ -5634,7 +5638,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.loadOrders = async () => {
-      let data = await this.state.privateMethod({httpMethod: 'POST', apiRoute: 'order'});
+      let data = await this.state.privateMethod({ httpMethod: 'POST', apiRoute: 'order' });
       if (data == 'DisplayedError') return;
       /* Example data:
       [
@@ -5659,7 +5663,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.getOrder = ({orderID}) => {
+    this.getOrder = ({ orderID }) => {
       // Future: Might need to make this faster by writing loadOrder/${orderID} which loads a specific order, and then getting its output here.
       // Example Buy IOC order:
       // {"age":"75122","baseVolume":"0.00057120","date":"28 Aug 2022","id":7179,"market":"BTC/GBP","quoteVolume":"10.00000000","settlement1Id":8289,"settlement1Status":"R","settlement2Id":8290,"settlement2Status":"R","side":"Buy","status":"SETTLED","time":"13:43:23","type":"IOC"}
@@ -5704,26 +5708,26 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.loadAddressBook = async (asset) => {
       let fName = 'loadAddressBook';
       console.log(`📍 ${fName}: Starting for asset:`, asset);
-      
+
       try {
         // Validate asset parameter
         if (!asset || typeof asset !== 'string') {
           console.log(`❌ ${fName}: Invalid asset parameter:`, asset);
           return [];
         }
-        
+
         console.log(`🌐 ${fName}: Loading fresh data from API for ${asset}`);
-        
+
         // Call API with proper error handling and timeout
         let data = await this.state.apiClient.privateMethod({
           httpMethod: 'POST',
           apiRoute: `addressBook/${asset.toUpperCase()}`,
           params: {},
-          abortController: this.createAbortController({tag: `addressBook-${asset}`})
+          abortController: this.createAbortController({ tag: `addressBook-${asset}` })
         });
-        
+
         console.log(`📦 ${fName}: Raw API response:`, data);
-        
+
         // Handle API response
         if (data === 'DisplayedError') {
           console.log(`❌ ${fName}: API returned DisplayedError`);
@@ -5731,14 +5735,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           this.state.apiData.address_book[asset.toUpperCase()] = [];
           return [];
         }
-        
+
         if (!data) {
           console.log(`⚠️ ${fName}: API returned no data`);
           // Store empty array in cache
           this.state.apiData.address_book[asset.toUpperCase()] = [];
           return [];
         }
-        
+
         // Process successful response
         let addressList = [];
         if (Array.isArray(data)) {
@@ -5751,18 +5755,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log(`⚠️ ${fName}: Unexpected response format:`, data);
           addressList = [];
         }
-        
+
         // ✨ CACHE THE RESULT in address_book object
         console.log(`💾 ${fName}: Caching ${addressList.length} addresses for ${asset}`);
         this.state.apiData.address_book[asset.toUpperCase()] = addressList;
-        
+
         console.log(`✅ ${fName}: Successfully loaded and cached ${addressList.length} addresses for ${asset}`);
         return addressList;
-        
+
       } catch (error) {
         console.log(`❌ ${fName}: Exception caught:`, error);
         console.log(`❌ ${fName}: Error message:`, error.message);
-        
+
         // Store empty array in cache on error
         this.state.apiData.address_book[asset.toUpperCase()] = [];
         return [];
@@ -5773,34 +5777,34 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.loadAllAddressBooks = async () => {
       const fName = 'loadAllAddressBooks';
       console.log(`\n📚 ${fName}: ===== STARTING PARALLEL ADDRESS BOOK LOADING =====`);
-      
+
       // Use balance API to get user's actual assets instead of hardcoded list
       let assetsToLoad = this.state.getAvailableAssets && this.state.getAvailableAssets().length > 0
         ? this.state.getAvailableAssets()
         : ['BTC', 'ETH', 'LTC', 'XRP', 'BCH', 'GBP', 'EUR', 'USD'];
-      
+
       console.log(`📚 ${fName}: Using assets from balance API`);
       console.log(`📚 ${fName}: Loading address books for ${assetsToLoad.length} assets:`, assetsToLoad);
-      
+
       try {
         // Load all address books in parallel using Promise.all
-        const loadPromises = assetsToLoad.map(asset => 
+        const loadPromises = assetsToLoad.map(asset =>
           this.loadAddressBook(asset).catch(error => {
             console.log(`⚠️ ${fName}: Failed to load ${asset} address book:`, error);
             return []; // Return empty array on error to prevent Promise.all from failing
           })
         );
-        
+
         const results = await Promise.all(loadPromises);
-        
+
         // Count total addresses loaded
         const totalAddresses = results.reduce((sum, list) => sum + list.length, 0);
-        
+
         console.log(`✅ ${fName}: Parallel loading complete!`);
         console.log(`📊 ${fName}: Loaded ${totalAddresses} total addresses across ${assetsToLoad.length} assets`);
         console.log(`📦 ${fName}: Cache status:`, Object.keys(this.state.apiData.address_book));
         console.log(`📚 ${fName}: ===== PARALLEL ADDRESS BOOK LOADING COMPLETE =====\n`);
-        
+
       } catch (error) {
         console.error(`❌ ${fName}: Parallel loading failed:`, error);
       }
@@ -5810,18 +5814,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.getAddressBook = (asset) => {
       // Get cached address book for an asset
       console.log('📍 getAddressBook: Called for asset:', asset);
-      
+
       if (!asset || typeof asset !== 'string') {
         return [];
       }
-      
+
       const cacheData = this.state.apiData.address_book[asset.toUpperCase()];
-      
+
       if (cacheData && Array.isArray(cacheData)) {
         console.log(`✅ getAddressBook: Found cached data for ${asset} (${cacheData.length} addresses)`);
         return cacheData;
       }
-      
+
       console.log(`⚠️ getAddressBook: No cached data for ${asset}`);
       return [];
     }
@@ -5830,12 +5834,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.getCachedAddressBookAssets = () => {
       // Get list of assets that have cached address book data
       console.log('📍 getCachedAddressBookAssets: Called');
-      
+
       const assets = Object.keys(this.state.apiData.address_book).filter(asset => {
-        return Array.isArray(this.state.apiData.address_book[asset]) && 
-               this.state.apiData.address_book[asset].length > 0;
+        return Array.isArray(this.state.apiData.address_book[asset]) &&
+          this.state.apiData.address_book[asset].length > 0;
       });
-      
+
       console.log(`✅ getCachedAddressBookAssets: Found cached data for assets:`, assets);
       return assets;
     }
@@ -5844,7 +5848,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     this.clearAddressBookCache = (asset = null) => {
       // Clear address book cache for specific asset or all assets
       console.log('📍 clearAddressBookCache: Called for asset:', asset);
-      
+
       if (asset) {
         delete this.state.apiData.address_book[asset.toUpperCase()];
         console.log(`✅ clearAddressBookCache: Cleared cache for ${asset}`);
@@ -5889,15 +5893,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.uploadDocument = async (params) => {
       console.log('🎯 [UPLOAD DOCUMENT] Function called with params:', params);
-      
-      let {documentType, documentCategory, fileData, fileExtension} = params;
-      console.log('🎯 [UPLOAD DOCUMENT] Extracted params:', {documentType, documentCategory, fileDataLength: fileData ? fileData.length : 'null', fileExtension});
-      
+
+      let { documentType, documentCategory, fileData, fileExtension } = params;
+      console.log('🎯 [UPLOAD DOCUMENT] Extracted params:', { documentType, documentCategory, fileDataLength: fileData ? fileData.length : 'null', fileExtension });
+
       let noAbort = true;
       let apiRoute = `private_upload/document/${documentType}`;
       // let apiRoute = `private_upload/document/appropriateness`;
       console.log('🎯 [UPLOAD DOCUMENT] API route:', apiRoute);
-      
+
       try {
         console.log('🎯 [UPLOAD DOCUMENT] About to call privateMethod...');
         let data = await this.state.privateMethod({
@@ -5910,11 +5914,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           functionName: 'uploadDocument',
           noAbort,
         });
-        
+
         console.log('🎯 [UPLOAD DOCUMENT] API call completed. Response data:', data);
         console.log('📄 [RESPONSE JSON]', JSON.stringify(data, null, 2));
         lj(data);
-        
+
         /* Example response:
   {"result":"success"}
         */
@@ -5928,7 +5932,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.resetPassword = async (params) => {
-      let {email} = params;
+      let { email } = params;
       let noAbort = true;
       let data = await this.state.publicMethod({
         httpMethod: 'GET',
@@ -5945,7 +5949,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
 
     this.getOpenBankingPaymentStatusFromSettlement = async (params) => {
-      let {settlementID} = params;
+      let { settlementID } = params;
       let url = `settlement/${settlementID}/open_banking_payment_status`;
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
@@ -5962,12 +5966,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       - SETTLED
       - UNKNOWN
       */
-     return data;
+      return data;
     }
 
 
     this.getOpenBankingPaymentURLFromSettlement = async (params) => {
-      let {settlementID} = params;
+      let { settlementID } = params;
       let url = `settlement/${settlementID}/open_banking_payment_url`;
       let data = await this.state.privateMethod({
         httpMethod: 'POST',
@@ -5991,7 +5995,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         functionName: 'closeSolidiAccount',
       });
       if (data == 'DisplayedError') return;
-      lj({data})
+      lj({ data })
       /* Example response:
 
       */
@@ -6033,7 +6037,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   "pepResult": false
 }
       */
-     return data;
+      return data;
     }
 
 
@@ -6083,7 +6087,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     console.log('🎯 [STATE INIT] Creating initial state object');
     console.log('🎯 [STATE INIT] Initial mainPanelState:', this.initialMainPanelState);
     console.log('🎯 [STATE INIT] Initial pageName:', this.initialPageName);
-    
+
     this.state = {
       // START Developer mode settings
       preserveRegistrationData: preserveRegistrationData,
@@ -6097,7 +6101,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       stateChangeIDHasChanged: this.stateChangeIDHasChanged,
       stashedState: {},
       stateHistoryList: [],
-      previousState: {mainPanelState: null, pageName: null},
+      previousState: { mainPanelState: null, pageName: null },
       stashCurrentState: this.stashCurrentState,
       stashState: this.stashState,
       loadStashedState: this.loadStashedState,
@@ -6251,7 +6255,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         personal_detail_option: {},
         ticker: {},
         transaction: [],
-        historic_prices: {"BTC/GBPX":{"1D":[1,20]}},
+        historic_prices: { "BTC/GBPX": { "1D": [1, 20] } },
         address_book: {}, // Cache for address book data by asset
       },
       prevAPIData: {
@@ -6295,7 +6299,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         },
       },
       registerData: null,
-      
+
       // Clean user data model - no dummy data
       blankUserData: {
         // Basic personal information
@@ -6305,23 +6309,23 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         lastName: '',
         gender: '',
         dateOfBirth: '',
-        
+
         // Location and citizenship
         citizenship: '',
         country: '',
-        
+
         // Contact information
         email: '',
         mobile: '',
         landline: '',
-        
+
         // Address information
         postcode: '',
         address_1: '',
         address_2: '',
         address_3: '',
         address_4: '',
-        
+
         // Email preferences
         emailPreferences: {
           systemAnnouncements: false,
@@ -6329,7 +6333,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           promotionsAndSpecialOffers: false,
         },
       },
-      
+
       blankRegisterConfirmData: {
         email: '',
         password: '',
@@ -6473,55 +6477,55 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     console.log('🎬 [MOBILE INIT] initializeMobileFeatures function called');
     console.log('🎬 [MOBILE INIT] Platform.OS:', Platform.OS);
     console.log('🎬 [MOBILE INIT] Is not web?', Platform.OS !== 'web');
-    
+
     // Load data from keychain (mobile only).
     if (Platform.OS !== 'web') {
       console.log('[PERSISTENT LOGIN] Starting mobile features initialization');
       console.log('[PERSISTENT LOGIN] Current mainPanelState:', this.state.mainPanelState);
       console.log('[PERSISTENT LOGIN] Current isAuthenticated:', this.state.user.isAuthenticated);
       console.log('[PERSISTENT LOGIN] Storage key:', this.state.apiCredentialsStorageKey);
-      
+
       this.loadPIN();
-      
+
       // Check for stored credentials
       console.log('[PERSISTENT LOGIN] Step 1: Checking for stored API credentials');
       await this.checkForAPICredentials();
       console.log('[PERSISTENT LOGIN] Step 1 complete - Found:', this.state.user.apiCredentialsFound);
       console.log('[PERSISTENT LOGIN] After check - isAuthenticated:', this.state.user.isAuthenticated);
-      
+
       console.log('[PERSISTENT LOGIN] Step 2: Restore session if credentials exist');
       if (this.state.user.apiCredentialsFound) {
         console.log('[PERSISTENT LOGIN] Credentials found - loading from keychain');
-        
+
         try {
           const credentials = await Keychain.getInternetCredentials(this.state.apiCredentialsStorageKey);
           console.log('[PERSISTENT LOGIN] Keychain read result:', credentials ? 'SUCCESS' : 'FAILED');
-          
+
           if (credentials && credentials.username && credentials.password) {
             const apiKey = credentials.username;
             const apiSecret = credentials.password;
-            
+
             console.log('[PERSISTENT LOGIN] Valid credentials loaded from keychain');
             console.log('[PERSISTENT LOGIN] API Key:', apiKey?.substring(0, 10) + '...');
             console.log('[PERSISTENT LOGIN] API Secret length:', apiSecret?.length);
-            
+
             // Create API client if it doesn't exist yet
             console.log('[PERSISTENT LOGIN] Checking API client - exists?', !!this.state.apiClient);
             if (!this.state.apiClient) {
               console.log('[PERSISTENT LOGIN] Creating API client with credentials...');
-              const {userAgent, domain} = this.state;
-              
+              const { userAgent, domain } = this.state;
+
               const newApiClient = new SolidiRestAPIClientLibrary({
-                userAgent, 
-                apiKey, 
-                apiSecret, 
+                userAgent,
+                apiKey,
+                apiSecret,
                 domain,
                 appStateRef: { current: this }
               });
-              
+
               this.setState({ apiClient: newApiClient });
               this.state.apiClient = newApiClient;
-              
+
               console.log('[PERSISTENT LOGIN] ✅ API client created with credentials!');
             } else {
               // API client already exists, just set credentials
@@ -6529,10 +6533,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               this.state.apiClient.apiSecret = apiSecret;
               console.log('[PERSISTENT LOGIN] ✅ API client credentials updated!');
             }
-            
+
             console.log('[PERSISTENT LOGIN] Final check - apiKey set:', !!this.state.apiClient.apiKey);
             console.log('[PERSISTENT LOGIN] Final check - apiSecret set:', !!this.state.apiClient.apiSecret);
-            
+
             // Mark user as authenticated
             console.log('✅ [PERSISTENT LOGIN] Setting isAuthenticated = true');
             this.state.user = {
@@ -6540,14 +6544,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               isAuthenticated: true,
               apiCredentialsFound: true
             };
-            
+
             // Get last visited page
             const lastPage = await this.getLastVisitedPage();
             console.log('📍 [PERSISTENT LOGIN] Last visited page:', JSON.stringify(lastPage));
-            
+
             let targetPage = 'Home';
             let targetPageName = 'default';
-            
+
             if (lastPage && lastPage.mainPanelState && lastPage.mainPanelState !== 'Login') {
               console.log('✅ [PERSISTENT LOGIN] Will restore to:', lastPage.mainPanelState);
               targetPage = lastPage.mainPanelState;
@@ -6555,26 +6559,26 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             } else {
               console.log('ℹ️ [PERSISTENT LOGIN] No valid last page - will go to Home');
             }
-            
+
             // IMPORTANT: Update both this.state directly AND call setState
             // Direct update ensures it's set before render
             console.log('🎯🎯🎯 [PERSISTENT LOGIN] UPDATING STATE NOW');
             console.log('🎯 Before - mainPanelState:', this.state.mainPanelState);
             console.log('🎯 Before - isAuthenticated:', this.state.user.isAuthenticated);
             console.log('🎯 Target page:', targetPage, 'Target pageName:', targetPageName);
-            
+
             this.state.mainPanelState = targetPage;
             this.state.pageName = targetPageName;
-            
+
             console.log('🎯 After direct assignment - mainPanelState:', this.state.mainPanelState);
-            
+
             // setState to trigger re-render
-            this.setState({ 
+            this.setState({
               mainPanelState: targetPage,
               pageName: targetPageName,
-              user: this.state.user 
+              user: this.state.user
             });
-            
+
             console.log('🎉🎉🎉 [PERSISTENT LOGIN] setState called!');
             console.log('🎉 Session restored to:', targetPage);
             console.log('🎉 Final state verification:');
@@ -6585,27 +6589,27 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             console.log('🚨🚨🚨 [PERSISTENT LOGIN] Credentials NOT found or invalid!');
             console.log('🚨 apiCredentialsFound was TRUE but actual credentials are MISSING');
             console.log('🚨 This means the cache is out of sync with keychain');
-            
+
             // Clear the flag and redirect to Login
             this.state.user = {
               ...this.state.user,
               isAuthenticated: false,
               apiCredentialsFound: false
             };
-            
+
             // Clear API client credentials
             if (this.state.apiClient) {
               this.state.apiClient.apiKey = null;
               this.state.apiClient.apiSecret = null;
               console.log('🚨 [PERSISTENT LOGIN] API client credentials cleared');
             }
-            
+
             this.state.mainPanelState = 'Login';
-            this.setState({ 
+            this.setState({
               mainPanelState: 'Login',
               user: this.state.user
             });
-            
+
             console.log('🚨 [PERSISTENT LOGIN] Redirected to Login with cleared state');
           }
         } catch (error) {
@@ -6617,57 +6621,57 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
             isAuthenticated: false,
             apiCredentialsFound: false
           };
-          
+
           // Clear API client credentials
           if (this.state.apiClient) {
             this.state.apiClient.apiKey = null;
             this.state.apiClient.apiSecret = null;
             console.log('🔄 [PERSISTENT LOGIN] API client credentials cleared');
           }
-          
+
           this.state.mainPanelState = 'Login';
-          this.setState({ 
+          this.setState({
             mainPanelState: 'Login',
             user: this.state.user
           });
-          
+
           console.log('🔄 [PERSISTENT LOGIN] Error recovery complete - redirected to Login');
         }
       } else {
         console.log('❌❌❌ [PERSISTENT LOGIN] No credentials found - redirecting to Login page');
         console.log('❌ [PERSISTENT LOGIN] CRITICAL: Clearing authentication state');
-        
+
         // No credentials - clear ALL authentication state and show Login page
         this.state.user = {
           ...this.state.user,
           isAuthenticated: false,
           apiCredentialsFound: false
         };
-        
+
         // Clear API client credentials
         if (this.state.apiClient) {
           this.state.apiClient.apiKey = null;
           this.state.apiClient.apiSecret = null;
           console.log('❌ [PERSISTENT LOGIN] API client credentials cleared');
         }
-        
+
         this.state.mainPanelState = 'Login';
-        this.setState({ 
+        this.setState({
           mainPanelState: 'Login',
           user: this.state.user
         });
-        
+
         console.log('❌ [PERSISTENT LOGIN] Final state: isAuthenticated=false, mainPanelState=Login');
       }
-      
+
       // Mark initialization as complete
       this.state.mobileInitializationComplete = true;
       console.log('✅✅✅ [PERSISTENT LOGIN] initializeMobileFeatures COMPLETE');
       console.log('✅ Final state: mainPanelState=' + this.state.mainPanelState + ', isAuthenticated=' + this.state.user.isAuthenticated);
-      
+
       // Start the lock-app timer (mobile only).
       this.resetLockAppTimer();
-      
+
       // 🔐 Start authentication monitoring
       this.startAuthenticationMonitoring();
     } else {
@@ -6675,7 +6679,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // For web, set default states without keychain operations
       this.state.user.pin = '';
       this.state.user.apiCredentialsFound = false;
-      
+
       // 🔐 Start authentication monitoring for web too
       this.startAuthenticationMonitoring();
     }
@@ -6688,7 +6692,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     console.log('🔐 [AUTO-LOGIN INIT] Current auth state:', this.state.user.isAuthenticated);
     console.log('🔐 [AUTO-LOGIN INIT] API credentials found:', this.state.user.apiCredentialsFound);
     console.log('🔐 [AUTO-LOGIN INIT] Auto-login enabled:', autoLoginWithStoredCredentials);
-    
+
     // Store the auto-login promise so handleInitialNavigation can wait for it
     if (!this.state.user.isAuthenticated && autoLoginWithStoredCredentials) {
       // Set flag to indicate auto-login is in progress (with setState to trigger re-render)
@@ -6698,26 +6702,26 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           isAutoLoginInProgress: true
         }
       });
-      
+
       this.autoLoginPromise = (async () => {
         try {
           console.log('🔐 ========================================');
           console.log('🔐 AUTO-LOGIN: Starting auto-login process');
           console.log('🔐 ========================================');
-          
+
           console.log('🔐 AUTO-LOGIN: Calling autoLoginWithStoredCredentials()...');
           let autoLoginResult = await this.state.autoLoginWithStoredCredentials();
-          
+
           console.log('🔐 AUTO-LOGIN: Auto-login completed');
           console.log('🔐 AUTO-LOGIN: Result:', autoLoginResult);
           console.log('🔐 AUTO-LOGIN: User authenticated:', this.state.user.isAuthenticated);
-          
+
           if (autoLoginResult === true) {
             console.log('✅ AUTO-LOGIN: Auto-login successful!');
           } else {
             console.log('ℹ️ AUTO-LOGIN: Auto-login did not succeed (no stored credentials or validation failed)');
           }
-          
+
           // Clear flag when auto-login completes (with setState to trigger re-render)
           this.setState({
             user: {
@@ -6729,7 +6733,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         } catch (error) {
           console.error('❌ AUTO-LOGIN: Auto-login failed with error:', error);
           console.error('❌ AUTO-LOGIN: Error stack:', error.stack);
-          
+
           // Clear flag when auto-login fails (with setState to trigger re-render)
           this.setState({
             user: {
@@ -6737,7 +6741,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               isAutoLoginInProgress: false
             }
           });
-          
+
           // If auto-login fails, clear potentially problematic credentials
           try {
             if (error.message && (error.message.includes('401') || error.message.includes('invalid') || error.message.includes('expired'))) {
@@ -6751,7 +6755,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           } catch (clearError) {
             console.log('⚠️ AUTO-LOGIN: Could not clear credentials:', clearError.message);
           }
-          
+
           console.log('🔐 AUTO-LOGIN: Continuing to login screen after auto-login failure');
           return false;
         }
@@ -6764,7 +6768,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('🔐 AUTO-LOGIN: User already authenticated, skipping auto-login');
       this.autoLoginPromise = Promise.resolve(true);
     }
-    
+
     console.log('🔐 [AUTO-LOGIN INIT] Auto-login promise created');
   }
 
@@ -6772,14 +6776,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   componentWillUnmount() {
     log('🔐 AppState component unmounting, cleaning up authentication monitoring');
     this.stopAuthenticationMonitoring();
-    
+
     console.log('✅ [STARTUP] Constructor initialization completed successfully');
   } // End of initializeConstructor method
 
   // Test keychain access after component mounts
   componentDidMount() {
     console.log('🔄 [MOUNT] ComponentDidMount called');
-    
+
     // CRITICAL: Wait for initialization to complete before handling navigation
     if (this.initializationPromise) {
       console.log('⏳ [MOUNT] Waiting for initialization to complete...');
@@ -6792,18 +6796,18 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       console.log('⚠️ [MOUNT] No initialization promise, proceeding with navigation...');
       this.handleInitialNavigation();
     }
-    
+
     if (this.keychainTestPending) {
       this.performKeychainTest();
     }
-    
+
     // Add AppState listener to handle app resume
     if (Platform.OS !== 'web') {
       console.log('📱 [MOUNT] Setting up AppState listener for app resume');
       this.appStateSubscription = AppState.addEventListener('change', this.handleAppStateChange);
     }
   }
-  
+
   // Handle app state changes (background -> active)
   handleAppStateChange = async (nextAppState) => {
     console.log('📱 [APP STATE] App state changed to:', nextAppState);
@@ -6811,43 +6815,43 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     console.log('📱 [APP STATE] Condition check - nextAppState === "active":', nextAppState === 'active');
     console.log('📱 [APP STATE] Condition check - currentAppState !== "active":', this.currentAppState !== 'active');
     console.log('📱 [APP STATE] Will trigger resume?', nextAppState === 'active' && this.currentAppState !== 'active');
-    
+
     // App is becoming active (from background or inactive)
     if (nextAppState === 'active' && this.currentAppState !== 'active') {
       console.log('✅✅✅ [APP RESUME] INSIDE IF BLOCK - STARTING RESUME LOGIC');
       console.log('🔄🔄🔄 [APP RESUME] App is resuming from background');
       console.log('🔄 [APP RESUME] Running persistent login check...');
       console.log('🔄 [APP RESUME] checkForAPICredentials function exists:', typeof this.checkForAPICredentials);
-      
+
       // Re-run the persistent login logic
       await this.checkForAPICredentials();
       console.log('🔄 [APP RESUME] Credentials check complete - found:', this.state.user.apiCredentialsFound);
       console.log('🔄 [APP RESUME] isAuthenticated:', this.state.user.isAuthenticated);
-      
+
       // If credentials exist but user is not authenticated, restore session
       if (this.state.user.apiCredentialsFound && !this.state.user.isAuthenticated) {
         console.log('🔄 [APP RESUME] Restoring authenticated session...');
-        
+
         try {
           const credentials = await Keychain.getInternetCredentials(this.state.apiCredentialsStorageKey);
-          
+
           if (credentials && credentials.username && credentials.password) {
             const apiKey = credentials.username;
             const apiSecret = credentials.password;
-            
+
             // Create API client if it doesn't exist, or update existing one
             if (!this.state.apiClient) {
               console.log('[APP RESUME] Creating API client with credentials...');
-              const {userAgent, domain} = this.state;
-              
+              const { userAgent, domain } = this.state;
+
               const newApiClient = new SolidiRestAPIClientLibrary({
-                userAgent, 
-                apiKey, 
-                apiSecret, 
+                userAgent,
+                apiKey,
+                apiSecret,
                 domain,
                 appStateRef: { current: this }
               });
-              
+
               this.setState({ apiClient: newApiClient });
               this.state.apiClient = newApiClient;
               console.log('[APP RESUME] ✅ API client created!');
@@ -6856,14 +6860,14 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               this.state.apiClient.apiSecret = apiSecret;
               console.log('[APP RESUME] ✅ API client credentials updated!');
             }
-            
+
             // Mark user as authenticated
             this.state.user = {
               ...this.state.user,
               isAuthenticated: true,
               apiCredentialsFound: true
             };
-            
+
             this.setState({ user: this.state.user });
             console.log('✅ [APP RESUME] Session restored successfully');
           }
@@ -6876,19 +6880,19 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           ...this.state.user,
           isAuthenticated: false
         };
-        
+
         if (this.state.apiClient) {
           this.state.apiClient.apiKey = null;
           this.state.apiClient.apiSecret = null;
         }
-        
-        this.setState({ 
+
+        this.setState({
           user: this.state.user,
           mainPanelState: 'Login'
         });
       }
     }
-    
+
     this.currentAppState = nextAppState;
   }
 
@@ -6896,17 +6900,17 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   determineInitialState = async () => {
     try {
       console.log('🔍 [AppState] Determining initial navigation state...');
-      
+
       // Check if we have valid API credentials stored
       const hasAPICredentials = this.state.user.apiCredentialsFound;
       const isAuthenticated = this.state.user.isAuthenticated;
-      
+
       console.log('🔐 [AppState] Authentication state:', {
         hasAPICredentials,
         isAuthenticated,
         userEmail: this.state.user.email
       });
-      
+
       if (hasAPICredentials && isAuthenticated) {
         // User has valid stored credentials and is authenticated → redirect to Home page
         console.log('✅ [AppState] Valid credentials found and authenticated → Redirecting to Home');
@@ -6931,17 +6935,17 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   handleInitialNavigation = async () => {
     try {
       console.log('🔍 [NAVIGATION] Determining initial navigation state...');
-      
+
       // CRITICAL: Wait for auto-login to complete before deciding where to navigate
       if (this.autoLoginPromise) {
         console.log('⏳ [NAVIGATION] Waiting for auto-login to complete...');
         const autoLoginResult = await this.autoLoginPromise;
         console.log('✅ [NAVIGATION] Auto-login completed. Result:', autoLoginResult);
       }
-      
+
       const initialState = await this.determineInitialState();
       console.log('🎯 [NAVIGATION] Determined initial state:', initialState);
-      
+
       // Only redirect if different from current state and not default Login
       if (initialState !== this.state.mainPanelState) {
         console.log('🔄 [NAVIGATION] Redirecting to:', initialState);
@@ -6952,7 +6956,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       } else {
         console.log('ℹ️ [NAVIGATION] Already on correct state:', initialState);
       }
-      
+
     } catch (error) {
       console.log('⚠️ [NAVIGATION] Error determining initial navigation:', error.message);
       // Stay on current state (Login by default)
@@ -6963,26 +6967,26 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
   performKeychainTest = async () => {
     try {
       console.log('🔐 [KEYCHAIN TEST] Starting keychain access test...');
-      
+
       // Test keychain read operation
       const testKey = 'testflight_debug_key';
       const readResult = await Keychain.getInternetCredentials(testKey);
       console.log('🔐 [KEYCHAIN TEST] Read test result:', readResult);
-      
+
       // Test keychain write operation
       await Keychain.setInternetCredentials(testKey, 'test_user', 'test_pass');
       console.log('🔐 [KEYCHAIN TEST] Write test: SUCCESS');
-      
+
       // Test keychain read after write
       const readAfterWrite = await Keychain.getInternetCredentials(testKey);
       console.log('🔐 [KEYCHAIN TEST] Read after write:', readAfterWrite);
-      
+
       // Clean up test
       await Keychain.resetInternetCredentials(testKey);
       console.log('🔐 [KEYCHAIN TEST] Cleanup completed');
-      
+
       console.log('✅ [KEYCHAIN TEST] All keychain operations successful!');
-      
+
     } catch (error) {
       console.error('🔐 [KEYCHAIN TEST ERROR] Keychain test failed:', error);
       console.error('🔐 [KEYCHAIN TEST ERROR] Error details:', {
@@ -6990,7 +6994,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         code: error.code,
         stack: error.stack
       });
-      
+
       // This might be the root cause of TestFlight crashes
       this.reportConstructorCrash(new Error(`Keychain test failed: ${error.message}`));
     }
@@ -7010,10 +7014,10 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
                 {this.state.error.message}
               </Text>
               <Text style={styles.emergencyInfo}>
-                The app is running in emergency mode. 
+                The app is running in emergency mode.
                 Error details have been sent for analysis.
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.emergencyButton}
                 onPress={() => {
                   console.log('🔄 [EMERGENCY] User requested restart');
@@ -7032,21 +7036,21 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     return (
       <AppStateContext.Provider value={this.state}>
 
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        {!this.state.maintenanceMode && !this.state.appUpdateRequired ?  <Header />   : null }
-        {!this.state.maintenanceMode && !this.state.appUpdateRequired ? 
-          <View style={styles.mainPanelContainer}>
-            <MainPanel /> 
-          </View>
-        : null }
-        {!this.state.maintenanceMode && !this.state.appUpdateRequired ?  
-          <Footer /> 
-        : null }
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+          {!this.state.maintenanceMode && !this.state.appUpdateRequired ? <Header /> : null}
+          {!this.state.maintenanceMode && !this.state.appUpdateRequired ?
+            <View style={styles.mainPanelContainer}>
+              <MainPanel />
+            </View>
+            : null}
+          {!this.state.maintenanceMode && !this.state.appUpdateRequired ?
+            <Footer />
+            : null}
 
-        { this.state.maintenanceMode                                 ? <Maintenance /> : null }
-        { this.state.appUpdateRequired                               ? <UpdateApp /> : null }
+          {this.state.maintenanceMode ? <Maintenance /> : null}
+          {this.state.appUpdateRequired ? <UpdateApp /> : null}
 
-      </SafeAreaView>
+        </SafeAreaView>
 
       </AppStateContext.Provider>
     );

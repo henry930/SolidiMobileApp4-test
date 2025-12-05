@@ -37,6 +37,8 @@ import { theme } from '../../constants';
 import { ThemeProvider, useTheme } from '../../styles/ThemeProvider';
 // Biometric Authentication
 import SecureApp from '../../components/BiometricAuth/SecureApp';
+// Firebase - Import to trigger auto-initialization from google-services.json
+import '@react-native-firebase/app';
 // Push Notifications
 import PushNotificationManager from '../../services/PushNotificationManager';
 
@@ -101,6 +103,16 @@ const AppContent = () => {
     // Initialize Push Notifications
     const initPushNotifications = async () => {
       try {
+        // Explicitly initialize Firebase if needed
+        const firebase = require('@react-native-firebase/app').default;
+        if (!firebase.apps.length) {
+          console.log('🔥 Initializing Firebase explicitly...');
+          await firebase.initializeApp();
+          console.log('✅ Firebase initialized explicitly');
+        } else {
+          console.log('✅ Firebase already initialized');
+        }
+
         console.log('🔔 Initializing push notifications...');
         console.log('🔔 Calling setupNotificationListeners...');
         // Setup listeners for incoming notifications

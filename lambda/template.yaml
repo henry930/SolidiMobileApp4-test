@@ -160,6 +160,62 @@ Resources:
             Method: GET
             RestApiId: !Ref SolidiApi
 
+  GetDevicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub solidi-get-devices-${Environment}
+      CodeUri: get-devices/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          DEVICES_TABLE: !Ref DevicesTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref DevicesTable
+      Events:
+        GetDevicesApi:
+          Type: Api
+          Properties:
+            Path: /devices
+            Method: GET
+            RestApiId: !Ref SolidiApi
+
+  DeleteDeviceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub solidi-delete-device-${Environment}
+      CodeUri: delete-device/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          DEVICES_TABLE: !Ref DevicesTable
+          PLATFORM_APPLICATION_ARN_IOS: !Ref PlatformApplicationArnIOS
+          PLATFORM_APPLICATION_ARN_ANDROID: !Ref PlatformApplicationArnAndroid
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DevicesTable
+        - SNSPublishMessagePolicy:
+            TopicName: '*'
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - sns:DeleteEndpoint
+              Resource: '*'
+      Events:
+        DeleteDeviceApi:
+          Type: Api
+          Properties:
+            Path: /device
+            Method: DELETE
+            RestApiId: !Ref SolidiApi
+
   # API Gateway
   SolidiApi:
     Type: AWS::Serverless::Api
@@ -167,7 +223,7 @@ Resources:
       Name: !Sub solidi-push-api-${Environment}
       StageName: !Ref Environment
       Cors:
-        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowMethods: "'GET,POST,DELETE,OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
         AllowOrigin: "'*'"
 

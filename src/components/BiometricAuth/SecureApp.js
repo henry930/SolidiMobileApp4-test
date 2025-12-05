@@ -87,29 +87,28 @@ class SecureApp extends Component {
     console.log('🔄 [SecureApp] componentDidUpdate called');
     console.log('🔄 [SecureApp] shouldInitializePushNotifications:', this.state.shouldInitializePushNotifications);
     console.log('🔄 [SecureApp] pushNotificationsInitialized:', this.state.pushNotificationsInitialized);
-    
+
     // Initialize push notifications after biometric auth (context not available in SecureApp, use AsyncStorage)
-    if (
-      this.state.shouldInitializePushNotifications &&
-      !this.state.pushNotificationsInitialized
-    ) {
+    // IMPORTANT: Always attempt registration when shouldInitializePushNotifications is true,
+    // even if pushNotificationsInitialized is true (FCM token might be obtained but device not registered)
+    if (this.state.shouldInitializePushNotifications) {
       console.log('📱 [SecureApp] ============================================');
       console.log('📱 [SecureApp] Initializing push notifications after biometric auth');
       console.log('📱 [SecureApp] ============================================');
 
       try {
         // Get user identifier from AsyncStorage since context is not available
-        const storedEmail = await AsyncStorage.getItem('email');
+        const storedEmail = await AsyncStorage.getItem('user_email'); // Match AppState key
         const storedUserId = await AsyncStorage.getItem('userId');
         const userId = storedUserId || storedEmail || 'user-' + Date.now();
-        
+
         console.log('📱 [SecureApp] STARTING PUSH NOTIFICATION INITIALIZATION');
         console.log('📱 [SecureApp] User ID:', userId);
         console.log('📱 [SecureApp] Platform:', Platform.OS);
         console.log('📱 [SecureApp] ============================================');
-        
+
         const pushResult = await PushNotificationService.initialize(userId);
-        
+
         console.log('📱 [SecureApp] ============================================');
         console.log('📱 [SecureApp] Push notification initialization result:', pushResult);
         console.log('📱 [SecureApp] ============================================');
@@ -124,7 +123,7 @@ class SecureApp extends Component {
         console.error('❌ [SecureApp] Error message:', error.message);
         console.error('❌ [SecureApp] Error stack:', error.stack);
         console.error('❌ [SecureApp] ============================================');
-        
+
         // Mark as initialized even on error to prevent retry loops
         this.setState({
           pushNotificationsInitialized: true,
@@ -184,7 +183,8 @@ class SecureApp extends Component {
           isLoading: false,
           isAuthenticated: true,
           biometricVerified: true, // Skip biometrics
-          needsBiometrics: false
+          needsBiometrics: false,
+          shouldInitializePushNotifications: true // Initialize push notifications even without biometrics
         });
       } else {
         // User was logged in before and biometrics enabled - require biometrics
@@ -214,7 +214,8 @@ class SecureApp extends Component {
         authError: error.message,
         isAuthenticated: true, // Still allow app to load
         biometricVerified: true, // Skip biometrics on error
-        needsBiometrics: false
+        needsBiometrics: false,
+        shouldInitializePushNotifications: true // Initialize push notifications
       });
     }
   };
@@ -334,7 +335,8 @@ class SecureApp extends Component {
           this.setState({
             isLoading: false,
             needsBiometrics: false,
-            biometricVerified: true
+            biometricVerified: true,
+            shouldInitializePushNotifications: true // Initialize push notifications
           });
 
           setTimeout(() => {
@@ -372,7 +374,8 @@ class SecureApp extends Component {
             this.setState({
               isLoading: false,
               needsBiometrics: false,
-              biometricVerified: true
+              biometricVerified: true,
+              shouldInitializePushNotifications: true // Initialize push notifications
             });
 
             setTimeout(() => {
@@ -518,7 +521,8 @@ class SecureApp extends Component {
           isAuthenticated: true,
           authError: null,
           biometricVerified: true,
-          needsBiometrics: false
+          needsBiometrics: false,
+          shouldInitializePushNotifications: true // Initialize push notifications after successful auth
         });
 
         // Biometric verification successful - credentials still exist, user can continue

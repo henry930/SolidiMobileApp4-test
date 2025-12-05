@@ -56,8 +56,8 @@ exports.handler = async (event) => {
 
         // Get platform ARN from environment
         const platformArn = platform === 'ios'
-            ? process.env.APNS_PLATFORM_ARN
-            : process.env.FCM_PLATFORM_ARN;
+            ? process.env.PLATFORM_APPLICATION_ARN_IOS
+            : process.env.PLATFORM_APPLICATION_ARN_ANDROID;
 
         if (!platformArn) {
             console.error(`Platform ARN not configured for ${platform}`);
@@ -77,7 +77,7 @@ exports.handler = async (event) => {
         // Check if endpoint already exists for this device
         let endpointArn;
         const existingDevice = await dynamodb.send(new GetCommand({
-            TableName: process.env.DEVICE_TOKENS_TABLE || 'device-tokens',
+            TableName: process.env.DEVICES_TABLE || 'solidi-devices-dev',
             Key: { userId, deviceId }
         }));
 
@@ -148,7 +148,7 @@ exports.handler = async (event) => {
         // Store/update in DynamoDB
         const timestamp = Date.now();
         await dynamodb.send(new PutCommand({
-            TableName: process.env.DEVICE_TOKENS_TABLE || 'device-tokens',
+            TableName: process.env.DEVICES_TABLE || 'solidi-devices-dev',
             Item: {
                 userId,
                 deviceId,

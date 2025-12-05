@@ -44,7 +44,7 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
 
             // Fetch from API
             const result = await NotificationHistoryService.getNotifications(userId, 50);
-            
+
             console.log(`✅ [NotificationInbox] Loaded ${result.count} notifications from API`);
             setNotifications(result.notifications || []);
             setHasMore(result.hasMore || false);
@@ -52,7 +52,7 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
 
         } catch (error) {
             console.error('❌ [NotificationInbox] Failed to load notifications from API:', error);
-            
+
             // Fallback to local storage
             try {
                 console.log('📱 [NotificationInbox] Falling back to local storage...');
@@ -85,13 +85,13 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
         try {
             setLoading(true);
             console.log('📄 [NotificationInbox] Loading more notifications...');
-            
+
             const result = await NotificationHistoryService.getNotifications(userId, 50, lastKey);
-            
+
             setNotifications(prev => [...prev, ...(result.notifications || [])]);
             setHasMore(result.hasMore || false);
             setLastKey(result.lastKey || null);
-            
+
             console.log(`✅ [NotificationInbox] Loaded ${result.count} more notifications`);
         } catch (error) {
             console.error('❌ [NotificationInbox] Failed to load more notifications:', error);
@@ -245,25 +245,9 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
                             </View>
                         )}
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity
-                            onPress={async () => {
-                                // Add a test notification
-                                await NotificationStorageService.saveNotification({
-                                    title: 'New Test Message',
-                                    body: `Test notification sent at ${new Date().toLocaleTimeString()}`,
-                                    data: { type: 'test', timestamp: Date.now() }
-                                });
-                                await loadNotifications();
-                            }}
-                            style={{ marginRight: 16 }}
-                        >
-                            <Icon name="plus-circle" size={24} color="#007AFF" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={onClose}>
-                            <Icon name="close" size={24} color="#000" />
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity onPress={onClose}>
+                        <Icon name="close" size={24} color="#000" />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Action Buttons */}
@@ -302,7 +286,7 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
                                     {renderNotification({ item })}
                                 </View>
                             ))}
-                            
+
                             {/* Load More Button */}
                             {hasMore && (
                                 <TouchableOpacity
@@ -320,7 +304,7 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
                                     )}
                                 </TouchableOpacity>
                             )}
-                            
+
                             {!hasMore && notifications.length > 0 && (
                                 <View style={styles.endMessageContainer}>
                                     <Text style={styles.endMessageText}>

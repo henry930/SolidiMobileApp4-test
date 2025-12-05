@@ -66,7 +66,7 @@ let Header = (props) => {
   // User requested "left top corner".
   // Pass userId from appState to NotificationBellIcon
   const userId = appState?.user?.email || null;
-  
+
   let notificationButton = (
     <View style={{ marginLeft: includeBackButton ? 8 : 0 }}>
       <NotificationBellIcon userId={userId} />
@@ -106,7 +106,7 @@ let Header = (props) => {
 
       {/* Main Header */}
       <View style={headerStyles.header}>
-        <View style={[headerStyles.sideButtonWrapper, { flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10 }]}>
+        <View style={[headerStyles.sideButtonWrapper, { flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10, overflow: 'visible' }]}>
           {/* Always show notification bell unless in strict modes like PIN */}
           {!pinMode && notificationButton}
         </View>

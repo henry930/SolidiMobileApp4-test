@@ -27,4 +27,22 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetNotificationsFunction"]
 
+[function_build_definitions.186cbc40-ef96-4e13-be0f-b16be7eeab41]
+codeuri = "/Users/henry/Solidi/SolidiMobileApp4/lambda/get-devices"
+runtime = "nodejs18.x"
+architecture = "x86_64"
+handler = "index.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetDevicesFunction"]
+
+[function_build_definitions.f02b1a0e-a33c-4628-9d34-cd6a95c20446]
+codeuri = "/Users/henry/Solidi/SolidiMobileApp4/lambda/delete-device"
+runtime = "nodejs18.x"
+architecture = "x86_64"
+handler = "index.handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["DeleteDeviceFunction"]
+
 [layer_build_definitions]

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { ImageButton } from 'src/components/atomic';
+import { colors } from 'src/constants';
 import NotificationStorageService from '../../storage/NotificationStorageService';
 import NotificationHistoryService from '../../services/NotificationHistoryService';
 import NotificationInbox from '../NotificationInbox/NotificationInbox';
@@ -12,42 +13,11 @@ const NotificationBellIcon = ({ userId }) => {
     useEffect(() => {
         loadUnreadCount();
 
-        // Add test notifications for demonstration
-        addTestNotifications();
-
         // Refresh unread count every 5 seconds
         const interval = setInterval(loadUnreadCount, 5000);
 
         return () => clearInterval(interval);
     }, []);
-
-    const addTestNotifications = async () => {
-        try {
-            // Check if test notifications already exist
-            const existing = await NotificationStorageService.getNotifications();
-            if (existing.length === 0) {
-                // Add some test notifications
-                await NotificationStorageService.saveNotification({
-                    title: 'Welcome to Solidi!',
-                    body: 'Your notification inbox is ready to use.',
-                    data: { screen: 'Home' }
-                });
-                await NotificationStorageService.saveNotification({
-                    title: 'Test Notification',
-                    body: 'This is a test notification to demonstrate the inbox feature.',
-                    data: { type: 'test' }
-                });
-                await NotificationStorageService.saveNotification({
-                    title: 'Server Maintenance',
-                    body: 'The server is currently under maintenance. Please try again later.',
-                    data: { priority: 'high' }
-                });
-                loadUnreadCount();
-            }
-        } catch (error) {
-            console.error('Failed to add test notifications:', error);
-        }
-    };
 
     const loadUnreadCount = async () => {
         try {
@@ -62,7 +32,7 @@ const NotificationBellIcon = ({ userId }) => {
                     // Fallback to local storage silently
                 }
             }
-            
+
             // Use local storage (fallback or no userId)
             const count = await NotificationStorageService.getUnreadCount();
             setUnreadCount(count);
@@ -83,14 +53,17 @@ const NotificationBellIcon = ({ userId }) => {
         loadUnreadCount();
     };
 
+
     return (
         <>
-            <TouchableOpacity
-                style={styles.container}
-                onPress={handlePress}
-                testID="notification-bell-icon"
-            >
-                <Icon name="bell" size={28} color="#000" />
+            <View style={styles.container}>
+                <ImageButton
+                    imageName='bell'
+                    imageType='icon'
+                    styles={styleBellButton}
+                    onPress={handlePress}
+                    testID="notification-bell-icon"
+                />
                 {unreadCount > 0 && (
                     <View style={styles.badge}>
                         <Text style={styles.badgeText}>
@@ -98,7 +71,7 @@ const NotificationBellIcon = ({ userId }) => {
                         </Text>
                     </View>
                 )}
-            </TouchableOpacity>
+            </View>
 
             <NotificationInbox
                 visible={inboxVisible}
@@ -109,30 +82,36 @@ const NotificationBellIcon = ({ userId }) => {
     );
 };
 
+const styleBellButton = {
+    image: {
+        iconSize: 27,
+        iconColor: colors.greyedOutIcon,
+    },
+    view: {},
+    text: {},
+};
+
 const styles = StyleSheet.create({
     container: {
-        padding: 8,
-        marginRight: 4,
-        marginLeft: 4,
         position: 'relative',
     },
     badge: {
         position: 'absolute',
-        top: -2,
-        right: -2,
+        top: 0,
+        right: 0,
         backgroundColor: '#FF3B30',
-        borderRadius: 8,
-        minWidth: 16,
-        height: 16,
+        borderRadius: 10,
+        minWidth: 20,
+        height: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 3,
-        borderWidth: 1,
+        paddingHorizontal: 4,
+        borderWidth: 2,
         borderColor: '#FFF',
     },
     badgeText: {
         color: '#FFF',
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: 'bold',
     },
 });

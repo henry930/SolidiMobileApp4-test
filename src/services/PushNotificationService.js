@@ -217,6 +217,9 @@ class PushNotificationService {
             // Get FCM token
             const messaging = require('@react-native-firebase/messaging').default;
 
+            // Firebase auto-initializes from google-services.json on Android
+            // No need to call initializeApp() explicitly
+
             // Check if device is registered
             if (!messaging().isDeviceRegisteredForRemoteMessages) {
                 await messaging().registerDeviceForRemoteMessages();

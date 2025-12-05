@@ -1,5 +1,8 @@
-const AWS = require('aws-sdk');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, QueryCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+
+const dynamoClient = new DynamoDBClient({});
+const dynamodb = DynamoDBDocumentClient.from(dynamoClient);
 
 const NOTIFICATIONS_TABLE = process.env.NOTIFICATIONS_TABLE || 'solidi-notifications';
 
@@ -30,50 +33,51 @@ exports.handler = async (event) => {
         const limit = Math.min(parseInt(queryParams.limit) || 50, 100);
         const lastKey = queryParams.lastKey;
 
-        // Validate userId
-        if (!userId) {
-            return {
-                statusCode: 400,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
+        let result;
+
+        if (userId) {
+            // Query by userId
+            const dbQueryParams = {
+                TableName: NOTIFICATIONS_TABLE,
+                KeyConditionExpression: 'userId = :userId',
+                ExpressionAttributeValues: {
+                    ':userId': userId
                 },
-                body: JSON.stringify({
-                    success: false,
-                    error: 'userId is required'
-                })
+                ScanIndexForward: false, // Sort by timestamp descending (newest first)
+                Limit: limit
             };
+
+            // Add pagination token if provided
+            if (lastKey) {
+                dbQueryParams.ExclusiveStartKey = {
+                    userId: userId,
+                    timestamp: parseInt(lastKey)
+                };
+            }
+
+            result = await dynamodb.send(new QueryCommand(dbQueryParams));
+        } else {
+            // Scan all notifications
+            const dbScanParams = {
+                TableName: NOTIFICATIONS_TABLE,
+                Limit: limit
+            };
+
+            if (lastKey) {
+                dbScanParams.ExclusiveStartKey = JSON.parse(lastKey);
+            }
+
+            result = await dynamodb.send(new ScanCommand(dbScanParams));
         }
 
-        // Build DynamoDB query
-        const dbQueryParams = {
-            TableName: NOTIFICATIONS_TABLE,
-            KeyConditionExpression: 'userId = :userId',
-            ExpressionAttributeValues: {
-                ':userId': userId
-            },
-            ScanIndexForward: false, // Sort by timestamp descending (newest first)
-            Limit: limit
-        };
-
-        // Add pagination token if provided
-        if (lastKey) {
-            dbQueryParams.ExclusiveStartKey = {
-                userId: userId,
-                timestamp: parseInt(lastKey)
-            };
-        }
-
-        // Query DynamoDB
-        const result = await dynamodb.query(dbQueryParams).promise();
-
-        console.log(`Retrieved ${result.Items.length} notifications for user: ${userId}`);
+        console.log(`Retrieved ${result.Items.length} notifications${userId ? ` for user: ${userId}` : ''}`);
 
         // Format response
         const response = {
             success: true,
             notifications: result.Items.map(item => ({
                 id: item.notificationId,
+                userId: item.userId,
                 title: item.title,
                 body: item.body,
                 data: item.data || {},

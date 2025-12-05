@@ -1,6 +1,6 @@
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, QueryCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
+const { DynamoDBDocumentClient, QueryCommand, PutCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 
 const snsClient = new SNSClient({});
 const dynamoClient = new DynamoDBClient({});
@@ -23,10 +23,19 @@ exports.handler = async (event) => {
     try {
         // Parse request body
         const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-        const { userIds, title, body: messageBody, data } = body;
+        const { userIds, userId, title, body: messageBody, message, data } = body;
+        const finalMessage = messageBody || message;
+
+        // Normalize userIds
+        let targetUserIds = [];
+        if (userIds && Array.isArray(userIds)) {
+            targetUserIds = userIds;
+        } else if (userId) {
+            targetUserIds = [userId];
+        }
 
         // Validate input
-        if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        if (targetUserIds.length === 0) {
             return {
                 statusCode: 400,
                 headers: {
@@ -35,12 +44,12 @@ exports.handler = async (event) => {
                 },
                 body: JSON.stringify({
                     error: 'Invalid userIds',
-                    message: 'userIds must be a non-empty array'
+                    message: 'userId or userIds must be provided'
                 })
             };
         }
 
-        if (!title || !messageBody) {
+        if (!title || !finalMessage) {
             return {
                 statusCode: 400,
                 headers: {
@@ -59,7 +68,7 @@ exports.handler = async (event) => {
         const notificationsTableName = process.env.NOTIFICATIONS_TABLE || 'notifications';
 
         // Process each user
-        for (const userId of userIds) {
+        for (const userId of targetUserIds) {
             try {
                 // Generate notification ID and timestamp
                 const timestamp = Date.now(); // Unix timestamp in milliseconds
@@ -75,7 +84,7 @@ exports.handler = async (event) => {
                         timestamp,
                         createdAt,
                         title,
-                        body: messageBody,
+                        body: finalMessage,
                         data: data || {},
                         read: false,
                         sent: false,
@@ -113,7 +122,7 @@ exports.handler = async (event) => {
                 for (const device of devicesResult.Items) {
                     try {
                         // Create platform-specific message
-                        const message = createPlatformMessage(title, messageBody, data, device.platform);
+                        const message = createPlatformMessage(title, finalMessage, data, device.platform);
 
                         // Publish to SNS
                         await snsClient.send(new PublishCommand({
@@ -134,14 +143,14 @@ exports.handler = async (event) => {
 
                         // If endpoint is disabled, mark device as inactive
                         if (error.code === 'EndpointDisabled' || error.code === 'InvalidParameter') {
-                            await dynamodb.update({
+                            await dynamodb.send(new UpdateCommand({
                                 TableName: devicesTableName,
                                 Key: { userId, deviceId: device.deviceId },
                                 UpdateExpression: 'SET active = :active',
                                 ExpressionAttributeValues: {
                                     ':active': false
                                 }
-                            }).promise();
+                            }));
                         }
 
                         deviceResults.push({
@@ -165,7 +174,7 @@ exports.handler = async (event) => {
                             timestamp,
                             createdAt,
                             title,
-                            body: messageBody,
+                            body: finalMessage,
                             data: data || {},
                             read: false,
                             sent: true,
@@ -197,7 +206,7 @@ exports.handler = async (event) => {
 
         // Calculate summary
         const summary = {
-            totalUsers: userIds.length,
+            totalUsers: targetUserIds.length,
             successfulUsers: results.filter(r => r.success).length,
             failedUsers: results.filter(r => !r.success).length
         };
