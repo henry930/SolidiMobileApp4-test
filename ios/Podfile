@@ -28,8 +28,8 @@ setup_permissions([
 #   dependencies: {
 #     ...(process.env.NO_FLIPPER ? { 'react-native-flipper': { platforms: { ios: null } } } : {}),
 # ```
-# Disable Flipper to avoid module conflicts with fmt and folly
-flipper_config = FlipperConfiguration.disabled
+# Disable Flipper to fix C++ module conflicts
+flipper_config = FlipperConfiguration.disabled # ENV['NO_FLIPPER'] == "1" ? FlipperConfiguration.disabled : FlipperConfiguration.enabled
  
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil

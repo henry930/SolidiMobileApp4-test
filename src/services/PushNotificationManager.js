@@ -42,17 +42,28 @@ class PushNotificationManager {
     }
 
     /**
-     * Get FCM device token
-     * @returns {Promise<string|null>} FCM token or null
+     * Get Device Token (FCM for Android, APNs for iOS)
+     * @returns {Promise<string|null>} Token or null
      */
     async getToken() {
         try {
+            if (Platform.OS === 'ios') {
+                const apnsToken = await messaging().getAPNSToken();
+                console.log('🍎 APNs Token:', apnsToken);
+                if (apnsToken) {
+                    this.token = apnsToken;
+                    return apnsToken;
+                }
+                // Fallback to FCM if APNs fails (though unlikely to work for APNs-configured SNS)
+                console.warn('⚠️ Failed to get APNs token, falling back to FCM...');
+            }
+
             const token = await messaging().getToken();
-            console.log('FCM Token:', token);
+            console.log('🔥 FCM Token:', token);
             this.token = token;
             return token;
         } catch (error) {
-            console.error('Error getting FCM token:', error);
+            console.error('Error getting token:', error);
             return null;
         }
     }
