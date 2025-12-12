@@ -7043,7 +7043,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               <MainPanel />
             </View>
             : null}
-          {!this.state.maintenanceMode && !this.state.appUpdateRequired ?
+          {!this.state.maintenanceMode && !this.state.appUpdateRequired && !['Login', 'Register', 'RegisterConfirm', 'RegisterConfirm2', 'ResetPassword', 'ContactUs'].includes(this.state.mainPanelState) ?
             <Footer />
             : null}
 
