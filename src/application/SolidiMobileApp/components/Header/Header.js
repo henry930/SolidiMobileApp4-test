@@ -52,9 +52,20 @@ let Header = (props) => {
   )
   let blankBackButton = <></>;
 
+  let anonymousPages = [
+    'Login',
+    'Register',
+    'RegisterConfirm',
+    'RegisterConfirm2',
+    'ResetPassword',
+    'ContactUs',
+    'PINLogin'
+  ];
+
   // Check whether to include back button.
   let includeBackButton = false;
-  if (appState.stateHistoryList.length > 1) {
+  // User request: ONLY show back button on anonymous pages ("these page has back. not for the other")
+  if (anonymousPages.includes(appState.mainPanelState)) {
     if (!hideBackButton) {
       includeBackButton = true;
     }
@@ -67,9 +78,13 @@ let Header = (props) => {
   // Pass userId from appState to NotificationBellIcon
   const userId = appState?.user?.email || null;
 
+  // Hide notification button on anonymous pages
+  const hideNotificationButton = anonymousPages.includes(appState.mainPanelState);
+
   let notificationButton = (
     <View style={{ marginLeft: includeBackButton ? 8 : 0 }}>
-      <NotificationBellIcon userId={userId} />
+      {/* Hide notification bell on anonymous pages */}
+      {!hideNotificationButton && <NotificationBellIcon userId={userId} />}
     </View>
   );
 
@@ -81,7 +96,7 @@ let Header = (props) => {
   // If we're connected to the test server (with no cryptocurrency), then display this fact visibly in a way that is easily seen on every page.
   // In prod, don't show a title.
   // In dev, don't show any difference from prod.
-  let titleSettingsButton = appState.appTier == 'stag' ? 'Test' : '';
+  // let titleSettingsButton = appState.appTier == 'stag' ? 'Test' : '';
 
 
   let changeState = (mainPanelState) => {
@@ -90,23 +105,30 @@ let Header = (props) => {
   }
 
 
+  const isAnonymousPage = anonymousPages.includes(appState.mainPanelState);
+
   return (
     <View style={[styleArg, headerStyles.container]}>
-      {/* Risk Warning Banner */}
-      <TouchableOpacity
-        style={headerStyles.riskBanner}
-        onPress={() => changeState('RiskSummary')}
-        activeOpacity={0.8}
-      >
-        <Text style={headerStyles.riskBannerText}>
-          Don't invest unless you're prepared to lose all the money you invest. This is a high-risk investment and you should not expect to be protected if something goes wrong. Take 2 mins to{' '}
-          <Text style={headerStyles.learnMoreText}>learn more</Text>.
-        </Text>
-      </TouchableOpacity>
+      {/* Risk Warning Banner - Hide on anonymous pages */}
+      {/* Risk Warning Banner - Hide on anonymous pages */}
+      {!isAnonymousPage && (
+        <TouchableOpacity
+          style={headerStyles.riskBanner}
+          onPress={() => changeState('RiskSummary')}
+          activeOpacity={0.8}
+        >
+          <Text style={headerStyles.riskBannerText}>
+            Don't invest unless you're prepared to lose all the money you invest. This is a high-risk investment and you should not expect to be protected if something goes wrong. Take 2 mins to{' '}
+            <Text style={headerStyles.learnMoreText}>learn more</Text>.
+          </Text>
+        </TouchableOpacity>
+      )}
+
 
       {/* Main Header */}
       <View style={headerStyles.header}>
         <View style={[headerStyles.sideButtonWrapper, { flexDirection: 'row', justifyContent: 'flex-start', paddingLeft: 10, overflow: 'visible' }]}>
+          {includeBackButton && backButton}
           {/* Always show notification bell unless in strict modes like PIN */}
           {!pinMode && notificationButton}
         </View>

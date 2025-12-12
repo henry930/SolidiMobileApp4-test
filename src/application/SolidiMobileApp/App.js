@@ -185,7 +185,7 @@ let App = () => {
       <ThemeProvider>
         <AppContent />
         <NotificationBanner />
-        <TestNotificationButton />
+
       </ThemeProvider>
     </SafeAreaProvider>
   );
