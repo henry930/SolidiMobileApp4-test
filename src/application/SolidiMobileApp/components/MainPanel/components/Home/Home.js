@@ -351,16 +351,18 @@ const Home = () => {
           }
         } else {
           console.log('[GRAPH] ⚠️ Not enough BTC historical data. Available:', btcHistoricPricesForGraph?.length || 0);
+          console.log('[GRAPH]    btcHistoricPricesForGraph value:', btcHistoricPricesForGraph);
+          console.log('[GRAPH]    Creating fallback using current prices...');
           
           // Fallback: use current price for all days if no historical data
           const currentPriceData = priceData[btcMarketForGraph];
-          if (currentPriceData) {
-            const ask = parseFloat(currentPriceData.ask);
-            const bid = parseFloat(currentPriceData.bid);
-            const currentPrice = (ask + bid) / 2;
-            const currentPortfolioValue = gbpBalance + (btcBalance * currentPrice);
+          console.log('[GRAPH]    currentPriceData for', btcMarketForGraph, ':', currentPriceData);
+          
+          if (currentPriceData && currentPriceData.price) {
+            const currentPrice = parseFloat(currentPriceData.price);
+            const currentPortfolioValue = gbpBalanceForGraph + (btcBalance * currentPrice);
             
-            console.log('[GRAPH] 📊 Using current portfolio value as fallback: £', currentPortfolioValue.toFixed(2));
+            console.log('[GRAPH] 📊 Fallback using current price: BTC=£', currentPrice.toFixed(2), ', Portfolio=£', currentPortfolioValue.toFixed(2));
             
             for (let dayIndex = 0; dayIndex < 30; dayIndex++) {
               const daysAgo = 29 - dayIndex;
@@ -368,6 +370,25 @@ const Home = () => {
               
               graphPoints.push({
                 timestamp: Number(timestamp),
+                value: Number(currentPortfolioValue)
+              });
+            }
+            console.log('[GRAPH] ✅ Created', graphPoints.length, 'points using current price');
+          } else {
+            console.log('[GRAPH] ⚠️ No current price data available either. Using totalValue as flat line.');
+            // Last resort: create flat line with current total value
+            for (let dayIndex = 0; dayIndex < 30; dayIndex++) {
+              const daysAgo = 29 - dayIndex;
+              const timestamp = Date.now() / 1000 - (daysAgo * 24 * 60 * 60);
+              
+              graphPoints.push({
+                timestamp: Number(timestamp),
+                value: Number(totalValue > 0 ? totalValue : 1000)
+              });
+            }
+            console.log('[GRAPH] ✅ Created', graphPoints.length, 'points showing £', (totalValue > 0 ? totalValue : 1000).toFixed(2));
+          }
+        }
                 value: Number(currentPortfolioValue)
               });
             }
@@ -380,6 +401,18 @@ const Home = () => {
           console.log('[GRAPH] 📋 Last point (today):', JSON.stringify(graphPoints[graphPoints.length - 1]));
           console.log('[GRAPH] 📊 Portfolio value range: £', Math.min(...graphPoints.map(p => p.value)).toFixed(2), 
                       '→ £', Math.max(...graphPoints.map(p => p.value)).toFixed(2));
+        } else {
+          console.log('[GRAPH] ⚠️ NO GRAPH POINTS GENERATED! Creating fallback flat line...');
+          // Create a simple flat line showing current portfolio value
+          for (let i = 0; i < 30; i++) {
+            const daysAgo = 29 - i;
+            const timestamp = Date.now() / 1000 - (daysAgo * 24 * 60 * 60);
+            graphPoints.push({
+              timestamp: Number(timestamp),
+              value: Number(totalValue > 0 ? totalValue : 1000) // Use current value or minimum 1000
+            });
+          }
+          console.log('[GRAPH] 📊 Created fallback graph with', graphPoints.length, 'points showing £', (totalValue > 0 ? totalValue : 1000).toFixed(2));
         }
         
         setGraphData(graphPoints);
