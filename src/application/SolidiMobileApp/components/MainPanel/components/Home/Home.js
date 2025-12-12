@@ -1503,11 +1503,18 @@ const Home = () => {
             )}
             
             {/* Monthly Asset Value Chart */}
-            {!isLoading && (
-              <View style={styles.chartContainer}>
+            {console.log('📊 [CHART RENDER CHECK]', {
+              isLoading,
+              hasGraphData: !!graphData,
+              graphDataLength: graphData?.length || 0,
+              firstPoint: graphData?.[0],
+              lastPoint: graphData?.[graphData.length - 1]
+            })}
+            {!isLoading && graphData && graphData.length > 0 && (
+              <View style={[styles.chartContainer, { minHeight: 140 }]}>
                 <SimpleChart 
                   data={graphData}
-                  width={screenWidth}
+                  width={screenWidth - 40}
                   height={120}
                   strokeColor="#1F2937"
                   fillColor="transparent"
