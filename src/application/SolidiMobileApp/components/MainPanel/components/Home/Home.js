@@ -1510,18 +1510,24 @@ const Home = () => {
               firstPoint: graphData?.[0],
               lastPoint: graphData?.[graphData.length - 1]
             })}
-            {!isLoading && graphData && graphData.length > 0 && (
-              <View style={[styles.chartContainer, { minHeight: 140 }]}>
-                <SimpleChart 
-                  data={graphData}
-                  width={screenWidth - 40}
-                  height={120}
-                  strokeColor="#1F2937"
-                  fillColor="transparent"
-                  strokeWidth={3}
-                  backgroundColor="#F9FAFB"
-                  onPointSelected={handleGraphPointSelected}
-                />
+            {!isLoading && (
+              <View style={[styles.chartContainer, { minHeight: 140, backgroundColor: '#F9FAFB', borderRadius: 12, paddingVertical: 10 }]}>
+                {graphData && graphData.length > 0 ? (
+                  <SimpleChart 
+                    data={graphData}
+                    width={screenWidth - 40}
+                    height={120}
+                    strokeColor="#1F2937"
+                    fillColor="transparent"
+                    strokeWidth={3}
+                    backgroundColor="#F9FAFB"
+                    onPointSelected={handleGraphPointSelected}
+                  />
+                ) : (
+                  <View style={{ height: 120, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: '#9CA3AF', fontSize: 14 }}>No chart data available</Text>
+                  </View>
+                )}
               </View>
             )}
           </View>
