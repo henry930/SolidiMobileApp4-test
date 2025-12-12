@@ -389,11 +389,6 @@ const Home = () => {
             console.log('[GRAPH] ✅ Created', graphPoints.length, 'points showing £', (totalValue > 0 ? totalValue : 1000).toFixed(2));
           }
         }
-                value: Number(currentPortfolioValue)
-              });
-            }
-          }
-        }
         
         console.log('[GRAPH] 📋 Generated', graphPoints.length, 'portfolio value points');
         if (graphPoints.length > 0) {
