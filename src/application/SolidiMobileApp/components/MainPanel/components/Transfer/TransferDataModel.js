@@ -151,13 +151,12 @@ export class TransferDataModel {
       // Use OWNED assets (balance > 0) for withdrawal/send
       if (this.appState && this.appState.getOwnedAssets) {
         const ownedAssets = this.appState.getOwnedAssets();
-        // Filter to only crypto (exclude fiat)
-        const cryptoAssets = ownedAssets.filter(a => a !== 'GBP' && a !== 'USD' && a !== 'EUR');
-        console.log('📤 [TRANSFER] Withdrawal assets (owned crypto):', cryptoAssets);
-        return cryptoAssets;
+        // Use ownedAssets directly (includes Fiat if balance > 0)
+        console.log('📤 [TRANSFER] Withdrawal assets (owned assets):', ownedAssets);
+        return ownedAssets;
       }
       // Fallback to filtering this.assets by capabilities
-      return this.assets.filter(asset => 
+      return this.assets.filter(asset =>
         this.capabilities[asset] && this.capabilities[asset].withdrawalEnabled
       );
     } catch (error) {
@@ -179,7 +178,7 @@ export class TransferDataModel {
         return ownedAssets;
       }
       // Fallback to filtering this.assets by capabilities
-      return this.assets.filter(asset => 
+      return this.assets.filter(asset =>
         this.capabilities[asset] && this.capabilities[asset].depositEnabled
       );
     } catch (error) {
@@ -198,7 +197,7 @@ export class TransferDataModel {
       if (!asset || typeof asset !== 'string') {
         return null;
       }
-      
+
       return this.addresses[asset.toUpperCase()] || null;
     } catch (error) {
       console.warn('Error getting deposit address:', error);
@@ -221,7 +220,7 @@ export class TransferDataModel {
           maxSendAmount: 0,
         };
       }
-      
+
       return this.capabilities[asset.toUpperCase()] || {
         withdrawalEnabled: false,
         depositEnabled: false,
@@ -249,7 +248,7 @@ export class TransferDataModel {
       if (!asset || typeof asset !== 'string') {
         return { label: 'Unknown Asset', value: 'UNKNOWN' };
       }
-      
+
       const upperAsset = asset.toUpperCase();
       return this.displayInfo[upperAsset] || {
         label: `${asset} (${upperAsset})`,
@@ -319,25 +318,25 @@ export class TransferDataModel {
     try {
       const capabilities = this.getAssetCapabilities(asset);
       const numAmount = parseFloat(amount);
-      
+
       if (isNaN(numAmount) || numAmount <= 0) {
         return { valid: false, error: 'Please enter a valid amount' };
       }
-      
+
       if (numAmount < capabilities.minSendAmount) {
-        return { 
-          valid: false, 
-          error: `Minimum send amount is ${capabilities.minSendAmount} ${asset}` 
+        return {
+          valid: false,
+          error: `Minimum send amount is ${capabilities.minSendAmount} ${asset}`
         };
       }
-      
+
       if (numAmount > capabilities.maxSendAmount) {
-        return { 
-          valid: false, 
-          error: `Maximum send amount is ${capabilities.maxSendAmount} ${asset}` 
+        return {
+          valid: false,
+          error: `Maximum send amount is ${capabilities.maxSendAmount} ${asset}`
         };
       }
-      
+
       return { valid: true, error: null };
     } catch (error) {
       console.warn('Error validating send amount:', error);
@@ -355,11 +354,11 @@ export class TransferDataModel {
     try {
       const numAmount = parseFloat(amount);
       if (isNaN(numAmount)) return '0.00';
-      
+
       const capabilities = this.getAssetCapabilities(asset);
       const isCrypto = capabilities.network !== 'fiat';
       const decimals = isCrypto ? 6 : 2;
-      
+
       return numAmount.toFixed(decimals);
     } catch (error) {
       console.warn('Error formatting amount:', error);
