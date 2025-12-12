@@ -12,15 +12,30 @@ import AppStateContext from 'src/application/data';
 // Import the original AddressBook component
 import OriginalAddressBook from './AddressBook';
 
-const AddressBookManagement = () => {
+/**
+ * AddressBookManagement Component
+ * @param {string} defaultTab - Initial tab to show: 'list' or 'add' (default: 'list')
+ * @param {string} selectedAsset - Pre-selected asset for filtering (optional)
+ * @param {Function} onAddressAdded - Callback when address is added
+ * @param {Function} onAddressSelected - Callback when address is selected (for selection mode)
+ * @param {Function} onClose - Callback to close the component/modal
+ */
+const AddressBookManagement = ({ 
+  defaultTab = 'list',
+  selectedAsset,
+  onAddressAdded,
+  onAddressSelected,
+  onClose
+}) => {
   // Get app state for API access
   let appState = useContext(AppStateContext);
 
   // Tab navigation state
-  const [activeTab, setActiveTab] = useState('list'); // 'add' or 'list'
+  const [activeTab, setActiveTab] = useState(defaultTab); // 'add' or 'list'
 
   // Asset filter state - now arrays for multi-select
-  const [selectedAssets, setSelectedAssets] = useState([]); // ['BTC', 'ETH', 'GBP', etc.]
+  // Initialize with selectedAsset if provided
+  const [selectedAssets, setSelectedAssets] = useState(selectedAsset ? [selectedAsset] : []); // ['BTC', 'ETH', 'GBP', etc.]
   const [selectedTypes, setSelectedTypes] = useState([]); // ['CRYPTO_HOSTED', 'CRYPTO_UNHOSTED', 'FIAT', etc.]
   const [showAssetDropdown, setShowAssetDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
@@ -460,8 +475,25 @@ const AddressBookManagement = () => {
     // Ensure actualAddress is always a string
     const displayAddress = String(actualAddress || 'Invalid address');
 
-    return (
-      <View style={styles.addressItemContainer}>
+    // Handler for selecting an address
+    const handleSelectAddress = () => {
+      if (onAddressSelected) {
+        log('Address selected:', item);
+        onAddressSelected(displayAddress, {
+          name: item.name,
+          assetType: item.assetType,
+          type: item.type,
+          ...addressData
+        });
+        // Close the modal if callback provided
+        if (onClose) {
+          onClose();
+        }
+      }
+    };
+
+    const ItemContent = (
+      <>
         <View style={styles.addressIconSection}>
           <Icon name={cryptoIcon} size={32} color={getAssetColor(item.assetType)} />
         </View>
@@ -499,20 +531,51 @@ const AddressBookManagement = () => {
         </View>
 
         <View style={styles.addressActionsSection}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => copyToClipboard(displayAddress, item.name)}
-          >
-            <Icon name="content-copy" size={16} color={colors.primary} />
-          </TouchableOpacity>
+          {onAddressSelected ? (
+            // Selection mode - show select button
+            <TouchableOpacity
+              style={[styles.actionButton, styles.selectActionButton]}
+              onPress={handleSelectAddress}
+            >
+              <Icon name="check-circle" size={20} color={colors.primary} />
+            </TouchableOpacity>
+          ) : (
+            // Management mode - show copy and delete buttons
+            <>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => copyToClipboard(displayAddress, item.name)}
+              >
+                <Icon name="content-copy" size={16} color={colors.primary} />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteActionButton]}
-            onPress={() => deleteAddress(item)}
-          >
-            <Icon name="delete" size={16} color={colors.red} />
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.deleteActionButton]}
+                onPress={() => deleteAddress(item)}
+              >
+                <Icon name="delete" size={16} color={colors.red} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
+      </>
+    );
+
+    // If in selection mode, make the whole item clickable
+    if (onAddressSelected) {
+      return (
+        <TouchableOpacity 
+          style={[styles.addressItemContainer, styles.selectableItem]}
+          onPress={handleSelectAddress}
+        >
+          {ItemContent}
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <View style={styles.addressItemContainer}>
+        {ItemContent}
       </View>
     );
   };
@@ -582,11 +645,16 @@ const AddressBookManagement = () => {
   );
 
   // Handle address added callback
-  const handleAddressAdded = () => {
+  const handleAddressAdded = (addressData) => {
     // Clear any existing timeout to prevent conflicts
     if (currentTimeoutId) {
       clearTimeout(currentTimeoutId);
       setCurrentTimeoutId(null);
+    }
+
+    // Call the callback if provided
+    if (onAddressAdded) {
+      onAddressAdded(addressData);
     }
 
     // Switch to list tab and reload initial data to include the new address
@@ -697,7 +765,10 @@ const AddressBookManagement = () => {
           {/* Tab Content */}
           {activeTab === 'add' ? (
             <View style={{ flex: 1 }}>
-              <OriginalAddressBook onAddressAdded={handleAddressAdded} />
+              <OriginalAddressBook 
+                onAddressAdded={handleAddressAdded}
+                selectedAsset={selectedAsset}
+              />
             </View>
           ) : (
             <View style={styles.listContainer}>
@@ -1098,6 +1169,10 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.lightGray,
   },
 
+  selectableItem: {
+    backgroundColor: colors.lightestGray,
+  },
+
   addressIconSection: {
     marginRight: scaledWidth(12),
     alignItems: 'center',
@@ -1176,6 +1251,12 @@ const styles = StyleSheet.create({
 
   deleteActionButton: {
     backgroundColor: 'transparent',
+  },
+
+  selectActionButton: {
+    backgroundColor: 'transparent',
+    width: scaledWidth(32),
+    height: scaledHeight(32),
   },
 
   // State styles

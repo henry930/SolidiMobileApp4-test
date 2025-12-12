@@ -60,7 +60,7 @@ import AppStateContext from 'src/application/data';
 import { colors, sharedStyles, sharedColors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
 import { TransferUtils, transferDataModel } from './TransferDataModel';
-import { AddressBookPicker, AddressBookModal, AddressBookSelectionPage } from 'src/components/atomic';
+import { AddressBookPicker, AddressBookManagementModal } from 'src/components/atomic';
 import { SolidiLoadingScreen } from 'src/components/shared';
 
 // Logger
@@ -111,11 +111,9 @@ let Transfer = ({ initialMode } = {}) => {
   let [addressBookEmpty, setAddressBookEmpty] = useState(false);
   let [depositDetailsLoaded, setDepositDetailsLoaded] = useState(false);
 
-  // Address book modal state
-  let [showAddressBookModal, setShowAddressBookModal] = useState(false);
-
-  // Address book selection modal state
-  let [showAddressBookSelectionPage, setShowAddressBookSelectionPage] = useState(false);
+  // Unified address book modal state
+  let [showAddressBookManagement, setShowAddressBookManagement] = useState(false);
+  let [addressBookDefaultTab, setAddressBookDefaultTab] = useState('list'); // 'list' or 'add'
 
   // Identity verification state
   let [identityVerified, setIdentityVerified] = useState(null); // null = loading, true = verified, false = not verified
@@ -1474,7 +1472,10 @@ let Transfer = ({ initialMode } = {}) => {
                       <Text style={styles.inputLabel}>Choose from Address Book</Text>
                       <TouchableOpacity
                         style={styles.addressBookButton}
-                        onPress={() => setShowAddressBookSelectionPage(true)}
+                        onPress={() => {
+                          setAddressBookDefaultTab('list');
+                          setShowAddressBookManagement(true);
+                        }}
                         activeOpacity={0.7}
                       >
                         <View style={styles.addressBookButtonContent}>
@@ -1499,7 +1500,8 @@ let Transfer = ({ initialMode } = {}) => {
                       size={20}
                       mode="contained"
                       onPress={() => {
-                        setShowAddressBookModal(true);
+                        setAddressBookDefaultTab('add');
+                        setShowAddressBookManagement(true);
                       }}
                       style={{
                         marginLeft: 8,
@@ -1768,10 +1770,11 @@ let Transfer = ({ initialMode } = {}) => {
 
         </KeyboardAwareScrollView>
 
-        {/* Address Book Modal */}
-        <AddressBookModal
-          visible={showAddressBookModal}
-          onClose={() => setShowAddressBookModal(false)}
+        {/* Unified Address Book Management Modal */}
+        <AddressBookManagementModal
+          visible={showAddressBookManagement}
+          onClose={() => setShowAddressBookManagement(false)}
+          defaultTab={addressBookDefaultTab}
           selectedAsset={selectedAsset}
           onAddressAdded={async (newAddress) => {
             log('New address added:', newAddress);
@@ -1789,14 +1792,7 @@ let Transfer = ({ initialMode } = {}) => {
               }
             }
           }}
-        />
-
-        {/* Address Book Selection Page */}
-        <AddressBookSelectionPage
-          visible={showAddressBookSelectionPage}
-          onClose={() => setShowAddressBookSelectionPage(false)}
-          selectedAsset={selectedAsset}
-          onSelectAddress={(address, details) => {
+          onAddressSelected={(address, details) => {
             handleAddressSelection(address, details);
           }}
         />

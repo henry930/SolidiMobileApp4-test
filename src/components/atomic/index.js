@@ -10,6 +10,7 @@ import AddressBookPicker from './AddressBookPicker';
 import AddressBookModal from './AddressBookModal';
 import AddressBookSelectionPage from './AddressBookSelectionPage';
 import AddressBookForm from './AddressBookForm';
+import AddressBookManagementModal from './AddressBookManagementModal';
 import RiskSummaryModal from './RiskSummaryModal';
 
 export {
@@ -24,5 +25,6 @@ export {
   AddressBookModal,
   AddressBookSelectionPage,
   AddressBookForm,
+  AddressBookManagementModal,
   RiskSummaryModal,
 };

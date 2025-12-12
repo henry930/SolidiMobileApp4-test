@@ -25,7 +25,7 @@ import Big from 'big.js';
 import AppStateContext from 'src/application/data';
 import { colors } from 'src/constants';
 import { scaledWidth, scaledHeight, normaliseFont } from 'src/util/dimensions';
-import { FixedWidthButton, ImageButton } from 'src/components/atomic';
+import { FixedWidthButton, ImageButton, AddressBookManagementModal } from 'src/components/atomic';
 import misc from 'src/util/misc';
 
 // Logger
@@ -41,6 +41,7 @@ let Settings = () => {
   let appState = useContext(AppStateContext);
   let [renderCount, triggerRender] = useState(0);
   let [biometricsEnabled, setBiometricsEnabled] = useState(true); // Default to enabled
+  let [showAddressBookModal, setShowAddressBookModal] = useState(false);
   let firstRender = misc.useFirstRender();
   let stateChangeID = appState.stateChangeID;
 
@@ -380,7 +381,7 @@ let Settings = () => {
                 title="Address Book"
                 description="Manage your saved addresses and contacts"
                 right={props => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => { appState.changeState('AddressBook'); }}
+                onPress={() => setShowAddressBookModal(true)}
                 style={{ paddingVertical: 4 }}
                 testID="settings-address-book-item"
               />
@@ -416,6 +417,25 @@ let Settings = () => {
 
       </ScrollView>
 
+      {/* Address Book Management Modal */}
+      <AddressBookManagementModal
+        visible={showAddressBookModal}
+        onClose={() => setShowAddressBookModal(false)}
+        defaultTab="list"
+        onAddressAdded={async (newAddress) => {
+          log('New address added from Settings:', newAddress);
+          // Refresh address book if needed
+          if (appState && appState.loadAddressBook) {
+            try {
+              setTimeout(async () => {
+                await appState.loadAddressBook();
+              }, 500);
+            } catch (error) {
+              log('Error refreshing address book:', error);
+            }
+          }
+        }}
+      />
 
     </View>
   )

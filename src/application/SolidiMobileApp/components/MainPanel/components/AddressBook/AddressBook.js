@@ -16,8 +16,10 @@ let { deb, dj, log, lj } = logger.getShortcuts(logger2);
  * AddressBook Page Component
  * Displays the address book form as a full page
  * Uses the shared AddressBookForm component
+ * @param {Function} onAddressAdded - Callback when address is added
+ * @param {string} selectedAsset - Pre-selected asset for the form
  */
-let AddressBook = (props) => {
+let AddressBook = ({ onAddressAdded, selectedAsset, ...props }) => {
   let appState = useContext(AppStateContext);
   let [renderCount, setRenderCount] = useState(0);
   let [stateChangeID, setStateChangeID] = useState(appState.stateChangeID);
@@ -56,8 +58,13 @@ let AddressBook = (props) => {
   let handleSuccess = (addressData) => {
     log('✅ Address added successfully from page:', addressData);
 
-    // Navigate back or show success message
-    if (appState && appState.changeState) {
+    // Call callback if provided
+    if (onAddressAdded) {
+      onAddressAdded(addressData);
+    }
+
+    // Navigate back or show success message (only if not in modal mode)
+    if (!onAddressAdded && appState && appState.changeState) {
       // Go back to profile or previous page
       setTimeout(() => {
         appState.changeState('Profile');
@@ -81,6 +88,7 @@ let AddressBook = (props) => {
         showsVerticalScrollIndicator={true}
       >
         <AddressBookForm
+          selectedAsset={selectedAsset}
           onSuccess={handleSuccess}
           onCancel={handleCancel}
           showHeader={true}

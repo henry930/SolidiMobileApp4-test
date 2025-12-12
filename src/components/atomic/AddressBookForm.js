@@ -43,7 +43,7 @@ let AddressBookForm = ({
     recipient: '',
     firstName: '',
     lastName: '',
-    asset: selectedAsset || '',
+    asset: selectedAsset ? selectedAsset.toLowerCase() : '',
     withdrawAddress: '',
     destinationType: '',
     exchangeName: '',
@@ -67,13 +67,13 @@ let AddressBookForm = ({
   let [submitError, setSubmitError] = useState('');
   let [submitStatus, setSubmitStatus] = useState('');
 
-  const lastSelectedAssetRef = useRef(selectedAsset);
+  const lastSelectedAssetRef = useRef(selectedAsset ? selectedAsset.toLowerCase() : '');
 
   // Update asset when selectedAsset prop changes
   useEffect(() => {
-    if (selectedAsset && selectedAsset !== lastSelectedAssetRef.current) {
-      lastSelectedAssetRef.current = selectedAsset;
-      setFormData(prev => ({ ...prev, asset: selectedAsset }));
+    if (selectedAsset && selectedAsset.toLowerCase() !== lastSelectedAssetRef.current) {
+      lastSelectedAssetRef.current = selectedAsset.toLowerCase();
+      setFormData(prev => ({ ...prev, asset: selectedAsset.toLowerCase() }));
     }
   }, [selectedAsset]);
 
@@ -663,7 +663,7 @@ let AddressBookForm = ({
       recipient: '',
       firstName: '',
       lastName: '',
-      asset: selectedAsset || '',
+      asset: selectedAsset ? selectedAsset.toLowerCase() : '',
       withdrawAddress: '',
       destinationType: '',
       exchangeName: '',
