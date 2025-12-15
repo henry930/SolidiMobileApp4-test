@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, PanResponder, Text } from 'react-native';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop, Text as SvgText, Rect } from 'react-native-svg';
 
@@ -8,9 +8,9 @@ const { width: screenWidth } = Dimensions.get('window');
  * SimpleChart - A basic line chart component for showing asset value changes
  * Shows the difference in asset values over time (monthly data)
  */
-const SimpleChart = ({ 
-  data = [], 
-  width = screenWidth - 40, 
+const SimpleChart = ({
+  data = [],
+  width = screenWidth - 40,
   height = 120,
   strokeColor = '#4CAF50',
   fillColor = 'rgba(76, 175, 80, 0.1)',
@@ -18,9 +18,14 @@ const SimpleChart = ({
   backgroundColor = 'transparent',
   onPointSelected = null  // Callback when user touches the graph
 }) => {
-  
+
   const [selectedIndex, setSelectedIndex] = useState(null);
-  
+
+  useEffect(() => {
+    console.log('[CHART] 🟢 SimpleChart MOUNTED');
+    return () => console.log('[CHART] 🔴 SimpleChart UNMOUNTED');
+  }, []);
+
   // Log what data we receive (only once when data changes)
   useMemo(() => {
     console.log('[CHART] 📊 Data received:', data.length, 'points');
@@ -29,14 +34,14 @@ const SimpleChart = ({
       console.log('[CHART] 📊 Last value:', data[data.length - 1]?.value);
     }
   }, [data]);
-  
+
   // Memoize calculations so graph doesn't recalculate when selectedIndex changes
   const chartCalculations = useMemo(() => {
     console.log('[CHART] 🔄 Recalculating chart (this should ONLY happen when data changes)');
-    
+
     // Use the actual data passed in - no mock data
     const chartData = data;
-    
+
     // If no data, return empty chart
     if (data.length === 0) {
       return {
@@ -67,14 +72,14 @@ const SimpleChart = ({
     const chartPoints = chartData.map((item, index) => {
       const x = padding + (index / (chartData.length - 1)) * chartWidth;
       let y;
-      
+
       if (valueRange === 0) {
         // All values are the same - draw line in the middle
         y = padding + chartHeight / 2;
       } else {
         y = padding + chartHeight - ((item.value - minValue) / valueRange) * chartHeight;
       }
-      
+
       return { x, y };
     });
 
@@ -96,19 +101,19 @@ const SimpleChart = ({
       minIndex
     };
   }, [data, width, height]); // Only recalculate when data, width, or height changes
-  
+
   const { chartData, padding, chartWidth, chartHeight, values, minValue, maxValue, valueRange, chartPoints, maxIndex, minIndex } = chartCalculations;
-  
+
   // Helper function to create smooth curve path
   const createSmoothPath = (points) => {
     if (points.length < 2) return '';
-    
+
     let path = `M ${points[0].x} ${points[0].y}`;
-    
+
     for (let i = 1; i < points.length; i++) {
       const current = points[i];
       const previous = points[i - 1];
-      
+
       if (i === 1) {
         // First curve
         const next = points[i + 1] || current;
@@ -128,16 +133,16 @@ const SimpleChart = ({
         // Middle curves
         const next = points[i + 1];
         const prev = points[i - 2] || previous;
-        
+
         const cpx1 = previous.x + (current.x - prev.x) * 0.2;
         const cpy1 = previous.y + (current.y - prev.y) * 0.2;
         const cpx2 = current.x - (next.x - previous.x) * 0.2;
         const cpy2 = current.y - (next.y - previous.y) * 0.2;
-        
+
         path += ` C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${current.x} ${current.y}`;
       }
     }
-    
+
     return path;
   };
 
@@ -175,14 +180,14 @@ const SimpleChart = ({
   // Handle touch to find nearest data point
   const handleTouch = (touchX) => {
     if (chartData.length === 0) return;
-    
+
     // Find the nearest data point index based on touch X position
     const relativeX = touchX - padding;
     const normalizedX = Math.max(0, Math.min(1, relativeX / chartWidth));
     const index = Math.round(normalizedX * (chartData.length - 1));
-    
+
     setSelectedIndex(index);
-    
+
     // Notify parent component with selected data point
     if (onPointSelected && chartData[index]) {
       onPointSelected({
@@ -195,7 +200,7 @@ const SimpleChart = ({
   };
 
   return (
-    <View 
+    <View
       style={[styles.container, { width, height, backgroundColor }]}
       {...panResponder.panHandlers}
     >
@@ -216,7 +221,7 @@ const SimpleChart = ({
           </Text>
         </View>
       )}
-      
+
       {/* Lowest value label - positioned to the right of the point */}
       {chartData.length > 0 && minIndex >= 0 && chartPoints[minIndex] && valueRange > 0 && maxIndex !== minIndex && (
         <View style={{
@@ -234,7 +239,7 @@ const SimpleChart = ({
           </Text>
         </View>
       )}
-      
+
       <Svg width={width} height={height}>
         <Defs>
           {/* Gradient temporarily disabled */}
@@ -246,7 +251,7 @@ const SimpleChart = ({
           </LinearGradient>
           */}
         </Defs>
-        
+
         {/* Area fill under the line - conditional rendering */}
         {fillColor && fillColor !== 'transparent' && (
           <Path
@@ -255,7 +260,7 @@ const SimpleChart = ({
             stroke="none"
           />
         )}
-        
+
         {/* Main smooth line */}
         <Path
           d={smoothLinePath}
@@ -265,7 +270,7 @@ const SimpleChart = ({
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        
+
         {/* Highest value marker */}
         {chartData.length > 0 && maxIndex >= 0 && chartPoints[maxIndex] && valueRange > 0 && (
           <Circle
@@ -277,7 +282,7 @@ const SimpleChart = ({
             strokeWidth="2"
           />
         )}
-        
+
         {/* Lowest value marker */}
         {chartData.length > 0 && minIndex >= 0 && chartPoints[minIndex] && valueRange > 0 && maxIndex !== minIndex && (
           <Circle
@@ -289,7 +294,7 @@ const SimpleChart = ({
             strokeWidth="2"
           />
         )}
-        
+
         {/* Selected point indicator (when touching) */}
         {selectedIndex !== null && chartPoints[selectedIndex] && (
           <Circle
@@ -301,13 +306,13 @@ const SimpleChart = ({
             strokeWidth="2"
           />
         )}
-        
+
         {/* End point indicator (default) */}
         {chartData.length > 0 && selectedIndex === null && (
           <Circle
             cx={padding + chartWidth}
-            cy={valueRange === 0 
-              ? padding + chartHeight / 2 
+            cy={valueRange === 0
+              ? padding + chartHeight / 2
               : padding + chartHeight - ((values[values.length - 1] - minValue) / valueRange) * chartHeight
             }
             r="4"
