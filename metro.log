@@ -1,15 +1,31 @@
+
+> SolidiMobileApp4@1.2.0 start
+> react-native start --reset-cache
+
 info Welcome to React Native v0.73
 info Starting dev server on port 8081...
-error listen EADDRINUSE: address already in use :::8081.
-Error: listen EADDRINUSE: address already in use :::8081
-    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
-    at listenInCluster (node:net:1997:12)
-    at Server.listen (node:net:2102:7)
-    at /Users/henry/Solidi/SolidiMobileApp4/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/index.flow.js:328:14
-    at new Promise (<anonymous>)
-    at earlyPortCheck (/Users/henry/Solidi/SolidiMobileApp4/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/index.flow.js:324:11)
-    at exports.runServer (/Users/henry/Solidi/SolidiMobileApp4/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/index.flow.js:124:9)
-    at Object.runServer [as func] (/Users/henry/Solidi/SolidiMobileApp4/node_modules/@react-native/community-cli-plugin/dist/commands/start/runServer.js:123:47)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async Command.handleAction (/Users/henry/Solidi/SolidiMobileApp4/node_modules/@react-native-community/cli/build/index.js:118:9)
-info Run CLI with --verbose flag for more details.
+
+                        ▒▒▓▓▓▓▒▒
+                     ▒▓▓▓▒▒░░▒▒▓▓▓▒
+                  ▒▓▓▓▓░░░▒▒▒▒░░░▓▓▓▓▒
+                 ▓▓▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▓▓
+                 ▓▓░░░░░▒▓▓▓▓▓▓▒░░░░░▓▓
+                 ▓▓░░▓▓▒░░░▒▒░░░▒▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▒▒▒▒▓▓▓▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░▓▓
+                 ▓▓▒░░▒▒▓▓▓▓▓▓▓▓▒░░░▒▓▓
+                  ▒▓▓▓▒░░░▒▓▓▒░░░▒▓▓▓▒
+                     ▒▓▓▓▒░░░░▒▓▓▓▒
+                        ▒▒▓▓▓▓▒▒
+
+
+warning: the transform cache was reset.
+                Welcome to Metro v0.80.12
+              Fast - Scalable - Integrated
+
+
+info React Native v0.83.0 is now available (your project is running on v0.73.11).
+info Changelog: https://github.com/facebook/react-native/releases/tag/v0.83.0
+info Diff: https://react-native-community.github.io/upgrade-helper/?from=0.83.0
+info For more info, check out "https://reactnative.dev/docs/upgrading?os=macos".
+info Dev server ready

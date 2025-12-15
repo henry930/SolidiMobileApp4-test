@@ -3752,8 +3752,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
       //this.state.loadingPrices = true;
       this.setState({ loadingPrices: true });
-      // Use production domain for public CSV files (not authentication-protected)
-      let domain = "www.solidi.co";
+      // Use test domain for public CSV files (where they're actually hosted)
+      let domain = "t2.solidi.co";
       let remotemarket = market.replace("/", "-");
       let url = "https://" + domain + "/" + remotemarket + "-" + period + ".csv";
       console.log('[HIST_PRICE] 📥 Fetching URL:', url);
