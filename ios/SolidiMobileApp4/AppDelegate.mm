@@ -12,6 +12,10 @@
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
+  
+  // Set notification center delegate to handle foreground notifications
+  UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+  center.delegate = self;
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
@@ -44,6 +48,34 @@
 - (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification
 {
   [RNCPushNotificationIOS didReceiveLocalNotification:notification];
+}
+
+// Required to display notifications when app is in FOREGROUND
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+  NSLog(@"📬 Notification received in FOREGROUND");
+  
+  // Show banner, sound, and badge even when app is in foreground
+  completionHandler(UNNotificationPresentationOptionSound | 
+                    UNNotificationPresentationOptionBanner | 
+                    UNNotificationPresentationOptionBadge);
+  
+  // Also forward to RNCPushNotificationIOS to trigger React Native event
+  NSDictionary *userInfo = notification.request.content.userInfo;
+  [RNCPushNotificationIOS didReceiveRemoteNotification:userInfo 
+                                fetchCompletionHandler:^(UIBackgroundFetchResult result) {}];
+}
+
+// Required to handle notification taps
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+didReceiveNotificationResponse:(UNNotificationResponse *)response
+         withCompletionHandler:(void(^)(void))completionHandler
+{
+  NSLog(@"📬 Notification tapped");
+  [RNCPushNotificationIOS didReceiveNotificationResponse:response];
+  completionHandler();
 }
 
 @end

@@ -129,16 +129,37 @@ exports.handler = async (event) => {
                 endpointArn = endpoint.EndpointArn;
                 console.log('Created new endpoint:', endpointArn);
             } catch (error) {
-                // If endpoint exists with same token, try to find and delete it
+                // If endpoint exists with same token, extract ARN and update it
                 if (error.message && error.message.includes('already exists with the same Token')) {
-                    console.log('Endpoint conflict detected, attempting to resolve...');
-                    // Extract endpoint ARN from error message if possible, or create with force
-                    const endpoint = await snsClient.send(new CreatePlatformEndpointCommand({
-                        PlatformApplicationArn: platformArn,
-                        Token: token,
-                        CustomUserData: userId
-                    }));
-                    endpointArn = endpoint.EndpointArn;
+                    console.log('Endpoint conflict detected, extracting ARN from error...');
+                    
+                    // Extract endpoint ARN from error message
+                    // Error message format: "Endpoint arn:aws:sns:...:endpoint/... already exists..."
+                    const arnMatch = error.message.match(/Endpoint (arn:aws:sns:[^:]+:[^:]+:endpoint\/[^\s]+)/);
+                    
+                    if (arnMatch && arnMatch[1]) {
+                        endpointArn = arnMatch[1];
+                        console.log('Extracted endpoint ARN:', endpointArn);
+                        
+                        // Update the endpoint attributes
+                        try {
+                            await snsClient.send(new SetEndpointAttributesCommand({
+                                EndpointArn: endpointArn,
+                                Attributes: {
+                                    Token: token,
+                                    Enabled: 'true',
+                                    CustomUserData: userId
+                                }
+                            }));
+                            console.log('Updated conflicting endpoint:', endpointArn);
+                        } catch (updateError) {
+                            console.error('Failed to update conflicting endpoint:', updateError.message);
+                            throw updateError;
+                        }
+                    } else {
+                        console.error('Could not extract endpoint ARN from error message');
+                        throw error;
+                    }
                 } else {
                     throw error;
                 }
