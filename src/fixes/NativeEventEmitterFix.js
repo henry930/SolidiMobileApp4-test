@@ -6,54 +6,56 @@
 import { Platform, NativeModules } from 'react-native';
 
 // ===== IMMEDIATE PATCH =====
-// Patch NativeEventEmitter before any module can use it
-const { NativeEventEmitter } = require('react-native');
+// Get the react-native module
+const ReactNative = require('react-native');
 
-// Store original constructor
-const OriginalNativeEventEmitter = NativeEventEmitter;
+// Store the ORIGINAL NativeEventEmitter class
+const OriginalNativeEventEmitter = ReactNative.NativeEventEmitter;
 
-// Create safe replacement constructor
-function SafeNativeEventEmitter(nativeModule) {
-  // If nativeModule is null/undefined, create a safe mock
-  if (!nativeModule) {
-    console.log('[NativeEventEmitterFix] Creating safe mock for null native module');
+// Create a wrapper class that inherits from the original
+class PatchedNativeEventEmitter extends OriginalNativeEventEmitter {
+  constructor(nativeModule) {
+    // If nativeModule is null/undefined, create a safe mock
+    if (!nativeModule || nativeModule === null || nativeModule === undefined) {
+      console.log('[NativeEventEmitterFix] Caught null native module, using safe mock');
+      
+      // Create instance with a dummy module to satisfy parent constructor
+      const dummyModule = {};
+      super(dummyModule);
+      
+      // Override all methods to be safe
+      this.addListener = (eventType, listener, context) => ({ remove: () => {} });
+      this.removeListener = () => {};
+      this.removeAllListeners = () => {};
+      this.emit = () => {};
+      this.listenerCount = () => 0;
+      
+      return this;
+    }
     
-    // Return a safe mock emitter
-    return {
-      addListener: (eventType, listener) => ({
-        remove: () => {}
-      }),
-      removeListener: () => {},
-      removeAllListeners: () => {},
-      emit: () => {},
-      listenerCount: () => 0
-    };
-  }
-  
-  // If nativeModule exists, use original constructor
-  try {
-    return new OriginalNativeEventEmitter(nativeModule);
-  } catch (error) {
-    console.log('[NativeEventEmitterFix] Original constructor failed, using safe mock');
-    return {
-      addListener: (eventType, listener) => ({
-        remove: () => {}
-      }),
-      removeListener: () => {},
-      removeAllListeners: () => {},
-      emit: () => {},
-      listenerCount: () => 0
-    };
+    // If nativeModule exists, use parent constructor normally
+    try {
+      super(nativeModule);
+    } catch (error) {
+      console.log('[NativeEventEmitterFix] Parent constructor failed:', error.message);
+      // Create a mock instance
+      super({});
+      this.addListener = (eventType, listener, context) => ({ remove: () => {} });
+      this.removeListener = () => {};
+      this.removeAllListeners = () => {};
+      this.emit = () => {};
+      this.listenerCount = () => 0;
+    }
   }
 }
 
-// Replace the global NativeEventEmitter
-global.NativeEventEmitter = SafeNativeEventEmitter;
-require('react-native').NativeEventEmitter = SafeNativeEventEmitter;
+// Replace NativeEventEmitter in react-native exports
+ReactNative.NativeEventEmitter = PatchedNativeEventEmitter;
 
-// Replace the global NativeEventEmitter
-global.NativeEventEmitter = SafeNativeEventEmitter;
-require('react-native').NativeEventEmitter = SafeNativeEventEmitter;
+// Also set it globally for any direct imports
+if (global.__fbBatchedBridge) {
+  global.__fbBatchedBridge.NativeEventEmitter = PatchedNativeEventEmitter;
+}
 
 // ===== ERROR SUPPRESSION =====
 const originalConsoleWarn = console.warn;

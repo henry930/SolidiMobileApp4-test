@@ -1385,17 +1385,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         return;
       }
 
-      // We check for "upgrade required" on every screen load.
-      try {
-        await this.state.checkIfAppUpdateRequired();
-      } catch (error) {
-        if (developmentModeBypass) {
-          log(`checkIfAppUpdateRequired failed, continuing with development mode: ${error.message}`);
-        } else {
-          throw error;
-        }
-      }
-
       // Load public info that rarely changes.
       if (!this.state.apiVersionLoaded) {
         try {
@@ -3191,55 +3180,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.checkIfAppUpdateRequired = async () => {
       let fName = 'checkIfAppUpdateRequired';
-
-      // Use sample data in development mode to bypass network issues
-      let data;
-      if (developmentModeBypass) {
-        log(`${fName}: Using sample data (development mode bypass enabled)`);
-        data = sampleData.appVersion;
-      } else {
-        data = await this.state.publicMethod({
-          functionName: fName,
-          apiRoute: 'app_latest_version',
-          httpMethod: 'GET',
-        });
-        if (data == 'DisplayedError') return;
-      }
-
-      let expectedKeys = 'version minimumVersionRequired'.split(' ');
-      let foundKeys = _.keys(data);
-      if (!_.isEqual(_.intersection(expectedKeys, foundKeys), expectedKeys)) {
-        if (developmentModeBypass) {
-          log(`${fName}: Using fallback sample data due to missing keys`);
-          data = sampleData.appVersion;
-        } else {
-          var msg = `${fName}: Missing expected key(s) in response data from API endpoint '/app_latest_version'. Expected: ${jd(expectedKeys)}; Found: ${jd(foundKeys)}`;
-          return this.state.switchToErrorState({ message: msg });
-        }
-      }
-      let latestAppVersion = data.version;
-      var msg = `Internal app version: ${appVersion} (build number ${appBuildNumber}). Latest app version specified on Solidi API (${appTier}): ${latestAppVersion}`;
-      deb(msg);
-      let os = Platform.OS;
-      let minimumVersionRequiredIos = data.minimumVersionRequired.ios.version;
-      let minimumVersionRequiredAndroid = data.minimumVersionRequired.android.version;
-      var msg = `Minimum version required for iOS: ${minimumVersionRequiredIos}. Minimum version required for Android: ${minimumVersionRequiredAndroid}.`;
-      deb(msg);
-      let minimumVersionRequired = 'Error';
-      if (os == 'ios') {
-        minimumVersionRequired = minimumVersionRequiredIos;
-      } else if (os == 'android') {
-        minimumVersionRequired = minimumVersionRequiredAndroid;
-      }
-      var msg = `Platform OS: ${os}. Minimum version required = ${minimumVersionRequired}.`;
-      deb(msg);
-      let updateRequired = semver.gt(minimumVersionRequired, appVersion);
-      //updateRequired = true; // dev
-      log(`Update required: ${updateRequired}`);
-      if (updateRequired) {
-        this.setState({ appUpdateRequired: true });
-        this.state.changeState('UpdateApp');
-      }
+      // Disabled - no longer checking for app updates
+      log(`${fName}: App update check disabled`);
+      return;
     }
 
 

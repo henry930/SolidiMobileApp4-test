@@ -813,55 +813,54 @@ let CryptoContent = ({ onClose }) => {
           </View>
 
           <View style={{ alignItems: 'center', marginBottom: 20 }}>
-            <Text variant="displaySmall" style={{ fontWeight: '700', marginBottom: 4 }}>
+            <Text variant="displaySmall" style={{ fontWeight: '700', marginBottom: 8 }}>
               {isLoadingTicker || currentPrice === null ? 'Loading...' : selectedGraphPoint
                 ? `£${selectedGraphPoint.value.toLocaleString()}`
                 : `£${currentPrice.toLocaleString()}`
               }
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {isLoadingTicker || currentPrice === null ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Icon name="loading" size={20} color={materialTheme.colors.primary} />
-                  <Text style={{ marginLeft: 4, color: materialTheme.colors.onSurfaceVariant }}>
-                    Loading price data...
-                  </Text>
-                </View>
-              ) : (
-                <>
-                  {(() => {
-                    // Calculate price change based on selected point or current price
-                    const displayPrice = selectedGraphPoint ? selectedGraphPoint.value : currentPrice;
-                    const market = `${asset}/GBP`;
-                    const priceData = historicPrices[market]?.[selectedPeriod] || [];
-                    const firstPrice = priceData.length > 0 ? priceData[0] : displayPrice;
-                    const changeAmount = displayPrice - firstPrice;
-                    const changePercent = firstPrice > 0 ? ((changeAmount / firstPrice) * 100).toFixed(2) : 0;
-                    const isPositive = changeAmount >= 0;
+            {isLoadingTicker || currentPrice === null ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="loading" size={20} color={materialTheme.colors.primary} />
+                <Text style={{ marginLeft: 4, color: materialTheme.colors.onSurfaceVariant }}>
+                  Loading price data...
+                </Text>
+              </View>
+            ) : (
+              <>
+                {(() => {
+                  // Calculate price change based on selected point or current price
+                  const displayPrice = selectedGraphPoint ? selectedGraphPoint.value : currentPrice;
+                  const market = `${asset}/GBP`;
+                  const priceData = historicPrices[market]?.[selectedPeriod] || [];
+                  const firstPrice = priceData.length > 0 ? priceData[0] : displayPrice;
+                  const changeAmount = displayPrice - firstPrice;
+                  const changePercent = firstPrice > 0 ? ((changeAmount / firstPrice) * 100).toFixed(2) : 0;
+                  const isPositive = changeAmount >= 0;
 
-                    return (
-                      <>
-                        <Icon
-                          name={isPositive ? "trending-up" : "trending-down"}
-                          size={20}
-                          color={isPositive ? '#4CAF50' : '#F44336'}
-                          style={{ marginRight: 4 }}
-                        />
-                        <Text style={{
-                          color: isPositive ? '#4CAF50' : '#F44336',
-                          fontWeight: '600'
-                        }}>
-                          {isPositive ? '+' : ''}{changePercent}%
-                        </Text>
-                        <Text style={{ color: materialTheme.colors.onSurfaceVariant, marginLeft: 8 }}>
-                          {selectedPeriod}
-                        </Text>
-                      </>
-                    );
-                  })()}
-                </>
-              )}
-            </View>
+                  return (
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon
+                        name={isPositive ? "trending-up" : "trending-down"}
+                        size={20}
+                        color={isPositive ? '#4CAF50' : '#F44336'}
+                        style={{ marginRight: 4 }}
+                      />
+                      <Text style={{
+                        color: isPositive ? '#4CAF50' : '#F44336',
+                        fontWeight: '600',
+                        fontSize: 16
+                      }}>
+                        {isPositive ? '+' : ''}£{Math.abs(changeAmount).toFixed(2)} ({isPositive ? '+' : ''}{changePercent}%)
+                      </Text>
+                      <Text style={{ color: materialTheme.colors.onSurfaceVariant, marginLeft: 8, fontSize: 14 }}>
+                        {selectedPeriod}
+                      </Text>
+                    </View>
+                  );
+                })()}
+              </>
+            )}
           </View>
 
         </Card.Content>
@@ -993,21 +992,6 @@ let CryptoContent = ({ onClose }) => {
     const structuredPriceData = {
       [market]: historicPrices[market] || {}
     };
-
-    // Debug logging
-    console.log(`📊 renderPriceGraph Debug:`, {
-      currentAsset,
-      selectedPeriod,
-      market,
-      hasHistoricPrices: !!historicPrices[market],
-      hasPeriodData: !!(historicPrices[market] && historicPrices[market][selectedPeriod]),
-      dataLength: historicPrices[market] && historicPrices[market][selectedPeriod] ? historicPrices[market][selectedPeriod].length : 0,
-      sampleData: historicPrices[market] && historicPrices[market][selectedPeriod] ? historicPrices[market][selectedPeriod].slice(0, 3) : [],
-      csvEndpoint: `${currentAsset}-GBP-${selectedPeriod}.csv`,
-      hasTickerData: !!appState.apiData?.ticker,
-      tickerKeys: appState.apiData?.ticker ? Object.keys(appState.apiData.ticker) : [],
-      currentPrice: currentPrice
-    });
 
     return (
       <View style={{ marginBottom: 16 }}>

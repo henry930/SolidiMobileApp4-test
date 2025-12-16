@@ -12,7 +12,9 @@ set -e  # Exit on error
 # ============================================================================
 # CONFIGURATION - Edit these variables for your environment
 # ============================================================================
+USE_SIMULATOR=true                     # Set to true for simulator, false for physical device
 DEVICE_ID="00008030-000669240A91402E"  # Your device UDID (find with: xcrun devicectl list devices)
+SIMULATOR_NAME="iPhone 15 Pro"         # Simulator device name
 BUNDLE_ID="co.solidi.mobile.test"      # App bundle identifier
 WORKSPACE="ios/SolidiMobileApp4.xcworkspace"
 SCHEME="SolidiMobileApp4"              # Xcode scheme name
@@ -43,12 +45,20 @@ echo ""
 echo -e "${YELLOW}🔨 Building app (incremental build)...${NC}"
 START_BUILD=$(date +%s)
 
+if [ "$USE_SIMULATOR" = true ]; then
+    SDK="iphonesimulator"
+    DESTINATION="platform=iOS Simulator,name=$SIMULATOR_NAME"
+else
+    SDK="iphoneos"
+    DESTINATION="id=$DEVICE_ID"
+fi
+
 xcodebuild \
     -workspace "$WORKSPACE" \
     -scheme "$SCHEME" \
     -configuration "$CONFIGURATION" \
-    -sdk iphoneos \
-    -destination "id=$DEVICE_ID" \
+    -sdk "$SDK" \
+    -destination "$DESTINATION" \
     build \
     ONLY_ACTIVE_ARCH=YES \
     2>&1 | grep -E "(Building|Linking|CodeSign|BUILD)" || true
@@ -59,20 +69,35 @@ echo -e "${GREEN}✅ Build completed in ${BUILD_TIME}s${NC}"
 echo ""
 
 # Step 3: Install
-echo -e "${YELLOW}📲 Installing app on device...${NC}"
+echo -e "${YELLOW}📲 Installing app...${NC}"
 START_INSTALL=$(date +%s)
 
-APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/SolidiMobileApp4-*/Build/Products/Debug-iphoneos -name "SolidiMobileApp4.app" -type d 2>/dev/null | head -1)
+if [ "$USE_SIMULATOR" = true ]; then
+    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/SolidiMobileApp4-*/Build/Products/Debug-iphonesimulator -name "SolidiMobileApp4.app" -type d 2>/dev/null | head -1)
+    
+    if [ -z "$APP_PATH" ]; then
+        echo -e "${RED}❌ Error: Could not find built app${NC}"
+        exit 1
+    fi
+    
+    # Boot simulator if not already booted
+    xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
+    
+    # Install app
+    xcrun simctl install "$SIMULATOR_NAME" "$APP_PATH"
+else
+    APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/SolidiMobileApp4-*/Build/Products/Debug-iphoneos -name "SolidiMobileApp4.app" -type d 2>/dev/null | head -1)
 
-if [ -z "$APP_PATH" ]; then
-    echo -e "${RED}❌ Error: Could not find built app${NC}"
-    exit 1
+    if [ -z "$APP_PATH" ]; then
+        echo -e "${RED}❌ Error: Could not find built app${NC}"
+        exit 1
+    fi
+
+    xcrun devicectl device install app \
+        --device "$DEVICE_ID" \
+        "$APP_PATH" \
+        2>&1 | grep -E "(Complete|installed|%)" || true
 fi
-
-xcrun devicectl device install app \
-    --device "$DEVICE_ID" \
-    "$APP_PATH" \
-    2>&1 | grep -E "(Complete|installed|%)" || true
 
 END_INSTALL=$(date +%s)
 INSTALL_TIME=$((END_INSTALL - START_INSTALL))
@@ -81,10 +106,15 @@ echo ""
 
 # Step 4: Launch
 echo -e "${YELLOW}🎯 Launching app...${NC}"
-xcrun devicectl device process launch \
-    --device "$DEVICE_ID" \
-    "$BUNDLE_ID" \
-    > /dev/null 2>&1
+
+if [ "$USE_SIMULATOR" = true ]; then
+    xcrun simctl launch "$SIMULATOR_NAME" "$BUNDLE_ID" > /dev/null 2>&1
+else
+    xcrun devicectl device process launch \
+        --device "$DEVICE_ID" \
+        "$BUNDLE_ID" \
+        > /dev/null 2>&1
+fi
 
 echo -e "${GREEN}✅ App launched successfully${NC}"
 echo ""

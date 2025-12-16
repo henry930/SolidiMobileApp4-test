@@ -18,11 +18,16 @@
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
-#if DEBUG
-  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
-#else
-  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
-#endif
+  // FORCE Metro for all DEBUG builds
+  #if DEBUG
+    NSLog(@"📦 [DEBUG] Loading from Metro at localhost:8081");
+    return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
+  #else
+    // Release mode - use bundled file
+    NSURL *bundleURL = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+    NSLog(@"📦 [RELEASE] Loading bundle from app: %@", bundleURL);
+    return bundleURL;
+  #endif
 }
 
 // Required for push notifications
