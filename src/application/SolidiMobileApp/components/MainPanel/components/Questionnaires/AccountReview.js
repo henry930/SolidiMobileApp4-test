@@ -265,20 +265,44 @@ const AccountReview = ({ navigation, onComplete }) => {
         // Handle finprom-suitability (first attempt) submission
         if (currentFormId === 'finprom-suitability') {
           if (cat === 1 && appropriate === 1) {
-            // PASSED - complete registration
-            console.log('[AccountReview] First attempt PASSED - completing registration');
+            // PASSED - show success and complete registration
+            console.log('[AccountReview] First attempt PASSED - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else if (appropriate === 'PASS' || appropriate === 'PASSED') {
-            // PASSED with string value - complete registration
-            console.log('[AccountReview] First attempt PASSED (string value) - completing registration');
+            // PASSED with string value - show success and complete registration
+            console.log('[AccountReview] First attempt PASSED (string value) - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else {
             // FAILED - show retry prompt
@@ -314,23 +338,47 @@ const AccountReview = ({ navigation, onComplete }) => {
           }
         }
         
-        // Handle crypto-appropriateness-assessment2 (second attempt) submission
-        if (currentFormId === 'crypto-appropriateness-assessment2') {
+        // Handle finprom-suitability2 (second attempt) submission
+        if (currentFormId === 'finprom-suitability2') {
           if (cat === 1 && appropriate === 1) {
-            // PASSED on second attempt - complete registration
-            console.log('[AccountReview] Second attempt PASSED - completing registration');
+            // PASSED on second attempt - show success and complete registration
+            console.log('[AccountReview] Second attempt PASSED - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment on your second attempt. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else if (appropriate === 'PASS' || appropriate === 'PASSED') {
-            // PASSED with string value - complete registration
-            console.log('[AccountReview] Second attempt PASSED (string value) - completing registration');
+            // PASSED with string value - show success and complete registration
+            console.log('[AccountReview] Second attempt PASSED (string value) - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment on your second attempt. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else {
             // FAILED both attempts - show 24 hour wait message
