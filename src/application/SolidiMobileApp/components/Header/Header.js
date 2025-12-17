@@ -26,8 +26,13 @@ let Header = (props) => {
   let statesWhereBackButtonIsHidden = [
     'Trade',
     'PIN',
+    'Register',
     'RegisterConfirm',
     'RegisterConfirm2',
+    'RegistrationCompletion',
+    'EmailVerification',
+    'PhoneVerification',
+    'AccountReview'
   ]
   let hideBackButton = statesWhereBackButtonIsHidden.includes(appState.mainPanelState);
 
