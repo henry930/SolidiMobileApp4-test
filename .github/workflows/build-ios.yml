@@ -21,6 +21,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         
+      - name: Setup Git for private repo access
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global url."https://${GH_TOKEN}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://${GH_TOKEN}@github.com/".insteadOf "ssh://git@github.com/"
+        
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
