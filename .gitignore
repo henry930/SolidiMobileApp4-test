@@ -93,7 +93,6 @@ buck-out/
 # only for local development
 /logs
 /scripts
-/docs
 
 # built production files
 /distribution

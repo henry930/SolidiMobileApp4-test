@@ -46,6 +46,7 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
             const result = await NotificationHistoryService.getNotifications(userId, 50);
 
             console.log(`✅ [NotificationInbox] Loaded ${result.count} notifications from API`);
+            console.log('📋 [NotificationInbox] First notification:', JSON.stringify(result.notifications[0], null, 2));
             setNotifications(result.notifications || []);
             setHasMore(result.hasMore || false);
             setLastKey(result.lastKey || null);
@@ -180,40 +181,50 @@ const NotificationInbox = ({ visible, onClose, userId }) => {
         return date.toLocaleDateString();
     };
 
-    const renderNotification = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.notificationItem, !item.read && styles.unreadNotification]}
-            onPress={() => handleNotificationPress(item)}
-        >
-            <View style={styles.notificationIcon}>
-                <Icon
-                    name="bell"
-                    size={24}
-                    color={item.read ? '#999' : '#007AFF'}
-                />
-            </View>
-            <View style={styles.notificationContent}>
-                <View style={styles.notificationHeader}>
-                    <Text style={[styles.notificationTitle, !item.read && styles.unreadText]}>
-                        {item.title}
-                    </Text>
-                    <Text style={styles.notificationTime}>
-                        {formatTimestamp(item.timestamp)}
-                    </Text>
+    const renderNotification = ({ item }) => {
+        console.log('🎨 Rendering notification:', {
+            id: item.id,
+            title: item.title,
+            body: item.body,
+            hasTitle: !!item.title,
+            hasBody: !!item.body
+        });
+        
+        return (
+            <TouchableOpacity
+                style={[styles.notificationItem, !item.read && styles.unreadNotification]}
+                onPress={() => handleNotificationPress(item)}
+            >
+                <View style={styles.notificationIcon}>
+                    <Icon
+                        name="bell"
+                        size={24}
+                        color={item.read ? '#999' : '#007AFF'}
+                    />
                 </View>
-                <Text style={styles.notificationBody} numberOfLines={2}>
-                    {item.body}
-                </Text>
-                {item.data && Object.keys(item.data).length > 0 && (
-                    <View style={styles.dataIndicator}>
-                        <Icon name="attachment" size={12} color="#999" />
-                        <Text style={styles.dataText}>Has data</Text>
+                <View style={styles.notificationContent}>
+                    <View style={styles.notificationHeader}>
+                        <Text style={[styles.notificationTitle, !item.read && styles.unreadText]}>
+                            {item.title || 'Notification'}
+                        </Text>
+                        <Text style={styles.notificationTime}>
+                            {formatTimestamp(item.timestamp)}
+                        </Text>
                     </View>
-                )}
-            </View>
-            {!item.read && <View style={styles.unreadDot} />}
-        </TouchableOpacity>
-    );
+                    <Text style={styles.notificationBody} numberOfLines={2}>
+                        {item.body || item.message || 'No message'}
+                    </Text>
+                    {item.data && Object.keys(item.data).length > 0 && (
+                        <View style={styles.dataIndicator}>
+                            <Icon name="attachment" size={12} color="#999" />
+                            <Text style={styles.dataText}>Has data</Text>
+                        </View>
+                    )}
+                </View>
+                {!item.read && <View style={styles.unreadDot} />}
+            </TouchableOpacity>
+        );
+    };
 
     const renderEmpty = () => (
         <View style={styles.emptyContainer}>

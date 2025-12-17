@@ -72,6 +72,20 @@ export const calculateGBPValue = (currency, amount, appState) => {
   // For crypto: Try to get pre-calculated balance first (fastest!)
   if (isCryptoCurrency(currency)) {
     console.log(`🔍 ${currency} is crypto, checking pre-calculated value...`);
+    
+    // NEW: Check if market exists for this asset
+    // Note: API may return GBPX instead of GBP, try both
+    const market = `${currency}/GBP`;
+    const marketX = `${currency}/GBPX`;
+    const tickerData = appState.getTicker ? appState.getTicker() : {};
+    const hasMarket = (tickerData && tickerData[market] && tickerData[market].price && !tickerData[market].error) ||
+                      (tickerData && tickerData[marketX] && tickerData[marketX].price && !tickerData[marketX].error);
+    
+    if (!hasMarket) {
+      console.log(`⚠️ ${currency} has NO MARKET - returning null for special handling`);
+      return null; // Return null to indicate no market (not 0, which is a valid zero balance)
+    }
+    
     // If this is the user's actual balance, get pre-calculated value
     const userBalance = parseFloat(appState.getBalance(currency));
     console.log(`🔍 User balance from appState = ${userBalance}`);
@@ -137,12 +151,15 @@ const BalanceListItem = ({
   const isCrypto = isCryptoCurrency(currency);
   
   // Calculate GBP value instantly using cached prices
+  // Returns null if no market exists for this asset
   const gbpValue = calculateGBPValue(currency, total, appState);
   
-  console.log(`💰 BALANCE CARD: ${currency} balance = ${total}, GBP value = £${gbpValue.toFixed(2)}`);
+  console.log(`💰 BALANCE CARD: ${currency} balance = ${total}, GBP value = ${gbpValue === null ? 'NO MARKET' : `£${gbpValue.toFixed(2)}`}`);
   
-  // For display: always show GBP value on the right
-  const displayValue = `£${formatCurrency(gbpValue.toString(), 'GBP')}`;
+  // For display: show GBP value or "(no market right now)" if no price available
+  const displayValue = gbpValue === null 
+    ? '(no market right now)' 
+    : `£${formatCurrency(gbpValue.toString(), 'GBP')}`;
   
   // Show original amount in description for reference
   let description = '';
@@ -178,7 +195,14 @@ const BalanceListItem = ({
         )}
         right={props => (
           <View style={{ justifyContent: 'center' }}>
-            <Text variant="titleMedium" style={{ fontWeight: 'bold', color: theme.colors.primary }}>
+            <Text 
+              variant={gbpValue === null ? "bodyMedium" : "titleMedium"} 
+              style={{ 
+                fontWeight: gbpValue === null ? 'normal' : 'bold', 
+                color: gbpValue === null ? theme.colors.onSurfaceVariant : theme.colors.primary,
+                fontStyle: gbpValue === null ? 'italic' : 'normal'
+              }}
+            >
               {displayValue}
             </Text>
           </View>

@@ -3541,9 +3541,63 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
+    this.loadCurrency = async () => {
+      // Load list of ALL tradable/transferable currencies
+      // Check cache first to avoid unnecessary API calls
+      if (this.state.apiData.currency && this.state.cache?.timestamps?.currency) {
+        const cacheAge = Date.now() - this.state.cache.timestamps.currency;
+        const cacheAgeMinutes = Math.floor(cacheAge / 60000);
+        if (cacheAge < 3600000) { // 1 hour cache
+          console.log(`✅ [CURRENCY] Using cached data (${cacheAgeMinutes} minutes old)`);
+          return this.state.apiData.currency;
+        }
+      }
+
+      let data = await this.state.privateMethod({
+        httpMethod: 'POST',
+        apiRoute: 'currency',
+        params: {},
+      });
+      if (data == 'DisplayedError') return;
+      
+      // Cache the currency data
+      let msg = "Currency list loaded from server.";
+      if (jd(data) === jd(this.state.apiData.currency)) {
+        log(msg + " No change.");
+      } else {
+        log(msg + " New data saved to appState. " + jd(data));
+        this.state.apiData.currency = data;
+        // Update cache timestamp
+        if (!this.state.cache) this.state.cache = {};
+        if (!this.state.cache.timestamps) this.state.cache.timestamps = {};
+        this.state.cache.timestamps.currency = Date.now();
+      }
+      return data;
+    }
+
+
+    this.getCurrency = () => {
+      // Get the list of available currencies for trading/transfer
+      let defaultList = ['BTC', 'ETH', 'LTC', 'XRP', 'GBP', 'EUR', 'USD'];
+      let currencies = this.state.apiData.currency;
+      
+      console.log('🔍 [GET-CURRENCY] Called getCurrency()');
+      console.log('🔍 [GET-CURRENCY] apiData.currency:', JSON.stringify(currencies));
+      console.log('🔍 [GET-CURRENCY] isEmpty?:', _.isEmpty(currencies));
+      console.log('🔍 [GET-CURRENCY] Will return:', _.isEmpty(currencies) ? 'DEFAULT LIST' : 'API DATA');
+      
+      if (_.isEmpty(currencies)) {
+        console.log('🔍 [GET-CURRENCY] Returning default:', defaultList);
+        return defaultList;
+      }
+      console.log('🔍 [GET-CURRENCY] Returning API data:', currencies);
+      return currencies;
+    }
+
+
     this.loadTicker = async () => {
-      let data = await this.state.publicMethod({
-        httpMethod: 'GET',
+      let data = await this.state.privateMethod({
+        httpMethod: 'POST',
         apiRoute: 'ticker',
         params: {},
       });
@@ -3580,6 +3634,29 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
       }
       // End Tmp 2
+      
+      // Process ticker data to calculate price as (bid + ask) / 2
+      // According to new requirements: price should be average of bid and ask
+      if (data && typeof data === 'object') {
+        for (let market in data) {
+          if (data[market] && !data[market].error) {
+            const bid = parseFloat(data[market].bid);
+            const ask = parseFloat(data[market].ask);
+            
+            // Calculate average price if both bid and ask are available
+            if (!isNaN(bid) && !isNaN(ask) && bid > 0 && ask > 0) {
+              const avgPrice = ((bid + ask) / 2).toFixed(2);
+              data[market].price = avgPrice;
+              data[market].calculatedPrice = true; // Flag to indicate calculated price
+              console.log(`[TICKER] ${market}: bid=${bid}, ask=${ask}, avg=${avgPrice}`);
+            } else if (data[market].price) {
+              // Keep existing price if bid/ask not available
+              console.log(`[TICKER] ${market}: using existing price=${data[market].price}`);
+            }
+          }
+        }
+      }
+      
       let msg = "Prices loaded from server.";
       this.state.priceLoadCount += 1;
       if (jd(data) === jd(this.state.apiData.ticker)) {
@@ -3670,16 +3747,74 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
     this.getTicker = () => {
+      console.log('🎯 [GET-TICKER] Called getTicker()');
+      console.log('🎯 [GET-TICKER] apiData.ticker:', JSON.stringify(this.state.apiData.ticker));
+      console.log('🎯 [GET-TICKER] Number of markets:', Object.keys(this.state.apiData.ticker || {}).length);
       return this.state.apiData.ticker;
     }
 
 
     this.getTickerForMarket = (market) => {
       // Get the ticker price held in the appState.
-      if (_.isUndefined(this.state.apiData.ticker[market])) return null;
-      if (_.isUndefined(this.state.apiData.ticker[market].price)) return null;
-      let price = this.state.apiData.ticker[market].price;
-      return { price };
+      // Price is calculated as (bid + ask) / 2 in loadTicker
+      
+      // Try both market names (GBP and GBPX)
+      let tickerData = this.state.apiData.ticker[market];
+      
+      // If market not found with GBP, try GBPX variant
+      if (_.isUndefined(tickerData) && market.endsWith('/GBP')) {
+        const marketX = market.replace('/GBP', '/GBPX');
+        tickerData = this.state.apiData.ticker[marketX];
+        if (tickerData) {
+          console.log(`[TICKER] Found ${marketX} instead of ${market}`);
+        }
+      }
+      // If market not found with GBPX, try GBP variant
+      else if (_.isUndefined(tickerData) && market.endsWith('/GBPX')) {
+        const marketGBP = market.replace('/GBPX', '/GBP');
+        tickerData = this.state.apiData.ticker[marketGBP];
+        if (tickerData) {
+          console.log(`[TICKER] Found ${marketGBP} instead of ${market}`);
+        }
+      }
+      
+      if (_.isUndefined(tickerData)) return null;
+      
+      // Check for error in ticker data (e.g., "Empty orderbook")
+      if (tickerData.error) {
+        console.log(`[TICKER] ${market}: Error - ${tickerData.error}`);
+        return null;
+      }
+      
+      // If price is already calculated, return it
+      if (!_.isUndefined(tickerData.price) && tickerData.price !== null) {
+        let price = tickerData.price;
+        return { 
+          price,
+          bid: tickerData.bid,
+          ask: tickerData.ask,
+          hasMarket: true
+        };
+      }
+      
+      // If no price but we have bid and ask, calculate it now
+      if (tickerData.bid && tickerData.ask) {
+        const bid = parseFloat(tickerData.bid);
+        const ask = parseFloat(tickerData.ask);
+        if (!isNaN(bid) && !isNaN(ask)) {
+          const price = ((bid + ask) / 2).toFixed(2);
+          console.log(`[TICKER] ${market}: Calculating price on-the-fly: (${bid} + ${ask}) / 2 = ${price}`);
+          return { 
+            price,
+            bid: tickerData.bid,
+            ask: tickerData.ask,
+            hasMarket: true
+          };
+        }
+      }
+      
+      console.log(`[TICKER] ${market}: No valid price data available`);
+      return null;
     }
 
 
@@ -3695,7 +3830,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
       //this.state.loadingPrices = true;
       this.setState({ loadingPrices: true });
-      // Use test domain for public CSV files (where they're actually hosted)
+      // Use development domain for public CSV files (not authentication-protected)
       let domain = "t2.solidi.co";
       let remotemarket = market.replace("/", "-");
       let url = "https://" + domain + "/" + remotemarket + "-" + period + ".csv";
@@ -3916,6 +4051,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Start background crypto price updates after login
       this.state.startCryptoPriceUpdates();
       console.log('[REG-CHECK] ✅ Crypto price updates started');
+      
+      console.log('[REG-CHECK] Step 8b: Starting ticker auto-refresh (15 seconds)...');
+      // Start ticker auto-refresh for real-time pricing across all pages
+      this.state.startTickerAutoRefresh();
+      console.log('[REG-CHECK] ✅ Ticker auto-refresh started');
 
       console.log('[REG-CHECK] Step 9: Preloading address books for all assets...');
       // Load all address books to cache after authentication
@@ -3946,6 +4086,12 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         console.log('[REG-CHECK] Balance data returned:', balanceData);
         console.log('[REG-CHECK] Assets in balance:', Object.keys(balanceData || {}));
         console.log('[REG-CHECK] balancesLoaded flag AFTER:', this.state.balancesLoaded);
+        
+        // Step 10b: Load currency list (all tradable/transferable assets)
+        console.log('[REG-CHECK] Step 10b: Loading currency list from /currency API...');
+        await this.loadCurrency();
+        console.log('[REG-CHECK] ✅ Currency list loaded and cached');
+        console.log('[REG-CHECK] Available currencies:', this.getCurrency());
       } else {
         console.log('[REG-CHECK] ⏭️  User balances already loaded, skipping');
         console.log('[REG-CHECK] Current cached assets:', Object.keys(this.state.apiData.balance || {}));
@@ -4672,15 +4818,16 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log('[CRYPTO-CACHE] ✅ Using existing ticker data from apiData.ticker');
           response = this.state.apiData.ticker;
         } else {
-          // SPECIAL: Use www.solidi.co for ticker endpoint only
-          console.log('[CRYPTO-CACHE] 🌐 Creating temporary API client with www.solidi.co for /ticker');
+          // SPECIAL: Use t2.solidi.co for ticker endpoint only
+          console.log('[CRYPTO-CACHE] 🌐 Creating temporary API client with t2.solidi.co for /ticker');
           const tickerApiClient = new SolidiRestAPIClientLibrary({
             userAgent: this.state.userAgent,
             apiKey: '',
             apiSecret: '',
-            domain: 'www.solidi.co',
+            domain: 't2.solidi.co',
             appStateRef: { current: this }
           });
+
 
           // Use public method for ticker
           console.log('[CRYPTO-CACHE] 🔓 Using PUBLIC method for /ticker');
@@ -4752,8 +4899,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
             console.log(`[CRYPTO-CACHE] Processing ${market} (${cryptoSymbol}):`, JSON.stringify(tickerData, null, 2));
 
-            // Skip if not a GBP pair
-            if (quoteCurrency !== baseCurrency) {
+            // Skip if not a GBP or GBPX pair (treat GBPX as GBP)
+            if (quoteCurrency !== baseCurrency && quoteCurrency !== 'GBPX') {
               console.log(`[CRYPTO-CACHE] Skipping ${market} - not a ${baseCurrency} pair`);
               continue;
             }
@@ -4906,6 +5053,37 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         clearInterval(this.cryptoPriceUpdateInterval);
         this.cryptoPriceUpdateInterval = null;
         console.log('🛑 [AppState] Background crypto rate updates stopped');
+      }
+    }
+
+    // Start automatic ticker refresh (15 seconds)
+    // This provides real-time pricing updates for Portfolio, Wallet, Assets pages
+    this.startTickerAutoRefresh = () => {
+      console.log('[TICKER-REFRESH] 🚀 Starting ticker auto-refresh...');
+      
+      // Initial load
+      this.loadTicker();
+      
+      // Set up 15-second interval
+      if (this.tickerRefreshInterval) {
+        clearInterval(this.tickerRefreshInterval);
+      }
+      
+      this.tickerRefreshInterval = setInterval(() => {
+        console.log('[TICKER-REFRESH] 🔄 15-second interval triggered - refreshing ticker prices...');
+        this.loadTicker();
+      }, 15000); // Update every 15 seconds
+      
+      console.log('[TICKER-REFRESH] ✅ Ticker auto-refresh started (15-second interval)');
+      console.log('[TICKER-REFRESH] 💡 All pages will automatically get updated prices every 15 seconds');
+    }
+
+    // Stop ticker auto-refresh
+    this.stopTickerAutoRefresh = () => {
+      if (this.tickerRefreshInterval) {
+        clearInterval(this.tickerRefreshInterval);
+        this.tickerRefreshInterval = null;
+        console.log('🛑 [TICKER-REFRESH] Ticker auto-refresh stopped');
       }
     }
 
@@ -6104,6 +6282,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       getPersonalDetailOptions: this.getPersonalDetailOptions,
       loadCountries: this.loadCountries,
       getCountries: this.getCountries,
+      loadCurrency: this.loadCurrency,
+      getCurrency: this.getCurrency,
       getBaseAssets: this.getBaseAssets,
       getQuoteAssets: this.getQuoteAssets,
       loadTicker: this.loadTicker,
@@ -6144,6 +6324,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       calculateCryptoGBPValue: this.calculateCryptoGBPValue,
       startCryptoPriceUpdates: this.startCryptoPriceUpdates,
       stopCryptoPriceUpdates: this.stopCryptoPriceUpdates,
+      startTickerAutoRefresh: this.startTickerAutoRefresh,
+      stopTickerAutoRefresh: this.stopTickerAutoRefresh,
       getCacheStatus: this.getCacheStatus,
       logCacheStatus: this.logCacheStatus,
       fetchPricesForASpecificVolume: this.fetchPricesForASpecificVolume,
@@ -6193,6 +6375,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         asset_icon: {},
         balance: {},
         country: [],
+        currency: [], // List of all tradable/transferable currencies
         market: [],
         order: [],
         personal_detail_option: {},
@@ -6200,6 +6383,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         transaction: [],
         historic_prices: { "BTC/GBPX": { "1D": [1, 20] } },
         address_book: {}, // Cache for address book data by asset
+      },
+      cache: {
+        timestamps: {} // For tracking cache age of various API calls
       },
       prevAPIData: {
         ticker: {},
