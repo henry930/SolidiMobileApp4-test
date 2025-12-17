@@ -459,9 +459,16 @@ const Register = () => {
         // Handle other errors
         console.log('❌ [UI] Registration failed:', result);
 
+        // Show detailed error message to help user understand why registration failed
+        const errorMessage = result.message 
+          ? result.message 
+          : result.error 
+            ? (typeof result.error === 'string' ? result.error : JSON.stringify(result.error))
+            : "An error occurred during registration. Please check your information and try again.";
+
         Alert.alert(
           "Registration Failed",
-          result.message || "Please try again later.",
+          errorMessage,
           [{ text: "OK" }]
         );
       }
@@ -469,9 +476,12 @@ const Register = () => {
     } catch (err) {
       console.error('❌ [UI] Registration error:', err);
 
+      // Show actual error message to help user diagnose the issue
+      const errorMessage = err.message || err.toString() || "An unexpected error occurred. Please try again.";
+
       Alert.alert(
         "Registration Error",
-        "An unexpected error occurred. Please try again.",
+        errorMessage,
         [{ text: "OK" }]
       );
     } finally {

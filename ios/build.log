@@ -1,0 +1,7 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace SolidiMobileApp4.xcworkspace -scheme SolidiMobileApp4 -configuration Debug -destination "platform=iOS Simulator,name=iPhone 16 Pro" -derivedDataPath build
+
+User defaults from command line:
+    IDEDerivedDataPathOverride = /Users/henry/Solidi/SolidiMobileApp4/ios/build
+    IDEPackageSupportUseBuiltinSCM = YES
+

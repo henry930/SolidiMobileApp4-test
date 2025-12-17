@@ -892,11 +892,24 @@ const DynamicQuestionnaireForm = ({
     const validation = validateForm(true); // true = page-specific validation
     if (!validation.isValid) {
       console.log('❌ [NEXT BUTTON] Page validation failed, showing errors');
-      Alert.alert('Validation Error', validation.errors.join('\n\n'));
+      // Allow user to see errors but still navigate - they can go back to fix
+      // Only block final submission, not page navigation
+      Alert.alert(
+        'Please Review Your Answers',
+        validation.errors.join('\n\n') + '\n\nYou can continue to review other sections or go back to make changes.',
+        [
+          { text: 'Go Back', style: 'cancel' },
+          { text: 'Continue Anyway', onPress: () => proceedToNextPage() }
+        ]
+      );
       return;
     }
     
     console.log('✅ [NEXT BUTTON] Page validation passed, proceeding with navigation');
+    proceedToNextPage();
+  };
+
+  const proceedToNextPage = () => {
     
     if (activeFormData?.pages && currentPage < activeFormData.pages.length - 1) {
       // Check if current page has accountpurpose question and handle conditional navigation
