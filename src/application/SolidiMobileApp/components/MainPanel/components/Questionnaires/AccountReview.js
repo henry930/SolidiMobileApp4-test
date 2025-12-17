@@ -281,10 +281,35 @@ const AccountReview = ({ navigation, onComplete }) => {
             }
             return;
           } else {
-            // FAILED - load second attempt form
-            console.log('[AccountReview] First attempt FAILED - loading crypto-appropriateness-assessment2');
-            setFormId('crypto-appropriateness-assessment2');
+            // FAILED - show retry prompt
+            console.log('[AccountReview] First attempt FAILED - showing retry prompt');
             setIsLoading(false);
+            
+            Alert.alert(
+              'Assessment Not Passed',
+              'Sorry. You did not pass this assessment. Would you like to retry?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                  onPress: () => {
+                    // Redirect to Home page
+                    appState.setMainPanelState({
+                      mainPanelState: 'Home',
+                      pageName: 'default'
+                    });
+                  }
+                },
+                {
+                  text: 'Retry',
+                  onPress: () => {
+                    // Load second attempt form
+                    console.log('[AccountReview] User chose to retry - loading finprom-suitability2');
+                    setFormId('finprom-suitability2');
+                  }
+                }
+              ]
+            );
             return;
           }
         }
