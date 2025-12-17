@@ -139,7 +139,19 @@ dependencies {
     }
 }
 
-apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+// Apply React Native native modules with fallback for different RN versions
+def nativeModulesGradle = file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+if (nativeModulesGradle.exists()) {
+    apply from: nativeModulesGradle
+    applyNativeModulesAppBuildGradle(project)
+} else {
+    // Fallback to React Native Community CLI plugin location
+    def rnCliGradle = file("../../node_modules/@react-native/community-cli-plugin/native_modules.gradle")
+    if (rnCliGradle.exists()) {
+        apply from: rnCliGradle
+        applyNativeModulesAppBuildGradle(project)
+    }
+}
 
 // FontAwesome icons
 // Source:
