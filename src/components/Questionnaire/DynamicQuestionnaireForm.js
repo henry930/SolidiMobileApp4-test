@@ -888,60 +888,38 @@ const DynamicQuestionnaireForm = ({
   const handleNext = () => {
     console.log('🔄 [NEXT BUTTON] Next button clicked - running page-specific validation');
     
-    // For restricted investor, validation already checked by canProceedToNext
-    // For other cases, do page-specific validation
+    // Validate current page only (not the entire form)
     const validation = validateForm(true); // true = page-specific validation
     if (!validation.isValid) {
       console.log('❌ [NEXT BUTTON] Page validation failed');
-      // Only show alert for non-restricted investor validation failures
+      
+      // Check if this is restricted investor validation failure
       const currentPageData = activeFormData.pages[currentPage];
-      const hasAccountPurpose = currentPageData?.questions?.some(q => q.id === 'accountpurpose');
       const hasRestrictedQuestions = currentPageData?.questions?.some(q => 
         q.id === 'prev12months' || q.id === 'next12months'
       );
       
-      // Don't show alert for restricted investor questions - Next button is already disabled
-      if (!hasAccountPurpose && !hasRestrictedQuestions) {
-        Alert.alert(
-          'Please Review Your Answers',
-          validation.errors.join('\n\n') + '\n\nYou can continue to review other sections or go back to make changes.',
-          [
-            { text: 'Go Back', style: 'cancel' },
-            { text: 'Continue Anyway', onPress: () => proceedToNextPage() }
-          ]
-        );
+      // For restricted investor questions, silently prevent navigation (no alert)
+      // User can see they need to answer both questions with 'Yes'
+      if (hasRestrictedQuestions && answers.accountpurpose === 'restricted') {
+        console.log('🚫 [NEXT BUTTON] Restricted investor must answer Yes to both questions - preventing navigation');
+        return; // Just return, don't show alert
       }
+      
+      // For other validation failures, show alert with option to continue or go back
+      Alert.alert(
+        'Please Review Your Answers',
+        validation.errors.join('\n\n') + '\n\nYou can continue to review other sections or go back to make changes.',
+        [
+          { text: 'Go Back', style: 'cancel' },
+          { text: 'Continue Anyway', onPress: () => proceedToNextPage() }
+        ]
+      );
       return;
     }
     
     console.log('✅ [NEXT BUTTON] Page validation passed, proceeding with navigation');
     proceedToNextPage();
-  };
-
-  // Check if user can proceed to next page (for disabling Next button)
-  const canProceedToNext = () => {
-    if (!activeFormData?.pages) return true;
-    
-    const currentPageData = activeFormData.pages[currentPage];
-    if (!currentPageData) return true;
-    
-    // Check if this page has restricted investor questions
-    const hasRestrictedQuestions = currentPageData.questions?.some(q => 
-      q.id === 'prev12months' || q.id === 'next12months'
-    );
-    
-    if (hasRestrictedQuestions && answers.accountpurpose === 'restricted') {
-      // For restricted investor, both questions must be 'yes'
-      const prev12months = answers['prev12months'];
-      const next12months = answers['next12months'];
-      
-      if (prev12months !== 'yes' || next12months !== 'yes') {
-        console.log('🚫 [NEXT BUTTON] Disabled - Restricted investor must answer Yes to both questions');
-        return false;
-      }
-    }
-    
-    return true;
   };
 
   const proceedToNextPage = () => {
@@ -1080,7 +1058,6 @@ const DynamicQuestionnaireForm = ({
         <Button 
           mode="contained" 
           onPress={handleNext}
-          disabled={!canProceedToNext()}
           style={styles.navButton}
           icon={isLastPage() ? "check" : "arrow-right"}
           contentStyle={{ flexDirection: 'row-reverse' }}
