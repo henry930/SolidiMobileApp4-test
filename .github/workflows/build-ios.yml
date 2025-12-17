@@ -15,7 +15,7 @@ on:
 jobs:
   build-ios:
     name: Build iOS Application
-    runs-on: macos-14  # Latest macOS with Xcode 16
+    runs-on: macos-13  # Use macOS 13 with Xcode 15 for better Firebase compatibility
     
     steps:
       - name: Checkout repository
