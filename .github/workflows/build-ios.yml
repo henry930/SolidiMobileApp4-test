@@ -44,7 +44,21 @@ jobs:
       - name: Install CocoaPods dependencies
         run: |
           cd ios
-          pod install --repo-update
+          # Retry pod install up to 3 times on failure
+          for i in 1 2 3; do
+            if pod install --repo-update; then
+              echo "Pod install succeeded"
+              break
+            else
+              if [ $i -lt 3 ]; then
+                echo "Pod install failed, retrying in 10 seconds... (attempt $i/3)"
+                sleep 10
+              else
+                echo "Pod install failed after 3 attempts"
+                exit 1
+              fi
+            fi
+          done
           
       - name: Cache CocoaPods
         uses: actions/cache@v4
