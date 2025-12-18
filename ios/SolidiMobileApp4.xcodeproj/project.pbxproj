@@ -322,7 +322,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# React Native build script\nset -e\n\n# Set Node.js binary path\nexport NODE_BINARY=\"/Users/henry/.nvm/versions/node/v22.20.0/bin/node\"\n\n# Disable Metro auto-start since we're running it manually\nexport RCT_NO_LAUNCH_PACKAGER=1\n\n# Run the React Native build script\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "# React Native build script\nset -e\n\n# Use system Node.js or the one from PATH\n# This works both locally and in CI/CD environments\nif command -v node >/dev/null 2>&1; then\n  export NODE_BINARY=$(command -v node)\nfi\n\n# Disable Metro auto-start since we're running it manually\nexport RCT_NO_LAUNCH_PACKAGER=1\n\n# Run the React Native build script\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
 		06FB573095D37D9907C0511A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
