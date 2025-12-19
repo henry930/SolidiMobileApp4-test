@@ -123,7 +123,7 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath $RUNNER_TEMP/SolidiMobileApp4.xcarchive \
             -allowProvisioningUpdates \
-            DEVELOPMENT_TEAM=MWSWL2JBVG \
+            DEVELOPMENT_TEAM=QG7AWFJCVH \
             archive
             
       - name: Export IPA
