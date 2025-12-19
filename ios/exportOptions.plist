@@ -15,11 +15,11 @@
     <key>destination</key>
     <string>export</string>
     <key>signingStyle</key>
-    <string>automatic</string>
+    <string>manual</string>
     <key>provisioningProfiles</key>
     <dict>
-        <key>co.solidi.mobile.test</key>
-        <string>iOS Team Provisioning Profile: co.solidi.mobile.test</string>
+        <key>com.henry.soliditestapp</key>
+        <string>Solidi Test App Store Profile</string>
     </dict>
 </dict>
 </plist>
