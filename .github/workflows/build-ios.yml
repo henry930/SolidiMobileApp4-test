@@ -134,6 +134,24 @@ jobs:
             -exportPath $RUNNER_TEMP/build \
             -exportOptionsPlist ExportOptions.plist
             
+      - name: Upload to TestFlight
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release')
+        env:
+          API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          # Save API key to file
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$API_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+          
+          # Upload to TestFlight
+          xcrun altool --upload-app \
+            --type ios \
+            --file $RUNNER_TEMP/build/*.ipa \
+            --apiKey $API_KEY_ID \
+            --apiIssuer $API_ISSUER_ID
+            
       - name: Upload IPA Artifact
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release')
         uses: actions/upload-artifact@v4
