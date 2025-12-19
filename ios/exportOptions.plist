@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>method</key>
-    <string>development</string>
+    <string>app-store</string>
     <key>teamID</key>
     <string>QG7AWFJCVH</string>
     <key>uploadBitcode</key>
@@ -15,6 +15,11 @@
     <key>destination</key>
     <string>export</string>
     <key>signingStyle</key>
-    <string>automatic</string>
+    <string>manual</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.henry.soliditestapp</key>
+        <string>Solidi TestFlight Profile</string>
+    </dict>
 </dict>
 </plist>

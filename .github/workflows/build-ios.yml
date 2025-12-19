@@ -122,13 +122,10 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath $RUNNER_TEMP/SolidiMobileApp4.xcarchive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
             archive
             
       - name: Export IPA
-        if: false  # Disabled - cannot export without code signing in CI
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release')
         run: |
           cd ios
           xcodebuild -exportArchive \
@@ -140,8 +137,8 @@ jobs:
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release')
         uses: actions/upload-artifact@v4
         with:
-          name: ios-archive-${{ github.sha }}
-          path: ${{ runner.temp }}/SolidiMobileApp4.xcarchive
+          name: ios-app-${{ github.sha }}
+          path: ${{ runner.temp }}/build/*.ipa
           retention-days: 30
           
       - name: Upload Debug Logs
