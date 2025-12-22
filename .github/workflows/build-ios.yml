@@ -41,6 +41,14 @@ jobs:
           # Force reinstall cli-platform-android to ensure native_modules.gradle is present
           npm install --force --legacy-peer-deps @react-native-community/cli-platform-android@12.3.7
         
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
       - name: Install CocoaPods dependencies
         run: |
           cd ios
@@ -59,14 +67,6 @@ jobs:
               fi
             fi
           done
-          
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
-        with:
-          path: ios/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
             
       # Code signing setup (will be needed for production builds)
       - name: Import Code Signing Certificates
