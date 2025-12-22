@@ -71,6 +71,17 @@ let Login = () => {
   let [passwordVisible, setPasswordVisible] = useState(false);
 
 
+  // Clear login form fields when user is logged out
+  useEffect(() => {
+    if (!appState.user.isAuthenticated && !appState.user.apiCredentialsFound) {
+      console.log('🧹 [LOGIN] User logged out - clearing email and password fields');
+      setEmail('');
+      setPassword('');
+      setTFA('');
+      setErrorMessage('');
+      setUploadMessage('');
+    }
+  }, [appState.user.isAuthenticated, appState.user.apiCredentialsFound]);
 
 
   // Initial setup.

@@ -4168,7 +4168,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
               const waitHours = Math.ceil(waitTimeMs / (1000 * 60 * 60));
               console.log(`⏰ Still in cooling period. Wait ${waitHours} more hours`);
 
-              // Show popup and force logout
+              // Show popup and force logout with credential clearing
               Alert.alert(
                 '24 Hour Wait Required',
                 `You need to wait until ${coolEndTime.toLocaleString()} before you can take the test again. (${waitHours} hours remaining)`,
@@ -4176,8 +4176,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
                   {
                     text: 'OK',
                     onPress: () => {
-                      console.log('🚪 User confirmed popup - forcing logout');
-                      this.logout();
+                      console.log('🚪 User confirmed popup - forcing logout and clearing credentials');
+                      this.logout(true); // Pass true to clear stored credentials and reset login form
                     }
                   }
                 ],

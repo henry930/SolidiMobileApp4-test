@@ -26,8 +26,13 @@ let Header = (props) => {
   let statesWhereBackButtonIsHidden = [
     'Trade',
     'PIN',
+    'Register',
     'RegisterConfirm',
     'RegisterConfirm2',
+    'RegistrationCompletion',
+    'EmailVerification',
+    'PhoneVerification',
+    'AccountReview'
   ]
   let hideBackButton = statesWhereBackButtonIsHidden.includes(appState.mainPanelState);
 
@@ -79,7 +84,7 @@ let Header = (props) => {
   const userId = appState?.user?.email || null;
 
   // Hide notification button on anonymous pages
-  const hideNotificationButton = anonymousPages.includes(appState.mainPanelState);
+  const hideNotificationButton = anonymousPages.includes(appState.mainPanelState) || appState.mainPanelState === 'RegistrationCompletion';
 
   let notificationButton = (
     <View style={{ marginLeft: includeBackButton ? 8 : 0 }}>
