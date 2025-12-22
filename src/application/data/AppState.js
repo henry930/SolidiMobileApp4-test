@@ -1385,6 +1385,17 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         return;
       }
 
+      // We check for "upgrade required" on every screen load.
+      try {
+        await this.state.checkIfAppUpdateRequired();
+      } catch (error) {
+        if (developmentModeBypass) {
+          log(`checkIfAppUpdateRequired failed, continuing with development mode: ${error.message}`);
+        } else {
+          throw error;
+        }
+      }
+
       // Load public info that rarely changes.
       if (!this.state.apiVersionLoaded) {
         try {
@@ -3180,9 +3191,55 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
     this.checkIfAppUpdateRequired = async () => {
       let fName = 'checkIfAppUpdateRequired';
-      // Disabled - no longer checking for app updates
-      log(`${fName}: App update check disabled`);
-      return;
+
+      // Use sample data in development mode to bypass network issues
+      let data;
+      if (developmentModeBypass) {
+        log(`${fName}: Using sample data (development mode bypass enabled)`);
+        data = sampleData.appVersion;
+      } else {
+        data = await this.state.publicMethod({
+          functionName: fName,
+          apiRoute: 'app_latest_version',
+          httpMethod: 'GET',
+        });
+        if (data == 'DisplayedError') return;
+      }
+
+      let expectedKeys = 'version minimumVersionRequired'.split(' ');
+      let foundKeys = _.keys(data);
+      if (!_.isEqual(_.intersection(expectedKeys, foundKeys), expectedKeys)) {
+        if (developmentModeBypass) {
+          log(`${fName}: Using fallback sample data due to missing keys`);
+          data = sampleData.appVersion;
+        } else {
+          var msg = `${fName}: Missing expected key(s) in response data from API endpoint '/app_latest_version'. Expected: ${jd(expectedKeys)}; Found: ${jd(foundKeys)}`;
+          return this.state.switchToErrorState({ message: msg });
+        }
+      }
+      let latestAppVersion = data.version;
+      var msg = `Internal app version: ${appVersion} (build number ${appBuildNumber}). Latest app version specified on Solidi API (${appTier}): ${latestAppVersion}`;
+      deb(msg);
+      let os = Platform.OS;
+      let minimumVersionRequiredIos = data.minimumVersionRequired.ios.version;
+      let minimumVersionRequiredAndroid = data.minimumVersionRequired.android.version;
+      var msg = `Minimum version required for iOS: ${minimumVersionRequiredIos}. Minimum version required for Android: ${minimumVersionRequiredAndroid}.`;
+      deb(msg);
+      let minimumVersionRequired = 'Error';
+      if (os == 'ios') {
+        minimumVersionRequired = minimumVersionRequiredIos;
+      } else if (os == 'android') {
+        minimumVersionRequired = minimumVersionRequiredAndroid;
+      }
+      var msg = `Platform OS: ${os}. Minimum version required = ${minimumVersionRequired}.`;
+      deb(msg);
+      let updateRequired = semver.gt(minimumVersionRequired, appVersion);
+      //updateRequired = true; // dev
+      log(`Update required: ${updateRequired}`);
+      if (updateRequired) {
+        this.setState({ appUpdateRequired: true });
+        this.state.changeState('UpdateApp');
+      }
     }
 
 
@@ -3541,63 +3598,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
 
-    this.loadCurrency = async () => {
-      // Load list of ALL tradable/transferable currencies
-      // Check cache first to avoid unnecessary API calls
-      if (this.state.apiData.currency && this.state.cache?.timestamps?.currency) {
-        const cacheAge = Date.now() - this.state.cache.timestamps.currency;
-        const cacheAgeMinutes = Math.floor(cacheAge / 60000);
-        if (cacheAge < 3600000) { // 1 hour cache
-          console.log(`✅ [CURRENCY] Using cached data (${cacheAgeMinutes} minutes old)`);
-          return this.state.apiData.currency;
-        }
-      }
-
-      let data = await this.state.privateMethod({
-        httpMethod: 'POST',
-        apiRoute: 'currency',
-        params: {},
-      });
-      if (data == 'DisplayedError') return;
-      
-      // Cache the currency data
-      let msg = "Currency list loaded from server.";
-      if (jd(data) === jd(this.state.apiData.currency)) {
-        log(msg + " No change.");
-      } else {
-        log(msg + " New data saved to appState. " + jd(data));
-        this.state.apiData.currency = data;
-        // Update cache timestamp
-        if (!this.state.cache) this.state.cache = {};
-        if (!this.state.cache.timestamps) this.state.cache.timestamps = {};
-        this.state.cache.timestamps.currency = Date.now();
-      }
-      return data;
-    }
-
-
-    this.getCurrency = () => {
-      // Get the list of available currencies for trading/transfer
-      let defaultList = ['BTC', 'ETH', 'LTC', 'XRP', 'GBP', 'EUR', 'USD'];
-      let currencies = this.state.apiData.currency;
-      
-      console.log('🔍 [GET-CURRENCY] Called getCurrency()');
-      console.log('🔍 [GET-CURRENCY] apiData.currency:', JSON.stringify(currencies));
-      console.log('🔍 [GET-CURRENCY] isEmpty?:', _.isEmpty(currencies));
-      console.log('🔍 [GET-CURRENCY] Will return:', _.isEmpty(currencies) ? 'DEFAULT LIST' : 'API DATA');
-      
-      if (_.isEmpty(currencies)) {
-        console.log('🔍 [GET-CURRENCY] Returning default:', defaultList);
-        return defaultList;
-      }
-      console.log('🔍 [GET-CURRENCY] Returning API data:', currencies);
-      return currencies;
-    }
-
-
     this.loadTicker = async () => {
-      let data = await this.state.privateMethod({
-        httpMethod: 'POST',
+      let data = await this.state.publicMethod({
+        httpMethod: 'GET',
         apiRoute: 'ticker',
         params: {},
       });
@@ -3634,29 +3637,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         }
       }
       // End Tmp 2
-      
-      // Process ticker data to calculate price as (bid + ask) / 2
-      // According to new requirements: price should be average of bid and ask
-      if (data && typeof data === 'object') {
-        for (let market in data) {
-          if (data[market] && !data[market].error) {
-            const bid = parseFloat(data[market].bid);
-            const ask = parseFloat(data[market].ask);
-            
-            // Calculate average price if both bid and ask are available
-            if (!isNaN(bid) && !isNaN(ask) && bid > 0 && ask > 0) {
-              const avgPrice = ((bid + ask) / 2).toFixed(2);
-              data[market].price = avgPrice;
-              data[market].calculatedPrice = true; // Flag to indicate calculated price
-              console.log(`[TICKER] ${market}: bid=${bid}, ask=${ask}, avg=${avgPrice}`);
-            } else if (data[market].price) {
-              // Keep existing price if bid/ask not available
-              console.log(`[TICKER] ${market}: using existing price=${data[market].price}`);
-            }
-          }
-        }
-      }
-      
       let msg = "Prices loaded from server.";
       this.state.priceLoadCount += 1;
       if (jd(data) === jd(this.state.apiData.ticker)) {
@@ -3746,132 +3726,17 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       }
     }
 
-    // Load currency list from /v1/currency API
-    // This provides a comprehensive list of ALL supported currencies/assets
-    // Used by: Address Book for asset selection
-    this.loadCurrency = async () => {
-      console.log('🔄 [CURRENCY] Loading currency list from /v1/currency API...');
-
-      // Check if already cached
-      if (this.state.apiData.currency && this.state.cache?.timestamps?.currency) {
-        const cacheAge = Date.now() - this.state.cache.timestamps.currency;
-        const cacheAgeMinutes = Math.floor(cacheAge / 60000);
-        console.log(`✅ [CURRENCY] Using cached data (${cacheAgeMinutes} minutes old)`);
-        return this.state.apiData.currency;
-      }
-
-      let data = await this.state.publicMethod({
-        httpMethod: 'GET',
-        apiRoute: 'currency',
-        params: {},
-      });
-
-      if (data == 'DisplayedError') {
-        console.log('❌ [CURRENCY] Error loading currency list');
-        return;
-      }
-
-      /* Example data (expected format - array of currency codes or object):
-      ["BTC", "ETH", "LTC", "XRP", "GBP", "USD", "EUR", ...]
-      OR
-      {"BTC": {...}, "ETH": {...}, "GBP": {...}, ...}
-      */
-
-      console.log('✅ [CURRENCY] Currency list loaded from API');
-      console.log('📋 [CURRENCY] Response type:', Array.isArray(data) ? 'Array' : typeof data);
-      console.log('📋 [CURRENCY] Data:', JSON.stringify(data, null, 2));
-
-      // Save to apiData
-      let msg = "Currency list loaded from server.";
-      if (jd(data) === jd(this.state.apiData.currency)) {
-        log(msg + " No change.");
-      } else {
-        log(msg + " New data saved to appState. " + jd(data));
-        this.state.apiData.currency = data;
-      }
-
-      // Update cache timestamp
-      if (!this.state.cache) {
-        this.state.cache = { timestamps: {} };
-      }
-      if (!this.state.cache.timestamps) {
-        this.state.cache.timestamps = {};
-      }
-      this.state.cache.timestamps.currency = Date.now();
-      console.log('[CACHE] Currency data cached at:', new Date(this.state.cache.timestamps.currency).toISOString());
-
-      return data;
-    }
-
     this.getTicker = () => {
-      console.log('🎯 [GET-TICKER] Called getTicker()');
-      console.log('🎯 [GET-TICKER] apiData.ticker:', JSON.stringify(this.state.apiData.ticker));
-      console.log('🎯 [GET-TICKER] Number of markets:', Object.keys(this.state.apiData.ticker || {}).length);
       return this.state.apiData.ticker;
     }
 
 
     this.getTickerForMarket = (market) => {
       // Get the ticker price held in the appState.
-      // Price is calculated as (bid + ask) / 2 in loadTicker
-      
-      // Try both market names (GBP and GBPX)
-      let tickerData = this.state.apiData.ticker[market];
-      
-      // If market not found with GBP, try GBPX variant
-      if (_.isUndefined(tickerData) && market.endsWith('/GBP')) {
-        const marketX = market.replace('/GBP', '/GBPX');
-        tickerData = this.state.apiData.ticker[marketX];
-        if (tickerData) {
-          console.log(`[TICKER] Found ${marketX} instead of ${market}`);
-        }
-      }
-      // If market not found with GBPX, try GBP variant
-      else if (_.isUndefined(tickerData) && market.endsWith('/GBPX')) {
-        const marketGBP = market.replace('/GBPX', '/GBP');
-        tickerData = this.state.apiData.ticker[marketGBP];
-        if (tickerData) {
-          console.log(`[TICKER] Found ${marketGBP} instead of ${market}`);
-        }
-      }
-      
-      if (_.isUndefined(tickerData)) return null;
-      
-      // Check for error in ticker data (e.g., "Empty orderbook")
-      if (tickerData.error) {
-        console.log(`[TICKER] ${market}: Error - ${tickerData.error}`);
-        return null;
-      }
-      
-      // If price is already calculated, return it
-      if (!_.isUndefined(tickerData.price) && tickerData.price !== null) {
-        let price = tickerData.price;
-        return { 
-          price,
-          bid: tickerData.bid,
-          ask: tickerData.ask,
-          hasMarket: true
-        };
-      }
-      
-      // If no price but we have bid and ask, calculate it now
-      if (tickerData.bid && tickerData.ask) {
-        const bid = parseFloat(tickerData.bid);
-        const ask = parseFloat(tickerData.ask);
-        if (!isNaN(bid) && !isNaN(ask)) {
-          const price = ((bid + ask) / 2).toFixed(2);
-          console.log(`[TICKER] ${market}: Calculating price on-the-fly: (${bid} + ${ask}) / 2 = ${price}`);
-          return { 
-            price,
-            bid: tickerData.bid,
-            ask: tickerData.ask,
-            hasMarket: true
-          };
-        }
-      }
-      
-      console.log(`[TICKER] ${market}: No valid price data available`);
-      return null;
+      if (_.isUndefined(this.state.apiData.ticker[market])) return null;
+      if (_.isUndefined(this.state.apiData.ticker[market].price)) return null;
+      let price = this.state.apiData.ticker[market].price;
+      return { price };
     }
 
 
@@ -3887,7 +3752,7 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
       //this.state.loadingPrices = true;
       this.setState({ loadingPrices: true });
-      // Use development domain for public CSV files (not authentication-protected)
+      // Use test domain for public CSV files (where they're actually hosted)
       let domain = "t2.solidi.co";
       let remotemarket = market.replace("/", "-");
       let url = "https://" + domain + "/" + remotemarket + "-" + period + ".csv";
@@ -4108,11 +3973,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       // Start background crypto price updates after login
       this.state.startCryptoPriceUpdates();
       console.log('[REG-CHECK] ✅ Crypto price updates started');
-      
-      console.log('[REG-CHECK] Step 8b: Starting ticker auto-refresh (15 seconds)...');
-      // Start ticker auto-refresh for real-time pricing across all pages
-      this.state.startTickerAutoRefresh();
-      console.log('[REG-CHECK] ✅ Ticker auto-refresh started');
 
       console.log('[REG-CHECK] Step 9: Preloading address books for all assets...');
       // Load all address books to cache after authentication
@@ -4138,26 +3998,11 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       if (!this.state.balancesLoaded) {
         console.log('[REG-CHECK] Calling loadBalances() for the first time...');
         let balanceData = await this.loadBalances();
-        console.log('[REG-CHECK] Balance data loaded:', balanceData ? 'Success' : 'Failed');
-
-        // Load currency list (Issue #79 - cache currency data at login)
-        console.log('[REG-CHECK] Calling loadCurrency() to cache currency list...');
-        await this.loadCurrency();
-        console.log('[REG-CHECK] Currency data loaded and cached');
-
-        // Check if user has any balances
-        const hasBalances = balanceData && Object.keys(balanceData).length > 0;
         this.state.balancesLoaded = true;
         console.log('[REG-CHECK] ✅ User balances loaded and cached');
         console.log('[REG-CHECK] Balance data returned:', balanceData);
         console.log('[REG-CHECK] Assets in balance:', Object.keys(balanceData || {}));
         console.log('[REG-CHECK] balancesLoaded flag AFTER:', this.state.balancesLoaded);
-        
-        // Step 10b: Load currency list (all tradable/transferable assets)
-        console.log('[REG-CHECK] Step 10b: Loading currency list from /currency API...');
-        await this.loadCurrency();
-        console.log('[REG-CHECK] ✅ Currency list loaded and cached');
-        console.log('[REG-CHECK] Available currencies:', this.getCurrency());
       } else {
         console.log('[REG-CHECK] ⏭️  User balances already loaded, skipping');
         console.log('[REG-CHECK] Current cached assets:', Object.keys(this.state.apiData.balance || {}));
@@ -4766,59 +4611,32 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
     }
 
     this.getAvailableAssets = () => {
-      // Get list of ALL available assets from the currency API
-      // Used in: AddressBook, Trade pages
-      // Returns ALL assets from /v1/currency API (or falls back to /v1/balance)
+      // Get list of ALL assets available for trading from the balance API
+      // Used in: Trade, Assets, AddressBook pages
+      // Returns ALL assets from /balance API response (including those with 0 balance)
       console.log('\n' + '🔍'.repeat(60));
-      console.log('🔍 getAvailableAssets CALLED - FROM CURRENCY API');
+      console.log('🔍 getAvailableAssets CALLED - FOR TRADING');
       console.log('🔍 apiData exists?', !_.isUndefined(this.state.apiData));
-      console.log('🔍 Currency data exists?', !_.isUndefined(this.state.apiData.currency));
       console.log('🔍 Balance data exists?', !_.isUndefined(this.state.apiData.balance));
+      console.log('🔍 balancesLoaded flag:', this.state.balancesLoaded);
+      console.log('🔍 Full balance data:', JSON.stringify(this.state.apiData.balance, null, 2));
 
-      // First try currency API data (preferred for address book)
-      if (!_.isUndefined(this.state.apiData.currency)) {
-        let currencyAssets;
-
-        // Handle both array and object formats
-        if (Array.isArray(this.state.apiData.currency)) {
-          // Currency API returns array of objects: [{code: "BTC", description: "Bitcoin", ...}, ...]
-          // Extract just the 'code' property from each object
-          currencyAssets = this.state.apiData.currency.map(item => {
-            if (typeof item === 'object' && item.code) {
-              return item.code;
-            }
-            return item; // Fallback if it's already a string
-          });
-        } else if (typeof this.state.apiData.currency === 'object') {
-          currencyAssets = Object.keys(this.state.apiData.currency);
-        } else {
-          console.log('❌ getAvailableAssets: Currency data has unexpected format');
-          currencyAssets = [];
-        }
-
-        console.log(`✅ getAvailableAssets: Found ${currencyAssets.length} assets from currency API`);
-        console.log(`✅ ALL AVAILABLE ASSETS:`, currencyAssets);
-        console.log(`📌 Source: /v1/currency API`);
+      if (_.isUndefined(this.state.apiData.balance)) {
+        console.log('❌ getAvailableAssets: Balance data is UNDEFINED');
+        console.log('⚠️ getAvailableAssets: This means balance API was not called or failed');
         console.log('🔍'.repeat(60) + '\n');
-        log(`getAvailableAssets: Found ${currencyAssets.length} assets from currency API:`, currencyAssets);
-        return currencyAssets;
+        return [];
       }
 
-      // Fallback to balance API if currency not loaded
-      if (!_.isUndefined(this.state.apiData.balance)) {
-        let allAssets = Object.keys(this.state.apiData.balance);
-        console.log(`⚠️ getAvailableAssets: Currency API not loaded, using fallback balance API`);
-        console.log(`⚠️ Found ${allAssets.length} assets from balance API:`, allAssets);
-        console.log(`📌 Source: /v1/balance API (fallback)`);
-        console.log('🔍'.repeat(60) + '\n');
-        log(`getAvailableAssets: Using fallback - ${allAssets.length} assets from balance:`, allAssets);
-        return allAssets;
-      }
+      // Return ALL assets from balance API (tradeable assets)
+      let allAssets = Object.keys(this.state.apiData.balance);
 
-      console.log('❌ getAvailableAssets: No currency or balance data available');
-      console.log('⚠️ getAvailableAssets: This means neither API was called or both failed');
+      console.log(`✅ getAvailableAssets: Found ${allAssets.length} total tradeable assets from balance API`);
+      console.log(`✅ ALL TRADEABLE ASSETS:`, allAssets);
+      console.log(`📌 Use Case: Trade, Assets, AddressBook pages`);
       console.log('🔍'.repeat(60) + '\n');
-      return [];
+      log(`getAvailableAssets: Found ${allAssets.length} tradeable assets:`, allAssets);
+      return allAssets;
     }
 
     this.getOwnedAssets = () => {
@@ -4911,16 +4729,15 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
           console.log('[CRYPTO-CACHE] ✅ Using existing ticker data from apiData.ticker');
           response = this.state.apiData.ticker;
         } else {
-          // SPECIAL: Use t2.solidi.co for ticker endpoint only
-          console.log('[CRYPTO-CACHE] 🌐 Creating temporary API client with t2.solidi.co for /ticker');
+          // SPECIAL: Use www.solidi.co for ticker endpoint only
+          console.log('[CRYPTO-CACHE] 🌐 Creating temporary API client with www.solidi.co for /ticker');
           const tickerApiClient = new SolidiRestAPIClientLibrary({
             userAgent: this.state.userAgent,
             apiKey: '',
             apiSecret: '',
-            domain: 't2.solidi.co',
+            domain: 'www.solidi.co',
             appStateRef: { current: this }
           });
-
 
           // Use public method for ticker
           console.log('[CRYPTO-CACHE] 🔓 Using PUBLIC method for /ticker');
@@ -4992,8 +4809,8 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
 
             console.log(`[CRYPTO-CACHE] Processing ${market} (${cryptoSymbol}):`, JSON.stringify(tickerData, null, 2));
 
-            // Skip if not a GBP or GBPX pair (treat GBPX as GBP)
-            if (quoteCurrency !== baseCurrency && quoteCurrency !== 'GBPX') {
+            // Skip if not a GBP pair
+            if (quoteCurrency !== baseCurrency) {
               console.log(`[CRYPTO-CACHE] Skipping ${market} - not a ${baseCurrency} pair`);
               continue;
             }
@@ -5146,37 +4963,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         clearInterval(this.cryptoPriceUpdateInterval);
         this.cryptoPriceUpdateInterval = null;
         console.log('🛑 [AppState] Background crypto rate updates stopped');
-      }
-    }
-
-    // Start automatic ticker refresh (15 seconds)
-    // This provides real-time pricing updates for Portfolio, Wallet, Assets pages
-    this.startTickerAutoRefresh = () => {
-      console.log('[TICKER-REFRESH] 🚀 Starting ticker auto-refresh...');
-      
-      // Initial load
-      this.loadTicker();
-      
-      // Set up 15-second interval
-      if (this.tickerRefreshInterval) {
-        clearInterval(this.tickerRefreshInterval);
-      }
-      
-      this.tickerRefreshInterval = setInterval(() => {
-        console.log('[TICKER-REFRESH] 🔄 15-second interval triggered - refreshing ticker prices...');
-        this.loadTicker();
-      }, 15000); // Update every 15 seconds
-      
-      console.log('[TICKER-REFRESH] ✅ Ticker auto-refresh started (15-second interval)');
-      console.log('[TICKER-REFRESH] 💡 All pages will automatically get updated prices every 15 seconds');
-    }
-
-    // Stop ticker auto-refresh
-    this.stopTickerAutoRefresh = () => {
-      if (this.tickerRefreshInterval) {
-        clearInterval(this.tickerRefreshInterval);
-        this.tickerRefreshInterval = null;
-        console.log('🛑 [TICKER-REFRESH] Ticker auto-refresh stopped');
       }
     }
 
@@ -6375,12 +6161,9 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       getPersonalDetailOptions: this.getPersonalDetailOptions,
       loadCountries: this.loadCountries,
       getCountries: this.getCountries,
-      loadCurrency: this.loadCurrency,
-      getCurrency: this.getCurrency,
       getBaseAssets: this.getBaseAssets,
       getQuoteAssets: this.getQuoteAssets,
       loadTicker: this.loadTicker,
-      loadCurrency: this.loadCurrency,
       loadCoinGeckoPrices: this.loadCoinGeckoPrices,
       loadTickerWithCoinGecko: this.loadTickerWithCoinGecko,
       getTicker: this.getTicker,
@@ -6418,8 +6201,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
       calculateCryptoGBPValue: this.calculateCryptoGBPValue,
       startCryptoPriceUpdates: this.startCryptoPriceUpdates,
       stopCryptoPriceUpdates: this.stopCryptoPriceUpdates,
-      startTickerAutoRefresh: this.startTickerAutoRefresh,
-      stopTickerAutoRefresh: this.stopTickerAutoRefresh,
       getCacheStatus: this.getCacheStatus,
       logCacheStatus: this.logCacheStatus,
       fetchPricesForASpecificVolume: this.fetchPricesForASpecificVolume,
@@ -6469,7 +6250,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         asset_icon: {},
         balance: {},
         country: [],
-        currency: [], // List of all tradable/transferable currencies
         market: [],
         order: [],
         personal_detail_option: {},
@@ -6477,9 +6257,6 @@ _.isEmpty(appState.stashedState) = ${_.isEmpty(appState.stashedState)}
         transaction: [],
         historic_prices: { "BTC/GBPX": { "1D": [1, 20] } },
         address_book: {}, // Cache for address book data by asset
-      },
-      cache: {
-        timestamps: {} // For tracking cache age of various API calls
       },
       prevAPIData: {
         ticker: {},

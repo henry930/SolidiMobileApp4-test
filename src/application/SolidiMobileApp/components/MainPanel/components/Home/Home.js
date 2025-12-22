@@ -46,12 +46,11 @@ import logger from 'src/util/logger';
 let logger2 = logger.extend('Home');
 let { deb, dj, log, lj } = logger.getShortcuts(logger2);
 
-console.log('🔄 HOME COMPONENT LOADED - VERSION 3.0 - TESTING BLANK PAGE FIX');
+console.log('🔄 HOME COMPONENT LOADED - VERSION 2.0');
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const Home = () => {
-  console.log('🏠 HOME COMPONENT RENDERING - App should appear now!');
   const appState = useContext(AppStateContext);
   const theme = useTheme();
 
@@ -296,10 +295,12 @@ const Home = () => {
         }
 
         // STEP 6: Generate graph data using transaction history and historical prices
+        console.log('[GRAPH] 📊 STEP 6: Generating portfolio value graph based on transaction history...');
 
         const graphPoints = [];
 
         // Load ALL transactions (not just recent 5)
+        console.log('[GRAPH] 📥 Loading full transaction history...');
         let allTransactions = [];
         try {
           const transactionResponse = await appState.privateMethod({
@@ -311,6 +312,7 @@ const Home = () => {
           if (transactionResponse && !transactionResponse.error) {
             const dataModel = new HistoryDataModel();
             allTransactions = dataModel.loadTransactions(transactionResponse);
+            console.log(`[GRAPH] ✅ Loaded ${allTransactions.length} total transactions`);
 
             // ENHANCEMENT: Discover assets from transactions
             const assetsFromTransactions = new Set();
@@ -325,14 +327,18 @@ const Home = () => {
             assetsFromTransactions.forEach(assetCode => {
               if (!assets.find(a => a.asset === assetCode)) {
                 assets.push({ asset: assetCode, name: assetCode });
+                console.log(`[GRAPH] 🔍 Discovered asset from transactions: ${assetCode}`);
               }
             });
           } else {
+            console.log('[GRAPH] ⚠️ No transactions found');
           }
         } catch (error) {
+          console.log('[GRAPH] ❌ Error loading transactions:', error.message);
         }
 
         // Load historical prices for ALL crypto assets
+        console.log('[GRAPH] 📥 Loading historical prices for all assets...');
         const historicalPrices = {}; // { 'BTC/GBP': { prices: [...], dataPoints: N, isValid: true }, ... }
 
         for (const asset of assets) {
@@ -350,17 +356,24 @@ const Home = () => {
               const minPrice = Math.min(...prices);
               const maxPrice = Math.max(...prices);
               const priceVariation = maxPrice - minPrice;
+              console.log(`[GRAPH] ✅ Loaded ${prices.length} prices for ${market}`);
+              console.log(`[GRAPH] 📊 ${market} price range: £${minPrice.toFixed(2)} - £${maxPrice.toFixed(2)} (variation: £${priceVariation.toFixed(2)})`);
 
               // CRITICAL CHECK: If all prices are identical, the graph will be flat!
               if (priceVariation < 0.01) {
+                console.log(`[GRAPH] ⚠️⚠️⚠️ CRITICAL: ${market} historical prices have ZERO variation!`);
+                console.log(`[GRAPH] ⚠️ All ${prices.length} prices are £${minPrice.toFixed(2)}`);
+                console.log(`[GRAPH] ⚠️ This will cause a flat graph even with correct code!`);
               }
 
             } else {
+              console.log(`[GRAPH] ⚠️ No historical prices for ${market}`);
 
               // FALLBACK: Generate synthetic historical prices based on current price
               // This provides a better user experience than a flat line
               const currentPrice = priceData[market] ? parseFloat(priceData[market].price) : 0;
               if (currentPrice > 0) {
+                console.log(`[GRAPH] 💡 Generating synthetic historical prices for ${market} based on current price £${currentPrice.toFixed(2)}`);
 
                 // Generate 30 price points with realistic crypto volatility
                 const syntheticPrices = [];
@@ -385,17 +398,21 @@ const Home = () => {
 
                 const minPrice = Math.min(...syntheticPrices);
                 const maxPrice = Math.max(...syntheticPrices);
+                console.log(`[GRAPH] ✅ Generated ${syntheticPrices.length} synthetic prices for ${market}`);
+                console.log(`[GRAPH] 📊 ${market} synthetic range: £${minPrice.toFixed(2)} - £${maxPrice.toFixed(2)}`);
               } else {
                 historicalPrices[market] = { prices: [], dataPoints: 0, isValid: false };
               }
 
             }
           } catch (error) {
+            console.log(`[GRAPH] ❌ Error loading prices for ${market}:`, error.message);
             historicalPrices[market] = { prices: [], dataPoints: 0, isValid: false };
           }
         }
 
         // Calculate balances for each day by replaying transactions
+        console.log('[GRAPH] 🔄 Calculating daily balances from transaction history...');
 
         const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
 
@@ -406,6 +423,7 @@ const Home = () => {
           const balance = parseFloat(appState.getBalance(asset.asset)) || 0;
           currentBalances[asset.asset] = balance;
         }
+        console.log('[GRAPH] 💰 Current balances:', currentBalances);
 
         // Filter transactions from last 30 days and sort by timestamp (oldest first)
         const recentTransactions = allTransactions
@@ -415,16 +433,15 @@ const Home = () => {
           })
           .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-        // DEBUG: Log transactions for graph calculation
-        console.log('[GRAPH_DEBUG] 📊 Recent transactions for graph:', {
-          totalTransactions: recentTransactions.length,
-          transactions: recentTransactions.map(tx => ({
-            date: new Date(tx.timestamp).toISOString().split('T')[0],
+        console.log(`[GRAPH] 📊 Found ${recentTransactions.length} transactions in last 30 days`);
+        if (recentTransactions.length > 0) {
+          console.log('[GRAPH] 📝 Sample transactions:', recentTransactions.slice(0, 3).map(tx => ({
             type: tx.type,
             asset: tx.asset || tx.currency,
-            amount: tx.amount
-          }))
-        });
+            amount: tx.amount,
+            timestamp: tx.timestamp
+          })));
+        }
 
         // NEW APPROACH: Calculate balance at 30 days ago by reversing ALL transactions from that point
         // Then replay forward day by day
@@ -438,12 +455,14 @@ const Home = () => {
         const reverseTransaction = (balances, tx) => {
           const asset = tx.asset || tx.currency;
           if (!asset) {
+            console.log('[GRAPH] ⚠️ Transaction missing asset:', tx);
             return;
           }
 
           // Initialize asset balance if not present
           if (balances[asset] === undefined) {
             balances[asset] = 0;
+            console.log(`[GRAPH] 🆕 Initialized balance for ${asset}`);
           }
 
           const amount = parseFloat(tx.amount) || 0;
@@ -464,8 +483,10 @@ const Home = () => {
             case 'SWAP':
             case 'TRADE':
               // For complex transactions, log and skip for now
+              console.log(`[GRAPH] ⚠️ Skipping complex transaction type: ${tx.type}`);
               break;
             default:
+              console.log(`[GRAPH] ⚠️ Unknown transaction type: ${tx.type} for ${asset}`);
           }
         };
 
@@ -473,8 +494,7 @@ const Home = () => {
           reverseTransaction(balances30DaysAgo, tx);
         }
 
-        console.log('[GRAPH_DEBUG] 💰 Balance 30 days ago (after reversing transactions):', balances30DaysAgo);
-        console.log('[GRAPH_DEBUG] 💰 Current balances:', currentBalances);
+        console.log('[GRAPH] 💰 Calculated balance 30 days ago:', balances30DaysAgo);
 
         // Step 2: Now replay FORWARD, day by day, applying transactions
         let runningBalances = { ...balances30DaysAgo };
@@ -514,8 +534,10 @@ const Home = () => {
               case 'SWAP':
               case 'TRADE':
                 // For complex transactions, log and skip
+                console.log(`[GRAPH] ⚠️ Skipping complex transaction type: ${tx.type}`);
                 break;
               default:
+                console.log(`[GRAPH] ⚠️ Unknown transaction type: ${tx.type} for ${asset}`);
             }
           };
 
@@ -527,6 +549,7 @@ const Home = () => {
               if (dayIndex % 10 === 0) {
                 const asset = tx.asset || tx.currency;
                 const amount = parseFloat(tx.amount) || 0;
+                console.log(`[GRAPH] Day ${dayIndex}: Applied ${tx.type} of ${amount} ${asset}`);
               }
             }
           }
@@ -538,6 +561,7 @@ const Home = () => {
           });
         }
 
+        console.log(`[GRAPH] 📊 Created ${dailyBalances.length} daily balance snapshots`);
 
         // Now calculate portfolio value for each day using historical prices
         // FIXED: Properly map day indices to historical price array indices
@@ -547,6 +571,7 @@ const Home = () => {
           // Check if we have valid historical data
           if (!priceData || !priceData.isValid || !priceData.prices || priceData.prices.length === 0) {
             if (dayIndex === 0) {
+              console.log(`[GRAPH] ⚠️ No historical data for ${market}, using current price: £${currentPrice?.toFixed(2)}`);
             }
             return currentPrice || 0;
           }
@@ -561,12 +586,14 @@ const Home = () => {
 
           if (price && price > 0) {
             if (dayIndex % 10 === 0) {
+              console.log(`[GRAPH] Day ${dayIndex}: Using historical price for ${market}: £${price.toFixed(2)} (array index ${priceIndex}/${prices.length - 1})`);
             }
             return price;
           }
 
           // Only use current price if specific price point is invalid
           if (dayIndex % 10 === 0) {
+            console.log(`[GRAPH] ⚠️ Invalid price at index ${priceIndex} for ${market}, using current: £${currentPrice?.toFixed(2)}`);
           }
           return currentPrice || 0;
         };
@@ -595,9 +622,11 @@ const Home = () => {
                 portfolioValue += value;
 
                 if (dayIndex % 10 === 0) {
+                  console.log(`[GRAPH] Day ${dayIndex}: ${asset.asset} balance=${balance.toFixed(4)}, price=£${price.toFixed(2)}, value=£${value.toFixed(2)}`);
                 }
               } else {
                 if (dayIndex % 10 === 0) {
+                  console.log(`[GRAPH] ⚠️ Day ${dayIndex}: No price available for ${market}, skipping ${balance.toFixed(4)} ${asset.asset}`);
                 }
               }
             }
@@ -609,10 +638,12 @@ const Home = () => {
           });
 
           if (dayIndex % 10 === 0) {
+            console.log(`[GRAPH] Day ${dayIndex}: Total portfolio value = £${portfolioValue.toFixed(2)}`);
           }
         }
 
         // Validate graph data quality
+        console.log('[GRAPH] 🔍 Validating graph data quality...');
         if (graphPoints.length > 0) {
           const values = graphPoints.map(p => p.value);
           const minValue = Math.min(...values);
@@ -621,8 +652,17 @@ const Home = () => {
           const variation = maxValue - minValue;
           const variationPercent = avgValue > 0 ? (variation / avgValue) * 100 : 0;
 
+          console.log('[GRAPH] 📊 Graph data validation:');
+          console.log(`[GRAPH]   - Data points: ${graphPoints.length}`);
+          console.log(`[GRAPH]   - Min value: £${minValue.toFixed(2)}`);
+          console.log(`[GRAPH]   - Max value: £${maxValue.toFixed(2)}`);
+          console.log(`[GRAPH]   - Average: £${avgValue.toFixed(2)}`);
+          console.log(`[GRAPH]   - Variation: £${variation.toFixed(2)} (${variationPercent.toFixed(2)}%)`);
 
           if (variation < 0.01) {
+            console.log('[GRAPH] ⚠️⚠️⚠️ WARNING: Extremely low variation detected!');
+            console.log('[GRAPH] ⚠️ Graph will appear as a flat line.');
+            console.log('[GRAPH] ⚠️ Checking historical price data quality...');
 
             // Log which assets had valid historical prices
             Object.keys(historicalPrices).forEach(market => {
@@ -632,15 +672,19 @@ const Home = () => {
                 const priceMin = Math.min(...prices);
                 const priceMax = Math.max(...prices);
                 const priceVar = priceMax - priceMin;
+                console.log(`[GRAPH]   - ${market}: ✅ ${data.dataPoints} prices, range £${priceMin.toFixed(2)}-£${priceMax.toFixed(2)} (var: £${priceVar.toFixed(2)})`);
               } else {
+                console.log(`[GRAPH]   - ${market}: ❌ No valid historical data`);
               }
             });
           } else {
+            console.log('[GRAPH] ✅ Graph has good variation and should display properly');
           }
         }
 
         // Fallback: if no graph points generated, create flat line
         if (graphPoints.length === 0) {
+          console.log('[GRAPH] ⚠️ No graph points generated. Creating fallback flat line...');
           for (let dayIndex = 0; dayIndex < 30; dayIndex++) {
             const daysAgo = 29 - dayIndex;
             const timestamp = Date.now() / 1000 - (daysAgo * 24 * 60 * 60);
@@ -650,8 +694,10 @@ const Home = () => {
               value: Number(totalValue > 0 ? totalValue : 1000)
             });
           }
+          console.log('[GRAPH] ✅ Created', graphPoints.length, 'points showing £', (totalValue > 0 ? totalValue : 1000).toFixed(2));
         }
 
+        console.log('[GRAPH] 📋 Generated', graphPoints.length, 'portfolio value points');
         if (graphPoints.length > 0) {
           const values = graphPoints.map(p => p.value);
           const minValue = Math.min(...values);
@@ -659,10 +705,17 @@ const Home = () => {
           const avgValue = values.reduce((sum, v) => sum + v, 0) / values.length;
           const variation = maxValue - minValue;
 
+          console.log('[GRAPH] 📋 First point (30 days ago):', JSON.stringify(graphPoints[0]));
+          console.log('[GRAPH] 📋 Last point (today):', JSON.stringify(graphPoints[graphPoints.length - 1]));
+          console.log(`[GRAPH] 📊 Portfolio value range: £${minValue.toFixed(2)} → £${maxValue.toFixed(2)}`);
+          console.log(`[GRAPH] 📊 Average value: £${avgValue.toFixed(2)}, Variation: £${variation.toFixed(2)} (${((variation / avgValue) * 100).toFixed(2)}%)`);
 
           if (variation < 1) {
+            console.log('[GRAPH] ⚠️ WARNING: Very low variation! Graph will appear nearly flat.');
+            console.log('[GRAPH] ⚠️ This is NORMAL if you have no recent transactions or stable holdings.');
           }
         } else {
+          console.log('[GRAPH] ⚠️ NO GRAPH POINTS GENERATED! Creating fallback flat line...');
           // Create a simple flat line showing current portfolio value
           for (let i = 0; i < 30; i++) {
             const daysAgo = 29 - i;
@@ -672,11 +725,13 @@ const Home = () => {
               value: Number(totalValue > 0 ? totalValue : 1000) // Use current value or minimum 1000
             });
           }
+          console.log('[GRAPH] 📊 Created fallback graph with', graphPoints.length, 'points showing £', (totalValue > 0 ? totalValue : 1000).toFixed(2));
         }
 
+        setGraphData(graphPoints);
+        console.log('[GRAPH] ✅ STEP 6 COMPLETE: Generated', graphPoints.length, 'graph points');
+
         // FINAL SAFETY CHECK: If graph has extremely low variation, add small adjustments
-        let finalGraphPoints = graphPoints; // Track which data we're actually using
-        
         if (graphPoints.length > 0) {
           const values = graphPoints.map(p => p.value);
           const minVal = Math.min(...values);
@@ -685,8 +740,10 @@ const Home = () => {
           const avgVal = values.reduce((sum, v) => sum + v, 0) / values.length;
           const variationPercent = avgVal > 0 ? (variation / avgVal) * 100 : 0;
 
+          console.log(`[GRAPH] 🔍 Final variation check: £${variation.toFixed(2)} (${variationPercent.toFixed(2)}%)`);
 
           if (variationPercent < 0.1) {
+            console.log('[GRAPH] ⚠️ Variation too low! Adding forced variation for better UX...');
             const adjustedPoints = graphPoints.map((point, index) => {
               // Add ±2% variation based on position in array
               const progress = index / (graphPoints.length - 1);
@@ -698,52 +755,157 @@ const Home = () => {
                 value: point.value * adjustment
               };
             });
-            finalGraphPoints = adjustedPoints; // Use adjusted data for both graph and calculation
+            setGraphData(adjustedPoints);
+            console.log('[GRAPH] ✅ Applied forced variation to graph data');
           }
         }
 
-        setGraphData(finalGraphPoints);
 
-        // STEP 7: Calculate monthly change from FINAL graph data (same data that's displayed)
-        console.log('[MONTHLY_CHANGE] 📊 Graph analysis:', {
-          graphPointsCount: finalGraphPoints.length,
-          firstValue: finalGraphPoints.length > 0 ? finalGraphPoints[0].value : 'N/A',
-          lastValue: finalGraphPoints.length > 0 ? finalGraphPoints[finalGraphPoints.length - 1].value : 'N/A',
-          allValuesUnique: finalGraphPoints.length > 0 ? new Set(finalGraphPoints.map(p => p.value)).size : 0,
-          sampleValues: finalGraphPoints.slice(0, 5).map(p => ({ ts: new Date(p.timestamp * 1000).toISOString().split('T')[0], val: p.value.toFixed(2) }))
-        });
+        // STEP 7: Calculate monthly change using historical prices
+        console.log('[HIST_PRICE]');
+        console.log('[HIST_PRICE] ========================================');
+        console.log('[HIST_PRICE] 📊 STEP 7: CALCULATING MONTHLY CHANGE');
+        console.log('[HIST_PRICE] ========================================');
+        console.log('[HIST_PRICE] Current total value:', totalValue);
+        console.log('[HIST_PRICE] Price data available:', Object.keys(priceData || {}).length, 'markets');
+        console.log('[HIST_PRICE] Assets array length:', assets?.length || 0);
+        console.log('[HIST_PRICE] Assets array:', assets);
+        console.log('[HIST_PRICE]');
 
-        if (finalGraphPoints.length >= 2) {
-          const value30DaysAgo = finalGraphPoints[0].value; // First point = 30 days ago
-          const valueNow = finalGraphPoints[finalGraphPoints.length - 1].value; // Last point = now
-          
-          if (value30DaysAgo > 0 && valueNow > 0) {
-            const change = valueNow - value30DaysAgo;
-            const changePercent = (change / value30DaysAgo) * 100;
-            
-            console.log('[MONTHLY_CHANGE] ✅ Calculated from graph:', {
-              value30DaysAgo: value30DaysAgo.toFixed(2),
-              valueNow: valueNow.toFixed(2),
-              change: change.toFixed(2),
-              changePercent: changePercent.toFixed(2),
-              isFlat: Math.abs(change) < 0.01
-            });
-            
-            setMonthlyChange(change);
-            setMonthlyChangePercent(changePercent);
-          } else {
-            console.log('[MONTHLY_CHANGE] ⚠️ Invalid values:', { value30DaysAgo, valueNow });
-            setMonthlyChange(0);
-            setMonthlyChangePercent(0);
+        let portfolioValue30DaysAgo = 0;
+
+        // Add GBP balance (no change for fiat)
+        const gbpBalanceFor30Days = appState.getBalance('GBP');
+        if (gbpBalanceFor30Days !== '[loading]') {
+          const gbpBalance30Days = parseFloat(gbpBalanceFor30Days) || 0;
+          portfolioValue30DaysAgo += gbpBalance30Days;
+          console.log('[HIST_PRICE] 💷 GBP balance (30 days ago = now):', gbpBalance30Days);
+        }
+
+        // Calculate crypto values from 30 days ago
+        for (const asset of assets) {
+          const balanceStr = appState.getBalance(asset.asset);
+          console.log(`[HIST_PRICE] 🔎 Checking ${asset.asset} - balance string:`, balanceStr);
+
+          if (balanceStr !== '[loading]') {
+            const balance = parseFloat(balanceStr) || 0;
+            console.log(`[HIST_PRICE] 🔎 ${asset.asset} parsed balance:`, balance);
+
+            if (balance > 0) {
+              try {
+                const market = `${asset.asset}/GBP`;
+                console.log('[HIST_PRICE]');
+                console.log(`[HIST_PRICE] 🔍 ===== LOADING HISTORICAL PRICES FOR ${market} =====`);
+                console.log(`[HIST_PRICE]    Balance: ${balance} ${asset.asset}`);
+                console.log(`[HIST_PRICE]    appState.loadHistoricPrices exists:`, typeof appState.loadHistoricPrices);
+
+                // Load 1 month historical prices from Solidi API
+                console.log(`[HIST_PRICE]    📞 Calling appState.loadHistoricPrices({ market: "${market}", period: "1M" })`);
+
+                try {
+                  await appState.loadHistoricPrices({ market, period: '1M' });
+                  console.log(`[HIST_PRICE]    ✅ loadHistoricPrices call completed`);
+                  // Small delay to ensure state update propagates
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                } catch (loadError) {
+                  console.log(`[HIST_PRICE]    ❌ Error calling loadHistoricPrices:`, loadError.message);
+                  console.log(`[HIST_PRICE]    ❌ Error stack:`, loadError.stack);
+                }
+
+                // Check what's in the state immediately after
+                console.log(`[HIST_PRICE]    🔎 Checking appState.apiData.historic_prices...`);
+                console.log(`[HIST_PRICE]    - apiData exists:`, !!appState.apiData);
+                console.log(`[HIST_PRICE]    - historic_prices exists:`, !!appState.apiData?.historic_prices);
+                console.log(`   - historic_prices keys:`, Object.keys(appState.apiData?.historic_prices || {}));
+                console.log(`   - market "${market}" exists:`, !!appState.apiData?.historic_prices?.[market]);
+                if (appState.apiData?.historic_prices?.[market]) {
+                  console.log(`   - periods available:`, Object.keys(appState.apiData.historic_prices[market]));
+                }
+
+                // Get the historic prices from appState
+                const historicPrices = appState.apiData?.historic_prices?.[market]?.['1M'];
+
+                console.log(`   � Retrieved historic prices from state:`, {
+                  exists: !!historicPrices,
+                  length: historicPrices?.length,
+                  firstPrice: historicPrices?.[0],
+                  lastPrice: historicPrices?.[historicPrices?.length - 1]
+                });
+
+                if (historicPrices && historicPrices.length > 0) {
+                  // Get the first price (30 days ago)
+                  const price30DaysAgo = historicPrices[0];
+                  const value30DaysAgo = balance * price30DaysAgo;
+                  portfolioValue30DaysAgo += value30DaysAgo;
+
+                  // Get current price for comparison
+                  const currentPrice = priceData[market] ? parseFloat(priceData[market].price) : 0;
+
+                  console.log(`💰 ${asset.asset}:`);
+                  console.log(`   - Balance: ${balance}`);
+                  console.log(`   - Price 30 days ago: £${price30DaysAgo}`);
+                  console.log(`   - Price now: £${currentPrice}`);
+                  console.log(`   - Value 30 days ago: £${value30DaysAgo.toFixed(2)}`);
+                  console.log(`   - Value now: £${(balance * currentPrice).toFixed(2)}`);
+                } else {
+                  console.log(`⚠️ No historical data for ${market}`);
+                }
+              } catch (error) {
+                console.log(`[HIST_PRICE] ❌ Error getting historical price for ${asset.asset}:`, error);
+              }
+            }
           }
+        }
+
+        // Calculate current portfolio value (GBP + crypto at current prices)
+        let portfolioValueNow = 0;
+
+        // Add GBP balance
+        const gbpBalanceNow = appState.getBalance('GBP');
+        if (gbpBalanceNow !== '[loading]') {
+          portfolioValueNow += parseFloat(gbpBalanceNow) || 0;
+        }
+
+        // Add current crypto values
+        for (const asset of assets) {
+          if (asset.group === 'Crypto') {
+            const balanceStr = appState.getBalance(asset.asset);
+            if (balanceStr !== '[loading]') {
+              const balance = parseFloat(balanceStr) || 0;
+              if (balance > 0) {
+                const market = `${asset.asset}/GBP`;
+                const currentPrice = priceData[market] ? parseFloat(priceData[market].price) : 0;
+                portfolioValueNow += balance * currentPrice;
+
+                console.log(`[PORTFOLIO] 💰 ${asset.asset}: ${balance} × £${currentPrice.toFixed(2)} = £${(balance * currentPrice).toFixed(2)}`);
+              }
+            }
+          }
+        }
+
+        // STEP 7: Calculate portfolio change using ALL assets (not just BTC)
+        console.log('[HIST_PRICE] 📊 STEP 7: Calculating portfolio change over 30 days (all assets)');
+        console.log('[HIST_PRICE] 📈 Portfolio 30 days ago: £', portfolioValue30DaysAgo.toFixed(2));
+        console.log('[HIST_PRICE] 📈 Portfolio now: £', portfolioValueNow.toFixed(2));
+
+        if (portfolioValue30DaysAgo > 0 && portfolioValueNow > 0) {
+          const portfolioChange = portfolioValueNow - portfolioValue30DaysAgo;
+          const portfolioChangePercent = (portfolioChange / portfolioValue30DaysAgo) * 100;
+
+          console.log('[HIST_PRICE] 💰 Portfolio value change: £', portfolioChange.toFixed(2));
+          console.log('[HIST_PRICE] 📊 Portfolio change %:', portfolioChangePercent.toFixed(2), '%');
+          console.log('[HIST_PRICE] ✅ Setting monthlyChange =', portfolioChange);
+          console.log('[HIST_PRICE] ✅ Setting monthlyChangePercent =', portfolioChangePercent);
+
+          setMonthlyChange(portfolioChange);
+          setMonthlyChangePercent(portfolioChangePercent);
         } else {
-          console.log('[MONTHLY_CHANGE] ⚠️ Not enough graph points:', graphPoints.length);
+          console.log('[HIST_PRICE] ⚠️ Invalid portfolio values - 30 days ago:', portfolioValue30DaysAgo, 'now:', portfolioValueNow);
           setMonthlyChange(0);
           setMonthlyChangePercent(0);
         }
 
-        // OLD STEP 7: Calculate monthly change using historical prices (REMOVED - too complex)
-
+        console.log('[HIST_PRICE] ✅ STEP 7 COMPLETE: Monthly change calculated');
 
         console.log('✅ ========== ALL DATA LOADED SUCCESSFULLY ==========');
         setIsLoading(false);
@@ -1693,6 +1855,7 @@ const Home = () => {
                 <Text style={styles.portfolioValue}>
                   {formatCurrency(portfolioValue)}
                 </Text>
+                {console.log('[UI_RENDER] 🖥️  monthlyChange:', monthlyChange, 'monthlyChangePercent:', monthlyChangePercent)}
 
                 <View style={styles.changeContainer}>
                   <Text style={[
@@ -1716,8 +1879,29 @@ const Home = () => {
             )}
 
             {/* Monthly Asset Value Chart */}
+            {console.log('📊 [CHART RENDER CHECK]', {
+              isLoading,
+              hasGraphData: !!graphData,
+              graphDataLength: graphData?.length || 0,
+              firstPoint: graphData?.[0],
+              lastPoint: graphData?.[graphData.length - 1],
+              minValue: graphData?.length > 0 ? Math.min(...graphData.map(p => p.value)) : 0,
+              maxValue: graphData?.length > 0 ? Math.max(...graphData.map(p => p.value)) : 0,
+              allValues: graphData?.map(p => p.value)
+            })}
             {!isLoading && (
               <View style={styles.chartContainer}>
+                {/* DEBUG: Show graph statistics */}
+                {graphData && graphData.length > 0 && (
+                  <View style={{ padding: 8, backgroundColor: '#FEF3C7', borderRadius: 4, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 10, color: '#92400E' }}>
+                      📊 Graph Debug: {graphData.length} points |
+                      Min: £{Math.min(...graphData.map(p => p.value)).toFixed(2)} |
+                      Max: £{Math.max(...graphData.map(p => p.value)).toFixed(2)} |
+                      Var: {((Math.max(...graphData.map(p => p.value)) - Math.min(...graphData.map(p => p.value))) / Math.min(...graphData.map(p => p.value)) * 100).toFixed(2)}%
+                    </Text>
+                  </View>
+                )}
                 {graphData && graphData.length > 0 ? (
                   <SimpleChart
                     data={graphData}
