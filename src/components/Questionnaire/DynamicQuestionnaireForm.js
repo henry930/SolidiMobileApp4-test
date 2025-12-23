@@ -448,22 +448,34 @@ const DynamicQuestionnaireForm = ({
       // Only apply business rules if we're on the relevant pages or doing full validation
       if (!pageSpecific || accountPurpose) {
         
-        // Restricted investor validation - only if they've entered a prevAmount
-        if (accountPurpose === 'restricted' && prevAmount !== null && prevAmount !== undefined && prevAmount !== '') {
-          console.log('🎯 [VALIDATION] Restricted investor detected - checking prevAmount');
-          console.log('🎯 [VALIDATION] prevAmount value:', prevAmount, 'type:', typeof prevAmount);
+        // Restricted investor validation - must answer YES to both questions AND enter <=10%
+        if (accountPurpose === 'restricted') {
+          console.log('🎯 [VALIDATION] Restricted investor detected - checking all requirements');
+          console.log('🎯 [VALIDATION] prev12months:', prev12months, 'next12months:', next12months, 'prevAmount:', prevAmount);
           
-          const percentageValue = parseFloat(prevAmount);
-          console.log('🎯 [VALIDATION] Parsed percentage value:', percentageValue);
+          // Rule: Must select 'Yes' to BOTH prev12months AND next12months questions
+          if (prev12months !== 'yes' || next12months !== 'yes') {
+            console.log('❌ [VALIDATION] Restricted investor validation FAILED - must answer YES to both questions');
+            invalidFields.push('For Restricted Investors: You must confirm "Yes" to both the previous 12 months and next 12 months investment questions.');
+          }
           
-          if (!isNaN(percentageValue) && percentageValue > 10) {
-            console.log('❌ [VALIDATION] Restricted investor validation FAILED - percentage too high:', percentageValue);
-            invalidFields.push('Invalid. Your amount should less than 10 if you are a restricted investor');
-          } else if (isNaN(percentageValue)) {
-            console.log('❌ [VALIDATION] Restricted investor validation FAILED - invalid number:', prevAmount);
-            invalidFields.push('Please enter a valid percentage for your investment amount');
+          // Rule: Must enter a percentage amount <=10%
+          if (prevAmount !== null && prevAmount !== undefined && prevAmount !== '') {
+            const percentageValue = parseFloat(prevAmount);
+            console.log('🎯 [VALIDATION] Parsed percentage value:', percentageValue);
+            
+            if (!isNaN(percentageValue) && percentageValue > 10) {
+              console.log('❌ [VALIDATION] Restricted investor validation FAILED - percentage too high:', percentageValue);
+              invalidFields.push('As a Restricted Investor, your investment amount must be 10% or less of your net worth.');
+            } else if (isNaN(percentageValue)) {
+              console.log('❌ [VALIDATION] Restricted investor validation FAILED - invalid number:', prevAmount);
+              invalidFields.push('Please enter a valid percentage for your investment amount.');
+            } else {
+              console.log('✅ [VALIDATION] Restricted investor validation PASSED - percentage OK:', percentageValue);
+            }
           } else {
-            console.log('✅ [VALIDATION] Restricted investor validation PASSED - percentage OK:', percentageValue);
+            console.log('❌ [VALIDATION] Restricted investor validation FAILED - no amount entered');
+            invalidFields.push('Please enter the percentage of your net worth invested in high-risk assets.');
           }
         }
 
@@ -553,7 +565,17 @@ const DynamicQuestionnaireForm = ({
     const validation = validateForm(false); // false = full form validation
     if (!validation.isValid) {
       console.log('❌ [SUBMIT] Final validation failed');
-      Alert.alert('Validation Error', validation.errors.join('\n\n'));
+      
+      // Improved error message for suitability assessment (Issue #116, item 4)
+      const errorTitle = formId.includes('suitability') || formId.includes('appropriateness') 
+        ? 'Unable to Complete Assessment' 
+        : 'Validation Error';
+      
+      const errorMessage = formId.includes('suitability') || formId.includes('appropriateness')
+        ? 'Please review your answers and ensure all required fields are completed correctly:\n\n' + validation.errors.join('\n\n')
+        : validation.errors.join('\n\n');
+      
+      Alert.alert(errorTitle, errorMessage);
       return;
     }
 
@@ -869,12 +891,38 @@ const DynamicQuestionnaireForm = ({
     // Validate current page only (not the entire form)
     const validation = validateForm(true); // true = page-specific validation
     if (!validation.isValid) {
-      console.log('❌ [NEXT BUTTON] Page validation failed, showing errors');
-      Alert.alert('Validation Error', validation.errors.join('\n\n'));
+      console.log('❌ [NEXT BUTTON] Page validation failed');
+      
+      // Check if this is restricted investor validation failure
+      const currentPageData = activeFormData.pages[currentPage];
+      const hasRestrictedQuestions = currentPageData?.questions?.some(q => 
+        q.id === 'prev12months' || q.id === 'next12months'
+      );
+      
+      // For restricted investor questions, silently prevent navigation (no alert)
+      // User can see they need to answer both questions with 'Yes'
+      if (hasRestrictedQuestions && answers.accountpurpose === 'restricted') {
+        console.log('🚫 [NEXT BUTTON] Restricted investor must answer Yes to both questions - preventing navigation');
+        return; // Just return, don't show alert
+      }
+      
+      // For other validation failures, show alert with option to continue or go back
+      Alert.alert(
+        'Please Review Your Answers',
+        validation.errors.join('\n\n') + '\n\nYou can continue to review other sections or go back to make changes.',
+        [
+          { text: 'Go Back', style: 'cancel' },
+          { text: 'Continue Anyway', onPress: () => proceedToNextPage() }
+        ]
+      );
       return;
     }
     
     console.log('✅ [NEXT BUTTON] Page validation passed, proceeding with navigation');
+    proceedToNextPage();
+  };
+
+  const proceedToNextPage = () => {
     
     if (activeFormData?.pages && currentPage < activeFormData.pages.length - 1) {
       // Check if current page has accountpurpose question and handle conditional navigation

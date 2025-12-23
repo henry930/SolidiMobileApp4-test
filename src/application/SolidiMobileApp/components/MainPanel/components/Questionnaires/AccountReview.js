@@ -265,47 +265,120 @@ const AccountReview = ({ navigation, onComplete }) => {
         // Handle finprom-suitability (first attempt) submission
         if (currentFormId === 'finprom-suitability') {
           if (cat === 1 && appropriate === 1) {
-            // PASSED - complete registration
-            console.log('[AccountReview] First attempt PASSED - completing registration');
+            // PASSED - show success and complete registration
+            console.log('[AccountReview] First attempt PASSED - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else if (appropriate === 'PASS' || appropriate === 'PASSED') {
-            // PASSED with string value - complete registration
-            console.log('[AccountReview] First attempt PASSED (string value) - completing registration');
+            // PASSED with string value - show success and complete registration
+            console.log('[AccountReview] First attempt PASSED (string value) - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else {
-            // FAILED - load second attempt form
-            console.log('[AccountReview] First attempt FAILED - loading crypto-appropriateness-assessment2');
-            setFormId('crypto-appropriateness-assessment2');
+            // FAILED - show retry prompt
+            console.log('[AccountReview] First attempt FAILED - showing retry prompt');
             setIsLoading(false);
+            
+            Alert.alert(
+              'Assessment Not Passed',
+              'Sorry. You did not pass this assessment. Would you like to retry?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                  onPress: () => {
+                    // Redirect to Home page
+                    appState.setMainPanelState({
+                      mainPanelState: 'Home',
+                      pageName: 'default'
+                    });
+                  }
+                },
+                {
+                  text: 'Retry',
+                  onPress: () => {
+                    // Load second attempt form
+                    console.log('[AccountReview] User chose to retry - loading finprom-suitability2');
+                    setFormId('finprom-suitability2');
+                  }
+                }
+              ]
+            );
             return;
           }
         }
         
-        // Handle crypto-appropriateness-assessment2 (second attempt) submission
-        if (currentFormId === 'crypto-appropriateness-assessment2') {
+        // Handle finprom-suitability2 (second attempt) submission
+        if (currentFormId === 'finprom-suitability2') {
           if (cat === 1 && appropriate === 1) {
-            // PASSED on second attempt - complete registration
-            console.log('[AccountReview] Second attempt PASSED - completing registration');
+            // PASSED on second attempt - show success and complete registration
+            console.log('[AccountReview] Second attempt PASSED - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment on your second attempt. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else if (appropriate === 'PASS' || appropriate === 'PASSED') {
-            // PASSED with string value - complete registration
-            console.log('[AccountReview] Second attempt PASSED (string value) - completing registration');
+            // PASSED with string value - show success and complete registration
+            console.log('[AccountReview] Second attempt PASSED (string value) - showing success message');
             setIsLoading(false);
-            if (onComplete) {
-              onComplete({ evaluationComplete: true, passed: true });
-            }
+            
+            Alert.alert(
+              'Congratulations!',
+              'You have successfully passed the suitability assessment on your second attempt. Your registration is now complete!',
+              [
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    if (onComplete) {
+                      onComplete({ evaluationComplete: true, passed: true });
+                    }
+                  }
+                }
+              ]
+            );
             return;
           } else {
             // FAILED both attempts - show 24 hour wait message
