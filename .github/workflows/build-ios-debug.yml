@@ -38,24 +38,18 @@ jobs:
       - name: Install CocoaPods dependencies
         run: |
           cd ios
-          # Clean install to avoid version conflicts - remove cached files
+          # Completely deintegrate CocoaPods to ensure clean state
+          pod deintegrate || true
           rm -f Podfile.lock
           rm -rf Pods
+          rm -rf ~/Library/Caches/CocoaPods
+          rm -rf ~/.cocoapods/repos/trunk
           
-          for i in 1 2 3; do
-            if pod install; then
-              echo "Pod install succeeded"
-              break
-            else
-              if [ $i -lt 3 ]; then
-                echo "Pod install failed, retrying in 10 seconds... (attempt $i/3)"
-                sleep 10
-              else
-                echo "Pod install failed after 3 attempts"
-                exit 1
-              fi
-            fi
-          done
+          # Fresh pod install
+          pod install --verbose
+          
+          # Verify Firebase version
+          grep "Firebase/CoreOnly" Podfile.lock || echo "Warning: Firebase/CoreOnly not found in Podfile.lock"
             
       - name: Import Development Code Signing Certificates
         env:
