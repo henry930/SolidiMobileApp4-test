@@ -580,7 +580,7 @@ const Register = () => {
                   pointerEvents="none"
                   style={{ marginBottom: 16 }}
                   left={<TextInput.Icon icon="human-male-female" />}
-                  right={<TextInput.Icon icon="chevron-down" onPress={showGenderPicker} />}
+                  right={<TextInput.Icon icon="chevron-down" />}
                 />
               </TouchableOpacity>
 
@@ -595,7 +595,7 @@ const Register = () => {
                   placeholder="DD/MM/YYYY"
                   style={{ marginBottom: 16 }}
                   left={<TextInput.Icon icon="calendar" />}
-                  right={<TextInput.Icon icon="chevron-down" onPress={showDatePickerModal} />}
+                  right={<TextInput.Icon icon="chevron-down" />}
                 />
               </TouchableOpacity>
 
@@ -609,7 +609,7 @@ const Register = () => {
                   pointerEvents="none"
                   style={{ marginBottom: 16 }}
                   left={<TextInput.Icon icon="flag" />}
-                  right={<TextInput.Icon icon="chevron-down" onPress={showCitizenshipPicker} />}
+                  right={<TextInput.Icon icon="chevron-down" />}
                 />
               </TouchableOpacity>
 
@@ -639,7 +639,7 @@ const Register = () => {
                     value={countryCode || 'Tap to select'}
                     editable={false}
                     pointerEvents="none"
-                    right={<TextInput.Icon icon="chevron-down" onPress={showCountryCodePicker} />}
+                    right={<TextInput.Icon icon="chevron-down" />}
                   />
                 </TouchableOpacity>
                 <TextInput
