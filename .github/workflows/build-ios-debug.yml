@@ -46,8 +46,12 @@ jobs:
       - name: Install CocoaPods dependencies
         run: |
           cd ios
+          # Clean install to avoid version conflicts
+          rm -f Podfile.lock
+          rm -rf Pods
+          
           for i in 1 2 3; do
-            if pod install --repo-update; then
+            if pod install; then
               echo "Pod install succeeded"
               break
             else
