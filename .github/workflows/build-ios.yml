@@ -120,6 +120,37 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             archive
       
+      - name: Import Code Signing for Debug Device Build
+        if: github.event.inputs.build_for_device == 'true'
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE }}
+          P12_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          # Import certificate and provisioning profile from secrets
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          
+          # Apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          PP_UUID=$(grep -a -A 1 '<key>UUID</key>' $PP_PATH | grep '<string>' | sed 's|.*<string>||' | sed 's|</string>.*||')
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
+      
       - name: Build iOS App (Debug for Device)
         if: github.event.inputs.build_for_device == 'true'
         run: |
@@ -129,35 +160,16 @@ jobs:
             -configuration Debug \
             -destination 'generic/platform=iOS' \
             -archivePath $RUNNER_TEMP/SolidiMobileApp4-Debug.xcarchive \
-            -allowProvisioningUpdates \
             archive
       
       - name: Export Debug IPA for Device
         if: github.event.inputs.build_for_device == 'true'
         run: |
           cd ios
-          # Create export options for development
-          cat > $RUNNER_TEMP/ExportOptionsDebug.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>development</string>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>compileBitcode</key>
-              <false/>
-              <key>signingStyle</key>
-              <string>automatic</string>
-          </dict>
-          </plist>
-          EOF
-          
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/SolidiMobileApp4-Debug.xcarchive \
             -exportPath $RUNNER_TEMP/debug-build \
-            -exportOptionsPlist $RUNNER_TEMP/ExportOptionsDebug.plist -allowProvisioningUpdates
+            -exportOptionsPlist ExportOptions.plist
       
       - name: Upload Debug IPA Artifact
         if: github.event.inputs.build_for_device == 'true'
